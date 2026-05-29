@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MaintFlow — Tableau de bord</title>
+    <link rel="shortcut icon" href="/icone.ico" type="image/x-icon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Logo -->
+      <div class="sidebar-logo">
+        <img src="white.png" alt="logo" class="sidebar-logo-img" />
+        <div class="logo-text">Maint<span>Flow</span></div>
+      </div>
+
+      <!-- Toggle arrow button -->
+      <button class="sidebar-arrow" id="sidebarToggle" title="Ouvrir / Fermer">
+        <i class="fa-solid fa-chevron-right" id="arrowIcon"></i>
+      </button>
+
+      <!-- Nav -->
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Principal</div>
+        <a
+          class="nav-item active"
+          href="#"
+          data-page="dashboard"
+          data-tooltip="Tableau de bord"
+        >
+          <i class="fa-solid fa-gauge-high"></i>
+          <span class="nav-label">Tableau de bord</span>
+        </a>
+        <a
+          class="nav-item"
+          href="#"
+          data-page="arborescence"
+          data-tooltip="Arborescence"
+        >
+          <i class="fa-solid fa-sitemap"></i>
+          <span class="nav-label">Arborescence</span>
+        </a>
+        <a
+          class="nav-item"
+          href="#"
+          data-page="organisation"
+          data-tooltip="Organisation"
+        >
+          <i class="fa-solid fa-building"></i>
+          <span class="nav-label">Organisation</span>
+        </a>
+
+        <div class="nav-section-label">Actifs</div>
+        <a
+          class="nav-item"
+          href="#"
+          data-page="equipements"
+          data-tooltip="Équipements"
+        >
+          <i class="fa-solid fa-gear"></i>
+          <span class="nav-label">Équipements</span>
+        </a>
+        <a class="nav-item" href="#" data-page="organe" data-tooltip="Organe">
+          <i class="fa-solid fa-puzzle-piece"></i>
+          <span class="nav-label">Organe</span>
+        </a>
+        <a
+          class="nav-item"
+          href="#"
+          data-page="articles"
+          data-tooltip="Articles"
+        >
+          <i class="fa-solid fa-box-open"></i>
+          <span class="nav-label">Articles</span>
+        </a>
+
+        <div class="nav-section-label">Opérations</div>
+        <a
+          class="nav-item"
+          href="#"
+          data-page="planification"
+          data-tooltip="Planification"
+        >
+          <i class="fa-solid fa-calendar-days"></i>
+          <span class="nav-label">Planification</span>
+          <span class="nav-badge">3</span>
+        </a>
+        <a
+          class="nav-item"
+          href="#"
+          data-page="interventions"
+          data-tooltip="Interventions"
+        >
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+          <span class="nav-label">Interventions</span>
+          <span class="nav-badge">7</span>
+        </a>
+
+        <div class="nav-section-label">Ressources</div>
+        <a class="nav-item" href="#" data-page="stock" data-tooltip="Stock">
+          <i class="fa-solid fa-warehouse"></i>
+          <span class="nav-label">Stock</span>
+        </a>
+        <a class="nav-item" href="#" data-page="achats" data-tooltip="Achats">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span class="nav-label">Achats</span>
+        </a>
+        <a
+          class="nav-item"
+          href="#"
+          data-page="fournisseurs"
+          data-tooltip="Fournisseurs"
+        >
+          <i class="fa-solid fa-truck"></i>
+          <span class="nav-label">Fournisseurs</span>
+        </a>
+
+        <div class="nav-section-label">Système</div>
+        <a
+          class="nav-item"
+          href="#"
+          data-page="administration"
+          data-tooltip="Administration"
+        >
+          <i class="fa-solid fa-sliders"></i>
+          <span class="nav-label">Administration</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="topbar-greeting">
+          <div class="greeting-main">Bonjour,الهايشة 🐮</div>
+          <div class="greeting-sub">Votre tableau de bord de maintenance</div>
+        </div>
+        <div class="topbar-date">
+          <i class="fa-regular fa-calendar"></i>&nbsp;
+          <span id="live-date">05 juin 2026 | 17:25</span>
+        </div>
+        <div class="topbar-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input
+            type="text"
+            placeholder="Rechercher équipement, intervention…"
+          />
+        </div>
+        <div class="topbar-actions">
+          <div class="dropdown-wrap">
+            <button
+              class="icon-btn"
+              id="notifBtn"
+              type="button"
+              aria-expanded="false"
+              aria-controls="notifMenu"
+              title="Notifications"
+            >
+              <i class="fa-solid fa-bell"></i>
+              <span class="notif-badge" id="notifCount">0</span>
+            </button>
+            <div
+              class="dropdown-menu dropdown-menu-notif"
+              id="notifMenu"
+              aria-hidden="true"
+            >
+              <div class="dropdown-title">Notifications</div>
+              <div class="notif-list" id="notifList">
+                <div class="dropdown-empty">
+                  Aucune notification pour le moment.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="dropdown-wrap">
+            <button
+              class="topbar-avatar"
+              id="profileBtn"
+              type="button"
+              aria-expanded="false"
+              aria-controls="profileMenu"
+            >
+              MA
+            </button>
+            <div
+              class="dropdown-menu dropdown-menu-profile"
+              id="profileMenu"
+              aria-hidden="true"
+            >
+              <button class="dropdown-item" type="button" data-action="profile">
+                <i class="fa-regular fa-user"></i>
+                <span>Profil</span>
+              </button>
+              <button
+                class="dropdown-item"
+                type="button"
+                data-action="settings"
+              >
+                <i class="fa-solid fa-gear"></i>
+                <span>Paramètre</span>
+              </button>
+              <button
+                class="dropdown-item danger"
+                type="button"
+                data-action="logout"
+              >
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Déconnexion</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <main class="content">
+        <section class="page-shell">
+          <div class="page-header">
+            <div>
+              <div class="page-title" id="pageTitle">Tableau de bord</div>
+              <div class="page-sub" id="pageSubtitle">
+                Vue globale de la maintenance
+              </div>
+            </div>
+            <div class="page-actions" id="pageActions"></div>
+          </div>
+          <div class="blank-page" id="pageContent"></div>
+        </section>
+      </main>
+    </div>
+
+    <div id="overlayRoot"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
