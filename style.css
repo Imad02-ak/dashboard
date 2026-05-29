@@ -798,6 +798,107 @@ body {
   gap: 18px;
 }
 
+/* Interventions page */
+.interventions-page .interventions-kpi-grid {
+  margin-bottom: 18px;
+}
+
+.interventions-page .intervention-history-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.interventions-page .intervention-history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.interventions-page .intervention-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.interventions-page .intervention-history-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff, #f9fbfd);
+}
+
+.interventions-page .intervention-history-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.interventions-page .intervention-history-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.interventions-page .intervention-history-date {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.interventions-page .interventions-modal-panel {
+  width: min(1120px, 100%);
+}
+
+.interventions-page .interventions-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.interventions-page .interventions-form-grid .field-group-wide {
+  grid-column: 1 / -1;
+}
+.interventions-page .tab-pane.active {
+  display: block;
+}
+.interventions-page .form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.interventions-page .form-grid label {
+  display: block;
+  font-size: 13px;
+}
+.interventions-page input,
+.interventions-page select,
+.interventions-page textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.interventions-page .btn {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.interventions-page .btn.small {
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
 .stock-card .card-body {
   padding: 18px 20px 20px;
 }

@@ -32,6 +32,61 @@ const stockInventoryStateStorageKey = "maintflow.stockInventoryState";
 
 let renderedNotifications = [];
 
+const organizationStorageKey = "maintflow.organizationDirectory";
+const organizationUsers = [
+  { id: "user-1", name: "Technicien Qualité", role: "Qualité" },
+  { id: "user-2", name: "Responsable Production", role: "Production" },
+  { id: "user-3", name: "Technicien Maintenance", role: "Maintenance" },
+];
+const organizationDefaults = {
+  unites: [],
+  divisions: [],
+  departmentServices: [],
+};
+
+const pages = {
+  dashboard: {
+    title: "Tableau de bord",
+    subtitle: "Vue globale de la maintenance",
+  },
+  arborescence: {
+    title: "Arborescence",
+    subtitle: "Structure des actifs et des emplacements",
+  },
+  organisation: {
+    title: "Organisation",
+    subtitle: "Structure de l'entreprise et des équipes",
+  },
+  equipements: {
+    title: "Équipements",
+    subtitle: "Catalogue et suivi des équipements",
+  },
+  organe: {
+    title: "Organe",
+    subtitle: "Gestion des organes et sous-ensembles",
+  },
+  articles: {
+    title: "Articles",
+    subtitle: "Référentiel des articles et consommables",
+  },
+  interventions: {
+    title: "Interventions",
+    subtitle: "Demandes, ordres et historiques de maintenance",
+  },
+  stock: { title: "Stock", subtitle: "Suivi des stocks et consommations" },
+  achats: { title: "Achats", subtitle: "Demandes et commandes d'achat" },
+  fournisseurs: { title: "Fournisseurs", subtitle: "Annuaire fournisseurs" },
+  parametres: {
+    title: "Administration",
+    subtitle: "Paramètres de l'application",
+  },
+  deconnexion: { title: "Déconnexion", subtitle: "Fin de session" },
+  profil: {
+    title: "Profil",
+    subtitle: "Préférences et informations du compte",
+  },
+};
+
 const notifications = [
   {
     title: "Panne critique — Compresseur A3",
@@ -59,524 +114,482 @@ const notifications = [
   },
 ];
 
-const dashboardKpis = [
-  {
-    label: "Interventions actives",
-    value: "42",
-    icon: "fa-screwdriver-wrench",
-    iconClass: "blue",
-    trendClass: "up",
-    trendIcon: "fa-arrow-trend-up",
-    trendValue: "+8%",
-    footer: "vs mois dernier",
-  },
-  {
-    label: "Équipements opérationnels",
-    value: "128",
-    icon: "fa-circle-check",
-    iconClass: "green",
-    trendClass: "up",
-    trendIcon: "fa-arrow-trend-up",
-    trendValue: "94%",
-    footer: "taux de disponibilité",
-  },
-  {
-    label: "Alertes en attente",
-    value: "11",
-    icon: "fa-triangle-exclamation",
-    iconClass: "orange",
-    trendClass: "down",
-    trendIcon: "fa-arrow-trend-down",
-    trendValue: "-3",
-    footer: "depuis hier",
-  },
-  {
-    label: "Coût maintenance (M)",
-    value: "87k€",
-    icon: "fa-coins",
-    iconClass: "red",
-    trendClass: "flat",
-    trendIcon: "fa-minus",
-    trendValue: "+1.2%",
-    footer: "budget : 95k€",
-  },
-];
+function renderHistorySection(directory) {
+  const entries = [];
+  directory.dis.forEach((di) =>
+    entries.push({
+      id: di.id,
+      date: di.createdAt,
+      ref: di.ref,
+      type: "DI",
+      label: di.title,
+      meta: di.status,
+    }),
+  );
+  directory.ots.forEach((ot) =>
+    entries.push({
+      id: ot.id,
+      date: ot.createdAt || ot.plannedDate,
+      ref: ot.ref,
+      type: "OT",
+      label: ot.equipmentLabel || ot.diRef || "Ordre",
+      meta: ot.status,
+    }),
+  );
+  directory.bts.forEach((bt) =>
+    entries.push({
+      id: bt.id,
+      date: bt.endDate || bt.startDate || bt.createdAt,
+      ref: bt.ref,
+      type: "BT",
+      label: bt.otRef || "Bon",
+      meta: bt.status,
+    }),
+  );
+  entries.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
-const recentInterventions = [
-  {
-    ref: "#INT-2847",
-    equipment: "Compresseur A3",
-    type: "Corrective",
-    priorityClass: "p-high",
-    priorityLabel: "Haute",
-    statusClass: "badge-warning",
-    statusLabel: "En cours",
-    technician: "K. Benali",
-  },
-  {
-    ref: "#INT-2846",
-    equipment: "Pompe centrifuge P2",
-    type: "Préventive",
-    priorityClass: "p-medium",
-    priorityLabel: "Moyenne",
-    statusClass: "badge-success",
-    statusLabel: "Terminée",
-    technician: "S. Amrani",
-  },
-  {
-    ref: "#INT-2845",
-    equipment: "Convoyeur ligne 4",
-    type: "Préventive",
-    priorityClass: "p-low",
-    priorityLabel: "Basse",
-    statusClass: "badge-info",
-    statusLabel: "Planifiée",
-    technician: "T. Mehdaoui",
-  },
-  {
-    ref: "#INT-2844",
-    equipment: "Moteur électrique M7",
-    type: "Corrective",
-    priorityClass: "p-high",
-    priorityLabel: "Haute",
-    statusClass: "badge-danger",
-    statusLabel: "Bloquée",
-    technician: "R. Chiali",
-  },
-  {
-    ref: "#INT-2843",
-    equipment: "Chaudière B1",
-    type: "Réglementaire",
-    priorityClass: "p-medium",
-    priorityLabel: "Moyenne",
-    statusClass: "badge-success",
-    statusLabel: "Terminée",
-    technician: "M. Ouali",
-  },
-];
+  const list = entries.length
+    ? entries
+        .map(
+          (entry) => `
+            <div class="intervention-history-row">
+              <div>
+                <div class="intervention-history-title"><strong>${entry.ref}</strong> · ${entry.type}</div>
+                <div class="intervention-history-sub">${escapeHtml(entry.label)} · ${escapeHtml(entry.meta)}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="intervention-history-date">${formatInterventionDate(entry.date)}</div>
+                ${buildInterventionHistoryActions(entry.type.toLowerCase(), entry.id)}
+              </div>
+            </div>
+          `,
+        )
+        .join("")
+    : buildInterventionEmptyState(
+        "fa-clock-rotate-left",
+        "Aucun historique disponible",
+        "Les créations, clôtures et validations apparaîtront ici.",
+        "L'export Excel / PDF est prévu sur cette vue.",
+      );
 
-const dashboardAlerts = [
-  {
-    type: "crit",
-    icon: "fa-circle-xmark",
-    title: "Panne critique — Compresseur A3",
-    subtitle: "Arrêt production ligne 2",
-    time: "09:14",
-  },
-  {
-    type: "warn",
-    icon: "fa-triangle-exclamation",
-    title: "Stock pièce critique faible",
-    subtitle: "Joint torique Ø42 — 2 restants",
-    time: "10:32",
-  },
-  {
-    type: "warn",
-    icon: "fa-clock",
-    title: "Échéance PM dans 3 jours",
-    subtitle: "Révision moteur M7",
-    time: "11:05",
-  },
-  {
-    type: "info",
-    icon: "fa-info-circle",
-    title: "Inspection planifiée demain",
-    subtitle: "Chaudière B1 — Zone Nord",
-    time: "13:47",
-  },
-];
+  return `
+        <div class="card org-list-card">
+          <div class="card-head">
+            <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique consolidé</div>
+            <span class="status-badge badge-info">${entries.length} événements</span>
+          </div>
+          <div class="card-body">
+            <div class="intervention-history-toolbar">
+              <div class="org-section-pills">
+                <span class="status-badge badge-gray">Par équipement</span>
+                <span class="status-badge badge-gray">Par technicien</span>
+                <span class="status-badge badge-gray">Par type</span>
+                <span class="status-badge badge-gray">Par statut</span>
+                <span class="status-badge badge-gray">Par date</span>
+                <span class="status-badge badge-gray">Par priorité</span>
+              </div>
+              <div class="intervention-history-actions">
+                <button class="btn btn-outline" type="button" data-int-export="excel">Export Excel</button>
+                <button class="btn btn-outline" type="button" data-int-export="pdf">Export PDF</button>
+              </div>
+            </div>
+            <div class="intervention-history-list">${list}</div>
+          </div>
+        </div>
+      `;
+}
 
-const criticalEquipment = [
-  {
-    icon: "fa-wind",
-    name: "Compresseur A3",
-    location: "Zone A — Atelier",
-    statusClass: "badge-danger",
-    statusLabel: "En panne",
-    fillClass: "fill-danger",
-    fillWidth: "18%",
-  },
-  {
-    icon: "fa-droplet",
-    name: "Pompe P2",
-    location: "Zone B — Sous-sol",
-    statusClass: "badge-success",
-    statusLabel: "Opérationnel",
-    fillClass: "fill-success",
-    fillWidth: "88%",
-  },
-  {
-    icon: "fa-bolt",
-    name: "Moteur M7",
-    location: "Zone C — Hall 3",
-    statusClass: "badge-warning",
-    statusLabel: "Dégradé",
-    fillClass: "fill-warning",
-    fillWidth: "52%",
-  },
-  {
-    icon: "fa-fire-flame-curved",
-    name: "Chaudière B1",
-    location: "Zone Nord",
-    statusClass: "badge-success",
-    statusLabel: "Opérationnel",
-    fillClass: "fill-success",
-    fillWidth: "92%",
-  },
-  {
-    icon: "fa-conveyor-belt",
-    name: "Convoyeur L4",
-    location: "Ligne 4",
-    statusClass: "badge-info",
-    statusLabel: "Maintenance",
-    fillClass: "fill-brand",
-    fillWidth: "65%",
-    fillStyle: "background:var(--brand)",
-  },
-  {
-    icon: "fa-tower-broadcast",
-    name: "Armoire TGBT",
-    location: "Électrique",
-    statusClass: "badge-success",
-    statusLabel: "Opérationnel",
-    fillClass: "fill-success",
-    fillWidth: "97%",
-  },
-];
+function buildInterventionEmptyState(icon, title, subtitle, note) {
+  return `
+        <div class="org-empty-card org-empty-card--list">
+          <div class="org-empty-icon"><i class="fa-solid ${icon}"></i></div>
+          <h3>${title}</h3>
+          <p>${subtitle}</p>
+          <small>${note}</small>
+        </div>
+      `;
+}
 
-const workOrderStatus = [
-  { label: "Terminées", count: 22, color: "var(--success)" },
-  { label: "En cours", count: 8, color: "var(--warning)" },
-  { label: "Bloquées", count: 5, color: "var(--danger)" },
-  { label: "Planifiées", count: 7, color: "var(--border)" },
-];
+function buildInterventionDiActions(di) {
+  return `
+        <div class="org-row-actions">
+          <button class="org-icon-btn" type="button" data-int-action="details-di" data-int-id="${di.id}" title="Voir les détails"><i class="fa-regular fa-eye"></i></button>
+          <button class="org-icon-btn" type="button" data-int-action="edit-di" data-int-id="${di.id}" title="Modifier"><i class="fa-regular fa-pen-to-square"></i></button>
+          <button class="org-icon-btn" type="button" data-int-action="to-ot" data-int-id="${di.id}" title="Transformer en OT"><i class="fa-solid fa-arrow-right"></i></button>
+          <button class="org-icon-btn danger" type="button" data-int-action="delete-di" data-int-id="${di.id}" title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
+        </div>
+      `;
+}
 
-const availabilityByZone = [
-  {
-    label: "Zone A — Atelier",
-    value: "72%",
-    fillClass: "fill-warning",
-    width: "72%",
-  },
-  {
-    label: "Zone B — Sous-sol",
-    value: "94%",
-    fillClass: "fill-success",
-    width: "94%",
-  },
-  {
-    label: "Zone C — Hall 3",
-    value: "88%",
-    fillClass: "fill-brand",
-    width: "88%",
-  },
-  {
-    label: "Zone Nord",
-    value: "97%",
-    fillClass: "fill-success",
-    width: "97%",
-  },
-];
+function buildInterventionOtActions(ot) {
+  return `
+        <div class="org-row-actions">
+          <button class="org-icon-btn" type="button" data-int-action="details-ot" data-int-id="${ot.id}" title="Voir les détails"><i class="fa-regular fa-eye"></i></button>
+          <button class="org-icon-btn" type="button" data-int-action="create-bt" data-int-id="${ot.id}" title="Créer BT"><i class="fa-regular fa-file-lines"></i></button>
+          <button class="org-icon-btn danger" type="button" data-int-action="delete-ot" data-int-id="${ot.id}" title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
+        </div>
+      `;
+}
 
-const recentActivity = [
-  {
-    dotStyle: "background:var(--danger-bg);color:var(--danger)",
-    icon: "fa-xmark",
-    title: "Panne déclarée — Compresseur A3",
-    meta: "09:14 · Déclaré par K. Benali · OT #2847 créé",
-  },
-  {
-    dotStyle: "background:var(--success-bg);color:var(--success)",
-    icon: "fa-check",
-    title: "Intervention terminée — Pompe P2",
-    meta: "08:45 · S. Amrani · Durée : 2h30",
-  },
-  {
-    dotStyle: "background:var(--warning-bg);color:var(--warning)",
-    icon: "fa-box",
-    title: "Commande pièce — Joint Ø42",
-    meta: "08:10 · Stock : 2 unités restantes",
-  },
-  {
-    dotStyle: "background:var(--info-bg);color:var(--info)",
-    icon: "fa-calendar-plus",
-    title: "PM planifiée — Chaudière B1",
-    meta: "07:30 · Prévu le 06/06 · Assigné à M. Ouali",
-  },
-  {
-    dotStyle: "background:#f1f5f9;color:#64748b",
-    icon: "fa-file-signature",
-    title: "Rapport mensuel généré",
-    meta: "Hier 17:00 · Mai 2026 — Exporté PDF",
-  },
-];
+function buildInterventionBtActions(bt) {
+  return `
+        <div class="org-row-actions">
+          <button class="org-icon-btn" type="button" data-int-action="details-bt" data-int-id="${bt.id}" title="Voir les détails"><i class="fa-regular fa-eye"></i></button>
+          <button class="org-icon-btn" type="button" data-int-action="close-bt" data-int-id="${bt.id}" title="Clôturer"><i class="fa-solid fa-check"></i></button>
+          <button class="org-icon-btn danger" type="button" data-int-action="delete-bt" data-int-id="${bt.id}" title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
+        </div>
+      `;
+}
 
-const weeklyPlanning = [
-  { day: "Lun", value: "4", height: "40%", active: false },
-  { day: "Auj.", value: "8", height: "80%", active: true },
-  { day: "Mer", value: "6", height: "60%", active: false },
-  { day: "Jeu", value: "3", height: "30%", active: false },
-  { day: "Ven", value: "5", height: "50%", active: false },
-];
+function buildInterventionHistoryActions(type, recordId) {
+  return `
+        <div class="org-row-actions">
+          <button class="org-icon-btn" type="button" data-int-action="details-${type}" data-int-id="${recordId}" title="Voir les détails"><i class="fa-regular fa-eye"></i></button>
+          <button class="org-icon-btn danger" type="button" data-int-action="delete-${type}" data-int-id="${recordId}" title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
+        </div>
+      `;
+}
 
-const upcomingWork = [
-  {
-    accent: "var(--danger)",
-    title: "Révision Compresseur A3",
-    meta: "Demain 08:00 · K. Benali",
-    priorityClass: "p-high",
-    priorityLabel: "Urgente",
-  },
-  {
-    accent: "var(--brand)",
-    title: "Inspection Chaudière B1",
-    meta: "06/06 · 10:00 · M. Ouali",
-    priorityClass: "p-medium",
-    priorityLabel: "Standard",
-  },
-  {
-    accent: "var(--success)",
-    title: "Graissage Convoyeur L4",
-    meta: "07/06 · 14:00 · T. Mehdaoui",
-    priorityClass: "p-low",
-    priorityLabel: "Basse",
-  },
-];
+function getInterventionBadgeClass(value) {
+  const normalized = String(value || "").toLowerCase();
+  if (normalized === "critique") return "badge-danger";
+  if (normalized === "haute") return "badge-warning";
+  if (normalized === "moyenne") return "badge-info";
+  return "badge-gray";
+}
 
-const pages = {
-  dashboard: {
-    title: "Tableau de bord",
-    subtitle: "Vue globale de la maintenance",
-    body: "Cette page est prête pour la prochaine étape du développement.",
-  },
-  arborescence: {
-    title: "Arborescence",
-    subtitle: "Structure des sites et des actifs",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  organisation: {
-    title: "Organisation",
-    subtitle: "Unités, équipes et affectations",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  equipements: {
-    title: "Équipements",
-    subtitle: "Groupes, familles et inventaire des équipements",
-    body: "Gestion des groupes, des familles et des fiches équipements.",
-  },
-  organe: {
-    title: "Organe",
-    subtitle: "Sous-ensembles et composants",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  articles: {
-    title: "Articles",
-    subtitle: "Référentiel des articles de stock",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  planification: {
-    title: "Planification",
-    subtitle: "Programmation des interventions",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  interventions: {
-    title: "Interventions",
-    subtitle: "Suivi des ordres de travail",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  stock: {
-    title: "Stock",
-    subtitle: "Fiche stock, mouvements, inventaires et historique",
-    body: "Pilotage complet des articles, mouvements de stock, inventaires et consultations historiques.",
-  },
-  achats: {
-    title: "Achats",
-    subtitle: "Demandes et commandes",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  fournisseurs: {
-    title: "Fournisseurs",
-    subtitle: "Partenaires et contacts",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  administration: {
-    title: "Administration",
-    subtitle: "Paramètres et droits d’accès",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  profil: {
-    title: "Profil",
-    subtitle: "Informations du compte utilisateur",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  parametres: {
-    title: "Paramètre",
-    subtitle: "Réglages personnels",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-  deconnexion: {
-    title: "Déconnexion",
-    subtitle: "Fin de session",
-    body: "Espace vide pour construire cette page ensuite.",
-  },
-};
+function getInterventionStatusBadgeClass(value) {
+  const normalized = String(value || "").toLowerCase();
+  if (normalized.includes("valid")) return "badge-success";
+  if (normalized.includes("term")) return "badge-success";
+  if (normalized.includes("plan")) return "badge-info";
+  if (normalized.includes("cours")) return "badge-warning";
+  if (normalized.includes("rejet")) return "badge-danger";
+  if (normalized.includes("clôt")) return "badge-info";
+  return "badge-gray";
+}
 
-const organizationSubpages = {
-  entreprise: {
-    label: "Entreprise",
-    title: "Entreprise",
-    body: "Espace vide pour construire la fiche entreprise.",
-  },
-  unites: {
-    label: "Unités",
-    title: "Unités",
-    body: "Gestion des unités avec liste, détails et formulaires.",
-  },
-  divisions: {
-    label: "Divisions",
-    title: "Divisions",
-    body: "Gestion des divisions liées à plusieurs unités.",
-  },
-  "departements-services": {
-    label: "Département",
-    title: "Département",
-    body: "Gestion des départements liés à plusieurs divisions.",
-  },
-};
+function formatInterventionDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("fr-FR");
+}
 
-const organizationUsers = [
-  {
-    id: "user-1",
-    name: "Amina El Idrissi",
-    email: "amina.elidrissi@maintflow.local",
-    role: "Responsable RH",
-  },
-  {
-    id: "user-2",
-    name: "Youssef Bensaid",
-    email: "youssef.bensaid@maintflow.local",
-    role: "Responsable production",
-  },
-  {
-    id: "user-3",
-    name: "Nadia Rami",
-    email: "nadia.rami@maintflow.local",
-    role: "Responsable maintenance",
-  },
-  {
-    id: "user-4",
-    name: "Karim Lahlou",
-    email: "karim.lahlou@maintflow.local",
-    role: "Chef division",
-  },
-  {
-    id: "user-5",
-    name: "Sara Jaziri",
-    email: "sara.jaziri@maintflow.local",
-    role: "Chef de service",
-  },
-  {
-    id: "user-6",
-    name: "Omar Haddad",
-    email: "omar.haddad@maintflow.local",
-    role: "Coordinateur opérationnel",
-  },
-];
+function formatInterventionArticleLine(articleLine) {
+  const article = getArticleRecord("articles", articleLine.articleId);
+  return article
+    ? `${article.code} — ${article.name} × ${articleLine.qty || 0}`
+    : `${articleLine.articleId || "Article"} × ${articleLine.qty || 0}`;
+}
 
-const organizationStorageKey = "maintflow.organizationStructure";
+function buildInterventionDetailRows(rows) {
+  return `
+        <div class="org-detail-list">
+          ${rows.map((row) => `<div class="org-detail-item"><span>${row.label}</span><strong>${row.value}</strong></div>`).join("")}
+        </div>
+      `;
+}
 
-const organizationDefaults = {
-  unites: [
-    {
-      id: "unit-1",
-      code: "UNI-001",
-      name: "Unité production Nord",
-      locations: "Zone Nord, bâtiment A",
-      phone: "021 45 11 10",
-      responsibleUserId: "user-2",
-      description:
-        "Pilotage de la production et des équipements critiques du site nord.",
-    },
-    {
-      id: "unit-2",
-      code: "UNI-002",
-      name: "Unité maintenance centrale",
-      locations: "Plateforme centrale",
-      phone: "021 45 11 22",
-      responsibleUserId: "user-3",
-      description:
-        "Coordination des plans de maintenance préventive et corrective.",
-    },
-    {
-      id: "unit-3",
-      code: "UNI-003",
-      name: "Unité support logistique",
-      locations: "Zone services",
-      phone: "021 45 11 35",
-      responsibleUserId: "user-6",
-      description:
-        "Support interne, approvisionnement et assistance opérationnelle.",
-    },
-  ],
-  divisions: [
-    {
-      id: "division-1",
-      code: "DIV-001",
-      name: "Division mécanique",
-      unitIds: ["unit-1", "unit-2"],
-      responsibleUserId: "user-4",
-      description: "Regroupe les activités mécaniques de plusieurs unités.",
-    },
-    {
-      id: "division-2",
-      code: "DIV-002",
-      name: "Division électrique",
-      unitIds: ["unit-2"],
-      responsibleUserId: "user-6",
-      description: "Suivi des installations électriques et automatismes.",
-    },
-    {
-      id: "division-3",
-      code: "DIV-003",
-      name: "Division logistique",
-      unitIds: ["unit-3"],
-      responsibleUserId: "user-5",
-      description: "Gestion des flux, stocks et soutiens aux équipes.",
-    },
-  ],
-  departmentServices: [
-    {
-      id: "department-1",
-      code: "DEP-001",
-      kind: "Département",
-      name: "Département planification",
-      divisionIds: ["division-1", "division-2"],
-      responsibleUserId: "user-3",
-      description:
-        "Planification des activités de maintenance et des arrêts techniques.",
-    },
-    {
-      id: "service-1",
-      code: "SRV-001",
-      kind: "Service",
-      name: "Service support technique",
-      divisionIds: ["division-1", "division-3"],
-      responsibleUserId: "user-5",
-      description:
-        "Support de proximité et accompagnement des équipes terrain.",
-    },
-    {
-      id: "department-2",
-      code: "DEP-002",
-      kind: "Département",
-      name: "Département qualité et sécurité",
-      divisionIds: ["division-2"],
-      responsibleUserId: "user-1",
-      description:
-        "Supervision des procédures qualité, sécurité et conformité.",
-    },
-  ],
-};
+function renderInterventionRecordDetails(recordType, record) {
+  const badgeLabel =
+    recordType === "di"
+      ? "Demande d'intervention"
+      : recordType === "ot"
+        ? "Ordre de travail"
+        : "Bon de travail";
+  const title = record?.ref || badgeLabel;
+  const subtitle =
+    recordType === "di"
+      ? "Fiche détaillée de la DI"
+      : recordType === "ot"
+        ? "Fiche détaillée de l'OT"
+        : "Fiche détaillée du BT";
+  let detailsHtml = "";
+
+  if (recordType === "di") {
+    const equipment = record.equipmentId
+      ? getEquipmentRecord("equipments", record.equipmentId)
+      : null;
+    const organ = record.organeId
+      ? getOrganeRecord("organes", record.organeId)
+      : null;
+    const requester = record.requesterId
+      ? getOrganizationUser(record.requesterId)
+      : null;
+    detailsHtml = buildInterventionDetailRows([
+      { label: "Réf", value: record.ref || "-" },
+      { label: "Titre", value: record.title || "-" },
+      {
+        label: "Équipement",
+        value: equipment
+          ? `${equipment.code} — ${equipment.name}`
+          : record.equipmentLabel || "-",
+      },
+      {
+        label: "Organe",
+        value: organ
+          ? `${organ.code} — ${organ.name}`
+          : record.organeLabel || "-",
+      },
+      { label: "Localisation", value: record.location || "-" },
+      {
+        label: "Demandeur",
+        value: requester ? requester.name : record.requesterLabel || "-",
+      },
+      { label: "Type", value: record.requestType || "-" },
+      { label: "Urgence", value: record.urgency || "-" },
+      { label: "Statut", value: record.status || "-" },
+      { label: "Créée le", value: formatInterventionDate(record.createdAt) },
+    ]);
+  }
+
+  if (recordType === "ot") {
+    const equipment = record.equipmentId
+      ? getEquipmentRecord("equipments", record.equipmentId)
+      : null;
+    const organ = record.organeId
+      ? getOrganeRecord("organes", record.organeId)
+      : null;
+    const technicians = (record.technicianIds || [])
+      .map((id) => getOrganizationUser(id))
+      .filter(Boolean)
+      .map((user) => user.name)
+      .join(", ");
+    detailsHtml = buildInterventionDetailRows([
+      { label: "Réf", value: record.ref || "-" },
+      { label: "DI liée", value: record.diRef || "-" },
+      {
+        label: "Équipement",
+        value: equipment
+          ? `${equipment.code} — ${equipment.name}`
+          : record.equipmentLabel || "-",
+      },
+      {
+        label: "Organe",
+        value: organ
+          ? `${organ.code} — ${organ.name}`
+          : record.organeLabel || "-",
+      },
+      { label: "Type maintenance", value: record.typeMaintenance || "-" },
+      { label: "Priorité", value: record.priority || "-" },
+      {
+        label: "Technicien(s)",
+        value: technicians || record.technicianLabel || "-",
+      },
+      { label: "Date planifiée", value: record.plannedDate || "-" },
+      {
+        label: "Durée estimée",
+        value: record.durationEstimated ? `${record.durationEstimated} h` : "-",
+      },
+      { label: "Statut", value: record.status || "-" },
+      { label: "Instructions", value: record.instructions || "-" },
+    ]);
+  }
+
+  if (recordType === "bt") {
+    const ot = record.otId ? getInterventionOt(record.otId) : null;
+    detailsHtml = buildInterventionDetailRows([
+      { label: "Réf", value: record.ref || "-" },
+      { label: "OT lié", value: record.otRef || ot?.ref || "-" },
+      { label: "Début", value: formatInterventionDate(record.startDate) },
+      { label: "Fin", value: formatInterventionDate(record.endDate) },
+      { label: "Durée réelle", value: record.duration || "-" },
+      { label: "Statut", value: record.status || "-" },
+      { label: "Travaux réalisés", value: record.works || "-" },
+      { label: "Observations", value: record.observations || "-" },
+      {
+        label: "Causes",
+        value: Array.isArray(record.causes)
+          ? record.causes.join(", ") || "-"
+          : "-",
+      },
+      {
+        label: "Articles consommés",
+        value: Array.isArray(record.articles)
+          ? record.articles.map(formatInterventionArticleLine).join("<br />") ||
+            "-"
+          : "-",
+      },
+      {
+        label: "Signature technicien",
+        value: record.technicianSignature
+          ? `${record.technicianSignature.name} · ${formatInterventionDate(record.technicianSignature.signedAt)}`
+          : "-",
+      },
+      {
+        label: "Signature responsable",
+        value: record.managerSignature
+          ? `${record.managerSignature.name} · ${formatInterventionDate(record.managerSignature.signedAt)}`
+          : "-",
+      },
+    ]);
+  }
+
+  return `
+        <div class="org-modal open" role="presentation">
+          <div class="org-modal-backdrop" data-int-close="true"></div>
+          <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intDetailTitle">
+            <div class="org-modal-head">
+              <div>
+                <div class="org-modal-kicker">${badgeLabel}</div>
+                <h3 id="intDetailTitle">${title}</h3>
+                <p>${subtitle}</p>
+              </div>
+              <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            ${detailsHtml}
+            <div class="org-modal-actions">
+              <button class="btn btn-outline" type="button" data-int-close="true">Fermer</button>
+              <button class="btn btn-outline" type="button" data-int-print-details="true">
+                <i class="fa-solid fa-print"></i>
+                <span>Imprimer</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+}
+
+function renderInterventionsModal() {
+  if (!overlayRootEl || !interventionsModalState) return;
+
+  if (interventionsModalState.mode === "details") {
+    const record = getInterventionRecord(
+      interventionsModalState.recordType || "di",
+      interventionsModalState.recordId,
+    );
+    overlayRootEl.innerHTML = record
+      ? renderInterventionRecordDetails(
+          interventionsModalState.recordType || "di",
+          record,
+        )
+      : "";
+    return;
+  }
+
+  const state = loadInterventionsState();
+  const nextRefValue = buildInterventionRef("DI", state.dis);
+  const creationDate = new Date().toLocaleString("fr-FR");
+
+  overlayRootEl.innerHTML = `
+        <div class="org-modal open" role="presentation">
+          <div class="org-modal-backdrop" data-int-close="true"></div>
+          <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intModalTitle">
+            <div class="org-modal-head">
+              <div>
+                <div class="org-modal-kicker">Interventions</div>
+                <h3 id="intModalTitle">Nouvelle demande d'intervention</h3>
+                <p>Le formulaire reprend le cycle métier DI avec les liens vers les autres modules.</p>
+              </div>
+              <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form class="org-form" data-int-form="create-di">
+              <div class="org-form-grid interventions-form-grid">
+                <div class="field-group field-group-wide"><label>Numéro</label><input type="text" value="${nextRefValue}" disabled /></div>
+                <div class="field-group field-group-wide"><label>Date création</label><input type="text" value="${creationDate}" disabled /></div>
+                <div class="field-group field-group-wide"><label>Titre</label><input name="title" type="text" required placeholder="Saisir le titre de la demande" /></div>
+                <div class="field-group field-group-wide"><label>Description</label><textarea name="description" rows="4" placeholder="Décrire la panne, l'anomalie ou l'amélioration attendue"></textarea></div>
+                <div class="field-group"><label>Équipement</label><select name="equipmentId" data-int-equipment-select>${buildInterventionEquipmentOptions()}</select></div>
+                <div class="field-group"><label>Organe</label><select name="organeId" data-int-organe-select>${buildInterventionOrganeOptions("")}</select></div>
+                <div class="field-group"><label>Localisation</label><input name="location" type="text" placeholder="Site / zone / emplacement" /></div>
+                <div class="field-group"><label>Type demande</label><select name="requestType">${interventionRequestTypeOptions().join("")}</select></div>
+                <div class="field-group"><label>Urgence</label><select name="urgency">${interventionUrgencyOptions.map((value) => `<option value="${value}">${value}</option>`).join("")}</select></div>
+                <div class="field-group"><label>Demandeur</label><select name="requesterId">${buildInterventionRequesterOptions()}</select></div>
+                <div class="field-group field-group-wide"><label>Photos</label><input name="photos" type="file" multiple accept="image/*" /></div>
+                <div class="field-group field-group-wide"><label>Statut</label><input type="text" value="En attente" disabled /></div>
+              </div>
+
+              <div class="org-modal-actions">
+                <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
+                <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i><span>Créer la DI</span></button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+
+  const equipmentSelect = overlayRootEl.querySelector(
+    "[data-int-equipment-select]",
+  );
+  const organSelect = overlayRootEl.querySelector("[data-int-organe-select]");
+  if (equipmentSelect && organSelect) {
+    const refreshOrganOptions = () => {
+      organSelect.innerHTML = buildInterventionOrganeOptions(
+        equipmentSelect.value || "",
+      );
+    };
+    equipmentSelect.addEventListener("change", refreshOrganOptions);
+    refreshOrganOptions();
+  }
+}
+
+function bindInterventionsModalHandlers() {
+  if (!overlayRootEl) return;
+
+  overlayRootEl.querySelectorAll("[data-int-close]").forEach((button) => {
+    button.addEventListener("click", closeInterventionsModal);
+  });
+
+  overlayRootEl
+    .querySelectorAll("[data-int-print-details]")
+    .forEach((button) => {
+      button.addEventListener("click", openInterventionsPrintCurrentDetails);
+    });
+
+  overlayRootEl
+    .querySelectorAll("[data-int-delete-from-details]")
+    .forEach((button) => {
+      button.addEventListener("click", function () {
+        openInterventionsDeleteConfirm(
+          this.dataset.intDeleteFromDetails || "di",
+          this.dataset.intId || "",
+        );
+      });
+    });
+
+  const form = overlayRootEl.querySelector("[data-int-form='create-di']");
+  if (!form) return;
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const directory = loadInterventionsState();
+    const formData = new FormData(form);
+    const equipmentId = String(formData.get("equipmentId") || "");
+    const organeId = String(formData.get("organeId") || "");
+    const requesterId = String(formData.get("requesterId") || "");
+    const photos = Array.from(
+      form.querySelector("input[name='photos']")?.files || [],
+    ).map((file) => file.name);
+    const equipment = equipmentId
+      ? getEquipmentRecord("equipments", equipmentId)
+      : null;
+    const organ = organeId ? getOrganeRecord("organes", organeId) : null;
+    const requester = requesterId ? getOrganizationUser(requesterId) : null;
+
+    directory.dis.unshift({
+      id: `di-${Date.now()}`,
+      ref: buildInterventionRef("DI", directory.dis),
+      createdAt: new Date().toISOString(),
+      title: String(formData.get("title") || "").trim(),
+      description: String(formData.get("description") || "").trim(),
+      equipmentId,
+      equipmentLabel: equipment ? `${equipment.code} — ${equipment.name}` : "",
+      organeId,
+      organeLabel: organ ? `${organ.code} — ${organ.name}` : "",
+      location: String(formData.get("location") || "").trim(),
+      requestType: String(formData.get("requestType") || "Panne"),
+      urgency: String(formData.get("urgency") || "Moyenne"),
+      requesterId,
+      requesterLabel: requester ? requester.name : "",
+      photos,
+      status: "En attente",
+    });
+
+    saveInterventionsState(directory);
+    closeInterventionsModal();
+  });
+}
 
 let organizationModalState = null;
 
@@ -8898,9 +8911,11 @@ function renderPage(pageKey, subpageKey) {
   const defaultSubpage =
     pageKey === "organisation"
       ? "entreprise"
-      : sectionSubpages[pageKey]
-        ? sectionSubpages[pageKey].defaultSubpage
-        : "";
+      : pageKey === "interventions"
+        ? "di"
+        : sectionSubpages[pageKey]
+          ? sectionSubpages[pageKey].defaultSubpage
+          : "";
   const activeSubpageKey = subpageKey || defaultSubpage;
   navItems.forEach((item) => {
     item.classList.toggle("active", item.dataset.page === pageKey);
@@ -8924,6 +8939,8 @@ function renderPage(pageKey, subpageKey) {
       renderArticlePage(activeSubpageKey);
     } else if (pageKey === "stock") {
       renderStockPage(activeSubpageKey);
+    } else if (pageKey === "interventions") {
+      renderInterventionsPage(activeSubpageKey);
     } else if (sectionSubpages[pageKey]) {
       renderSectionSubpages(pageKey, activeSubpageKey);
     } else {
@@ -9062,6 +9079,1873 @@ function openArboArticleDetails(record, title, subtitle, bodyHtml) {
   bindArboContextModalClose("[data-art-close]", function () {
     articleModalState = null;
     clearArboContextOverlay();
+  });
+}
+
+// -----------------------
+// Interventions module
+// -----------------------
+const interventionsStorageKey = "maintflow.interventions";
+
+const interventionStatusOptions = [
+  "En attente",
+  "Validée",
+  "Rejetée",
+  "Transformée en OT",
+];
+const interventionUrgencyOptions = ["Faible", "Moyenne", "Haute", "Critique"];
+const interventionMaintenanceTypes = [
+  "Corrective",
+  "Préventive",
+  "Prédictive",
+  "Réglementaire",
+];
+const interventionBtCauses = [
+  "Usure normale",
+  "Défaut de lubrification",
+  "Surcharge",
+  "Défaut matière",
+  "Autre",
+];
+
+const interventionDefaultState = {
+  dis: [],
+  ots: [],
+  bts: [],
+};
+
+function buildInterventionsSeedState() {
+  const now = Date.now();
+  const equipmentConvoyeur = getEquipmentRecord("equipments", "equipment-3");
+  const equipmentPompe = getEquipmentRecord("equipments", "equipment-2");
+  const equipmentTgbt = getEquipmentRecord("equipments", "equipment-1");
+  const organRoulement = getOrganeRecord("organes", "organe-1");
+  const organGarniture = getOrganeRecord("organes", "organe-2");
+  const userMaintenance = getOrganizationUser("user-3");
+  const userProduction = getOrganizationUser("user-2");
+  const userQualite = getOrganizationUser("user-1");
+  const userLogistique = getOrganizationUser("user-6");
+  const articleHuile = getArticleRecord("articles", "article-1");
+  const articleRoulement = getArticleRecord("articles", "article-2");
+
+  return {
+    dis: [
+      {
+        id: "di-seed-101",
+        ref: "DI-101",
+        createdAt: new Date(now - 5 * 24 * 3600000).toISOString(),
+        title: "Vibration anormale sur convoyeur L4",
+        description:
+          "Le convoyeur présente des vibrations en charge avec bruit de roulement côté arrière.",
+        equipmentId: equipmentConvoyeur?.id || "equipment-3",
+        equipmentLabel: equipmentConvoyeur
+          ? `${equipmentConvoyeur.code} — ${equipmentConvoyeur.name}`
+          : "EQP-003 — Convoyeur L4",
+        organeId: organRoulement?.id || "organe-1",
+        organeLabel: organRoulement
+          ? `${organRoulement.code} — ${organRoulement.name}`
+          : "ORG-001 — Roulement AR Convoyeur L4",
+        location: "Ligne 4 / Zone transfert",
+        requestType: "Panne",
+        urgency: "Haute",
+        requesterId: userLogistique?.id || "user-6",
+        requesterLabel: userLogistique ? userLogistique.name : "Omar Haddad",
+        photos: [],
+        status: "Validée",
+      },
+      {
+        id: "di-seed-102",
+        ref: "DI-102",
+        createdAt: new Date(now - 3 * 24 * 3600000).toISOString(),
+        title: "Fuite sur garniture de la pompe P2",
+        description:
+          "Présence de fuite au niveau du presse-étoupe, surveillance demandée avant arrêt complet.",
+        equipmentId: equipmentPompe?.id || "equipment-2",
+        equipmentLabel: equipmentPompe
+          ? `${equipmentPompe.code} — ${equipmentPompe.name}`
+          : "EQP-002 — Pompe P2",
+        organeId: organGarniture?.id || "organe-2",
+        organeLabel: organGarniture
+          ? `${organGarniture.code} — ${organGarniture.name}`
+          : "ORG-002 — Garniture Pompe P2",
+        location: "Zone B / Sous-sol",
+        requestType: "Anomalie",
+        urgency: "Critique",
+        requesterId: userMaintenance?.id || "user-3",
+        requesterLabel: userMaintenance ? userMaintenance.name : "Nadia Rami",
+        photos: [],
+        status: "Transformée en OT",
+      },
+      {
+        id: "di-seed-103",
+        ref: "DI-103",
+        createdAt: new Date(now - 1 * 24 * 3600000).toISOString(),
+        title: "Contrôle préventif du TGBT principal",
+        description:
+          "Demande de contrôle visuel et resserrage préventif des connexions du tableau principal.",
+        equipmentId: equipmentTgbt?.id || "equipment-1",
+        equipmentLabel: equipmentTgbt
+          ? `${equipmentTgbt.code} — ${equipmentTgbt.name}`
+          : "EQP-001 — TGBT principal",
+        organeId: "",
+        organeLabel: "",
+        location: "Zone A / Atelier électrique",
+        requestType: "Sécurité",
+        urgency: "Moyenne",
+        requesterId: userQualite?.id || "user-1",
+        requesterLabel: userQualite ? userQualite.name : "Amina El Idrissi",
+        photos: [],
+        status: "En attente",
+      },
+    ],
+    ots: [
+      {
+        id: "ot-seed-101",
+        ref: "OT-101",
+        diId: "di-seed-101",
+        diRef: "DI-101",
+        createdAt: new Date(now - 4 * 24 * 3600000).toISOString(),
+        plannedDate: new Date(now + 1 * 24 * 3600000)
+          .toISOString()
+          .slice(0, 10),
+        durationEstimated: 3,
+        typeMaintenance: "Corrective",
+        equipmentId: equipmentConvoyeur?.id || "equipment-3",
+        equipmentLabel: equipmentConvoyeur
+          ? `${equipmentConvoyeur.code} — ${equipmentConvoyeur.name}`
+          : "EQP-003 — Convoyeur L4",
+        organeId: organRoulement?.id || "organe-1",
+        organeLabel: organRoulement
+          ? `${organRoulement.code} — ${organRoulement.name}`
+          : "ORG-001 — Roulement AR Convoyeur L4",
+        technicianIds: [
+          userMaintenance?.id || "user-3",
+          userProduction?.id || "user-2",
+        ],
+        technicianLabel:
+          userMaintenance && userProduction
+            ? `${userMaintenance.name}, ${userProduction.name}`
+            : "Nadia Rami, Youssef Bensaid",
+        priority: "Haute",
+        instructions:
+          "Vérifier le roulement arrière, contrôler l'alignement et resserrer les fixations du châssis.",
+        articles: [{ articleId: articleRoulement?.id || "article-2", qty: 1 }],
+        documents: [],
+        status: "Planifié",
+      },
+      {
+        id: "ot-seed-102",
+        ref: "OT-102",
+        diId: "di-seed-102",
+        diRef: "DI-102",
+        createdAt: new Date(now - 2 * 24 * 3600000).toISOString(),
+        plannedDate: new Date(now).toISOString().slice(0, 10),
+        durationEstimated: 4,
+        typeMaintenance: "Corrective",
+        equipmentId: equipmentPompe?.id || "equipment-2",
+        equipmentLabel: equipmentPompe
+          ? `${equipmentPompe.code} — ${equipmentPompe.name}`
+          : "EQP-002 — Pompe P2",
+        organeId: organGarniture?.id || "organe-2",
+        organeLabel: organGarniture
+          ? `${organGarniture.code} — ${organGarniture.name}`
+          : "ORG-002 — Garniture Pompe P2",
+        technicianIds: [userMaintenance?.id || "user-3"],
+        technicianLabel: userMaintenance ? userMaintenance.name : "Nadia Rami",
+        priority: "Critique",
+        instructions:
+          "Prévoir arrêt contrôlé, remplacement de la garniture et contrôle de fuite en redémarrage.",
+        articles: [
+          { articleId: articleHuile?.id || "article-1", qty: 2 },
+          { articleId: articleRoulement?.id || "article-2", qty: 1 },
+        ],
+        documents: [],
+        status: "En cours",
+      },
+    ],
+    bts: [
+      {
+        id: "bt-seed-101",
+        ref: "BT-101",
+        otId: "ot-seed-102",
+        otRef: "OT-102",
+        startDate: new Date(now - 8 * 3600000).toISOString(),
+        endDate: new Date(now - 5 * 3600000).toISOString(),
+        duration: "3h",
+        works:
+          "Remplacement de la garniture, nettoyage du corps de pompe et contrôle du retour en service.",
+        articles: [
+          { articleId: articleHuile?.id || "article-1", qty: 1 },
+          { articleId: articleRoulement?.id || "article-2", qty: 1 },
+        ],
+        observations:
+          "Aucune fuite après redémarrage, surveillance recommandée sur 24h.",
+        causes: ["Défaut de lubrification"],
+        photos: [],
+        technicianSignature: {
+          name: userMaintenance ? userMaintenance.name : "Nadia Rami",
+          signedAt: new Date(now - 5 * 3600000).toISOString(),
+        },
+        managerSignature: {
+          name: userMaintenance ? userMaintenance.name : "Nadia Rami",
+          signedAt: new Date(now - 4 * 3600000).toISOString(),
+        },
+        status: "Validé",
+      },
+      {
+        id: "bt-seed-102",
+        ref: "BT-102",
+        otId: "ot-seed-101",
+        otRef: "OT-101",
+        startDate: new Date(now - 90 * 60000).toISOString(),
+        endDate: null,
+        duration: null,
+        works:
+          "Contrôle en cours du roulement arrière, alignement et graissage préventif.",
+        articles: [{ articleId: articleRoulement?.id || "article-2", qty: 1 }],
+        observations:
+          "Vibrations en baisse après graissage, test final en cours.",
+        causes: ["Usure normale"],
+        photos: [],
+        technicianSignature: {
+          name: userProduction ? userProduction.name : "Youssef Bensaid",
+          signedAt: new Date(now - 30 * 60000).toISOString(),
+        },
+        managerSignature: null,
+        status: "En cours",
+      },
+    ],
+  };
+}
+
+let interventionsModalState = null;
+
+function loadInterventionsState() {
+  try {
+    const raw = window.localStorage.getItem(interventionsStorageKey);
+    if (!raw) return buildInterventionsSeedState();
+    const parsed = JSON.parse(raw);
+    const normalized = {
+      dis: Array.isArray(parsed.dis) ? parsed.dis : [],
+      ots: Array.isArray(parsed.ots) ? parsed.ots : [],
+      bts: Array.isArray(parsed.bts) ? parsed.bts : [],
+    };
+
+    const seedState = buildInterventionsSeedState();
+    const hasSeedData = seedState.dis.some((item) =>
+      normalized.dis.some((record) => record.ref === item.ref),
+    );
+
+    if (
+      !normalized.dis.length &&
+      !normalized.ots.length &&
+      !normalized.bts.length
+    ) {
+      try {
+        window.localStorage.setItem(
+          interventionsStorageKey,
+          JSON.stringify(seedState),
+        );
+      } catch (error) {}
+      return seedState;
+    }
+
+    if (!hasSeedData) {
+      const mergedState = {
+        dis: [...seedState.dis, ...normalized.dis],
+        ots: [...seedState.ots, ...normalized.ots],
+        bts: [...seedState.bts, ...normalized.bts],
+      };
+
+      try {
+        window.localStorage.setItem(
+          interventionsStorageKey,
+          JSON.stringify(mergedState),
+        );
+      } catch (error) {}
+
+      return mergedState;
+    }
+
+    return {
+      dis: normalized.dis,
+      ots: normalized.ots,
+      bts: normalized.bts,
+    };
+  } catch (e) {
+    return buildInterventionsSeedState();
+  }
+}
+
+function saveInterventionsState(state) {
+  try {
+    window.localStorage.setItem(interventionsStorageKey, JSON.stringify(state));
+  } catch (e) {
+    // Keep the UI usable if persistent storage is unavailable.
+  }
+}
+
+function setInterventionsModalState(state) {
+  interventionsModalState = state;
+}
+
+function closeInterventionsModal() {
+  setInterventionsModalState(null);
+  renderInterventionsPage(getCurrentInterventionsTab());
+}
+
+function openInterventionsModal(mode, recordId = null, recordType = "di") {
+  setInterventionsModalState({ mode, recordId, recordType });
+  renderInterventionsPage(getCurrentInterventionsTab());
+}
+
+function openInterventionsDetails(recordType, recordId) {
+  openInterventionsModal("details", recordId, recordType);
+}
+
+function buildInterventionPrintDetails(recordType, record) {
+  const equipment = record.equipmentId
+    ? getEquipmentRecord("equipments", record.equipmentId)
+    : null;
+  const organ = record.organeId
+    ? getOrganeRecord("organes", record.organeId)
+    : null;
+  const requester = record.requesterId
+    ? getOrganizationUser(record.requesterId)
+    : null;
+  const technicians = (record.technicianIds || [])
+    .map((id) => getOrganizationUser(id))
+    .filter(Boolean)
+    .map((user) => user.name)
+    .join(", ");
+
+  const sharedRows = [
+    { label: "Référence", value: record.ref || "-" },
+    { label: "Statut", value: record.status || "-" },
+    {
+      label: "Équipement",
+      value: equipment
+        ? `${equipment.code} — ${equipment.name}`
+        : record.equipmentLabel || "-",
+    },
+    {
+      label: "Organe",
+      value: organ
+        ? `${organ.code} — ${organ.name}`
+        : record.organeLabel || "-",
+    },
+  ];
+
+  if (recordType === "di") {
+    sharedRows.push(
+      {
+        label: "Demandeur",
+        value: requester ? requester.name : record.requesterLabel || "-",
+      },
+      { label: "Type", value: record.requestType || "-" },
+      { label: "Urgence", value: record.urgency || "-" },
+      { label: "Localisation", value: record.location || "-" },
+      { label: "Créée le", value: formatInterventionDate(record.createdAt) },
+    );
+  }
+
+  if (recordType === "ot") {
+    sharedRows.push(
+      { label: "DI liée", value: record.diRef || "-" },
+      { label: "Type maintenance", value: record.typeMaintenance || "-" },
+      { label: "Priorité", value: record.priority || "-" },
+      {
+        label: "Technicien(s)",
+        value: technicians || record.technicianLabel || "-",
+      },
+      { label: "Date planifiée", value: record.plannedDate || "-" },
+      {
+        label: "Durée estimée",
+        value: record.durationEstimated ? `${record.durationEstimated} h` : "-",
+      },
+    );
+  }
+
+  if (recordType === "bt") {
+    sharedRows.push(
+      {
+        label: "OT lié",
+        value: record.otRef || getInterventionOt(record.otId)?.ref || "-",
+      },
+      { label: "Début", value: formatInterventionDate(record.startDate) },
+      { label: "Fin", value: formatInterventionDate(record.endDate) },
+      { label: "Durée réelle", value: record.duration || "-" },
+      { label: "Travaux réalisés", value: record.works || "-" },
+      { label: "Observations", value: record.observations || "-" },
+    );
+  }
+
+  return sharedRows;
+}
+
+function buildInterventionPrintArticles(record) {
+  if (!Array.isArray(record.articles) || !record.articles.length) {
+    return `
+      <div class="intervention-print-empty">
+        Aucun article renseigné pour ce document.
+      </div>
+    `;
+  }
+
+  const rows = record.articles
+    .map((articleLine, index) => {
+      const article = getArticleRecord("articles", articleLine.articleId);
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${article ? `${article.code} — ${article.name}` : articleLine.articleId || "Article"}</td>
+          <td>${articleLine.qty || 0}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  return `
+    <table class="intervention-print-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Article</th>
+          <th>Qté</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function buildInterventionPrintSignatures(recordType, record) {
+  const requester = record.requesterId
+    ? getOrganizationUser(record.requesterId)
+    : null;
+  const technicians = (record.technicianIds || [])
+    .map((id) => getOrganizationUser(id))
+    .filter(Boolean)
+    .map((user) => user.name)
+    .join(", ");
+  const btTechnician =
+    record.technicianSignature?.name || technicians || "Nom du technicien";
+  const btManager = record.managerSignature?.name || "Nom du responsable";
+
+  const firstLabel =
+    recordType === "di"
+      ? "Demandeur"
+      : recordType === "ot"
+        ? "Technicien"
+        : "Technicien";
+  const firstName =
+    recordType === "di"
+      ? requester?.name || record.requesterLabel || "Nom du demandeur"
+      : recordType === "ot"
+        ? technicians || record.technicianLabel || "Nom du technicien"
+        : btTechnician;
+
+  const secondLabel =
+    recordType === "di" ? "Responsable validation" : "Responsable / Validation";
+  const secondName =
+    recordType === "bt"
+      ? `${btManager}${record.managerSignature?.signedAt ? ` · ${formatInterventionDate(record.managerSignature.signedAt)}` : ""}`
+      : "Nom du responsable";
+
+  return `
+    <div class="intervention-print-signatures">
+      <div class="intervention-print-signature">
+        <strong>${firstLabel}</strong>
+        <span>${firstName}</span>
+        <div class="intervention-print-signature-line"></div>
+        <small>Nom et signature</small>
+      </div>
+      <div class="intervention-print-signature">
+        <strong>${secondLabel}</strong>
+        <span>${secondName}</span>
+        <div class="intervention-print-signature-line"></div>
+        <small>Nom et signature</small>
+      </div>
+    </div>
+  `;
+}
+
+function renderInterventionPrintDocument(recordType, record, enterprise) {
+  const documentTitle =
+    recordType === "di"
+      ? "FICHE TECHNIQUE DI"
+      : recordType === "ot"
+        ? "FICHE TECHNIQUE OT"
+        : "FICHE TECHNIQUE BT";
+  const documentTypeLabel =
+    recordType === "di"
+      ? "Demande d'intervention"
+      : recordType === "ot"
+        ? "Ordre de travail"
+        : "Bon de travail";
+  const printDate = new Date().toLocaleString("fr-FR");
+  const enterpriseLocation = [
+    enterprise.wilaya,
+    enterprise.daira,
+    enterprise.commune,
+  ]
+    .filter(Boolean)
+    .join(" • ");
+  const enterprisePhone = enterprise.phone
+    ? `Téléphone : ${enterprise.phone}`
+    : "";
+  const enterpriseCode = enterprise.code ? `Code : ${enterprise.code}` : "";
+  const companyInitials = (enterprise.name || enterprise.code || "MF")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+  const detailRows = buildInterventionPrintDetails(recordType, record)
+    .map(
+      (row) => `
+        <div class="intervention-print-item">
+          <span>${row.label}</span>
+          <strong>${row.value}</strong>
+        </div>
+      `,
+    )
+    .join("");
+  const linkedEquipment = record.equipmentId
+    ? getEquipmentRecord("equipments", record.equipmentId)
+    : null;
+  const linkedOrgan = record.organeId
+    ? getOrganeRecord("organes", record.organeId)
+    : null;
+  const contextText =
+    record.description ||
+    record.instructions ||
+    record.works ||
+    "Aucun descriptif saisi.";
+  const progressText =
+    recordType === "bt" && record.observations
+      ? record.observations
+      : recordType === "ot"
+        ? record.instructions || "Document de planification et d'exécution."
+        : "Document de demande à instruire.";
+  const logoMarkup = enterprise.logo
+    ? `<img src="${escapeHtml(enterprise.logo)}" alt="Logo de l'entreprise" />`
+    : `<span>${escapeHtml(companyInitials || "MF")}</span>`;
+
+  return `
+    <div class="intervention-print-document">
+      <header class="intervention-print-header">
+        <div class="intervention-print-brand">
+          <div class="intervention-print-logo">${logoMarkup}</div>
+          <div class="intervention-print-company">
+            <div class="intervention-print-kicker">Document technique interne</div>
+            <h1>${escapeHtml(enterprise.name || "Entreprise")}</h1>
+            <p>${escapeHtml(enterpriseLocation || "Adresse non renseignée")}</p>
+            <div class="intervention-print-company-lines">
+              ${enterpriseCode ? `<span>${escapeHtml(enterpriseCode)}</span>` : ""}
+              ${enterprisePhone ? `<span>${escapeHtml(enterprisePhone)}</span>` : ""}
+            </div>
+          </div>
+        </div>
+
+        <div class="intervention-print-meta">
+          <div class="intervention-print-meta-title">${documentTitle}</div>
+          <div class="intervention-print-meta-grid">
+            <div><span>Référence</span><strong>${escapeHtml(record.ref || "-")}</strong></div>
+            <div><span>Type</span><strong>${escapeHtml(documentTypeLabel)}</strong></div>
+            <div><span>Statut</span><strong>${escapeHtml(record.status || "-")}</strong></div>
+            <div><span>Date impression</span><strong>${escapeHtml(printDate)}</strong></div>
+          </div>
+        </div>
+      </header>
+
+      <section class="intervention-print-section">
+        <div class="intervention-print-section-head">
+          <h2>Informations de l'intervention</h2>
+          <span>${escapeHtml(recordType.toUpperCase())}</span>
+        </div>
+        <div class="intervention-print-grid">${detailRows}</div>
+      </section>
+
+      <section class="intervention-print-section">
+        <div class="intervention-print-section-head">
+          <h2>Référentiel technique</h2>
+          <span>Parc et traçabilité</span>
+        </div>
+        <div class="intervention-print-reference-grid">
+          <div class="intervention-print-reference-card">
+            <span>Équipement</span>
+            <strong>${escapeHtml(linkedEquipment ? `${linkedEquipment.code} — ${linkedEquipment.name}` : record.equipmentLabel || "-")}</strong>
+          </div>
+          <div class="intervention-print-reference-card">
+            <span>Organe</span>
+            <strong>${escapeHtml(linkedOrgan ? `${linkedOrgan.code} — ${linkedOrgan.name}` : record.organeLabel || "-")}</strong>
+          </div>
+          <div class="intervention-print-reference-card">
+            <span>Responsable / Technicien</span>
+            <strong>${escapeHtml(recordType === "di" ? record.requesterLabel || "-" : record.technicianLabel || recordType === "bt" ? record.technicianSignature?.name || "-" : "-")}</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="intervention-print-section">
+        <div class="intervention-print-section-head">
+          <h2>Contexte et observations</h2>
+          <span>Résumé métier</span>
+        </div>
+        <div class="intervention-print-notes">
+          <strong>Résumé</strong>
+          <p>${escapeHtml(contextText)}</p>
+        </div>
+        <div class="intervention-print-notes intervention-print-notes--muted">
+          <strong>Compléments</strong>
+          <p>${escapeHtml(progressText)}</p>
+        </div>
+      </section>
+
+      <section class="intervention-print-section">
+        <div class="intervention-print-section-head">
+          <h2>Consommation de pièces</h2>
+          <span>Articles liés</span>
+        </div>
+        ${buildInterventionPrintArticles(record)}
+      </section>
+
+      <section class="intervention-print-section">
+        <div class="intervention-print-section-head">
+          <h2>Signatures</h2>
+          <span>Validation documentaire</span>
+        </div>
+        ${buildInterventionPrintSignatures(recordType, record)}
+      </section>
+
+      <footer class="intervention-print-footer">
+        <div>
+          <strong>${escapeHtml(enterprise.name || "Entreprise")}</strong>
+          <span>${escapeHtml(enterpriseLocation || "Adresse non renseignée")}</span>
+        </div>
+        <div>
+          <strong>${escapeHtml(enterprise.code || "Code non défini")}</strong>
+          <span>${escapeHtml(printDate)}</span>
+        </div>
+      </footer>
+    </div>
+  `;
+}
+
+function openInterventionsPrintCurrentDetails() {
+  if (!interventionsModalState) return;
+
+  const recordType = interventionsModalState.recordType || "di";
+  const record = getInterventionRecord(
+    recordType,
+    interventionsModalState.recordId,
+  );
+  if (!record) return;
+
+  const enterprise = getEnterpriseProfile();
+  const popup = window.open("", "_blank", "width=1100,height=1400");
+  if (!popup) {
+    window.alert("Impossible d'ouvrir la fenêtre d'impression.");
+    return;
+  }
+
+  const stylesHref = new URL("style.css", window.location.href).href;
+  popup.document.open();
+  popup.document.write(`
+    <!doctype html>
+    <html lang="fr">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>${escapeHtml(record.ref || "Impression intervention")}</title>
+        <link rel="stylesheet" href="${stylesHref}" />
+      </head>
+      <body class="intervention-print-body">
+        ${renderInterventionPrintDocument(recordType, record, enterprise)}
+      </body>
+    </html>
+  `);
+  popup.document.close();
+  popup.onload = function () {
+    popup.focus();
+    popup.print();
+  };
+  popup.onafterprint = function () {
+    popup.close();
+  };
+}
+
+function openInterventionsDeleteConfirm(recordType, recordId) {
+  const directory = loadInterventionsState();
+  const source = getInterventionRecord(recordType, recordId);
+  if (!source) return;
+
+  const confirmed = window.confirm(
+    `Supprimer ${source.ref} ? Cette action est irréversible.`,
+  );
+  if (!confirmed) return;
+
+  if (recordType === "di") {
+    directory.dis = directory.dis.filter((item) => item.id !== recordId);
+    directory.ots = directory.ots.filter((item) => item.diId !== recordId);
+    directory.bts = directory.bts.filter((item) => {
+      const ot = directory.ots.find((order) => order.id === item.otId);
+      return !ot || ot.diId !== recordId;
+    });
+  } else if (recordType === "ot") {
+    directory.ots = directory.ots.filter((item) => item.id !== recordId);
+    directory.bts = directory.bts.filter((item) => item.otId !== recordId);
+    directory.dis = directory.dis.map((item) =>
+      item.id === source.diId ? { ...item, status: "Validée" } : item,
+    );
+  } else if (recordType === "bt") {
+    directory.bts = directory.bts.filter((item) => item.id !== recordId);
+  }
+
+  saveInterventionsState(directory);
+  renderInterventionsPage(getCurrentInterventionsTab());
+}
+
+function getCurrentInterventionsTab(fallback = "di") {
+  const hash = window.location.hash.replace("#", "").trim();
+  if (!hash.startsWith("interventions")) return fallback;
+  const parts = hash.split("/");
+  return parts[1] || fallback;
+}
+
+function buildInterventionRef(prefix, items) {
+  const maxNumber = items.reduce((max, item) => {
+    const match = String(item.ref || "").match(
+      new RegExp(`^${prefix}-(\\d+)$`),
+    );
+    const value = match ? Number(match[1]) : 0;
+    return value > max ? value : max;
+  }, 0);
+
+  return `${prefix}-${String(maxNumber + 1).padStart(3, "0")}`;
+}
+
+function getInterventionDirectory() {
+  return loadInterventionsState();
+}
+
+function getInterventionDi(recordId) {
+  return (
+    getInterventionDirectory().dis.find((item) => item.id === recordId) || null
+  );
+}
+
+function getInterventionOt(recordId) {
+  return (
+    getInterventionDirectory().ots.find((item) => item.id === recordId) || null
+  );
+}
+
+function getInterventionBt(recordId) {
+  return (
+    getInterventionDirectory().bts.find((item) => item.id === recordId) || null
+  );
+}
+
+function getInterventionRecord(recordType, recordId) {
+  if (recordType === "ot") return getInterventionOt(recordId);
+  if (recordType === "bt") return getInterventionBt(recordId);
+  return getInterventionDi(recordId);
+}
+
+function buildInterventionsTabs(activeTabKey) {
+  const tabs = {
+    di: "Demande d'intervention (DI)",
+    ot: "Ordre de travail (OT)",
+    bt: "Bon de travail (BT)",
+    history: "Historique",
+  };
+
+  return `
+    <div class="org-tabs" role="tablist" aria-label="Sous-pages interventions">
+      ${Object.entries(tabs)
+        .map(
+          ([key, label]) => `
+            <button class="org-tab ${key === activeTabKey ? "active" : ""}" type="button" data-int-subpage="${key}">
+              ${label}
+            </button>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function attachInterventionsTabHandlers(selector) {
+  if (!pageContentEl) return;
+
+  pageContentEl.querySelectorAll(selector).forEach((button) => {
+    button.addEventListener("click", function () {
+      const nextTab = this.dataset.intSubpage || "di";
+      renderPage("interventions", nextTab);
+      window.location.hash = `interventions/${nextTab}`;
+    });
+  });
+}
+
+function renderInterventionsActionButtons(activeTabKey) {
+  if (!pageActionsEl) return;
+
+  const primaryLabel =
+    activeTabKey === "di"
+      ? "Nouvelle DI"
+      : activeTabKey === "ot"
+        ? "Nouveau OT"
+        : activeTabKey === "bt"
+          ? "Nouveau BT"
+          : "Exporter";
+
+  pageActionsEl.innerHTML = `
+    <button class="btn btn-primary" type="button" data-int-action="primary">
+      <i class="fa-solid fa-plus"></i>
+      <span>${primaryLabel}</span>
+    </button>
+  `;
+
+  const button = pageActionsEl.querySelector("[data-int-action='primary']");
+  if (!button) return;
+
+  button.addEventListener("click", function () {
+    if (activeTabKey === "di") {
+      openInterventionsModal("create-di");
+      return;
+    }
+
+    if (activeTabKey === "ot") {
+      window.alert(
+        "La création manuelle d'OT peut être ajoutée ensuite sur la même base de modal.",
+      );
+      return;
+    }
+
+    if (activeTabKey === "bt") {
+      window.alert(
+        "La création manuelle de BT peut être ajoutée ensuite sur la même base de modal.",
+      );
+      return;
+    }
+
+    window.alert("L'export Excel / PDF sera branché sur le module Historique.");
+  });
+}
+
+function renderInterventionsPage(activeTabKey = "di") {
+  const tabKey = ["di", "ot", "bt", "history"].includes(activeTabKey)
+    ? activeTabKey
+    : "di";
+  const directory = getInterventionDirectory();
+
+  if (pageTitleEl) pageTitleEl.textContent = "Interventions";
+  if (pageSubtitleEl) {
+    pageSubtitleEl.textContent =
+      tabKey === "history"
+        ? "Consultation, export et traçabilité des interventions"
+        : "Cycle complet DI, OT et BT avec suivi terrain";
+  }
+
+  renderInterventionsActionButtons(tabKey);
+
+  if (!pageContentEl) return;
+
+  const sectionMeta = {
+    di: {
+      kicker: "Demande d'intervention",
+      title: "Demandes d'intervention (DI)",
+      subtitle:
+        "Création, validation et transformation en OT avec équipements, organes et demandeur liés au référentiel.",
+      pills: [
+        `${directory.dis.length} DI`,
+        `${directory.dis.filter((item) => item.status === "En attente").length} en attente`,
+      ],
+    },
+    ot: {
+      kicker: "Ordre de travail",
+      title: "Ordres de travail (OT)",
+      subtitle:
+        "Planification, assignation technicien et suivi de l'exécution jusqu'à la clôture.",
+      pills: [
+        `${directory.ots.length} OT`,
+        `${directory.ots.filter((item) => item.status === "Planifié").length} planifiés`,
+      ],
+    },
+    bt: {
+      kicker: "Bon de travail",
+      title: "Bons de travail (BT)",
+      subtitle:
+        "Saisie terrain, articles consommés, signatures et validation finale.",
+      pills: [
+        `${directory.bts.length} BT`,
+        `${directory.bts.filter((item) => item.status === "Clôturé").length} clôturés`,
+      ],
+    },
+    history: {
+      kicker: "Historique",
+      title: "Historique des interventions",
+      subtitle:
+        "Vue consolidée des DI, OT et BT avec filtres et export Excel / PDF.",
+      pills: [
+        `${directory.dis.length + directory.ots.length + directory.bts.length} événements`,
+        `${directory.bts.filter((item) => item.status === "Validé").length} BT validés`,
+      ],
+    },
+  };
+
+  const meta = sectionMeta[tabKey];
+
+  pageContentEl.className =
+    "organization-page organization-crud-page interventions-page";
+  pageContentEl.innerHTML = `
+    ${buildInterventionsTabs(tabKey)}
+
+    <div class="org-section-intro">
+      <div>
+        <div class="org-section-kicker">${meta.kicker}</div>
+        <h2>${meta.title}</h2>
+        <p>${meta.subtitle}</p>
+      </div>
+      <div class="org-section-pills">
+        ${meta.pills.map((pill) => `<span class="status-badge badge-info">${pill}</span>`).join("")}
+      </div>
+    </div>
+
+    ${renderInterventionsKpis(tabKey, directory)}
+
+    ${renderInterventionsTabContent(tabKey, directory)}
+  `;
+
+  attachInterventionsTabHandlers("[data-int-subpage]");
+
+  if (interventionsModalState) {
+    renderInterventionsModal();
+    bindInterventionsModalHandlers();
+  } else if (overlayRootEl) {
+    overlayRootEl.innerHTML = "";
+  }
+
+  attachInterventionsPageHandlers(tabKey);
+}
+
+function attachInterventionsPageHandlers(activeTabKey) {
+  if (
+    !pageContentEl ||
+    pageContentEl.dataset.interventionsHandlersBound === "true"
+  ) {
+    return;
+  }
+
+  pageContentEl.dataset.interventionsHandlersBound = "true";
+  pageContentEl.addEventListener("click", function (event) {
+    const actionButton = event.target.closest("[data-int-action]");
+    if (actionButton && pageContentEl.contains(actionButton)) {
+      const action = actionButton.dataset.intAction || "";
+      const recordId = actionButton.dataset.intId || "";
+
+      if (action.startsWith("details-")) {
+        openInterventionsDetails(action.replace("details-", ""), recordId);
+        return;
+      }
+
+      if (action.startsWith("delete-")) {
+        openInterventionsDeleteConfirm(action.replace("delete-", ""), recordId);
+        return;
+      }
+
+      if (action === "to-ot") {
+        convertDiToOt(recordId);
+        return;
+      }
+
+      if (action === "create-bt") {
+        createBtFromOt(recordId);
+        return;
+      }
+
+      if (action === "close-bt") {
+        closeBt(recordId);
+        return;
+      }
+
+      if (action === "edit-di") {
+        openInterventionsModal("create-di", recordId);
+        return;
+      }
+    }
+
+    const exportButton = event.target.closest("[data-int-export]");
+    if (exportButton && pageContentEl.contains(exportButton)) {
+      window.alert(
+        `Export ${exportButton.dataset.intExport.toUpperCase()} à brancher sur le module Historique.`,
+      );
+    }
+  });
+}
+
+function renderInterventionsKpis(tabKey, directory) {
+  const kpiSets = {
+    di: [
+      {
+        label: "Total DI",
+        value: String(directory.dis.length),
+        footer: "Demandes enregistrées",
+        icon: "fa-clipboard-list",
+        iconClass: "blue",
+      },
+      {
+        label: "En attente",
+        value: String(
+          directory.dis.filter((item) => item.status === "En attente").length,
+        ),
+        footer: "À valider",
+        icon: "fa-hourglass-half",
+        iconClass: "orange",
+      },
+      {
+        label: "Validées",
+        value: String(
+          directory.dis.filter((item) => item.status === "Validée").length,
+        ),
+        footer: "Prêtes pour OT",
+        icon: "fa-circle-check",
+        iconClass: "green",
+      },
+      {
+        label: "Transformées",
+        value: String(
+          directory.dis.filter((item) => item.status === "Transformée en OT")
+            .length,
+        ),
+        footer: "OT créés",
+        icon: "fa-arrow-right",
+        iconClass: "red",
+      },
+    ],
+    ot: [
+      {
+        label: "Total OT",
+        value: String(directory.ots.length),
+        footer: "Ordres enregistrés",
+        icon: "fa-screwdriver-wrench",
+        iconClass: "blue",
+      },
+      {
+        label: "Planifiés",
+        value: String(
+          directory.ots.filter((item) => item.status === "Planifié").length,
+        ),
+        footer: "À démarrer",
+        icon: "fa-calendar-check",
+        iconClass: "orange",
+      },
+      {
+        label: "En cours",
+        value: String(
+          directory.ots.filter((item) => item.status === "En cours").length,
+        ),
+        footer: "Sur le terrain",
+        icon: "fa-gears",
+        iconClass: "green",
+      },
+      {
+        label: "Terminés",
+        value: String(
+          directory.ots.filter((item) => item.status === "Terminé").length,
+        ),
+        footer: "Clôturés",
+        icon: "fa-circle-check",
+        iconClass: "red",
+      },
+    ],
+    bt: [
+      {
+        label: "Total BT",
+        value: String(directory.bts.length),
+        footer: "Bons saisis",
+        icon: "fa-file-signature",
+        iconClass: "blue",
+      },
+      {
+        label: "En cours",
+        value: String(
+          directory.bts.filter((item) => item.status === "En cours").length,
+        ),
+        footer: "Terrain",
+        icon: "fa-person-digging",
+        iconClass: "orange",
+      },
+      {
+        label: "Clôturés",
+        value: String(
+          directory.bts.filter((item) => item.status === "Clôturé").length,
+        ),
+        footer: "En attente de validation",
+        icon: "fa-circle-check",
+        iconClass: "green",
+      },
+      {
+        label: "Validés",
+        value: String(
+          directory.bts.filter((item) => item.status === "Validé").length,
+        ),
+        footer: "Finalisés",
+        icon: "fa-shield-check",
+        iconClass: "red",
+      },
+    ],
+    history: [
+      {
+        label: "Événements",
+        value: String(
+          directory.dis.length + directory.ots.length + directory.bts.length,
+        ),
+        footer: "Vue consolidée",
+        icon: "fa-clock-rotate-left",
+        iconClass: "blue",
+      },
+      {
+        label: "DI",
+        value: String(directory.dis.length),
+        footer: "Demandes",
+        icon: "fa-clipboard-list",
+        iconClass: "orange",
+      },
+      {
+        label: "OT",
+        value: String(directory.ots.length),
+        footer: "Ordres",
+        icon: "fa-screwdriver-wrench",
+        iconClass: "green",
+      },
+      {
+        label: "BT",
+        value: String(directory.bts.length),
+        footer: "Bons",
+        icon: "fa-file-signature",
+        iconClass: "red",
+      },
+    ],
+  };
+
+  return `
+    <div class="kpi-grid interventions-kpi-grid">
+      ${kpiSets[tabKey]
+        .map(
+          (item) => `
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <div class="kpi-label">${item.label}</div>
+                <div class="kpi-icon ${item.iconClass}"><i class="fa-solid ${item.icon}"></i></div>
+              </div>
+              <div class="kpi-value">${item.value}</div>
+              <div class="kpi-footer">
+                <span class="kpi-trend flat"><i class="fa-solid fa-minus"></i></span>
+                <span>${item.footer}</span>
+              </div>
+            </div>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderInterventionsTabContent(tabKey, directory) {
+  if (tabKey === "di") {
+    return renderDiSection(directory);
+  }
+
+  if (tabKey === "ot") {
+    return renderOtSection(directory);
+  }
+
+  if (tabKey === "bt") {
+    return renderBtSection(directory);
+  }
+
+  return renderHistorySection(directory);
+}
+
+function renderDiSection(directory) {
+  const rows = directory.dis.length
+    ? directory.dis
+        .map((di) => {
+          const equipment = di.equipmentId
+            ? getEquipmentRecord("equipments", di.equipmentId)
+            : null;
+          const organ = di.organeId
+            ? getOrganeRecord("organes", di.organeId)
+            : null;
+          const requester = getOrganizationUser(di.requesterId);
+
+          return `
+            <tr>
+              <td><strong>${di.ref}</strong></td>
+              <td>${escapeHtml(di.title)}</td>
+              <td class="muted">${equipment ? `${equipment.code} — ${equipment.name}` : di.equipmentLabel || "-"}</td>
+              <td class="muted">${organ ? `${organ.code} — ${organ.name}` : di.organeLabel || "-"}</td>
+              <td class="muted">${requester ? `${requester.name}` : di.requesterLabel || "-"}</td>
+              <td><span class="status-badge ${getInterventionBadgeClass(di.urgency)}">${di.urgency}</span></td>
+              <td><span class="status-badge ${getInterventionStatusBadgeClass(di.status)}">${di.status}</span></td>
+              <td>${buildInterventionDiActions(di)}</td>
+            </tr>
+          `;
+        })
+        .join("")
+    : `
+      <tr>
+        <td colspan="8">
+          ${buildInterventionEmptyState(
+            "fa-clipboard-list",
+            "Aucune DI enregistrée",
+            "Créez la première demande d'intervention depuis le bouton Nouvelle DI.",
+            "La fenêtre popup reprend le formulaire métier et les liens vers les autres modules.",
+          )}
+        </td>
+      </tr>
+    `;
+
+  return `
+    <div class="card org-list-card">
+      <div class="card-head">
+        <div class="card-title"><i class="fa-solid fa-clipboard-list"></i> Liste des DI</div>
+        <span class="status-badge badge-info">${directory.dis.length} lignes</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Réf</th>
+              <th>Titre</th>
+              <th>Équipement</th>
+              <th>Organe</th>
+              <th>Demandeur</th>
+              <th>Urgence</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderOtSection(directory) {
+  const rows = directory.ots.length
+    ? directory.ots
+        .map((ot) => {
+          const equipment = ot.equipmentId
+            ? getEquipmentRecord("equipments", ot.equipmentId)
+            : null;
+          const technicianNames = (ot.technicianIds || [])
+            .map((id) => getOrganizationUser(id))
+            .filter(Boolean)
+            .map((user) => user.name)
+            .join(", ");
+
+          return `
+            <tr>
+              <td><strong>${ot.ref}</strong></td>
+              <td class="muted">${ot.diRef || "-"}</td>
+              <td class="muted">${equipment ? `${equipment.code} — ${equipment.name}` : ot.equipmentLabel || "-"}</td>
+              <td>${ot.typeMaintenance || "-"}</td>
+              <td class="muted">${ot.plannedDate || "-"}</td>
+              <td class="muted">${technicianNames || ot.technicianLabel || "-"}</td>
+              <td><span class="status-badge ${getInterventionStatusBadgeClass(ot.status)}">${ot.status}</span></td>
+              <td>${buildInterventionOtActions(ot)}</td>
+            </tr>
+          `;
+        })
+        .join("")
+    : `
+      <tr>
+        <td colspan="8">
+          ${buildInterventionEmptyState(
+            "fa-screwdriver-wrench",
+            "Aucun OT planifié",
+            "Les OT issus d'une DI validée apparaîtront ici.",
+            "Le tableau gardera le même langage visuel que les pages Équipements et Organe.",
+          )}
+        </td>
+      </tr>
+    `;
+
+  return `
+    <div class="card org-list-card">
+      <div class="card-head">
+        <div class="card-title"><i class="fa-solid fa-screwdriver-wrench"></i> Liste des OT</div>
+        <span class="status-badge badge-info">${directory.ots.length} lignes</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Réf</th>
+              <th>DI liée</th>
+              <th>Équipement</th>
+              <th>Type</th>
+              <th>Date planifiée</th>
+              <th>Technicien(s)</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderBtSection(directory) {
+  const rows = directory.bts.length
+    ? directory.bts
+        .map((bt) => {
+          return `
+            <tr>
+              <td><strong>${bt.ref}</strong></td>
+              <td class="muted">${bt.otRef || "-"}</td>
+              <td class="muted">${bt.startDate ? new Date(bt.startDate).toLocaleString("fr-FR") : "-"}</td>
+              <td class="muted">${bt.endDate ? new Date(bt.endDate).toLocaleString("fr-FR") : "-"}</td>
+              <td>${bt.duration || bt.durationReal || "-"}</td>
+              <td><span class="status-badge ${getInterventionStatusBadgeClass(bt.status)}">${bt.status}</span></td>
+              <td>${buildInterventionBtActions(bt)}</td>
+            </tr>
+          `;
+        })
+        .join("")
+    : `
+      <tr>
+        <td colspan="7">
+          ${buildInterventionEmptyState(
+            "fa-file-signature",
+            "Aucun BT saisi",
+            "Les bons de travail remplis par les techniciens s'afficheront ici.",
+            "La clôture BT déclenchera les sorties de stock automatiques.",
+          )}
+        </td>
+      </tr>
+    `;
+
+  return `
+    <div class="card org-list-card">
+      <div class="card-head">
+        <div class="card-title"><i class="fa-solid fa-file-signature"></i> Liste des BT</div>
+        <span class="status-badge badge-info">${directory.bts.length} lignes</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Réf</th>
+              <th>OT lié</th>
+              <th>Date début</th>
+              <th>Date fin</th>
+              <th>Durée réelle</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderHistorySection(directory) {
+  const entries = [];
+  directory.dis.forEach((di) => {
+    entries.push({
+      id: di.id,
+      date: di.createdAt,
+      ref: di.ref,
+      type: "DI",
+      label: di.title,
+      meta: di.status,
+    });
+  });
+  directory.ots.forEach((ot) => {
+    entries.push({
+      id: ot.id,
+      date: ot.createdAt || ot.plannedDate,
+      ref: ot.ref,
+      type: "OT",
+      label: ot.equipmentLabel || ot.diRef || "Ordre",
+      meta: ot.status,
+    });
+  });
+  directory.bts.forEach((bt) => {
+    entries.push({
+      id: bt.id,
+      date: bt.endDate || bt.startDate || bt.createdAt,
+      ref: bt.ref,
+      type: "BT",
+      label: bt.otRef || "Bon",
+      meta: bt.status,
+    });
+  });
+  entries.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+  const list = entries.length
+    ? entries
+        .map(
+          (entry) => `
+            <div class="intervention-history-row">
+              <div>
+                <div class="intervention-history-title"><strong>${entry.ref}</strong> · ${entry.type}</div>
+                <div class="intervention-history-sub">${escapeHtml(entry.label)} · ${escapeHtml(entry.meta)}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="intervention-history-date">${entry.date ? new Date(entry.date).toLocaleString("fr-FR") : "-"}</div>
+                ${buildInterventionHistoryActions(entry.type.toLowerCase(), entry.id)}
+              </div>
+            </div>
+          `,
+        )
+        .join("")
+    : buildInterventionEmptyState(
+        "fa-clock-rotate-left",
+        "Aucun historique disponible",
+        "Les créations, clôtures et validations apparaîtront ici.",
+        "L'export Excel / PDF est prévu sur cette vue.",
+      );
+
+  return `
+    <div class="card org-list-card">
+      <div class="card-head">
+        <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique consolidé</div>
+        <span class="status-badge badge-info">${entries.length} événements</span>
+      </div>
+      <div class="card-body">
+        <div class="intervention-history-toolbar">
+          <div class="org-section-pills">
+            <span class="status-badge badge-gray">Par équipement</span>
+            <span class="status-badge badge-gray">Par technicien</span>
+            <span class="status-badge badge-gray">Par type</span>
+            <span class="status-badge badge-gray">Par statut</span>
+            <span class="status-badge badge-gray">Par date</span>
+            <span class="status-badge badge-gray">Par priorité</span>
+          </div>
+          <div class="intervention-history-actions">
+            <button class="btn btn-outline" type="button" data-int-export="excel">Export Excel</button>
+            <button class="btn btn-outline" type="button" data-int-export="pdf">Export PDF</button>
+          </div>
+        </div>
+        <div class="intervention-history-list">${list}</div>
+      </div>
+    </div>
+  `;
+}
+
+function buildInterventionEmptyState(icon, title, subtitle, note) {
+  return `
+    <div class="org-empty-card org-empty-card--list">
+      <div class="org-empty-icon"><i class="fa-solid ${icon}"></i></div>
+      <h3>${title}</h3>
+      <p>${subtitle}</p>
+      <small>${note}</small>
+    </div>
+  `;
+}
+
+function buildInterventionDiActions(di) {
+  return `
+    <div class="org-row-actions">
+      <button class="org-icon-btn" type="button" data-int-action="details-di" data-int-id="${di.id}" title="Voir les détails">
+        <i class="fa-regular fa-eye"></i>
+      </button>
+      <button class="org-icon-btn" type="button" data-int-action="edit-di" data-int-id="${di.id}" title="Modifier">
+        <i class="fa-regular fa-pen-to-square"></i>
+      </button>
+      <button class="org-icon-btn" type="button" data-int-action="to-ot" data-int-id="${di.id}" title="Transformer en OT">
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+      <button class="org-icon-btn danger" type="button" data-int-action="delete-di" data-int-id="${di.id}" title="Supprimer">
+        <i class="fa-regular fa-trash-can"></i>
+      </button>
+    </div>
+  `;
+}
+
+function buildInterventionOtActions(ot) {
+  return `
+    <div class="org-row-actions">
+      <button class="org-icon-btn" type="button" data-int-action="details-ot" data-int-id="${ot.id}" title="Voir les détails">
+        <i class="fa-regular fa-eye"></i>
+      </button>
+      <button class="org-icon-btn" type="button" data-int-action="create-bt" data-int-id="${ot.id}" title="Créer BT">
+        <i class="fa-regular fa-file-lines"></i>
+      </button>
+      <button class="org-icon-btn danger" type="button" data-int-action="delete-ot" data-int-id="${ot.id}" title="Supprimer">
+        <i class="fa-regular fa-trash-can"></i>
+      </button>
+    </div>
+  `;
+}
+
+function buildInterventionBtActions(bt) {
+  return `
+    <div class="org-row-actions">
+      <button class="org-icon-btn" type="button" data-int-action="details-bt" data-int-id="${bt.id}" title="Voir les détails">
+        <i class="fa-regular fa-eye"></i>
+      </button>
+      <button class="org-icon-btn" type="button" data-int-action="close-bt" data-int-id="${bt.id}" title="Clôturer">
+        <i class="fa-solid fa-check"></i>
+      </button>
+      <button class="org-icon-btn danger" type="button" data-int-action="delete-bt" data-int-id="${bt.id}" title="Supprimer">
+        <i class="fa-regular fa-trash-can"></i>
+      </button>
+    </div>
+  `;
+}
+
+function buildInterventionHistoryActions(type, recordId) {
+  return `
+    <div class="org-row-actions">
+      <button class="org-icon-btn" type="button" data-int-action="details-${type}" data-int-id="${recordId}" title="Voir les détails">
+        <i class="fa-regular fa-eye"></i>
+      </button>
+      <button class="org-icon-btn danger" type="button" data-int-action="delete-${type}" data-int-id="${recordId}" title="Supprimer">
+        <i class="fa-regular fa-trash-can"></i>
+      </button>
+    </div>
+  `;
+}
+
+function getInterventionBadgeClass(value) {
+  const normalized = String(value || "").toLowerCase();
+  if (normalized === "critique") return "badge-danger";
+  if (normalized === "haute") return "badge-warning";
+  if (normalized === "moyenne") return "badge-info";
+  return "badge-gray";
+}
+
+function getInterventionStatusBadgeClass(value) {
+  const normalized = String(value || "").toLowerCase();
+  if (normalized.includes("valid")) return "badge-success";
+  if (normalized.includes("term")) return "badge-success";
+  if (normalized.includes("plan")) return "badge-info";
+  if (normalized.includes("cours")) return "badge-warning";
+  if (normalized.includes("rejet")) return "badge-danger";
+  if (normalized.includes("clôt")) return "badge-info";
+  return "badge-gray";
+}
+
+function formatInterventionDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("fr-FR");
+}
+
+function formatInterventionArticleLine(articleLine) {
+  const article = getArticleRecord("articles", articleLine.articleId);
+  return article
+    ? `${article.code} — ${article.name} × ${articleLine.qty || 0}`
+    : `${articleLine.articleId || "Article"} × ${articleLine.qty || 0}`;
+}
+
+function buildInterventionDetailRows(rows) {
+  return `
+    <div class="org-detail-list">
+      ${rows
+        .map(
+          (row) => `
+            <div class="org-detail-item">
+              <span>${row.label}</span>
+              <strong>${row.value}</strong>
+            </div>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderInterventionRecordDetails(recordType, record) {
+  const badgeLabel =
+    recordType === "di"
+      ? "Demande d'intervention"
+      : recordType === "ot"
+        ? "Ordre de travail"
+        : "Bon de travail";
+
+  const title = record?.ref || badgeLabel;
+  const subtitle =
+    recordType === "di"
+      ? "Fiche détaillée de la DI"
+      : recordType === "ot"
+        ? "Fiche détaillée de l'OT"
+        : "Fiche détaillée du BT";
+
+  let detailsHtml = "";
+
+  if (recordType === "di") {
+    const equipment = record.equipmentId
+      ? getEquipmentRecord("equipments", record.equipmentId)
+      : null;
+    const organ = record.organeId
+      ? getOrganeRecord("organes", record.organeId)
+      : null;
+    const requester = record.requesterId
+      ? getOrganizationUser(record.requesterId)
+      : null;
+
+    detailsHtml = buildInterventionDetailRows([
+      { label: "Réf", value: record.ref || "-" },
+      { label: "Titre", value: record.title || "-" },
+      {
+        label: "Équipement",
+        value: equipment
+          ? `${equipment.code} — ${equipment.name}`
+          : record.equipmentLabel || "-",
+      },
+      {
+        label: "Organe",
+        value: organ
+          ? `${organ.code} — ${organ.name}`
+          : record.organeLabel || "-",
+      },
+      { label: "Localisation", value: record.location || "-" },
+      {
+        label: "Demandeur",
+        value: requester ? requester.name : record.requesterLabel || "-",
+      },
+      { label: "Type", value: record.requestType || "-" },
+      { label: "Urgence", value: record.urgency || "-" },
+      { label: "Statut", value: record.status || "-" },
+      { label: "Créée le", value: formatInterventionDate(record.createdAt) },
+    ]);
+  }
+
+  if (recordType === "ot") {
+    const equipment = record.equipmentId
+      ? getEquipmentRecord("equipments", record.equipmentId)
+      : null;
+    const organ = record.organeId
+      ? getOrganeRecord("organes", record.organeId)
+      : null;
+    const technicians = (record.technicianIds || [])
+      .map((id) => getOrganizationUser(id))
+      .filter(Boolean)
+      .map((user) => user.name)
+      .join(", ");
+
+    detailsHtml = buildInterventionDetailRows([
+      { label: "Réf", value: record.ref || "-" },
+      { label: "DI liée", value: record.diRef || "-" },
+      {
+        label: "Équipement",
+        value: equipment
+          ? `${equipment.code} — ${equipment.name}`
+          : record.equipmentLabel || "-",
+      },
+      {
+        label: "Organe",
+        value: organ
+          ? `${organ.code} — ${organ.name}`
+          : record.organeLabel || "-",
+      },
+      { label: "Type maintenance", value: record.typeMaintenance || "-" },
+      { label: "Priorité", value: record.priority || "-" },
+      {
+        label: "Technicien(s)",
+        value: technicians || record.technicianLabel || "-",
+      },
+      { label: "Date planifiée", value: record.plannedDate || "-" },
+      {
+        label: "Durée estimée",
+        value: record.durationEstimated ? `${record.durationEstimated} h` : "-",
+      },
+      { label: "Statut", value: record.status || "-" },
+      { label: "Instructions", value: record.instructions || "-" },
+    ]);
+  }
+
+  if (recordType === "bt") {
+    const ot = record.otId ? getInterventionOt(record.otId) : null;
+    detailsHtml = buildInterventionDetailRows([
+      { label: "Réf", value: record.ref || "-" },
+      { label: "OT lié", value: record.otRef || ot?.ref || "-" },
+      { label: "Début", value: formatInterventionDate(record.startDate) },
+      { label: "Fin", value: formatInterventionDate(record.endDate) },
+      { label: "Durée réelle", value: record.duration || "-" },
+      { label: "Statut", value: record.status || "-" },
+      { label: "Travaux réalisés", value: record.works || "-" },
+      { label: "Observations", value: record.observations || "-" },
+      {
+        label: "Causes",
+        value: Array.isArray(record.causes)
+          ? record.causes.join(", ") || "-"
+          : "-",
+      },
+      {
+        label: "Articles consommés",
+        value: Array.isArray(record.articles)
+          ? record.articles.map(formatInterventionArticleLine).join("<br />") ||
+            "-"
+          : "-",
+      },
+      {
+        label: "Signature technicien",
+        value: record.technicianSignature
+          ? `${record.technicianSignature.name} · ${formatInterventionDate(record.technicianSignature.signedAt)}`
+          : "-",
+      },
+      {
+        label: "Signature responsable",
+        value: record.managerSignature
+          ? `${record.managerSignature.name} · ${formatInterventionDate(record.managerSignature.signedAt)}`
+          : "-",
+      },
+    ]);
+  }
+
+  return `
+    <div class="org-modal open" role="presentation">
+      <div class="org-modal-backdrop" data-int-close="true"></div>
+      <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intDetailTitle">
+        <div class="org-modal-head">
+          <div>
+            <div class="org-modal-kicker">${badgeLabel}</div>
+            <h3 id="intDetailTitle">${title}</h3>
+            <p>${subtitle}</p>
+          </div>
+          <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        ${detailsHtml}
+        <div class="org-modal-actions">
+          <button class="btn btn-outline" type="button" data-int-close="true">Fermer</button>
+          <button class="btn btn-outline" type="button" data-int-print-details="true">
+            <i class="fa-solid fa-print"></i>
+            <span>Imprimer</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function convertDiToOt(diId) {
+  const directory = loadInterventionsState();
+  const di = directory.dis.find((item) => item.id === diId);
+  if (!di) return window.alert("DI introuvable.");
+
+  const ot = {
+    id: `ot-${Date.now()}`,
+    ref: buildInterventionRef("OT", directory.ots),
+    diId: di.id,
+    diRef: di.ref,
+    createdAt: new Date().toISOString(),
+    plannedDate: new Date(Date.now() + 24 * 3600000).toISOString().slice(0, 10),
+    durationEstimated: 2,
+    typeMaintenance: "Corrective",
+    equipmentId: di.equipmentId || "",
+    equipmentLabel: di.equipmentLabel || di.equipment || "",
+    organeId: di.organeId || "",
+    organeLabel: di.organeLabel || di.organe || "",
+    technicianIds: [],
+    priority: di.urgency || "Moyenne",
+    instructions: di.description || "",
+    articles: [],
+    documents: [],
+    status: "Planifié",
+  };
+
+  di.status = "Transformée en OT";
+  directory.ots.unshift(ot);
+  saveInterventionsState(directory);
+  renderInterventionsPage(getCurrentInterventionsTab("di"));
+}
+
+function createBtFromOt(otId) {
+  const directory = loadInterventionsState();
+  const ot = directory.ots.find((item) => item.id === otId);
+  if (!ot) return window.alert("OT introuvable.");
+
+  const bt = {
+    id: `bt-${Date.now()}`,
+    ref: buildInterventionRef("BT", directory.bts),
+    otId: ot.id,
+    otRef: ot.ref,
+    startDate: new Date().toISOString(),
+    endDate: null,
+    duration: null,
+    works: "",
+    articles: [],
+    observations: "",
+    causes: [],
+    photos: [],
+    technicianSignature: null,
+    managerSignature: null,
+    status: "En cours",
+  };
+
+  directory.bts.unshift(bt);
+  ot.status = "En cours";
+  saveInterventionsState(directory);
+  renderInterventionsPage(getCurrentInterventionsTab("bt"));
+}
+
+function closeBt(btId) {
+  const directory = loadInterventionsState();
+  const bt = directory.bts.find((item) => item.id === btId);
+  if (!bt) return window.alert("BT introuvable.");
+
+  bt.endDate = new Date().toISOString();
+  bt.duration = `${Math.max(0, Math.round((new Date(bt.endDate) - new Date(bt.startDate)) / 3600000))}h`;
+  bt.status = "Clôturé";
+
+  (bt.articles || []).forEach((articleLine) => {
+    const primary = getPrimaryStockRecord(articleLine.articleId);
+    if (!primary) return;
+
+    const quantity = Number(articleLine.qty || 0) || 0;
+    const nextQuantity = Math.max(
+      0,
+      Number(primary.currentQuantity || 0) - quantity,
+    );
+    upsertStockRecord(articleLine.articleId, primary, {
+      currentQuantity: nextQuantity,
+      updatedAt: new Date().toISOString(),
+    });
+    appendStockMovement({
+      articleId: articleLine.articleId,
+      quantity,
+      type: "exit",
+      source: "BT",
+      linkedRef: bt.ref,
+      pmp: primary.pmp || 0,
+      location: primary.locationLabel,
+    });
+    syncStockArticleQuantityFromRecords(articleLine.articleId);
+  });
+
+  const ot = directory.ots.find((item) => item.id === bt.otId);
+  if (ot) ot.status = "Terminé";
+
+  saveInterventionsState(directory);
+  renderInterventionsPage(getCurrentInterventionsTab("bt"));
+}
+
+function escapeHtml(value) {
+  return String(value || "").replace(/[&<>\"']/g, function (character) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[character];
   });
 }
 
