@@ -69,6 +69,10 @@ const pages = {
     title: "Articles",
     subtitle: "Référentiel des articles et consommables",
   },
+  planification: {
+    title: "Planification",
+    subtitle: "Programmes, charges et échéances de maintenance",
+  },
   interventions: {
     title: "Interventions",
     subtitle: "Demandes, ordres et historiques de maintenance",
@@ -6376,6 +6380,120 @@ function renderSectionSubpages(pageKey, subpageKey) {
   });
 }
 
+function getDashboardKpis() {
+  const interventionDirectory = loadInterventionsState();
+  const equipmentDirectory = getEquipmentDirectory();
+  const articleDirectory = getArticleDirectory();
+  const stockAlerts = getStockAlerts();
+
+  const openInterventions =
+    interventionDirectory.dis.filter(
+      (item) => !["Validée", "Rejetée", "Annulée"].includes(item.status),
+    ).length +
+    interventionDirectory.ots.filter(
+      (item) => !["Terminé", "Clôturé", "Validé"].includes(item.status),
+    ).length +
+    interventionDirectory.bts.filter(
+      (item) => !["Validé", "Clôturé"].includes(item.status),
+    ).length;
+
+  return [
+    {
+      label: "Interventions ouvertes",
+      value: String(openInterventions),
+      footer: "DI, OT et BT actifs",
+      icon: "fa-screwdriver-wrench",
+      iconClass: "blue",
+      trendClass: "flat",
+      trendIcon: "fa-minus",
+      trendValue: "Suivi",
+    },
+    {
+      label: "Équipements",
+      value: String(equipmentDirectory.equipments.length),
+      footer: `${equipmentDirectory.groups.length} groupes`,
+      icon: "fa-gears",
+      iconClass: "orange",
+      trendClass: "flat",
+      trendIcon: "fa-minus",
+      trendValue: "Catalogue",
+    },
+    {
+      label: "Articles",
+      value: String(articleDirectory.articles.length),
+      footer: "Référentiel matières",
+      icon: "fa-box-open",
+      iconClass: "green",
+      trendClass: "flat",
+      trendIcon: "fa-minus",
+      trendValue: "Stock",
+    },
+    {
+      label: "Alertes en attente",
+      value: String(
+        stockAlerts.length + notifications.filter((item) => !item.read).length,
+      ),
+      footer: "Notifications et stock",
+      icon: "fa-bell",
+      iconClass: "red",
+      trendClass: "flat",
+      trendIcon: "fa-minus",
+      trendValue: "Actif",
+    },
+  ];
+}
+
+function getDashboardRecentInterventions() {
+  const directory = loadInterventionsState();
+
+  return [
+    ...directory.dis.map((item) => ({
+      type: "DI",
+      ref: item.ref,
+      equipment: item.equipmentLabel || item.title || "-",
+      equipmentLabel: item.equipmentLabel || item.title || "-",
+      priorityLabel: item.urgency || "-",
+      priorityClass: getInterventionBadgeClass(item.urgency),
+      statusLabel: item.status || "-",
+      statusClass: getInterventionStatusBadgeClass(item.status),
+      technician: item.requesterLabel || "-",
+      sortDate: item.createdAt,
+    })),
+    ...directory.ots.map((item) => ({
+      type: "OT",
+      ref: item.ref,
+      equipment: item.equipmentLabel || item.diRef || "-",
+      equipmentLabel: item.equipmentLabel || item.diRef || "-",
+      priorityLabel: item.priority || "-",
+      priorityClass: getInterventionBadgeClass(item.priority),
+      statusLabel: item.status || "-",
+      statusClass: getInterventionStatusBadgeClass(item.status),
+      technician: item.technicianLabel || "-",
+      sortDate: item.createdAt || item.plannedDate,
+    })),
+    ...directory.bts.map((item) => {
+      const linkedOt = directory.ots.find((ot) => ot.id === item.otId);
+      return {
+        type: "BT",
+        ref: item.ref,
+        equipment:
+          item.equipmentLabel || linkedOt?.equipmentLabel || item.otRef || "-",
+        equipmentLabel:
+          item.equipmentLabel || linkedOt?.equipmentLabel || item.otRef || "-",
+        priorityLabel: linkedOt?.priority || item.status || "-",
+        priorityClass: getInterventionBadgeClass(linkedOt?.priority),
+        statusLabel: item.status || "-",
+        statusClass: getInterventionStatusBadgeClass(item.status),
+        technician:
+          item.technicianSignature?.name || item.managerSignature?.name || "-",
+        sortDate: item.endDate || item.startDate || item.otRef,
+      };
+    }),
+  ]
+    .sort((a, b) => new Date(b.sortDate || 0) - new Date(a.sortDate || 0))
+    .slice(0, 5);
+}
+
 function renderDashboardPage() {
   if (pageActionsEl) {
     renderDashboardActions();
@@ -6383,9 +6501,145 @@ function renderDashboardPage() {
 
   if (!pageContentEl) return;
 
-  const stockAlerts = getStockAlerts();
-  const dashboardAlertItems = [...dashboardAlerts, ...stockAlerts];
+  const interventionDirectory = loadInterventionsState();
+  const equipmentDirectory = getEquipmentDirectory();
+  const dashboardAlertItems = getCombinedNotifications();
   const alertCount = dashboardAlertItems.length;
+  const dashboardKpis = getDashboardKpis();
+  const recentInterventions = getDashboardRecentInterventions();
+  const criticalEquipment = (equipmentDirectory.equipments || [])
+    .slice(0, 4)
+    .map((equipment, index) => ({
+      name: `${equipment.code} — ${equipment.name}`,
+      location:
+        equipment.location ||
+        equipment.locationLabel ||
+        "Localisation non précisée",
+      statusLabel: equipment.status || "En service",
+      statusClass: getStatusBadgeClass(equipment.status || "En service"),
+      icon: ["fa-gear", "fa-industry", "fa-screwdriver-wrench", "fa-plug"][
+        index % 4
+      ],
+      fillClass:
+        index === 0
+          ? "fill-danger"
+          : index === 1
+            ? "fill-warning"
+            : "fill-success",
+      fillWidth: `${Math.max(35, 100 - index * 18)}%`,
+    }));
+  const workOrderStatus = [
+    {
+      label: "Planifié",
+      count: interventionDirectory.ots.filter(
+        (item) => String(item.status || "").toLowerCase() === "planifié",
+      ).length,
+      color: "var(--info)",
+    },
+    {
+      label: "En cours",
+      count: interventionDirectory.ots.filter(
+        (item) => String(item.status || "").toLowerCase() === "en cours",
+      ).length,
+      color: "var(--warning)",
+    },
+    {
+      label: "Terminé",
+      count: interventionDirectory.ots.filter((item) =>
+        [
+          "terminé",
+          "termine",
+          "validé",
+          "valide",
+          "clôturé",
+          "cloture",
+        ].includes(String(item.status || "").toLowerCase()),
+      ).length,
+      color: "var(--success)",
+    },
+    {
+      label: "BT actifs",
+      count: interventionDirectory.bts.filter(
+        (item) => String(item.status || "").toLowerCase() === "en cours",
+      ).length,
+      color: "var(--brand)",
+    },
+  ];
+  const availabilityByZone = (equipmentDirectory.groups || [])
+    .slice(0, 4)
+    .map((group, index) => ({
+      label: `${group.code} — ${group.name}`,
+      value: `${
+        (equipmentDirectory.equipments || []).filter(
+          (equipment) => equipment.groupId === group.id,
+        ).length
+      } équipements`,
+      width: `${Math.max(25, 100 - index * 18)}%`,
+      fillClass:
+        index === 0
+          ? "fill-danger"
+          : index === 1
+            ? "fill-warning"
+            : "fill-success",
+    }));
+  const recentActivity = [
+    ...dashboardAlertItems.slice(0, 3).map((alert) => ({
+      title: alert.title,
+      meta: `${alert.subtitle} · ${alert.time}`,
+      icon: alert.icon,
+      dotStyle:
+        alert.type === "crit"
+          ? "background:var(--danger)"
+          : alert.type === "warn"
+            ? "background:var(--warning)"
+            : "background:var(--info)",
+    })),
+    ...recentInterventions.slice(0, 2).map((item) => ({
+      title: `${item.ref} · ${item.type}`,
+      meta: `${item.equipmentLabel} · ${item.statusLabel}`,
+      icon: "fa-screwdriver-wrench",
+      dotStyle:
+        item.priorityClass === "badge-danger"
+          ? "background:var(--danger)"
+          : item.priorityClass === "badge-warning"
+            ? "background:var(--warning)"
+            : "background:var(--brand)",
+    })),
+  ].slice(0, 5);
+  const weeklyPlanning = Array.from({ length: 5 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() + index);
+    const dateKey = date.toISOString().slice(0, 10);
+    const count = interventionDirectory.ots.filter(
+      (item) => String(item.plannedDate || "").slice(0, 10) === dateKey,
+    ).length;
+
+    return {
+      day: date.toLocaleDateString("fr-FR", { weekday: "short" }),
+      value: String(count),
+      active: index === 0,
+      height: `${Math.max(18, count * 18 + 18)}px`,
+    };
+  });
+  const upcomingWork = [...interventionDirectory.ots]
+    .sort(
+      (a, b) =>
+        new Date(a.plannedDate || a.createdAt || 0) -
+        new Date(b.plannedDate || b.createdAt || 0),
+    )
+    .slice(0, 3)
+    .map((item) => ({
+      title: `${item.ref} · ${item.equipmentLabel || item.diRef || "Ordre"}`,
+      meta: item.plannedDate || item.createdAt || "Date à planifier",
+      accent:
+        item.priority === "Critique"
+          ? "var(--danger)"
+          : item.priority === "Haute"
+            ? "var(--warning)"
+            : "var(--brand)",
+      priorityClass: getInterventionBadgeClass(item.priority),
+      priorityLabel: item.priority || "Standard",
+    }));
 
   pageContentEl.className = "dashboard-page";
   pageContentEl.innerHTML = `
@@ -8952,7 +9206,7 @@ function renderPage(pageKey, subpageKey) {
         <div class="blank-card">
           <div class="blank-badge"><i class="fa-regular fa-file-lines"></i></div>
           <h2>${page.title}</h2>
-          <p>${page.body}</p>
+          <p>${page.body || page.subtitle || "Contenu à développer plus tard."}</p>
           <span class="blank-note">On développera cette page étape par étape.</span>
         </div>
       `;
