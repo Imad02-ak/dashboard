@@ -1,11 +1,13 @@
-﻿function updateClock() {
+﻿let administrationLocaleCache = "fr-FR";
+
+function updateClock() {
   const now = new Date();
-  const dateStr = now.toLocaleDateString("fr-FR", {
+  const dateStr = now.toLocaleDateString(administrationLocaleCache, {
     day: "2-digit",
     month: "long",
     year: "numeric",
   });
-  const timeStr = now.toLocaleTimeString("fr-FR", {
+  const timeStr = now.toLocaleTimeString(administrationLocaleCache, {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -146,6 +148,467 @@ const pages = {
     title: "Interventions",
     subtitle: "Cycle complet DI, OT et BT avec suivi terrain",
   },
+  parametres: {
+    title: "Administration",
+    subtitle:
+      "Gestion des utilisateurs, des rôles, des paramètres globaux et des journaux système",
+  },
+};
+
+const administrationSubpages = {
+  defaultSubpage: "utilisateurs",
+  tabs: {
+    utilisateurs: {
+      label: "Utilisateurs",
+      title: "Utilisateurs",
+      body: "Gestion de tous les comptes qui accèdent au logiciel.",
+    },
+    roles: {
+      label: "Rôles & Permissions",
+      title: "Rôles & Permissions",
+      body: "Définition de qui peut faire quoi dans chaque module de la plateforme.",
+    },
+    general: {
+      label: "Paramètres généraux",
+      title: "Paramètres généraux",
+      body: "Configuration globale du logiciel, des alertes et de la numérotation.",
+    },
+    logs: {
+      label: "Journaux système",
+      title: "Journaux système",
+      body: "Traçabilité complète des actions réalisées dans l'application.",
+    },
+  },
+};
+
+const administrationStorageKey = "maintflow.administrationState";
+const administrationRoleCatalog = [
+  "Super Admin",
+  "Admin",
+  "Responsable",
+  "Technicien",
+  "Magasinier",
+  "Acheteur",
+  "Demandeur",
+  "Consultant",
+];
+const administrationLanguageOptions = ["fr", "en"];
+const administrationCurrencyOptions = ["DZD", "EUR", "USD"];
+const administrationPermissionMatrix = [
+  {
+    module: "Dashboard",
+    view: true,
+    create: false,
+    edit: false,
+    delete: false,
+    validate: false,
+  },
+  {
+    module: "Arborescence",
+    view: true,
+    create: false,
+    edit: false,
+    delete: false,
+    validate: false,
+  },
+  {
+    module: "Organisation",
+    view: true,
+    create: true,
+    edit: true,
+    delete: true,
+    validate: false,
+  },
+  {
+    module: "Équipements",
+    view: true,
+    create: true,
+    edit: true,
+    delete: true,
+    validate: false,
+  },
+  {
+    module: "Organes",
+    view: true,
+    create: true,
+    edit: true,
+    delete: true,
+    validate: false,
+  },
+  {
+    module: "Articles",
+    view: true,
+    create: true,
+    edit: true,
+    delete: true,
+    validate: false,
+  },
+  {
+    module: "Planification",
+    view: true,
+    create: true,
+    edit: true,
+    delete: true,
+    validate: true,
+  },
+  {
+    module: "Interventions",
+    view: true,
+    create: true,
+    edit: true,
+    delete: true,
+    validate: true,
+  },
+  {
+    module: "Stock",
+    view: true,
+    create: true,
+    edit: true,
+    delete: true,
+    validate: true,
+  },
+  {
+    module: "Achats",
+    view: true,
+    create: true,
+    edit: true,
+    delete: true,
+    validate: true,
+  },
+  {
+    module: "Fournisseurs",
+    view: true,
+    create: true,
+    edit: true,
+    delete: true,
+    validate: false,
+  },
+  {
+    module: "Administration",
+    view: true,
+    create: true,
+    edit: true,
+    delete: true,
+    validate: false,
+  },
+];
+
+function buildAdministrationRolePermissionsDefaults() {
+  const base = administrationPermissionMatrix.reduce((accumulator, row) => {
+    accumulator[row.module] = {
+      view: Boolean(row.view),
+      create: Boolean(row.create),
+      edit: Boolean(row.edit),
+      delete: Boolean(row.delete),
+      validate: Boolean(row.validate),
+    };
+    return accumulator;
+  }, {});
+
+  return {
+    "Super Admin": administrationPermissionMatrix.reduce((accumulator, row) => {
+      accumulator[row.module] = {
+        view: true,
+        create: true,
+        edit: true,
+        delete: true,
+        validate: true,
+      };
+      return accumulator;
+    }, {}),
+    Admin: administrationPermissionMatrix.reduce((accumulator, row) => {
+      accumulator[row.module] = {
+        view: true,
+        create: true,
+        edit: true,
+        delete: true,
+        validate: row.validate || row.module === "Administration",
+      };
+      return accumulator;
+    }, {}),
+    Responsable: JSON.parse(JSON.stringify(base)),
+    Technicien: administrationPermissionMatrix.reduce((accumulator, row) => {
+      accumulator[row.module] = {
+        view: true,
+        create: row.module === "Interventions" || row.module === "Organisation",
+        edit: row.module === "Interventions",
+        delete: false,
+        validate: row.module === "Interventions",
+      };
+      return accumulator;
+    }, {}),
+    Magasinier: administrationPermissionMatrix.reduce((accumulator, row) => {
+      accumulator[row.module] = {
+        view:
+          row.module === "Stock" ||
+          row.module === "Achats" ||
+          row.module === "Administration",
+        create: row.module === "Stock",
+        edit: row.module === "Stock",
+        delete: false,
+        validate: row.module === "Stock" || row.module === "Achats",
+      };
+      return accumulator;
+    }, {}),
+    Acheteur: administrationPermissionMatrix.reduce((accumulator, row) => {
+      accumulator[row.module] = {
+        view:
+          row.module === "Achats" ||
+          row.module === "Fournisseurs" ||
+          row.module === "Administration",
+        create: row.module === "Achats" || row.module === "Fournisseurs",
+        edit: row.module === "Achats" || row.module === "Fournisseurs",
+        delete: row.module === "Fournisseurs",
+        validate: row.module === "Achats",
+      };
+      return accumulator;
+    }, {}),
+    Demandeur: administrationPermissionMatrix.reduce((accumulator, row) => {
+      accumulator[row.module] = {
+        view:
+          row.module === "Dashboard" ||
+          row.module === "Interventions" ||
+          row.module === "Administration",
+        create: row.module === "Interventions",
+        edit: row.module === "Interventions",
+        delete: false,
+        validate: false,
+      };
+      return accumulator;
+    }, {}),
+    Consultant: administrationPermissionMatrix.reduce((accumulator, row) => {
+      accumulator[row.module] = {
+        view: true,
+        create: false,
+        edit: false,
+        delete: false,
+        validate: false,
+      };
+      return accumulator;
+    }, {}),
+  };
+}
+
+function mergeAdministrationRolePermissions(basePermissions, overrides = {}) {
+  const nextPermissions = JSON.parse(JSON.stringify(basePermissions || {}));
+
+  Object.entries(overrides || {}).forEach(([roleName, modulePermissions]) => {
+    if (!nextPermissions[roleName]) {
+      nextPermissions[roleName] = {};
+    }
+
+    Object.entries(modulePermissions || {}).forEach(
+      ([moduleName, permissions]) => {
+        nextPermissions[roleName][moduleName] = {
+          ...(nextPermissions[roleName][moduleName] || {}),
+          ...(permissions || {}),
+        };
+      },
+    );
+  });
+
+  return nextPermissions;
+}
+
+const administrationDefaults = {
+  users: [
+    {
+      id: "adm-user-1",
+      code: "USR-001",
+      firstName: "Amina",
+      lastName: "Benali",
+      username: "amina.benali",
+      passwordHint: "Hashé côté serveur",
+      email: "amina.benali@maintflow.local",
+      phone: "+213 555 010 101",
+      photo: "",
+      unit: "Site Nord Production",
+      division: "Division Énergie",
+      department: "Maintenance électrique",
+      role: "Super Admin",
+      functionTitle: "Administrateur système",
+      language: "Français",
+      timezone: "Africa/Algiers",
+      status: "Actif",
+      createdAt: "2026-05-10T08:30:00.000Z",
+      lastLogin: "2026-05-31T08:15:00.000Z",
+    },
+    {
+      id: "adm-user-2",
+      code: "USR-002",
+      firstName: "Yacine",
+      lastName: "Mekki",
+      username: "yacine.mekki",
+      passwordHint: "Hashé côté serveur",
+      email: "yacine.mekki@maintflow.local",
+      phone: "+213 555 010 102",
+      photo: "",
+      unit: "Site Sud Conditionnement",
+      division: "Division Process",
+      department: "Production",
+      role: "Responsable",
+      functionTitle: "Responsable maintenance",
+      language: "Français",
+      timezone: "Africa/Algiers",
+      status: "Actif",
+      createdAt: "2026-05-14T10:15:00.000Z",
+      lastLogin: "2026-05-30T16:50:00.000Z",
+    },
+    {
+      id: "adm-user-3",
+      code: "USR-003",
+      firstName: "Nadia",
+      lastName: "Khellaf",
+      username: "nadia.khellaf",
+      passwordHint: "Hashé côté serveur",
+      email: "nadia.khellaf@maintflow.local",
+      phone: "+213 555 010 103",
+      photo: "",
+      unit: "Site Nord Production",
+      division: "Division Process",
+      department: "Maintenance process",
+      role: "Technicien",
+      functionTitle: "Technicien",
+      language: "Arabe",
+      timezone: "Africa/Algiers",
+      status: "Actif",
+      createdAt: "2026-05-18T07:45:00.000Z",
+      lastLogin: "2026-05-31T07:12:00.000Z",
+    },
+    {
+      id: "adm-user-4",
+      code: "USR-004",
+      firstName: "Sami",
+      lastName: "Boudiaf",
+      username: "sami.boudiaf",
+      passwordHint: "Hashé côté serveur",
+      email: "sami.boudiaf@maintflow.local",
+      phone: "+213 555 010 104",
+      photo: "",
+      unit: "Site Sud Conditionnement",
+      division: "Division Logistique",
+      department: "Magasin",
+      role: "Magasinier",
+      functionTitle: "Gestionnaire stock",
+      language: "Français",
+      timezone: "Africa/Algiers",
+      status: "Suspendu",
+      createdAt: "2026-05-19T09:20:00.000Z",
+      lastLogin: "2026-05-27T11:40:00.000Z",
+    },
+  ],
+  settings: {
+    companyName: "MaintFlow Industrie",
+    logo: "",
+    currency: "DZD",
+    defaultLanguage: "fr",
+    timezone: "Africa/Algiers",
+    dateFormat: "JJ/MM/AAAA",
+    stock: {
+      valuation: "PMP",
+      negativeStock: false,
+      blockOnShortage: true,
+      requireReceptionValidation: true,
+    },
+    notifications: {
+      stockMinimum: true,
+      stockSafety: true,
+      stockBreakage: true,
+      diDelayDays: 3,
+      otDelayDays: 2,
+      btDelayDays: 2,
+      bcDelayDays: 5,
+      daDelayDays: 4,
+      contractExpiryDays: 30,
+      warrantyExpiryDays: 15,
+      counterThreshold: true,
+    },
+    numbering: {
+      diPrefix: "DI",
+      otPrefix: "OT",
+      btPrefix: "BT",
+      daPrefix: "DA",
+      bcPrefix: "BC",
+      recPrefix: "REC",
+      plnPrefix: "PLN",
+      cptPrefix: "CPT",
+      frnPrefix: "FRN",
+      ctrPrefix: "CTR",
+      digits: "3",
+      resetPolicy: "Annuelle",
+    },
+    interventions: {
+      requireDiBeforeOt: true,
+      requireBtSignature: true,
+      requireBtPhotos: false,
+      requireSafetyChecklist: true,
+      maxPendingDiDays: 5,
+    },
+    backup: {
+      exportMode: "JSON",
+      exportScope: "Tous les modules",
+      autoFrequency: "Hebdomadaire",
+      importMode: "JSON",
+      resetMode: "Double confirmation",
+    },
+    selectedRole: "Responsable",
+    rolePermissions: buildAdministrationRolePermissionsDefaults(),
+  },
+  logs: [
+    {
+      id: "log-1",
+      date: "2026-05-31T08:21:00.000Z",
+      user: "Amina Benali",
+      action: "Connexion",
+      module: "Administration",
+      record: "USR-001",
+      detail: "Connexion réussie depuis le poste d'administration.",
+      before: "—",
+      after: "Session ouverte",
+    },
+    {
+      id: "log-2",
+      date: "2026-05-30T15:42:00.000Z",
+      user: "Yacine Mekki",
+      action: "Création enregistrement",
+      module: "Organisation",
+      record: "DIV-004",
+      detail: "Division créée avec rattachement à deux sites.",
+      before: "—",
+      after: "Division Énergie 2",
+    },
+    {
+      id: "log-3",
+      date: "2026-05-29T10:11:00.000Z",
+      user: "Nadia Khellaf",
+      action: "Modification enregistrement",
+      module: "Stock",
+      record: "STK-102",
+      detail: "Mise à jour de la quantité mini et du seuil de sécurité.",
+      before: "Min 20 / Sécurité 10",
+      after: "Min 15 / Sécurité 8",
+    },
+    {
+      id: "log-4",
+      date: "2026-05-28T17:55:00.000Z",
+      user: "Sami Boudiaf",
+      action: "Export données",
+      module: "Achats",
+      record: "HIST-ACH-2026-05",
+      detail: "Export CSV de l'historique des achats.",
+      before: "—",
+      after: "Fichier exporté",
+    },
+  ],
+};
+
+let administrationUserDraftId = null;
+let administrationLogFilters = {
+  user: "",
+  module: "",
+  action: "",
+  from: "",
+  to: "",
 };
 
 const planificationTechniciens = [
@@ -1042,7 +1505,7 @@ function formatArticleTraceabilityDate(value) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleDateString("fr-FR");
+  return date.toLocaleDateString(getAdministrationLocale());
 }
 
 function buildArticleGroupFormContent(record, mode) {
@@ -3880,7 +4343,7 @@ function formatEquipmentDate(value) {
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleDateString("fr-FR");
+  return date.toLocaleDateString(getAdministrationLocale());
 }
 
 function getCriticalityBadgeClass(criticality) {
@@ -6520,6 +6983,2102 @@ function renderArborescencePage() {
   attachArborescenceHandlers();
 }
 
+function cloneAdministrationDefaults() {
+  return JSON.parse(JSON.stringify(administrationDefaults));
+}
+
+function getAdministrationState() {
+  const state = cloneAdministrationDefaults();
+
+  try {
+    const stored = window.localStorage.getItem(administrationStorageKey);
+    if (!stored) return state;
+
+    const parsed = JSON.parse(stored);
+    const settings = parsed.settings || {};
+    state.users = Array.isArray(parsed.users) ? parsed.users : state.users;
+    state.logs = Array.isArray(parsed.logs) ? parsed.logs : state.logs;
+    state.settings = {
+      ...state.settings,
+      ...settings,
+      stock: {
+        ...state.settings.stock,
+        ...(settings.stock || {}),
+      },
+      notifications: {
+        ...state.settings.notifications,
+        ...(settings.notifications || {}),
+      },
+      numbering: {
+        ...state.settings.numbering,
+        ...(settings.numbering || {}),
+      },
+      interventions: {
+        ...state.settings.interventions,
+        ...(settings.interventions || {}),
+      },
+      backup: {
+        ...state.settings.backup,
+        ...(settings.backup || {}),
+      },
+      selectedRole: settings.selectedRole || state.settings.selectedRole,
+      rolePermissions: mergeAdministrationRolePermissions(
+        state.settings.rolePermissions,
+        settings.rolePermissions || {},
+      ),
+    };
+    state.settings.defaultLanguage = normalizeAdministrationLanguage(
+      state.settings.defaultLanguage,
+    );
+  } catch (error) {
+    return state;
+  }
+
+  return state;
+}
+
+function saveAdministrationState(state) {
+  try {
+    window.localStorage.setItem(
+      administrationStorageKey,
+      JSON.stringify(state),
+    );
+  } catch (error) {
+    // ignore storage errors
+  }
+}
+
+const administrationLanguageLabels = {
+  fr: { fr: "Français", en: "French" },
+  en: { fr: "Anglais", en: "English" },
+};
+
+const administrationUiText = {
+  fr: {
+    appTitleSuffix: "Tableau de bord",
+    sidebarToggle: "Ouvrir / Fermer",
+    navSections: {
+      principal: "Principal",
+      actifs: "Actifs",
+      operations: "Opérations",
+      ressources: "Ressources",
+      systeme: "Système",
+    },
+    topbar: {
+      greetingMain: "Bonjour,الهايشة 🐮",
+      greetingSub: "Votre tableau de bord de maintenance",
+      searchPlaceholder: "Rechercher équipement, intervention…",
+      notifications: "Notifications",
+      profile: "Profil",
+      settings: "Paramètres",
+      logout: "Déconnexion",
+    },
+    pages: {
+      dashboard: ["Tableau de bord", "Vue globale de la maintenance"],
+      arborescence: [
+        "Arborescence",
+        "Structure des actifs et des emplacements",
+      ],
+      organisation: [
+        "Organisation",
+        "Structure de l'entreprise et des équipes",
+      ],
+      equipements: ["Équipements", "Catalogue et suivi des équipements"],
+      organe: ["Organe", "Gestion des organes et sous-ensembles"],
+      articles: ["Articles", "Référentiel des articles et consommables"],
+      planification: ["Planification", "Plans, calendrier et compteurs"],
+      stock: ["Stock", "Paramétrage du stock, mouvements et inventaire"],
+      achats: ["Achats", "Cycle DA, BC, réceptions et historique"],
+      fournisseurs: [
+        "Fournisseurs",
+        "Référentiel fournisseurs, catalogue, contrats et évaluations",
+      ],
+      interventions: [
+        "Interventions",
+        "Cycle complet DI, OT et BT avec suivi terrain",
+      ],
+      parametres: [
+        "Administration",
+        "Gestion des utilisateurs, des rôles, des paramètres globaux et des journaux système",
+      ],
+    },
+    admin: {
+      users: [
+        "Utilisateurs",
+        "Gestion de tous les comptes qui accèdent au logiciel.",
+      ],
+      roles: [
+        "Rôles & Permissions",
+        "Définition de qui peut faire quoi dans chaque module de la plateforme.",
+      ],
+      general: [
+        "Paramètres généraux",
+        "Configuration globale du logiciel, des alertes et de la numérotation automatique.",
+      ],
+      logs: [
+        "Journaux système",
+        "Traçabilité complète des actions réalisées dans l'application.",
+      ],
+      enterprise: "Entreprise",
+      localSave: "Sauvegarde locale",
+      companyName: "Nom entreprise",
+      companyNameHint: "Valeur automatiquement liée à l'Organisation.",
+      logo: "Logo",
+      logoHint: "Utilisé dans les exports PDF et les impressions.",
+      currency: "Devise",
+      defaultLanguage: "Langue par défaut",
+      timezone: "Fuseau horaire",
+      dateFormat: "Format date",
+      notifications: "Notifications",
+      alertsTitle: "Paramètres d'alertes",
+      alertsBody:
+        "Seuils et temporisations pour le stock, les interventions, les achats et les compteurs.",
+      workflow: "Workflow métier",
+      backup: "Sauvegarde",
+      backupTitle: "Export, import et réinitialisation",
+      backupBody:
+        "Base d'export JSON, import complet et options de remise à zéro par module.",
+      save: "Enregistrer les paramètres",
+    },
+  },
+  en: {
+    appTitleSuffix: "Dashboard",
+    sidebarToggle: "Open / Close",
+    navSections: {
+      principal: "Main",
+      actifs: "Assets",
+      operations: "Operations",
+      ressources: "Resources",
+      systeme: "System",
+    },
+    topbar: {
+      greetingMain: "Hello,الهايشة 🐮",
+      greetingSub: "Your maintenance dashboard",
+      searchPlaceholder: "Search equipment, intervention…",
+      notifications: "Notifications",
+      profile: "Profile",
+      settings: "Settings",
+      logout: "Sign out",
+    },
+    pages: {
+      dashboard: ["Dashboard", "Global maintenance overview"],
+      arborescence: ["Tree", "Assets and locations structure"],
+      organisation: ["Organization", "Structure of the company and teams"],
+      equipements: ["Equipment", "Equipment catalog and tracking"],
+      organe: ["Component", "Component and sub-assembly management"],
+      articles: ["Items", "Item and consumables reference"],
+      planification: ["Planning", "Plans, calendar and counters"],
+      stock: ["Stock", "Stock settings, movements and inventory"],
+      achats: ["Purchasing", "PR, PO, receipts and history flow"],
+      fournisseurs: [
+        "Suppliers",
+        "Supplier reference, catalog, contracts and evaluations",
+      ],
+      interventions: [
+        "Work Orders",
+        "Full work request, order and report flow",
+      ],
+      parametres: [
+        "Administration",
+        "Users, roles, global settings and system logs",
+      ],
+    },
+    admin: {
+      users: ["Users", "Management of all accounts that access the software."],
+      roles: [
+        "Roles & Permissions",
+        "Define who can do what in each platform module.",
+      ],
+      general: [
+        "General Settings",
+        "Global software, alerts and numbering configuration.",
+      ],
+      logs: [
+        "System Logs",
+        "Full traceability of actions performed in the application.",
+      ],
+      enterprise: "Company",
+      localSave: "Local save",
+      companyName: "Company name",
+      companyNameHint: "Automatically linked to Organization.",
+      logo: "Logo",
+      logoHint: "Used in PDF exports and prints.",
+      currency: "Currency",
+      defaultLanguage: "Default language",
+      timezone: "Time zone",
+      dateFormat: "Date format",
+      notifications: "Notifications",
+      alertsTitle: "Alert settings",
+      alertsBody:
+        "Thresholds and delays for stock, interventions, purchasing and counters.",
+      workflow: "Business workflow",
+      backup: "Backup",
+      backupTitle: "Export, import and reset",
+      backupBody: "JSON export base, full import and reset options by module.",
+      save: "Save settings",
+    },
+  },
+};
+
+function normalizeAdministrationLanguage(value) {
+  const language = String(value || "").toLowerCase();
+  if (["en", "en-us", "english", "anglais"].includes(language)) {
+    return "en";
+  }
+  return "fr";
+}
+
+function getAdministrationLanguageKey(state = null) {
+  const currentState = state || getAdministrationState();
+  return normalizeAdministrationLanguage(
+    currentState.settings?.defaultLanguage,
+  );
+}
+
+function getAdministrationLocale(state = null) {
+  return getAdministrationLanguageKey(state) === "en" ? "en-US" : "fr-FR";
+}
+
+function getAdministrationText(path, state = null) {
+  const languageKey = getAdministrationLanguageKey(state);
+  const branch = administrationUiText[languageKey] || administrationUiText.fr;
+  return path
+    .split(".")
+    .reduce((current, segment) => current?.[segment], branch);
+}
+
+function getAdministrationLanguageLabel(languageKey, state = null) {
+  const currentLanguage = getAdministrationLanguageKey(state);
+  return (
+    administrationLanguageLabels[languageKey]?.[currentLanguage] || languageKey
+  );
+}
+
+function localizeAdministrationText(value, state = null) {
+  const languageKey = getAdministrationLanguageKey(state);
+  const branch = administrationUiText[languageKey] || administrationUiText.fr;
+  const translations = new Map([
+    ...Object.entries(administrationUiText.fr.pages).map(([key, [fr]]) => [
+      fr,
+      branch.pages[key][0],
+    ]),
+  ]);
+
+  const adminPairs = [
+    [
+      administrationUiText.fr.navSections.principal,
+      branch.navSections.principal,
+    ],
+    [administrationUiText.fr.navSections.actifs, branch.navSections.actifs],
+    [
+      administrationUiText.fr.navSections.operations,
+      branch.navSections.operations,
+    ],
+    [
+      administrationUiText.fr.navSections.ressources,
+      branch.navSections.ressources,
+    ],
+    [administrationUiText.fr.navSections.systeme, branch.navSections.systeme],
+  ];
+
+  const pagePairs = Object.values(administrationUiText.fr.pages).map(
+    ([fr], index) => {
+      const key = Object.keys(administrationUiText.fr.pages)[index];
+      return [fr, branch.pages[key][0]];
+    },
+  );
+
+  const specificPairs = [
+    ["Sous-pages administration", branch.admin.roles[0]],
+    ["Paramètres généraux", branch.admin.general[0]],
+    ["Rôles & Permissions", branch.admin.roles[0]],
+    ["Journaux système", branch.admin.logs[0]],
+    ["Utilisateurs", branch.admin.users[0]],
+    [
+      "Gestion de tous les comptes qui accèdent au logiciel.",
+      branch.admin.users[1],
+    ],
+    [
+      "Définition de qui peut faire quoi dans chaque module de la plateforme.",
+      branch.admin.roles[1],
+    ],
+    [
+      "Configuration globale du logiciel, des alertes et de la numérotation automatique.",
+      branch.admin.general[1],
+    ],
+    [
+      "Configuration globale du logiciel, des alertes et de la numérotation.",
+      branch.admin.general[1],
+    ],
+    [
+      "Traçabilité complète des actions réalisées dans l'application.",
+      branch.admin.logs[1],
+    ],
+    ["Entreprise", branch.admin.enterprise],
+    ["Sauvegarde locale", branch.admin.localSave],
+    ["Nom entreprise", branch.admin.companyName],
+    [
+      "Valeur automatiquement liée à l'Organisation.",
+      branch.admin.companyNameHint,
+    ],
+    ["Logo", branch.admin.logo],
+    ["Utilisé dans les exports PDF et les impressions.", branch.admin.logoHint],
+    ["Devise", branch.admin.currency],
+    ["Langue par défaut", branch.admin.defaultLanguage],
+    ["Fuseau horaire", branch.admin.timezone],
+    ["Format date", branch.admin.dateFormat],
+    ["Notifications", branch.admin.notifications],
+    ["Paramètres d'alertes", branch.admin.alertsTitle],
+    [
+      "Seuils et temporisations pour le stock, les interventions, les achats et les compteurs.",
+      branch.admin.alertsBody,
+    ],
+    ["Workflow métier", branch.admin.workflow],
+    ["Sauvegarde", branch.admin.backup],
+    ["Export, import et réinitialisation", branch.admin.backupTitle],
+    [
+      "Base d'export JSON, import complet et options de remise à zéro par module.",
+      branch.admin.backupBody,
+    ],
+    ["Enregistrer les paramètres", branch.admin.save],
+    ["Enregistrer", languageKey === "en" ? "Save" : "Enregistrer"],
+    ["Sauvegarde locale", branch.admin.localSave],
+    ["Alertes stock", languageKey === "en" ? "Stock alerts" : "Alertes stock"],
+    [
+      "Activer alertes stock minimum",
+      languageKey === "en"
+        ? "Enable minimum stock alerts"
+        : "Activer alertes stock minimum",
+    ],
+    [
+      "Activer alertes stock sécurité",
+      languageKey === "en"
+        ? "Enable safety stock alerts"
+        : "Activer alertes stock sécurité",
+    ],
+    [
+      "Activer alertes rupture",
+      languageKey === "en"
+        ? "Enable stockout alerts"
+        : "Activer alertes rupture",
+    ],
+    [
+      "Alertes interventions",
+      languageKey === "en" ? "Intervention alerts" : "Alertes interventions",
+    ],
+    [
+      "DI non traitée après X jours",
+      languageKey === "en"
+        ? "Unprocessed request after X days"
+        : "DI non traitée après X jours",
+    ],
+    [
+      "OT en retard après X jours",
+      languageKey === "en"
+        ? "Late work order after X days"
+        : "OT en retard après X jours",
+    ],
+    [
+      "BT non validé après X jours",
+      languageKey === "en"
+        ? "Unvalidated work report after X days"
+        : "BT non validé après X jours",
+    ],
+    [
+      "BC non reçu après X jours",
+      languageKey === "en"
+        ? "Unreceived purchase order after X days"
+        : "BC non reçu après X jours",
+    ],
+    [
+      "DA en attente après X jours",
+      languageKey === "en"
+        ? "Pending purchase request after X days"
+        : "DA en attente après X jours",
+    ],
+    ["Portée export", languageKey === "en" ? "Export scope" : "Portée export"],
+    [
+      "Fréquence sauvegarde auto",
+      languageKey === "en"
+        ? "Auto backup frequency"
+        : "Fréquence sauvegarde auto",
+    ],
+    [
+      "Tous les modules",
+      languageKey === "en" ? "All modules" : "Tous les modules",
+    ],
+    ["Par module", languageKey === "en" ? "By module" : "Par module"],
+    ["Quotidienne", languageKey === "en" ? "Daily" : "Quotidienne"],
+    ["Hebdomadaire", languageKey === "en" ? "Weekly" : "Hebdomadaire"],
+    ["Mensuelle", languageKey === "en" ? "Monthly" : "Mensuelle"],
+    ["Aucune", languageKey === "en" ? "None" : "Aucune"],
+    ["Notifications", branch.topbar.notifications],
+    ["Profil", branch.topbar.profile],
+    ["Paramètre", branch.topbar.settings],
+    ["Déconnexion", branch.topbar.logout],
+    ["Ouvrir / Fermer", branch.sidebarToggle],
+    ["Rechercher équipement, intervention…", branch.topbar.searchPlaceholder],
+    ["Votre tableau de bord de maintenance", branch.topbar.greetingSub],
+    ["Bonjour,الهايشة 🐮", branch.topbar.greetingMain],
+    ["Généré le", languageKey === "en" ? "Generated on" : "Généré le"],
+    ["Planification", languageKey === "en" ? "Planning" : "Planification"],
+    [
+      "Plans, calendrier et compteurs",
+      languageKey === "en"
+        ? "Plans, calendar and counters"
+        : "Plans, calendrier et compteurs",
+    ],
+    [
+      "Paramétrage du stock, emplacements et valorisation des articles.",
+      languageKey === "en"
+        ? "Stock settings, locations and item valuation."
+        : "Paramétrage du stock, emplacements et valorisation des articles.",
+    ],
+    [
+      "Entrées, sorties et transferts de stock avec traçabilité complète.",
+      languageKey === "en"
+        ? "Stock entries, exits and transfers with full traceability."
+        : "Entrées, sorties et transferts de stock avec traçabilité complète.",
+    ],
+    [
+      "Création d’inventaires et feuille de comptage terrain.",
+      languageKey === "en"
+        ? "Inventory creation and field counting sheet."
+        : "Création d’inventaires et feuille de comptage terrain.",
+    ],
+    [
+      "Consultation des mouvements filtrée par article, type, date ou utilisateur.",
+      languageKey === "en"
+        ? "View movements filtered by item, type, date or user."
+        : "Consultation des mouvements filtrée par article, type, date ou utilisateur.",
+    ],
+    [
+      "Demandes d'achat (DA)",
+      languageKey === "en" ? "Purchase requests (PR)" : "Demandes d'achat (DA)",
+    ],
+    [
+      "Bons de commande (BC)",
+      languageKey === "en" ? "Purchase orders (PO)" : "Bons de commande (BC)",
+    ],
+    [
+      "Enregistrement de la marchandise reçue, contrôle qualité et mise à jour du stock.",
+      languageKey === "en"
+        ? "Register received goods, quality control and stock updates."
+        : "Enregistrement de la marchandise reçue, contrôle qualité et mise à jour du stock.",
+    ],
+    [
+      "Consultation consolidée DA/BC/REC avec filtres multi-critères et export.",
+      languageKey === "en"
+        ? "Consolidated PR/PO/REC view with multi-criteria filters and export."
+        : "Consultation consolidée DA/BC/REC avec filtres multi-critères et export.",
+    ],
+    [
+      "Référentiel des plans, déclenchements et gammes opératoires.",
+      languageKey === "en"
+        ? "Reference list of plans, triggers and operating procedures."
+        : "Référentiel des plans, déclenchements et gammes opératoires.",
+    ],
+    [
+      "Vue des OT planifiés, en cours et en retard sur plusieurs horizons.",
+      languageKey === "en"
+        ? "View of scheduled, in-progress and overdue work orders across several horizons."
+        : "Vue des OT planifiés, en cours et en retard sur plusieurs horizons.",
+    ],
+    [
+      "Plans de maintenance",
+      languageKey === "en" ? "Maintenance plans" : "Plans de maintenance",
+    ],
+    ["Calendrier", languageKey === "en" ? "Calendar" : "Calendrier"],
+    ["Compteurs", languageKey === "en" ? "Counters" : "Compteurs"],
+  ];
+
+  let output = String(value ?? "");
+  [...adminPairs, ...pagePairs, ...specificPairs].forEach(([from, to]) => {
+    if (from && to && output === from) {
+      output = to;
+    }
+  });
+  return output;
+}
+
+function applyLocalizedShell(state = null) {
+  const languageKey = getAdministrationLanguageKey(state);
+  const locale = getAdministrationLocale(state);
+  const text = administrationUiText[languageKey] || administrationUiText.fr;
+
+  administrationLocaleCache = locale;
+
+  if (document.documentElement) {
+    document.documentElement.lang = locale.startsWith("en") ? "en" : "fr";
+  }
+
+  if (document.title) {
+    document.title = `MaintFlow — ${text.appTitleSuffix}`;
+  }
+
+  navItems.forEach((item) => {
+    const pageKey = item.dataset.page || "dashboard";
+    const label =
+      text.pages[pageKey]?.[0] ||
+      item.dataset.tooltip ||
+      item.textContent.trim();
+    const navLabel = item.querySelector(".nav-label");
+    if (navLabel) navLabel.textContent = label;
+    item.dataset.tooltip = label;
+  });
+
+  const sections = Array.from(document.querySelectorAll(".nav-section-label"));
+  ["principal", "actifs", "operations", "ressources", "systeme"].forEach(
+    (key, index) => {
+      if (sections[index]) sections[index].textContent = text.navSections[key];
+    },
+  );
+
+  const sidebarToggle = document.getElementById("sidebarToggle");
+  if (sidebarToggle) sidebarToggle.title = text.sidebarToggle;
+
+  const greetingMain = document.querySelector(".greeting-main");
+  if (greetingMain) greetingMain.textContent = text.topbar.greetingMain;
+  const greetingSub = document.querySelector(".greeting-sub");
+  if (greetingSub) greetingSub.textContent = text.topbar.greetingSub;
+  const searchInput = document.querySelector(".topbar-search input");
+  if (searchInput) searchInput.placeholder = text.topbar.searchPlaceholder;
+
+  const notifBtnLabel = document.getElementById("notifBtn");
+  if (notifBtnLabel) notifBtnLabel.title = text.topbar.notifications;
+  const profileButton = document.getElementById("profileBtn");
+  if (profileButton)
+    profileButton.setAttribute("aria-label", text.topbar.profile);
+
+  const notifDropdownTitle = document.querySelector(
+    "#notifMenu .dropdown-title",
+  );
+  if (notifDropdownTitle)
+    notifDropdownTitle.textContent = text.topbar.notifications;
+  const profileProfile = document.querySelector(
+    '#profileMenu [data-action="profile"] span',
+  );
+  if (profileProfile) profileProfile.textContent = text.topbar.profile;
+  const profileSettings = document.querySelector(
+    '#profileMenu [data-action="settings"] span',
+  );
+  if (profileSettings) profileSettings.textContent = text.topbar.settings;
+  const profileLogout = document.querySelector(
+    '#profileMenu [data-action="logout"] span',
+  );
+  if (profileLogout) profileLogout.textContent = text.topbar.logout;
+
+  updateClock();
+}
+
+function formatAdministrationDateTime(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString(getAdministrationLocale(), {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatAdministrationDate(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString(getAdministrationLocale());
+}
+
+function getAdministrationUserFullName(user) {
+  return (
+    `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Utilisateur"
+  );
+}
+
+function getAdministrationUserInitials(user) {
+  const parts = [user.firstName, user.lastName]
+    .map((part) => String(part || "").trim())
+    .filter(Boolean);
+  if (!parts.length) return "U";
+  return parts
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
+
+function buildAdministrationTabs(activeSubpageKey) {
+  return `
+    <div class="org-tabs administration-tabs" role="tablist" aria-label="${localizeAdministrationText("Sous-pages administration")}">
+      ${Object.entries(administrationSubpages.tabs)
+        .map(
+          ([key, tab]) => `
+            <button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-admin-subpage="${key}">
+              ${localizeAdministrationText(tab.label)}
+            </button>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function buildAdministrationOrgOptions(kind, selectedValue = "") {
+  return [
+    '<option value="">Non renseigné</option>',
+    ...getOrganizationRecords(kind).map((record) => {
+      const value = record.name || record.code || "";
+      return `<option value="${escapeHtml(value)}"${value === selectedValue ? " selected" : ""}>${escapeHtml(record.code || "")} — ${escapeHtml(record.name || value)}</option>`;
+    }),
+  ].join("");
+}
+
+function buildAdministrationPhotoMarkup(user) {
+  if (user.photo) {
+    return `<img src="${escapeHtml(user.photo)}" alt="Photo de ${escapeHtml(getAdministrationUserFullName(user))}" />`;
+  }
+
+  return `<span>${escapeHtml(getAdministrationUserInitials(user))}</span>`;
+}
+
+function getAdministrationRolePermissions(state, roleName) {
+  const permissions =
+    state.settings.rolePermissions?.[roleName] ||
+    buildAdministrationRolePermissionsDefaults()[roleName] ||
+    {};
+
+  return administrationPermissionMatrix.reduce((accumulator, row) => {
+    accumulator[row.module] = {
+      view: Boolean(permissions[row.module]?.view),
+      create: Boolean(permissions[row.module]?.create),
+      edit: Boolean(permissions[row.module]?.edit),
+      delete: Boolean(permissions[row.module]?.delete),
+      validate: Boolean(permissions[row.module]?.validate),
+    };
+    return accumulator;
+  }, {});
+}
+
+function getAdministrationRolePermissionValue(
+  state,
+  roleName,
+  moduleName,
+  key,
+) {
+  const rolePermissions = getAdministrationRolePermissions(state, roleName);
+  return Boolean(rolePermissions[moduleName]?.[key]);
+}
+
+function getAdministrationRolePermissionToggleLabel(value) {
+  return value ? "Activée" : "Désactivée";
+}
+
+function toggleAdministrationRolePermission(state, roleName, moduleName, key) {
+  const nextState = JSON.parse(JSON.stringify(state));
+  if (!nextState.settings.rolePermissions) {
+    nextState.settings.rolePermissions =
+      buildAdministrationRolePermissionsDefaults();
+  }
+
+  if (!nextState.settings.rolePermissions[roleName]) {
+    nextState.settings.rolePermissions[roleName] = {};
+  }
+
+  if (!nextState.settings.rolePermissions[roleName][moduleName]) {
+    nextState.settings.rolePermissions[roleName][moduleName] = {
+      view: false,
+      create: false,
+      edit: false,
+      delete: false,
+      validate: false,
+    };
+  }
+
+  nextState.settings.rolePermissions[roleName][moduleName][key] = !Boolean(
+    nextState.settings.rolePermissions[roleName][moduleName][key],
+  );
+
+  saveAdministrationState(nextState);
+  return nextState;
+}
+
+function countAdministrationRolePermissions(rolePermissions) {
+  return administrationPermissionMatrix.reduce((total, row) => {
+    return (
+      total +
+      Object.values(rolePermissions[row.module] || {}).filter(Boolean).length
+    );
+  }, 0);
+}
+
+function renderAdministrationPermissionToggle(
+  state,
+  roleName,
+  moduleName,
+  key,
+) {
+  const checked = getAdministrationRolePermissionValue(
+    state,
+    roleName,
+    moduleName,
+    key,
+  );
+
+  return `
+    <button
+      class="admin-permission-toggle ${checked ? "is-on" : "is-off"}"
+      type="button"
+      data-admin-role-permission="${moduleName}::${key}"
+      data-admin-role-name="${roleName}"
+      aria-pressed="${checked ? "true" : "false"}"
+      aria-label="${escapeHtml(moduleName)} ${escapeHtml(key)} ${getAdministrationRolePermissionToggleLabel(checked)}"
+    >
+      <i class="fa-solid ${checked ? "fa-square-check" : "fa-square"}"></i>
+    </button>
+  `;
+}
+
+function getAdministrationFilteredLogs(state) {
+  return state.logs
+    .filter((log) => {
+      const userMatch =
+        !administrationLogFilters.user ||
+        log.user === administrationLogFilters.user;
+      const moduleMatch =
+        !administrationLogFilters.module ||
+        log.module === administrationLogFilters.module;
+      const actionMatch =
+        !administrationLogFilters.action ||
+        log.action === administrationLogFilters.action;
+      const createdAt = log.date ? new Date(log.date) : null;
+      const fromMatch =
+        !administrationLogFilters.from ||
+        (createdAt
+          ? createdAt >= new Date(`${administrationLogFilters.from}T00:00:00`)
+          : true);
+      const toMatch =
+        !administrationLogFilters.to ||
+        (createdAt
+          ? createdAt <= new Date(`${administrationLogFilters.to}T23:59:59`)
+          : true);
+
+      return userMatch && moduleMatch && actionMatch && fromMatch && toMatch;
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+function buildAdministrationUserDetailsModalShell(title, subtitle, bodyHtml) {
+  return `
+    <div class="org-modal open" role="presentation">
+      <div class="org-modal-backdrop" data-admin-user-close="true"></div>
+      <div class="org-modal-panel" role="dialog" aria-modal="true" aria-labelledby="adminUserModalTitle">
+        <div class="org-modal-head">
+          <div>
+            <div class="org-modal-kicker">Utilisateurs</div>
+            <h3 id="adminUserModalTitle">${escapeHtml(title)}</h3>
+            <p>${escapeHtml(subtitle)}</p>
+          </div>
+          <button class="org-modal-close" type="button" data-admin-user-close="true" aria-label="Fermer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        ${bodyHtml}
+      </div>
+    </div>
+  `;
+}
+
+function renderAdministrationUserDetailsModal(user) {
+  if (!overlayRootEl || !user) return;
+
+  const enterprise = getEnterpriseProfile();
+  const bodyHtml = `
+    <div class="admin-user-detail-modal">
+      <div class="admin-user-detail-hero">
+        <div class="admin-user-avatar admin-user-detail-avatar">
+          ${buildAdministrationPhotoMarkup(user)}
+        </div>
+        <div>
+          <div class="admin-user-detail-code">${escapeHtml(user.code)}</div>
+          <h4>${escapeHtml(getAdministrationUserFullName(user))}</h4>
+          <p>${escapeHtml(user.role)} · ${escapeHtml(user.functionTitle)}</p>
+        </div>
+      </div>
+      <div class="org-detail-grid">
+        <div class="org-detail-item"><span>Nom d'utilisateur</span><strong>${escapeHtml(user.username)}</strong></div>
+        <div class="org-detail-item"><span>Email</span><strong>${escapeHtml(user.email)}</strong></div>
+        <div class="org-detail-item"><span>Téléphone</span><strong>${escapeHtml(user.phone || "-")}</strong></div>
+        <div class="org-detail-item"><span>Unité</span><strong>${escapeHtml(user.unit || "Non renseigné")}</strong></div>
+        <div class="org-detail-item"><span>Division</span><strong>${escapeHtml(user.division || "Non renseigné")}</strong></div>
+        <div class="org-detail-item"><span>Département</span><strong>${escapeHtml(user.department || "Non renseigné")}</strong></div>
+        <div class="org-detail-item"><span>Langue</span><strong>${escapeHtml(user.language || "-")}</strong></div>
+        <div class="org-detail-item"><span>Fuseau horaire</span><strong>${escapeHtml(user.timezone || "-")}</strong></div>
+        <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(user.status)}</strong></div>
+        <div class="org-detail-item"><span>Date création</span><strong>${formatAdministrationDateTime(user.createdAt)}</strong></div>
+        <div class="org-detail-item"><span>Dernière connexion</span><strong>${formatAdministrationDateTime(user.lastLogin)}</strong></div>
+        <div class="org-detail-item"><span>Code entreprise associé</span><strong>${escapeHtml(user.companyCode || enterprise.code || "ORG-001")}</strong></div>
+      </div>
+      <div class="org-modal-actions">
+        <button class="btn btn-outline" type="button" data-admin-user-print-detail="true">
+          <i class="fa-solid fa-print"></i>
+          <span>Imprimer</span>
+        </button>
+        <button class="btn btn-primary" type="button" data-admin-user-close="true">
+          <i class="fa-solid fa-check"></i>
+          <span>Fermer</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  overlayRootEl.innerHTML = buildAdministrationUserDetailsModalShell(
+    getAdministrationUserFullName(user),
+    "Consultation des informations du compte.",
+    bodyHtml,
+  );
+
+  overlayRootEl
+    .querySelectorAll("[data-admin-user-close]")
+    .forEach((button) => {
+      button.addEventListener("click", function () {
+        overlayRootEl.innerHTML = "";
+      });
+    });
+
+  const printButton = overlayRootEl.querySelector(
+    "[data-admin-user-print-detail]",
+  );
+  if (printButton) {
+    printButton.addEventListener("click", function () {
+      window.print();
+    });
+  }
+}
+
+function openAdministrationUserDetails(recordId) {
+  const state = getAdministrationState();
+  const user = state.users.find((item) => item.id === recordId);
+  if (!user) return;
+
+  renderAdministrationUserDetailsModal(user);
+}
+
+function buildAdministrationUsersSection(state) {
+  const currentUser = administrationUserDraftId
+    ? state.users.find((user) => user.id === administrationUserDraftId) || null
+    : null;
+  const userCount = state.users.length;
+  const activeUsers = state.users.filter(
+    (user) => user.status === "Actif",
+  ).length;
+  const suspendedUsers = state.users.filter(
+    (user) => user.status === "Suspendu",
+  ).length;
+  const roleCount = new Set(state.users.map((user) => user.role)).size;
+
+  return `
+    <section class="administration-section">
+      <div class="administration-section-head">
+        <div>
+          <div class="equipment-section-kicker">Utilisateurs</div>
+          <h3>Gestion de tous les comptes qui accèdent au logiciel.</h3>
+        </div>
+      </div>
+
+      <div class="admin-users-intro">
+        <div class="admin-users-kpi-grid">
+          <div class="admin-summary-card">
+            <span>Comptes</span>
+            <strong>${userCount}</strong>
+            <small>Total des utilisateurs enregistrés</small>
+          </div>
+          <div class="admin-summary-card">
+            <span>Actifs</span>
+            <strong>${activeUsers}</strong>
+            <small>Connexions autorisées</small>
+          </div>
+          <div class="admin-summary-card">
+            <span>Suspendus</span>
+            <strong>${suspendedUsers}</strong>
+            <small>Accès temporairement bloqués</small>
+          </div>
+          <div class="admin-summary-card">
+            <span>Rôles utilisés</span>
+            <strong>${roleCount}</strong>
+            <small>Couverture fonctionnelle</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="administration-section">
+      <div class="administration-section-head">
+        <div>
+          <div class="equipment-section-kicker">Répertoire</div>
+          <h3>Comptes enregistrés</h3>
+          <p>Liste des utilisateurs, des rattachements, du code entreprise associé et de la dernière connexion.</p>
+        </div>
+        <span class="status-badge badge-info">Consultation, impression et export</span>
+      </div>
+      <div class="admin-user-list">
+        ${state.users
+          .map(
+            (user) => `
+              <article class="admin-user-list-item">
+                <div class="admin-user-list-avatar ${user.status === "Suspendu" ? "is-muted" : ""}">
+                  ${buildAdministrationPhotoMarkup(user)}
+                </div>
+                <div class="admin-user-list-main">
+                  <div class="admin-user-list-head">
+                    <div>
+                      <strong>${escapeHtml(getAdministrationUserFullName(user))}</strong>
+                      <p>${escapeHtml(user.username)} · ${escapeHtml(user.email)}</p>
+                    </div>
+                    <span class="status-badge ${user.status === "Actif" ? "badge-success" : user.status === "Suspendu" ? "badge-warning" : "badge-gray"}">${escapeHtml(user.status)}</span>
+                  </div>
+                  <div class="admin-user-tags">
+                    <span>${escapeHtml(user.code)}</span>
+                    <span>${escapeHtml(user.role)}</span>
+                    <span>${escapeHtml(user.functionTitle)}</span>
+                    <span>Entreprise ${escapeHtml(user.companyCode || getEnterpriseProfile().code || "ORG-001")}</span>
+                    <span>${escapeHtml(user.unit || "Non renseigné")}</span>
+                    <span>${escapeHtml(user.division || "Non renseigné")}</span>
+                  </div>
+                  <div class="admin-user-footnote">
+                    <span>Créé le ${formatAdministrationDate(user.createdAt)}</span>
+                    <span>Dernière connexion ${formatAdministrationDateTime(user.lastLogin)}</span>
+                  </div>
+                </div>
+                <div class="admin-user-list-actions">
+                  <button class="btn btn-outline" type="button" data-admin-user-view="${escapeHtml(user.id)}">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                  <button class="btn btn-outline" type="button" data-admin-user-print="${escapeHtml(user.id)}">
+                    <i class="fa-solid fa-print"></i>
+                  </button>
+                  <button class="btn btn-outline danger" type="button" data-admin-user-delete="${escapeHtml(user.id)}">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </div>
+              </article>
+            `,
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function buildAdministrationRolesSection(state) {
+  const selectedRole = state.settings.selectedRole || "Responsable";
+  const rolePermissions = getAdministrationRolePermissions(state, selectedRole);
+  const activePermissions = countAdministrationRolePermissions(rolePermissions);
+  const totalPermissions = administrationPermissionMatrix.reduce(
+    (total, row) =>
+      total +
+      (row.module === "Dashboard" || row.module === "Arborescence" ? 1 : 5),
+    0,
+  );
+
+  return `
+    <section class="administration-section admin-roles-hero">
+      <div class="administration-section-head">
+        <div>
+          <div class="equipment-section-kicker">Administration</div>
+          <h3>Rôles & Permissions</h3>
+          <p>Définir qui peut faire quoi dans chaque module, avec une matrice éditable par rôle.</p>
+        </div>
+        <span class="status-badge badge-info">Modifications enregistrées automatiquement</span>
+      </div>
+      <div class="admin-summary-grid admin-roles-kpi-grid">
+        <div class="admin-summary-card">
+          <span>Rôles prédéfinis</span>
+          <strong>7</strong>
+          <small>Verrouillés par défaut</small>
+        </div>
+        <div class="admin-summary-card">
+          <span>Modules</span>
+          <strong>${administrationPermissionMatrix.length}</strong>
+          <small>Couverture complète</small>
+        </div>
+        <div class="admin-summary-card">
+          <span>Droits actifs</span>
+          <strong>${activePermissions}</strong>
+          <small>Rôle ${escapeHtml(selectedRole)}</small>
+        </div>
+        <div class="admin-summary-card">
+          <span>Droits modifiables</span>
+          <strong>${totalPermissions}</strong>
+          <small>Voir, créer, modifier, supprimer, valider</small>
+        </div>
+      </div>
+    </section>
+
+    <div class="admin-role-grid">
+      <section class="administration-section">
+        <div class="administration-section-head">
+          <div>
+            <div class="equipment-section-kicker">Matrice</div>
+            <h3>Permissions par module</h3>
+            <p>Choisissez un rôle, puis modifiez ses permissions via des boutons à état.</p>
+          </div>
+        </div>
+
+        <div class="admin-role-control">
+          <label for="adminRoleSelect">Rôle</label>
+          <select id="adminRoleSelect" class="admin-role-select">
+            ${administrationRoleCatalog
+              .map(
+                (roleName) =>
+                  `<option value="${roleName}"${roleName === selectedRole ? " selected" : ""}>${roleName}</option>`,
+              )
+              .join("")}
+          </select>
+        </div>
+
+        <div class="admin-role-matrix-summary">
+          <div class="admin-role-matrix-summary-item">
+            <span>Rôle actif</span>
+            <strong>${escapeHtml(selectedRole)}</strong>
+          </div>
+          <div class="admin-role-matrix-summary-item">
+            <span>Permissions actives</span>
+            <strong>${activePermissions}</strong>
+          </div>
+        </div>
+
+        <div class="admin-permission-table-wrap">
+          <table class="admin-permission-table admin-permission-table--interactive">
+            <thead>
+              <tr>
+                <th>Module</th>
+                <th>Voir</th>
+                <th>Créer</th>
+                <th>Modifier</th>
+                <th>Supprimer</th>
+                <th>Valider</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${administrationPermissionMatrix
+                .map(
+                  (row) => `
+                  <tr>
+                    <td>${escapeHtml(row.module)}</td>
+                    <td>${renderAdministrationPermissionToggle(state, selectedRole, row.module, "view")}</td>
+                    <td>${renderAdministrationPermissionToggle(state, selectedRole, row.module, "create")}</td>
+                    <td>${renderAdministrationPermissionToggle(state, selectedRole, row.module, "edit")}</td>
+                    <td>${renderAdministrationPermissionToggle(state, selectedRole, row.module, "delete")}</td>
+                    <td>${renderAdministrationPermissionToggle(state, selectedRole, row.module, "validate")}</td>
+                  </tr>
+                `,
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="administration-section">
+        <div class="administration-section-head">
+          <div>
+            <div class="equipment-section-kicker">Rôles verrouillés</div>
+            <h3>Profils prédéfinis</h3>
+            <p>Ces rôles servent de base de sécurité. Les permissions fines peuvent être dérivées ensuite pour les profils métier.</p>
+          </div>
+        </div>
+        <div class="admin-role-cards">
+          <article class="admin-role-card locked">
+            <div class="admin-role-card-head">
+              <strong>Super Admin</strong>
+              <span class="status-badge badge-warning">Accès total</span>
+            </div>
+            <p>Contrôle complet de tous les modules, de la configuration et des données.</p>
+          </article>
+          <article class="admin-role-card locked">
+            <div class="admin-role-card-head">
+              <strong>Admin</strong>
+              <span class="status-badge badge-info">Quasi total</span>
+            </div>
+            <p>Tout sauf les actions réservées au Super Admin, notamment la hiérarchie de sécurité.</p>
+          </article>
+          <article class="admin-role-card locked">
+            <div class="admin-role-card-head">
+              <strong>Responsable</strong>
+              <span class="status-badge badge-success">Voir + créer + modifier + valider</span>
+            </div>
+            <p>Profil d'exploitation pour les responsables de service et les validateurs.</p>
+          </article>
+          <article class="admin-role-card locked">
+            <div class="admin-role-card-head">
+              <strong>Technicien</strong>
+              <span class="status-badge badge-gray">Opérations terrain</span>
+            </div>
+            <p>Lecture large et création des DI/BT avec modification des OT affectés.</p>
+          </article>
+          <article class="admin-role-card locked">
+            <div class="admin-role-card-head">
+              <strong>Magasinier</strong>
+              <span class="status-badge badge-gray">Stock uniquement</span>
+            </div>
+            <p>Gère le stock, les mouvements et les validations de réception.</p>
+          </article>
+          <article class="admin-role-card locked">
+            <div class="admin-role-card-head">
+              <strong>Acheteur</strong>
+              <span class="status-badge badge-gray">Achats + fournisseurs</span>
+            </div>
+            <p>Suit le cycle achat et les échanges avec les fournisseurs.</p>
+          </article>
+          <article class="admin-role-card locked">
+            <div class="admin-role-card-head">
+              <strong>Consultant</strong>
+              <span class="status-badge badge-info">Lecture seule</span>
+            </div>
+            <p>Accès de consultation sans modification ni validation.</p>
+          </article>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function buildAdministrationGeneralSection(state) {
+  const settings = state.settings;
+  const languageKey = getAdministrationLanguageKey(state);
+
+  return `
+    <form class="admin-settings-form" id="adminGeneralForm">
+      <section class="administration-section">
+        <div class="administration-section-head">
+          <div>
+            <div class="equipment-section-kicker">${localizeAdministrationText("Entreprise", state)}</div>
+            <h3>${localizeAdministrationText("Paramètres généraux", state)}</h3>
+            <p>${localizeAdministrationText("Configuration globale du logiciel, des alertes et de la numérotation automatique.", state)}</p>
+          </div>
+          <span class="status-badge badge-info">${localizeAdministrationText("Sauvegarde locale", state)}</span>
+        </div>
+
+        <div class="org-form-grid">
+          <div class="field-group">
+            <label for="adminCompanyName">${localizeAdministrationText("Nom entreprise", state)}</label>
+            <input id="adminCompanyName" type="text" value="${escapeHtml(settings.companyName)}" disabled />
+            <div class="org-field-hint">${localizeAdministrationText("Valeur automatiquement liée à l'Organisation.", state)}</div>
+          </div>
+          <div class="field-group">
+            <label for="adminCompanyLogo">${localizeAdministrationText("Logo", state)}</label>
+            <input id="adminCompanyLogo" type="file" accept="image/*" />
+            <div class="org-field-hint">${localizeAdministrationText("Utilisé dans les exports PDF et les impressions.", state)}</div>
+          </div>
+          <div class="field-group">
+            <label for="adminCurrency">${localizeAdministrationText("Devise", state)}</label>
+            <select id="adminCurrency">
+              ${administrationCurrencyOptions
+                .map(
+                  (currency) =>
+                    `<option value="${currency}"${settings.currency === currency ? " selected" : ""}>${currency}</option>`,
+                )
+                .join("")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="adminDefaultLanguage">${localizeAdministrationText("Langue par défaut", state)}</label>
+            <select id="adminDefaultLanguage">
+              ${administrationLanguageOptions
+                .map(
+                  (language) =>
+                    `<option value="${language}"${normalizeAdministrationLanguage(settings.defaultLanguage) === language ? " selected" : ""}>${getAdministrationLanguageLabel(language, state)}</option>`,
+                )
+                .join("")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="adminTimezone">${localizeAdministrationText("Fuseau horaire", state)}</label>
+            <input id="adminTimezone" type="text" value="${escapeHtml(settings.timezone)}" />
+          </div>
+          <div class="field-group">
+            <label for="adminDateFormat">${localizeAdministrationText("Format date", state)}</label>
+            <input id="adminDateFormat" type="text" value="${escapeHtml(settings.dateFormat)}" />
+          </div>
+        </div>
+      </section>
+
+      <section class="administration-section">
+        <div class="administration-section-head">
+          <div>
+            <div class="equipment-section-kicker">${localizeAdministrationText("Notifications", state)}</div>
+            <h3>${localizeAdministrationText("Paramètres d'alertes", state)}</h3>
+            <p>${localizeAdministrationText("Seuils et temporisations pour le stock, les interventions, les achats et les compteurs.", state)}</p>
+          </div>
+        </div>
+        <div class="admin-settings-columns">
+          <div class="admin-settings-card">
+            <h4>${localizeAdministrationText("Alertes stock", state)}</h4>
+            <div class="admin-toggle-list">
+              <label><input type="checkbox" id="adminStockMinimum"${settings.notifications.stockMinimum ? " checked" : ""} /> ${localizeAdministrationText("Activer alertes stock minimum", state)}</label>
+              <label><input type="checkbox" id="adminStockSafety"${settings.notifications.stockSafety ? " checked" : ""} /> ${localizeAdministrationText("Activer alertes stock sécurité", state)}</label>
+              <label><input type="checkbox" id="adminStockBreakage"${settings.notifications.stockBreakage ? " checked" : ""} /> ${localizeAdministrationText("Activer alertes rupture", state)}</label>
+            </div>
+          </div>
+          <div class="admin-settings-card">
+            <h4>${localizeAdministrationText("Alertes interventions", state)}</h4>
+            <div class="org-form-grid">
+              <div class="field-group">
+                <label for="adminDiDelayDays">${localizeAdministrationText("DI non traitée après X jours", state)}</label>
+                <input id="adminDiDelayDays" type="number" min="0" value="${escapeHtml(settings.notifications.diDelayDays)}" />
+              </div>
+              <div class="field-group">
+                <label for="adminOtDelayDays">${localizeAdministrationText("OT en retard après X jours", state)}</label>
+                <input id="adminOtDelayDays" type="number" min="0" value="${escapeHtml(settings.notifications.otDelayDays)}" />
+              </div>
+              <div class="field-group">
+                <label for="adminBtDelayDays">${localizeAdministrationText("BT non validé après X jours", state)}</label>
+                <input id="adminBtDelayDays" type="number" min="0" value="${escapeHtml(settings.notifications.btDelayDays)}" />
+              </div>
+              <div class="field-group">
+                <label for="adminBcDelayDays">${localizeAdministrationText("BC non reçu après X jours", state)}</label>
+                <input id="adminBcDelayDays" type="number" min="0" value="${escapeHtml(settings.notifications.bcDelayDays)}" />
+              </div>
+              <div class="field-group">
+                <label for="adminDaDelayDays">${localizeAdministrationText("DA en attente après X jours", state)}</label>
+                <input id="adminDaDelayDays" type="number" min="0" value="${escapeHtml(settings.notifications.daDelayDays)}" />
+              </div>
+              <div class="field-group">
+                <label for="adminCounterThreshold">Alerte seuil compteur</label>
+                <select id="adminCounterThreshold">
+                  <option value="true"${settings.notifications.counterThreshold ? " selected" : ""}>Oui</option>
+                  <option value="false"${!settings.notifications.counterThreshold ? " selected" : ""}>Non</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="administration-section">
+        <div class="administration-section-head">
+          <div>
+            <div class="equipment-section-kicker">Numérotation</div>
+            <h3>Préfixes automatiques</h3>
+            <p>Réglage des préfixes, du nombre de chiffres et du reset de séquence.</p>
+          </div>
+        </div>
+        <div class="org-form-grid">
+          ${[
+            ["diPrefix", "DI"],
+            ["otPrefix", "OT"],
+            ["btPrefix", "BT"],
+            ["daPrefix", "DA"],
+            ["bcPrefix", "BC"],
+            ["recPrefix", "REC"],
+            ["plnPrefix", "PLN"],
+            ["cptPrefix", "CPT"],
+            ["frnPrefix", "FRN"],
+            ["ctrPrefix", "CTR"],
+          ]
+            .map(
+              ([key, label]) => `
+                <div class="field-group">
+                  <label for="admin${label}Prefix">${label}</label>
+                  <input id="admin${label}Prefix" type="text" value="${escapeHtml(settings.numbering[key])}" />
+                </div>
+              `,
+            )
+            .join("")}
+          <div class="field-group">
+            <label for="adminNumberDigits">Nombre de chiffres</label>
+            <select id="adminNumberDigits">
+              ${["3", "4", "5"].map((digits) => `<option value="${digits}"${settings.numbering.digits === digits ? " selected" : ""}>${digits}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="adminResetPolicy">Remise à zéro</label>
+            <select id="adminResetPolicy">
+              ${["Annuelle", "Jamais"].map((policy) => `<option value="${policy}"${settings.numbering.resetPolicy === policy ? " selected" : ""}>${policy}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="administration-section">
+        <div class="administration-section-head">
+          <div>
+            <div class="equipment-section-kicker">Stock et interventions</div>
+            <h3>Workflow métier</h3>
+            <p>Paramètres de valorisation du stock et règles de validation des interventions.</p>
+          </div>
+        </div>
+        <div class="admin-settings-columns">
+          <div class="admin-settings-card">
+            <h4>Stock</h4>
+            <div class="org-form-grid">
+              <div class="field-group">
+                <label for="adminStockValuation">Méthode valorisation</label>
+                <select id="adminStockValuation">
+                  ${["PMP", "FIFO", "LIFO"].map((method) => `<option value="${method}"${settings.stock.valuation === method ? " selected" : ""}>${method}</option>`).join("")}
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="adminNegativeStock">Autoriser stock négatif</label>
+                <select id="adminNegativeStock">
+                  <option value="true"${settings.stock.negativeStock ? " selected" : ""}>Oui</option>
+                  <option value="false"${!settings.stock.negativeStock ? " selected" : ""}>Non</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="adminBlockOnShortage">Blocage sortie si rupture</label>
+                <select id="adminBlockOnShortage">
+                  <option value="true"${settings.stock.blockOnShortage ? " selected" : ""}>Oui</option>
+                  <option value="false"${!settings.stock.blockOnShortage ? " selected" : ""}>Non</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="adminReceptionValidation">Validation réception obligatoire</label>
+                <select id="adminReceptionValidation">
+                  <option value="true"${settings.stock.requireReceptionValidation ? " selected" : ""}>Oui</option>
+                  <option value="false"${!settings.stock.requireReceptionValidation ? " selected" : ""}>Non</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="admin-settings-card">
+            <h4>Interventions</h4>
+            <div class="org-form-grid">
+              <div class="field-group">
+                <label for="adminRequireDiBeforeOt">DI obligatoire avant OT</label>
+                <select id="adminRequireDiBeforeOt">
+                  <option value="true"${settings.interventions.requireDiBeforeOt ? " selected" : ""}>Oui</option>
+                  <option value="false"${!settings.interventions.requireDiBeforeOt ? " selected" : ""}>Non</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="adminRequireBtSignature">Signature BT obligatoire</label>
+                <select id="adminRequireBtSignature">
+                  <option value="true"${settings.interventions.requireBtSignature ? " selected" : ""}>Oui</option>
+                  <option value="false"${!settings.interventions.requireBtSignature ? " selected" : ""}>Non</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="adminRequireBtPhotos">Photos obligatoires dans BT</label>
+                <select id="adminRequireBtPhotos">
+                  <option value="true"${settings.interventions.requireBtPhotos ? " selected" : ""}>Oui</option>
+                  <option value="false"${!settings.interventions.requireBtPhotos ? " selected" : ""}>Non</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="adminRequireSafetyChecklist">Checklist sécurité obligatoire</label>
+                <select id="adminRequireSafetyChecklist">
+                  <option value="true"${settings.interventions.requireSafetyChecklist ? " selected" : ""}>Oui</option>
+                  <option value="false"${!settings.interventions.requireSafetyChecklist ? " selected" : ""}>Non</option>
+                </select>
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="adminMaxPendingDiDays">Délai max DI non traitée (jours)</label>
+                <input id="adminMaxPendingDiDays" type="number" min="0" value="${escapeHtml(settings.interventions.maxPendingDiDays)}" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="administration-section">
+        <div class="administration-section-head">
+          <div>
+            <div class="equipment-section-kicker">${localizeAdministrationText("Sauvegarde", state)}</div>
+            <h3>${localizeAdministrationText("Export, import et réinitialisation", state)}</h3>
+            <p>${localizeAdministrationText("Base d'export JSON, import complet et options de remise à zéro par module.", state)}</p>
+          </div>
+        </div>
+        <div class="org-form-grid">
+          <div class="field-group">
+            <label for="adminBackupExportMode">Export données</label>
+            <select id="adminBackupExportMode">
+              ${["JSON", "CSV"].map((mode) => `<option value="${mode}"${settings.backup.exportMode === mode ? " selected" : ""}>${mode}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="adminBackupExportScope">${localizeAdministrationText("Portée export", state)}</label>
+            <select id="adminBackupExportScope">
+              ${["Tous les modules", "Par module"].map((scope) => `<option value="${scope}"${settings.backup.exportScope === scope ? " selected" : ""}>${localizeAdministrationText(scope, state)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="adminBackupFrequency">${localizeAdministrationText("Fréquence sauvegarde auto", state)}</label>
+            <select id="adminBackupFrequency">
+              ${["Quotidienne", "Hebdomadaire", "Mensuelle", "Aucune"].map((frequency) => `<option value="${frequency}"${settings.backup.autoFrequency === frequency ? " selected" : ""}>${localizeAdministrationText(frequency, state)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="adminBackupImportMode">Import données</label>
+            <select id="adminBackupImportMode">
+              ${["JSON"].map((mode) => `<option value="${mode}"${settings.backup.importMode === mode ? " selected" : ""}>${mode}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="adminBackupResetMode">Réinitialisation</label>
+            <select id="adminBackupResetMode">
+              ${["Module unique", "Double confirmation", "Désactivée"].map((mode) => `<option value="${mode}"${settings.backup.resetMode === mode ? " selected" : ""}>${mode}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <div class="org-modal-actions">
+        <button class="btn btn-primary" type="submit">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>${localizeAdministrationText("Enregistrer les paramètres", state)}</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function buildAdministrationLogsSection(state) {
+  const filteredLogs = getAdministrationFilteredLogs(state);
+  const users = Array.from(new Set(state.logs.map((log) => log.user))).sort();
+  const modules = Array.from(
+    new Set(state.logs.map((log) => log.module)),
+  ).sort();
+  const actions = Array.from(
+    new Set(state.logs.map((log) => log.action)),
+  ).sort();
+
+  return `
+    <div class="admin-hero-grid">
+      <div class="admin-hero-copy">
+        <div class="org-section-kicker">Administration</div>
+        <h2>Journaux système</h2>
+        <p>Consultation uniquement. Chaque ligne trace l'utilisateur, l'action, le module concerné, l'enregistrement ciblé et le détail avant/après.</p>
+      </div>
+      <div class="admin-summary-grid">
+        <div class="admin-summary-card">
+          <span>Entrées visibles</span>
+          <strong>${filteredLogs.length}</strong>
+          <small>Après filtrage</small>
+        </div>
+        <div class="admin-summary-card">
+          <span>Actions distinctes</span>
+          <strong>${actions.length}</strong>
+          <small>Typologie d'audit</small>
+        </div>
+        <div class="admin-summary-card">
+          <span>Modules suivis</span>
+          <strong>${modules.length}</strong>
+          <small>Couverture de traçabilité</small>
+        </div>
+        <div class="admin-summary-card">
+          <span>Utilisateurs</span>
+          <strong>${users.length}</strong>
+          <small>Comptes présents dans l'historique</small>
+        </div>
+      </div>
+    </div>
+
+    <section class="administration-section">
+      <div class="administration-section-head">
+        <div>
+          <div class="equipment-section-kicker">Filtres</div>
+          <h3>Recherche des journaux</h3>
+          <p>Affinage par utilisateur, module, type d'action et intervalle de dates.</p>
+        </div>
+      </div>
+
+      <div class="admin-log-filters">
+        <label>
+          <span>Utilisateur</span>
+          <select data-admin-log-filter="user">
+            <option value="">Tous</option>
+            ${users.map((user) => `<option value="${escapeHtml(user)}"${administrationLogFilters.user === user ? " selected" : ""}>${escapeHtml(user)}</option>`).join("")}
+          </select>
+        </label>
+        <label>
+          <span>Module</span>
+          <select data-admin-log-filter="module">
+            <option value="">Tous</option>
+            ${modules.map((module) => `<option value="${escapeHtml(module)}"${administrationLogFilters.module === module ? " selected" : ""}>${escapeHtml(module)}</option>`).join("")}
+          </select>
+        </label>
+        <label>
+          <span>Type d'action</span>
+          <select data-admin-log-filter="action">
+            <option value="">Tous</option>
+            ${actions.map((action) => `<option value="${escapeHtml(action)}"${administrationLogFilters.action === action ? " selected" : ""}>${escapeHtml(action)}</option>`).join("")}
+          </select>
+        </label>
+        <label>
+          <span>Du</span>
+          <input data-admin-log-filter="from" type="date" value="${escapeHtml(administrationLogFilters.from)}" />
+        </label>
+        <label>
+          <span>Au</span>
+          <input data-admin-log-filter="to" type="date" value="${escapeHtml(administrationLogFilters.to)}" />
+        </label>
+      </div>
+
+      <div class="admin-permission-table-wrap admin-log-table-wrap">
+        <table class="admin-permission-table admin-log-table">
+          <thead>
+            <tr>
+              <th>Date et heure</th>
+              <th>Utilisateur</th>
+              <th>Action</th>
+              <th>Module</th>
+              <th>Enregistrement</th>
+              <th>Détail</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              filteredLogs
+                .map(
+                  (log) => `
+                  <tr>
+                    <td>${formatAdministrationDateTime(log.date)}</td>
+                    <td>${escapeHtml(log.user)}</td>
+                    <td><span class="status-badge badge-info">${escapeHtml(log.action)}</span></td>
+                    <td>${escapeHtml(log.module)}</td>
+                    <td>${escapeHtml(log.record)}</td>
+                    <td>
+                      <div class="admin-log-detail">${escapeHtml(log.detail)}</div>
+                      <div class="admin-log-before-after"><span>Avant: ${escapeHtml(log.before)}</span><span>Après: ${escapeHtml(log.after)}</span></div>
+                    </td>
+                  </tr>
+                `,
+                )
+                .join("") ||
+              `<tr><td colspan="6"><div class="org-empty-card admin-empty-card"><div class="blank-badge"><i class="fa-regular fa-folder-open"></i></div><h2>Aucun journal trouvé</h2><p>Adaptez les filtres pour afficher d'autres entrées.</p></div></td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function buildAdministrationSection(activeSubpageKey, state) {
+  if (activeSubpageKey === "roles") {
+    return buildAdministrationRolesSection(state);
+  }
+
+  if (activeSubpageKey === "general") {
+    return buildAdministrationGeneralSection(state);
+  }
+
+  if (activeSubpageKey === "logs") {
+    return buildAdministrationLogsSection(state);
+  }
+
+  return buildAdministrationUsersSection(state);
+}
+
+function buildAdministrationActionButtons(activeSubpageKey, state) {
+  if (!pageActionsEl) return;
+
+  if (activeSubpageKey === "utilisateurs") {
+    pageActionsEl.innerHTML = `
+      <button class="btn btn-outline" type="button" data-admin-export-users>
+        <i class="fa-solid fa-file-csv"></i>
+        <span>${localizeAdministrationText("Exporter CSV", state)}</span>
+      </button>
+      <button class="btn btn-primary" type="button" data-admin-users-print>
+        <i class="fa-solid fa-print"></i>
+        <span>${localizeAdministrationText("Imprimer", state)}</span>
+      </button>
+    `;
+    return;
+  }
+
+  if (activeSubpageKey === "general") {
+    pageActionsEl.innerHTML = `
+      <button class="btn btn-primary" type="button" data-admin-settings-save>
+        <i class="fa-solid fa-floppy-disk"></i>
+        <span>${localizeAdministrationText("Enregistrer", state)}</span>
+      </button>
+    `;
+    return;
+  }
+
+  if (activeSubpageKey === "logs") {
+    pageActionsEl.innerHTML = `
+      <button class="btn btn-outline" type="button" data-admin-export-logs>
+        <i class="fa-solid fa-file-csv"></i>
+        <span>${localizeAdministrationText("Exporter CSV", state)}</span>
+      </button>
+      <button class="btn btn-primary" type="button" data-admin-print-logs>
+        <i class="fa-solid fa-print"></i>
+        <span>${localizeAdministrationText("Imprimer / PDF", state)}</span>
+      </button>
+    `;
+    return;
+  }
+
+  pageActionsEl.innerHTML = "";
+}
+
+function renderAdministrationPage(subpageKey) {
+  const activeSubpageKey = administrationSubpages.tabs[subpageKey]
+    ? subpageKey
+    : administrationSubpages.defaultSubpage;
+  const activeSubpage = administrationSubpages.tabs[activeSubpageKey];
+  const state = getAdministrationState();
+
+  if (pageTitleEl)
+    pageTitleEl.textContent = localizeAdministrationText(
+      "Administration",
+      state,
+    );
+  if (pageSubtitleEl)
+    pageSubtitleEl.textContent = localizeAdministrationText(
+      activeSubpage.body,
+      state,
+    );
+  buildAdministrationActionButtons(activeSubpageKey, state);
+
+  if (!pageContentEl) return;
+
+  pageContentEl.className = "organization-page administration-page";
+  pageContentEl.innerHTML = `
+    ${buildAdministrationTabs(activeSubpageKey)}
+    ${buildAdministrationSection(activeSubpageKey, state)}
+  `;
+
+  applyLocalizedShell(state);
+  attachAdministrationTabHandlers();
+  attachAdministrationRolesHandlers(state);
+  attachAdministrationUserHandlers(state);
+  attachAdministrationGeneralHandlers(state);
+  attachAdministrationLogHandlers(state);
+}
+
+function attachAdministrationTabHandlers() {
+  if (!pageContentEl) return;
+
+  pageContentEl.querySelectorAll("[data-admin-subpage]").forEach((button) => {
+    button.addEventListener("click", function () {
+      const nextSubpage =
+        this.dataset.adminSubpage || administrationSubpages.defaultSubpage;
+      renderPage("parametres", nextSubpage);
+      window.location.hash = `parametres/${nextSubpage}`;
+    });
+  });
+}
+
+function attachAdministrationRolesHandlers(state) {
+  if (!pageContentEl) return;
+
+  const roleSelect = pageContentEl.querySelector("#adminRoleSelect");
+  if (roleSelect) {
+    roleSelect.addEventListener("change", function () {
+      const nextState = getAdministrationState();
+      nextState.settings.selectedRole = this.value;
+      saveAdministrationState(nextState);
+      renderPage("parametres", "roles");
+      window.location.hash = "parametres/roles";
+    });
+  }
+
+  pageContentEl
+    .querySelectorAll("[data-admin-role-permission]")
+    .forEach((button) => {
+      button.addEventListener("click", function () {
+        const roleName = this.dataset.adminRoleName || "";
+        const permissionKey = this.dataset.adminRolePermission || "";
+        const [moduleName, actionKey] = permissionKey.split("::");
+        if (!roleName || !moduleName || !actionKey) return;
+
+        const nextState = toggleAdministrationRolePermission(
+          getAdministrationState(),
+          roleName,
+          moduleName,
+          actionKey,
+        );
+        nextState.settings.selectedRole = roleName;
+        saveAdministrationState(nextState);
+        renderPage("parametres", "roles");
+        window.location.hash = "parametres/roles";
+      });
+    });
+}
+
+function readAdministrationFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function () {
+      resolve(String(reader.result || ""));
+    };
+    reader.onerror = function () {
+      reject(new Error("Impossible de lire le fichier."));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function downloadAdministrationCsv(filename, rows) {
+  const escapeCell = (value) =>
+    `"${String(value ?? "").replaceAll('"', '""')}"`;
+  const csv = rows.map((row) => row.map(escapeCell).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function attachAdministrationUserHandlers(state) {
+  if (!pageContentEl) return;
+
+  const exportButton = pageActionsEl
+    ? pageActionsEl.querySelector("[data-admin-export-users]")
+    : null;
+  const printButton = pageActionsEl
+    ? pageActionsEl.querySelector("[data-admin-users-print]")
+    : null;
+
+  if (exportButton) {
+    exportButton.addEventListener("click", function () {
+      const rows = [
+        [
+          "Numéro",
+          "Nom",
+          "Prénom",
+          "Nom d'utilisateur",
+          "Email",
+          "Téléphone",
+          "Rôle",
+          "Fonction",
+          "Unité",
+          "Division",
+          "Département",
+          "Statut",
+        ],
+        ...state.users.map((user) => [
+          user.code,
+          user.lastName,
+          user.firstName,
+          user.username,
+          user.email,
+          user.phone,
+          user.role,
+          user.functionTitle,
+          user.unit,
+          user.division,
+          user.department,
+          user.status,
+        ]),
+      ];
+      downloadAdministrationCsv("utilisateurs-administration.csv", rows);
+    });
+  }
+
+  if (printButton) {
+    printButton.addEventListener("click", function () {
+      window.print();
+    });
+  }
+
+  pageContentEl.querySelectorAll("[data-admin-user-view]").forEach((button) => {
+    button.addEventListener("click", function () {
+      const recordId = this.dataset.adminUserView || "";
+      openAdministrationUserDetails(recordId);
+    });
+  });
+
+  pageContentEl
+    .querySelectorAll("[data-admin-user-print]")
+    .forEach((button) => {
+      button.addEventListener("click", function () {
+        const recordId = this.dataset.adminUserPrint || "";
+        const user = state.users.find((item) => item.id === recordId);
+        if (!user) return;
+
+        renderAdministrationUserDetailsModal(user);
+        setTimeout(() => window.print(), 0);
+      });
+    });
+
+  pageContentEl
+    .querySelectorAll("[data-admin-user-delete]")
+    .forEach((button) => {
+      button.addEventListener("click", function () {
+        const userId = this.dataset.adminUserDelete;
+        if (!userId) return;
+
+        const nextState = getAdministrationState();
+        const user = nextState.users.find((item) => item.id === userId);
+        if (!user) return;
+
+        if (
+          !window.confirm(`Supprimer ${getAdministrationUserFullName(user)} ?`)
+        )
+          return;
+
+        nextState.users = nextState.users.filter((item) => item.id !== userId);
+        nextState.logs = [
+          {
+            id: `log-${Date.now()}`,
+            date: new Date().toISOString(),
+            user: "Administrateur système",
+            action: "Suppression enregistrement",
+            module: "Administration",
+            record: user.code,
+            detail: `Utilisateur ${getAdministrationUserFullName(user)} supprimé depuis la page Administration.`,
+            before: getAdministrationUserFullName(user),
+            after: "Compte supprimé",
+          },
+          ...nextState.logs,
+        ];
+        saveAdministrationState(nextState);
+        administrationUserDraftId = null;
+        renderPage("parametres", "utilisateurs");
+        window.location.hash = "parametres/utilisateurs";
+      });
+    });
+}
+
+function attachAdministrationGeneralHandlers() {
+  if (!pageContentEl) return;
+
+  const form = pageContentEl.querySelector("#adminGeneralForm");
+  const saveButton = pageActionsEl
+    ? pageActionsEl.querySelector("[data-admin-settings-save]")
+    : null;
+
+  if (saveButton) {
+    saveButton.addEventListener("click", function () {
+      if (form && typeof form.requestSubmit === "function") {
+        form.requestSubmit();
+      } else if (form) {
+        form.dispatchEvent(
+          new Event("submit", { cancelable: true, bubbles: true }),
+        );
+      }
+    });
+  }
+
+  if (!form) return;
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const nextState = getAdministrationState();
+    const logoInput = form.querySelector("#adminCompanyLogo");
+    const logoFile = logoInput && logoInput.files ? logoInput.files[0] : null;
+    const logoData = logoFile
+      ? await readAdministrationFileAsDataUrl(logoFile)
+      : nextState.settings.logo || "";
+
+    nextState.settings = {
+      ...nextState.settings,
+      logo: logoData,
+      currency:
+        form.querySelector("#adminCurrency")?.value ||
+        nextState.settings.currency,
+      defaultLanguage:
+        form.querySelector("#adminDefaultLanguage")?.value ||
+        nextState.settings.defaultLanguage,
+      timezone:
+        form.querySelector("#adminTimezone")?.value ||
+        nextState.settings.timezone,
+      dateFormat:
+        form.querySelector("#adminDateFormat")?.value ||
+        nextState.settings.dateFormat,
+      stock: {
+        ...nextState.settings.stock,
+        valuation:
+          form.querySelector("#adminStockValuation")?.value ||
+          nextState.settings.stock.valuation,
+        negativeStock:
+          form.querySelector("#adminNegativeStock")?.value === "true",
+        blockOnShortage:
+          form.querySelector("#adminBlockOnShortage")?.value === "true",
+        requireReceptionValidation:
+          form.querySelector("#adminReceptionValidation")?.value === "true",
+      },
+      notifications: {
+        ...nextState.settings.notifications,
+        stockMinimum: !!form.querySelector("#adminStockMinimum")?.checked,
+        stockSafety: !!form.querySelector("#adminStockSafety")?.checked,
+        stockBreakage: !!form.querySelector("#adminStockBreakage")?.checked,
+        diDelayDays: Number(
+          form.querySelector("#adminDiDelayDays")?.value || 0,
+        ),
+        otDelayDays: Number(
+          form.querySelector("#adminOtDelayDays")?.value || 0,
+        ),
+        btDelayDays: Number(
+          form.querySelector("#adminBtDelayDays")?.value || 0,
+        ),
+        bcDelayDays: Number(
+          form.querySelector("#adminBcDelayDays")?.value || 0,
+        ),
+        daDelayDays: Number(
+          form.querySelector("#adminDaDelayDays")?.value || 0,
+        ),
+        contractExpiryDays: nextState.settings.notifications.contractExpiryDays,
+        warrantyExpiryDays: nextState.settings.notifications.warrantyExpiryDays,
+        counterThreshold:
+          form.querySelector("#adminCounterThreshold")?.value === "true",
+      },
+      numbering: {
+        ...nextState.settings.numbering,
+        diPrefix:
+          form.querySelector("#adminDIPrefix")?.value ||
+          nextState.settings.numbering.diPrefix,
+        otPrefix:
+          form.querySelector("#adminOTPrefix")?.value ||
+          nextState.settings.numbering.otPrefix,
+        btPrefix:
+          form.querySelector("#adminBTPrefix")?.value ||
+          nextState.settings.numbering.btPrefix,
+        daPrefix:
+          form.querySelector("#adminDAPrefix")?.value ||
+          nextState.settings.numbering.daPrefix,
+        bcPrefix:
+          form.querySelector("#adminBCPrefix")?.value ||
+          nextState.settings.numbering.bcPrefix,
+        recPrefix:
+          form.querySelector("#adminRECPrefix")?.value ||
+          nextState.settings.numbering.recPrefix,
+        plnPrefix:
+          form.querySelector("#adminPLNPrefix")?.value ||
+          nextState.settings.numbering.plnPrefix,
+        cptPrefix:
+          form.querySelector("#adminCPTPrefix")?.value ||
+          nextState.settings.numbering.cptPrefix,
+        frnPrefix:
+          form.querySelector("#adminFRNPrefix")?.value ||
+          nextState.settings.numbering.frnPrefix,
+        ctrPrefix:
+          form.querySelector("#adminCTRPrefix")?.value ||
+          nextState.settings.numbering.ctrPrefix,
+        digits:
+          form.querySelector("#adminNumberDigits")?.value ||
+          nextState.settings.numbering.digits,
+        resetPolicy:
+          form.querySelector("#adminResetPolicy")?.value ||
+          nextState.settings.numbering.resetPolicy,
+      },
+      interventions: {
+        ...nextState.settings.interventions,
+        requireDiBeforeOt:
+          form.querySelector("#adminRequireDiBeforeOt")?.value === "true",
+        requireBtSignature:
+          form.querySelector("#adminRequireBtSignature")?.value === "true",
+        requireBtPhotos:
+          form.querySelector("#adminRequireBtPhotos")?.value === "true",
+        requireSafetyChecklist:
+          form.querySelector("#adminRequireSafetyChecklist")?.value === "true",
+        maxPendingDiDays: Number(
+          form.querySelector("#adminMaxPendingDiDays")?.value || 0,
+        ),
+      },
+      backup: {
+        ...nextState.settings.backup,
+        exportMode:
+          form.querySelector("#adminBackupExportMode")?.value ||
+          nextState.settings.backup.exportMode,
+        exportScope:
+          form.querySelector("#adminBackupExportScope")?.value ||
+          nextState.settings.backup.exportScope,
+        autoFrequency:
+          form.querySelector("#adminBackupFrequency")?.value ||
+          nextState.settings.backup.autoFrequency,
+        importMode:
+          form.querySelector("#adminBackupImportMode")?.value ||
+          nextState.settings.backup.importMode,
+        resetMode:
+          form.querySelector("#adminBackupResetMode")?.value ||
+          nextState.settings.backup.resetMode,
+      },
+    };
+
+    nextState.logs = [
+      {
+        id: `log-${Date.now()}`,
+        date: new Date().toISOString(),
+        user: "Administrateur système",
+        action: "Modification enregistrement",
+        module: "Administration",
+        record: "PARAM-001",
+        detail:
+          "Paramètres généraux enregistrés depuis la page Administration.",
+        before: "Configuration précédente",
+        after: "Configuration mise à jour",
+      },
+      ...nextState.logs,
+    ];
+
+    saveAdministrationState(nextState);
+    renderPage("parametres", "general");
+    window.location.hash = "parametres/general";
+  });
+}
+
+function attachAdministrationLogHandlers(state) {
+  if (!pageContentEl) return;
+
+  const exportButton = pageActionsEl
+    ? pageActionsEl.querySelector("[data-admin-export-logs]")
+    : null;
+  const printButton = pageActionsEl
+    ? pageActionsEl.querySelector("[data-admin-print-logs]")
+    : null;
+
+  if (exportButton) {
+    exportButton.addEventListener("click", function () {
+      const filteredLogs = getAdministrationFilteredLogs(state);
+      const rows = [
+        [
+          "Date",
+          "Utilisateur",
+          "Action",
+          "Module",
+          "Enregistrement",
+          "Détail",
+          "Avant",
+          "Après",
+        ],
+        ...filteredLogs.map((log) => [
+          formatAdministrationDateTime(log.date),
+          log.user,
+          log.action,
+          log.module,
+          log.record,
+          log.detail,
+          log.before,
+          log.after,
+        ]),
+      ];
+      downloadAdministrationCsv("journaux-systeme.csv", rows);
+    });
+  }
+
+  if (printButton) {
+    printButton.addEventListener("click", function () {
+      window.print();
+    });
+  }
+
+  pageContentEl
+    .querySelectorAll("[data-admin-log-filter]")
+    .forEach((control) => {
+      const key = control.dataset.adminLogFilter;
+      if (!key) return;
+
+      control.addEventListener("change", function () {
+        administrationLogFilters = {
+          ...administrationLogFilters,
+          [key]: this.value,
+        };
+        renderPage("parametres", "logs");
+        window.location.hash = "parametres/logs";
+      });
+    });
+}
+
 function renderSectionSubpages(pageKey, subpageKey) {
   const config = sectionSubpages[pageKey];
   if (!config || !pageContentEl) return;
@@ -6803,7 +9362,9 @@ function renderDashboardPage() {
     ).length;
 
     return {
-      day: date.toLocaleDateString("fr-FR", { weekday: "short" }),
+      day: date.toLocaleDateString(getAdministrationLocale(), {
+        weekday: "short",
+      }),
       value: String(count),
       active: index === 0,
       height: `${Math.max(18, count * 18 + 18)}px`,
@@ -7119,13 +9680,13 @@ function renderNotifications() {
 }
 
 function formatStockNumber(value) {
-  return new Intl.NumberFormat("fr-FR", {
+  return new Intl.NumberFormat(getAdministrationLocale(), {
     maximumFractionDigits: 2,
   }).format(Number(value) || 0);
 }
 
 function formatStockDateTime(date = new Date()) {
-  return date.toLocaleString("fr-FR", {
+  return date.toLocaleString(getAdministrationLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -9526,7 +12087,9 @@ function getPlanificationTechnicianName(technicianId) {
 function formatPlanificationDate(value) {
   if (!value) return "-";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("fr-FR");
+  return Number.isNaN(date.getTime())
+    ? "-"
+    : date.toLocaleString(getAdministrationLocale());
 }
 
 function getPlanificationPlanBadgeClass(value) {
@@ -9991,10 +12554,12 @@ function renderPlanificationPage(subpageKey = "plans-maintenance") {
     ? subpageKey
     : sectionSubpages.planification.defaultSubpage;
 
-  if (pageTitleEl) pageTitleEl.textContent = "Planification";
+  if (pageTitleEl)
+    pageTitleEl.textContent = localizeAdministrationText("Planification");
   if (pageSubtitleEl)
-    pageSubtitleEl.textContent =
-      sectionSubpages.planification.tabs[activeSubpageKey].body;
+    pageSubtitleEl.textContent = localizeAdministrationText(
+      sectionSubpages.planification.tabs[activeSubpageKey].body,
+    );
 
   renderPlanificationActionButtons(activeSubpageKey);
 
@@ -10620,8 +13185,10 @@ function renderStockPage(subpageKey) {
     : stockSubpages.defaultSubpage;
   const activeSubpage = stockSubpages.tabs[activeSubpageKey];
 
-  if (pageTitleEl) pageTitleEl.textContent = "Stock";
-  if (pageSubtitleEl) pageSubtitleEl.textContent = activeSubpage.body;
+  if (pageTitleEl)
+    pageTitleEl.textContent = localizeAdministrationText("Stock");
+  if (pageSubtitleEl)
+    pageSubtitleEl.textContent = localizeAdministrationText(activeSubpage.body);
 
   renderStockPageActions(activeSubpageKey);
 
@@ -10717,10 +13284,13 @@ function planificationDayKey(value) {
 }
 
 function planificationMonthLabel(year, monthIndex) {
-  return new Date(year, monthIndex, 1).toLocaleDateString("fr-FR", {
-    month: "long",
-    year: "numeric",
-  });
+  return new Date(year, monthIndex, 1).toLocaleDateString(
+    getAdministrationLocale(),
+    {
+      month: "long",
+      year: "numeric",
+    },
+  );
 }
 
 function buildPlanificationRef(prefix, items) {
@@ -10986,10 +13556,12 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
     ? subpageKey
     : sectionSubpages.planification.defaultSubpage;
 
-  if (pageTitleEl) pageTitleEl.textContent = "Planification";
+  if (pageTitleEl)
+    pageTitleEl.textContent = localizeAdministrationText("Planification");
   if (pageSubtitleEl)
-    pageSubtitleEl.textContent =
-      sectionSubpages.planification.tabs[activeSubpageKey].body;
+    pageSubtitleEl.textContent = localizeAdministrationText(
+      sectionSubpages.planification.tabs[activeSubpageKey].body,
+    );
 
   const plans = state.plans || [];
   const activePlans = plans.filter(
@@ -11506,11 +14078,13 @@ function buildAchatsRef(prefix, records) {
 function formatAchatsDate(value) {
   if (!value) return "-";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("fr-FR");
+  return Number.isNaN(date.getTime())
+    ? "-"
+    : date.toLocaleString(getAdministrationLocale());
 }
 
 function formatAchatsMoney(value) {
-  return new Intl.NumberFormat("fr-FR", {
+  return new Intl.NumberFormat(getAdministrationLocale(), {
     style: "currency",
     currency: "DZD",
     maximumFractionDigits: 2,
@@ -13120,7 +15694,7 @@ function exportAchatsHistoryPdf(rows) {
       </head>
       <body>
         <h1>Historique Achats</h1>
-        <p>Généré le ${escapeHtml(new Date().toLocaleString("fr-FR"))}</p>
+        <p>${localizeAdministrationText("Généré le")} ${escapeHtml(new Date().toLocaleString(getAdministrationLocale()))}</p>
         <table>
           <thead>
             <tr>
@@ -13339,8 +15913,12 @@ function renderAchatsPage(subpageKey) {
   const config = achatsSubpages.tabs[activeSubpageKey];
   const state = loadAchatsState();
 
-  if (pageTitleEl) pageTitleEl.textContent = `Achats - ${config.title}`;
-  if (pageSubtitleEl) pageSubtitleEl.textContent = config.subtitle;
+  if (pageTitleEl)
+    pageTitleEl.textContent = localizeAdministrationText(
+      `Achats - ${config.title}`,
+    );
+  if (pageSubtitleEl)
+    pageSubtitleEl.textContent = localizeAdministrationText(config.subtitle);
 
   renderAchatsPageActions(activeSubpageKey);
 
@@ -13381,8 +15959,12 @@ function renderPage(pageKey, subpageKey) {
     item.classList.toggle("active", item.dataset.page === pageKey);
   });
 
-  if (pageTitleEl) pageTitleEl.textContent = page.title;
-  if (pageSubtitleEl) pageSubtitleEl.textContent = page.subtitle;
+  if (pageTitleEl)
+    pageTitleEl.textContent = localizeAdministrationText(page.title);
+  if (pageSubtitleEl)
+    pageSubtitleEl.textContent = localizeAdministrationText(page.subtitle);
+
+  applyLocalizedShell();
 
   if (pageContentEl) {
     if (pageKey === "dashboard") {
@@ -13412,6 +15994,8 @@ function renderPage(pageKey, subpageKey) {
       }
     } else if (pageKey === "interventions") {
       renderInterventionsPage(activeSubpageKey);
+    } else if (pageKey === "parametres") {
+      renderAdministrationPage(activeSubpageKey);
     } else if (sectionSubpages[pageKey]) {
       renderSectionSubpages(pageKey, activeSubpageKey);
     } else {
@@ -14251,7 +16835,7 @@ function renderInterventionPrintDocument(recordType, record, enterprise) {
       : recordType === "ot"
         ? "Ordre de travail"
         : "Bon de travail";
-  const printDate = new Date().toLocaleString("fr-FR");
+  const printDate = new Date().toLocaleString(getAdministrationLocale());
   const enterpriseLocation = [
     enterprise.wilaya,
     enterprise.daira,
@@ -14610,7 +17194,8 @@ function renderInterventionsPage(activeTabKey = "di") {
     : "di";
   const directory = getInterventionDirectory();
 
-  if (pageTitleEl) pageTitleEl.textContent = "Interventions";
+  if (pageTitleEl)
+    pageTitleEl.textContent = localizeAdministrationText("Interventions");
   if (pageSubtitleEl) {
     pageSubtitleEl.textContent =
       tabKey === "history"
@@ -15080,8 +17665,8 @@ function renderBtSection(directory) {
             <tr>
               <td><strong>${bt.ref}</strong></td>
               <td class="muted">${bt.otRef || "-"}</td>
-              <td class="muted">${bt.startDate ? new Date(bt.startDate).toLocaleString("fr-FR") : "-"}</td>
-              <td class="muted">${bt.endDate ? new Date(bt.endDate).toLocaleString("fr-FR") : "-"}</td>
+              <td class="muted">${bt.startDate ? new Date(bt.startDate).toLocaleString(getAdministrationLocale()) : "-"}</td>
+              <td class="muted">${bt.endDate ? new Date(bt.endDate).toLocaleString(getAdministrationLocale()) : "-"}</td>
               <td>${bt.duration || bt.durationReal || "-"}</td>
               <td><span class="status-badge ${getInterventionStatusBadgeClass(bt.status)}">${bt.status}</span></td>
               <td>${buildInterventionBtActions(bt)}</td>
@@ -15172,7 +17757,7 @@ function renderHistorySection(directory) {
                 <div class="intervention-history-sub">${escapeHtml(entry.label)} · ${escapeHtml(entry.meta)}</div>
               </div>
               <div style="display:flex;align-items:center;gap:12px">
-                <div class="intervention-history-date">${entry.date ? new Date(entry.date).toLocaleString("fr-FR") : "-"}</div>
+                <div class="intervention-history-date">${entry.date ? new Date(entry.date).toLocaleString(getAdministrationLocale()) : "-"}</div>
                 ${buildInterventionHistoryActions(entry.type.toLowerCase(), entry.id)}
               </div>
             </div>
@@ -15310,7 +17895,9 @@ function getInterventionStatusBadgeClass(value) {
 function formatInterventionDate(value) {
   if (!value) return "-";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("fr-FR");
+  return Number.isNaN(date.getTime())
+    ? "-"
+    : date.toLocaleString(getAdministrationLocale());
 }
 
 function formatInterventionArticleLine(articleLine) {
@@ -16292,14 +18879,14 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
 
   function formatCurrency(value) {
     if (value === null || value === undefined || value === "") return "—";
-    return Number(value).toLocaleString("fr-FR");
+    return Number(value).toLocaleString(getAdministrationLocale());
   }
 
   function formatDate(value) {
     if (!value) return "—";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleDateString("fr-FR");
+    return date.toLocaleDateString(getAdministrationLocale());
   }
 
   function getData(tab, state) {
@@ -17597,7 +20184,6 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
 
   window._fournisseurs = { loadState, saveState, seededState, renderPage };
 })();
-
 
 resetDemoDataIfNeeded();
 bootstrapRoute();
