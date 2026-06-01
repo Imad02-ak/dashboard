@@ -32,6 +32,7 @@ const profileMenu = document.getElementById("profileMenu");
 const stockAlertReadStorageKey = "maintflow.stockAlertReads";
 const stockInventoryStateStorageKey = "maintflow.stockInventoryState";
 const planificationStorageKey = "maintflow.planificationState";
+const connectedUserStorageKey = "maintflow.connectedUserId";
 
 let renderedNotifications = [];
 let organizationModalState = null;
@@ -67,6 +68,7 @@ const organizationUsers = [
 const organizationDefaults = {
   unites: [],
   divisions: [],
+  departmentServices: [],
 };
 
 const pages = {
@@ -143,6 +145,10 @@ const pages = {
   fournisseurs: {
     title: "Fournisseurs",
     subtitle: "Référentiel fournisseurs, catalogue, contrats et évaluations",
+  },
+  profil: {
+    title: "Profil",
+    subtitle: "Informations du compte connecté",
   },
   interventions: {
     title: "Interventions",
@@ -837,14 +843,19 @@ const organizationSubpages = {
     body: "Fiche entreprise, informations de base et logo.",
   },
   unites: {
-    label: "Sites",
-    title: "Sites",
-    body: "Gestion des sites avec responsables et rattachements.",
+    label: "Unités",
+    title: "Unités",
+    body: "Gestion des unités avec responsables et rattachements.",
   },
   divisions: {
     label: "Divisions",
     title: "Divisions",
-    body: "Gestion des divisions avec liaison multi-sites.",
+    body: "Gestion des divisions avec liaison multi-unités.",
+  },
+  "departements-services": {
+    label: "Départements",
+    title: "Départements",
+    body: "Gestion des départements avec liaison multi-divisions.",
   },
 };
 
@@ -936,19 +947,19 @@ function buildOrganizationSeedState() {
     unites: [
       {
         id: "unit-1",
-        code: "SITE-001",
-        name: "Site Nord Production",
+        code: "UNI-001",
+        name: "Unité Nord Production",
         responsibleUserId: "user-2",
         responsibleEmail: "responsable.production@maintflow.local",
         description: "Unité principale de production et d'assemblage",
       },
       {
         id: "unit-2",
-        code: "SITE-002",
-        name: "Site Sud Conditionnement",
+        code: "UNI-002",
+        name: "Unité Sud Conditionnement",
         responsibleUserId: "user-6",
         responsibleEmail: "responsable.logistique@maintflow.local",
-        description: "Site dédié au conditionnement et à la logistique",
+        description: "Unité dédiée au conditionnement et à la logistique",
       },
     ],
     divisions: [
@@ -978,6 +989,38 @@ function buildOrganizationSeedState() {
         responsibleUserId: "user-6",
         responsibleEmail: "responsable.logistique@maintflow.local",
         description: "Convoyage, stockage et expédition",
+      },
+    ],
+    departmentServices: [
+      {
+        id: "department-1",
+        code: "DEP-001",
+        kind: "Département",
+        name: "Département Maintenance",
+        divisionIds: ["division-1"],
+        responsibleUserId: "user-3",
+        responsibleEmail: "technicien.maintenance@maintflow.local",
+        description: "Maintenance préventive et corrective des utilités",
+      },
+      {
+        id: "department-2",
+        code: "DEP-002",
+        kind: "Département",
+        name: "Département Production",
+        divisionIds: ["division-2"],
+        responsibleUserId: "user-2",
+        responsibleEmail: "responsable.production@maintflow.local",
+        description: "Suivi des équipements de production",
+      },
+      {
+        id: "department-3",
+        code: "DEP-003",
+        kind: "Département",
+        name: "Département Logistique",
+        divisionIds: ["division-3"],
+        responsibleUserId: "user-6",
+        responsibleEmail: "responsable.logistique@maintflow.local",
+        description: "Flux de convoyage, stockage et expédition",
       },
     ],
   };
@@ -2803,19 +2846,30 @@ function getOrganizationDirectory() {
         unites: Array.isArray(parsed.unites)
           ? parsed.unites.map((unit) => ({
               ...unit,
+              code:
+                typeof unit.code === "string" && unit.code.startsWith("SITE-")
+                  ? unit.code.replace(/^SITE-/, "UNI-")
+                  : unit.code,
               name:
-                typeof unit.name === "string" && unit.name.includes("Unité")
-                  ? unit.name.replace(/Unité/g, "Site")
+                typeof unit.name === "string" && unit.name.includes("Site")
+                  ? unit.name.replace(/Site/g, "Unité")
                   : unit.name,
             }))
           : directory.unites,
         divisions: Array.isArray(parsed.divisions)
           ? parsed.divisions
           : directory.divisions,
+        departmentServices: Array.isArray(parsed.departmentServices)
+          ? parsed.departmentServices
+          : buildOrganizationSeedState().departmentServices,
       };
     }
 
-    if (!directory.unites.length && !directory.divisions.length) {
+    if (
+      !directory.unites.length &&
+      !directory.divisions.length &&
+      !directory.departmentServices.length
+    ) {
       const seedState = buildOrganizationSeedState();
       try {
         window.localStorage.setItem(
@@ -2858,6 +2912,7 @@ function getOrganizationRecords(kind) {
   const directory = getOrganizationDirectory();
   if (kind === "unites") return directory.unites;
   if (kind === "divisions") return directory.divisions;
+  if (kind === "departmentServices") return directory.departmentServices;
   return [];
 }
 
@@ -3086,10 +3141,10 @@ function renderUnitsManagementPage() {
       : null;
 
   renderOrganizationPageHeader(
-    "Sites",
-    "Gestion des sites avec liste, détails, création, modification et suppression.",
+    "Unités",
+    "Gestion des unités avec liste, détails, création, modification et suppression.",
   );
-  renderOrganizationActionButtons("unites", "Nouveau site");
+  renderOrganizationActionButtons("unites", "Nouvelle unité");
 
   if (!pageContentEl) return;
 
@@ -3119,9 +3174,9 @@ function renderUnitsManagementPage() {
         <td colspan="6">
           ${buildOrganizationEmptyState(
             "fa-building",
-            "Aucun site enregistré",
-            "Créez le premier site pour commencer à structurer l’organisation.",
-            "Le bouton Nouveau site ouvre le formulaire de création.",
+            "Aucune unité enregistrée",
+            "Créez la première unité pour commencer à structurer l’organisation.",
+            "Le bouton Nouvelle unité ouvre le formulaire de création.",
           )}
         </td>
       </tr>
@@ -3134,18 +3189,18 @@ function renderUnitsManagementPage() {
     <div class="org-section-intro">
       <div>
         <div class="org-section-kicker">Référentiel organisation</div>
-        <h2>Sites</h2>
-        <p>Chaque site conserve son code, ses coordonnées et son responsable avec email synchronisé automatiquement.</p>
+        <h2>Unités</h2>
+        <p>Chaque unité conserve son code, ses coordonnées et son responsable avec email synchronisé automatiquement.</p>
       </div>
       <div class="org-section-pills">
-        <span class="status-badge badge-info">${directory.unites.length} sites</span>
+        <span class="status-badge badge-info">${directory.unites.length} unités</span>
         <span class="status-badge badge-gray">${directory.divisions.length} divisions liées</span>
       </div>
     </div>
 
     ${renderOrganizationStats([
       {
-        label: "Sites actifs",
+        label: "Unités actives",
         value: String(directory.unites.length),
         note: "Enregistrement local dans le navigateur",
       },
@@ -3167,7 +3222,7 @@ function renderUnitsManagementPage() {
 
     <div class="card org-list-card">
       <div class="card-head">
-        <div class="card-title"><i class="fa-solid fa-building"></i> Liste des sites</div>
+        <div class="card-title"><i class="fa-solid fa-building"></i> Liste des unités</div>
         <span class="status-badge badge-info">${directory.unites.length} lignes</span>
       </div>
       <div class="table-wrap">
@@ -3190,10 +3245,10 @@ function renderUnitsManagementPage() {
   `;
 
   renderOrganizationModal(
-    activeRecord ? `Détails de ${activeRecord.name}` : "Nouveau site",
+    activeRecord ? `Détails de ${activeRecord.name}` : "Nouvelle unité",
     activeRecord
-      ? "Toutes les informations du site sélectionné."
-      : "Saisissez les informations du nouveau site.",
+      ? "Toutes les informations de l’unité sélectionnée."
+      : "Saisissez les informations de la nouvelle unité.",
     organizationModalState &&
       organizationModalState.mode === "details" &&
       activeRecord
@@ -3218,12 +3273,12 @@ function buildUnitsFormContent(record, mode) {
     <form class="org-form" data-org-form="unites">
       <div class="org-form-grid">
         <div class="field-group">
-          <label for="unitCode">Code site</label>
+          <label for="unitCode">Code unité</label>
           <input id="unitCode" type="text" value="${escapeHtml(codePreview)}" disabled />
         </div>
         <div class="field-group">
           <label for="unitName">Nom</label>
-          <input id="unitName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom du site" required />
+          <input id="unitName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom de l’unité" required />
         </div>
         <div class="field-group field-group-wide">
           <label for="unitLocations">Localisations</label>
@@ -3231,7 +3286,7 @@ function buildUnitsFormContent(record, mode) {
         </div>
         <div class="field-group">
           <label for="unitPhone">Numéro téléphone</label>
-          <input id="unitPhone" name="phone" type="tel" value="${escapeHtml(record?.phone || "")}" placeholder="Téléphone du site" />
+          <input id="unitPhone" name="phone" type="tel" value="${escapeHtml(record?.phone || "")}" placeholder="Téléphone de l’unité" />
         </div>
         <div class="field-group">
           <label for="unitResponsible">Nom de responsable</label>
@@ -3278,7 +3333,7 @@ function renderDivisionsManagementPage() {
 
   renderOrganizationPageHeader(
     "Divisions",
-    "Gestion des divisions avec liaison multi-sites, responsable et email synchronisé.",
+    "Gestion des divisions avec liaison multi-unités, responsable et email synchronisé.",
   );
   renderOrganizationActionButtons("divisions", "Nouvelle division");
 
@@ -3310,8 +3365,8 @@ function renderDivisionsManagementPage() {
           ${buildOrganizationEmptyState(
             "fa-diagram-project",
             "Aucune division enregistrée",
-            "Créez une division et rattachez-la à un ou plusieurs sites.",
-            "Les divisions peuvent appartenir à plusieurs sites.",
+            "Créez une division et rattachez-la à une ou plusieurs unités.",
+            "Les divisions peuvent appartenir à plusieurs unités.",
           )}
         </td>
       </tr>
@@ -3325,11 +3380,11 @@ function renderDivisionsManagementPage() {
       <div>
         <div class="org-section-kicker">Référentiel organisation</div>
         <h2>Divisions</h2>
-        <p>Chaque division peut appartenir à plusieurs sites, avec un responsable unique et son email chargé automatiquement.</p>
+          <p>Chaque division peut appartenir à plusieurs unités, avec un responsable unique et son email chargé automatiquement.</p>
       </div>
       <div class="org-section-pills">
         <span class="status-badge badge-info">${directory.divisions.length} divisions</span>
-        <span class="status-badge badge-gray">${directory.unites.length} sites disponibles</span>
+        <span class="status-badge badge-gray">${directory.unites.length} unités disponibles</span>
       </div>
     </div>
 
@@ -3337,16 +3392,16 @@ function renderDivisionsManagementPage() {
       {
         label: "Divisions actives",
         value: String(directory.divisions.length),
-        note: "Liens multi-sites pris en charge",
+        note: "Liens multi-unités pris en charge",
       },
       {
-        label: "Divisions multi-sites",
+        label: "Divisions multi-unités",
         value: String(
           directory.divisions.filter(
             (division) => (division.unitIds || []).length > 1,
           ).length,
         ),
-        note: "Une division peut appartenir à plusieurs sites",
+        note: "Une division peut appartenir à plusieurs unités",
       },
       {
         label: "Responsables attribués",
@@ -3369,7 +3424,7 @@ function renderDivisionsManagementPage() {
             <tr>
               <th>Code</th>
               <th>Nom</th>
-              <th>Sites liés</th>
+              <th>Unités liées</th>
               <th>Responsable</th>
               <th>Actions</th>
             </tr>
@@ -3418,11 +3473,11 @@ function buildDivisionsFormContent(record, mode) {
           <input id="divisionName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom de la division" required />
         </div>
         <div class="field-group field-group-wide">
-          <label for="divisionUnits">Sites rattachés</label>
+          <label for="divisionUnits">Unités rattachées</label>
           <select id="divisionUnits" name="unitIds" multiple size="5">
             ${buildUnitOptions(record?.unitIds || [])}
           </select>
-          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs sites.</div>
+          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs unités.</div>
         </div>
         <div class="field-group">
           <label for="divisionResponsible">Nom de responsable</label>
@@ -3451,7 +3506,7 @@ function buildDivisionsDetailsContent(record) {
     <div class="org-detail-grid">
       <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
       <div class="org-detail-item"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Sites liés</span><strong>${joinNames(getOrganizationRecords("unites"), record.unitIds || [])}</strong></div>
+      <div class="org-detail-item org-detail-item--full"><span>Unités liées</span><strong>${joinNames(getOrganizationRecords("unites"), record.unitIds || [])}</strong></div>
       <div class="org-detail-item"><span>Responsable</span><strong>${responsible ? responsible.name : "Non défini"}</strong></div>
       <div class="org-detail-item"><span>Email</span><strong>${responsible ? responsible.email : "-"}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Description</span><strong>${record.description || "Aucune description"}</strong></div>
@@ -3471,7 +3526,7 @@ function renderDepartmentServicesManagementPage() {
       : null;
 
   renderOrganizationPageHeader(
-    "Département",
+    "Départements",
     "Gestion des départements avec liaison multi-divisions.",
   );
   renderOrganizationActionButtons(
@@ -3523,7 +3578,7 @@ function renderDepartmentServicesManagementPage() {
     <div class="org-section-intro">
       <div>
         <div class="org-section-kicker">Référentiel organisation</div>
-        <h2>Département</h2>
+          <h2>Départements</h2>
         <p>Chaque département peut être rattaché à plusieurs divisions.</p>
       </div>
     </div>
@@ -4056,6 +4111,8 @@ function renderOrganizationPage(subpageKey) {
     renderUnitsManagementPage();
   } else if (activeSubpageKey === "divisions") {
     renderDivisionsManagementPage();
+  } else if (activeSubpageKey === "departements-services") {
+    renderDepartmentServicesManagementPage();
   } else {
     renderOrganizationPageHeader(activeSubpage.title, activeSubpage.body);
     pageContentEl.className = "organization-page";
@@ -6769,7 +6826,7 @@ function getArboDivisionChildren(division, datasets) {
     (group.divisionIds || []).includes(division.id),
   );
 
-  return groups.map((group) => {
+  const buildEquipmentBranch = (group) => {
     const familyNodes = datasets.equipmentFamilies
       .filter((family) => family.groupId === group.id)
       .map((family) => {
@@ -6875,7 +6932,24 @@ function getArboDivisionChildren(division, datasets) {
       "fa-screwdriver-wrench",
       familyNodes,
     );
-  });
+  };
+
+  const departmentNodes = datasets.departmentServices
+    .filter((department) =>
+      (department.divisionIds || []).includes(division.id),
+    )
+    .map((department) =>
+      buildArboNode(
+        `arbo-department-${department.id}`,
+        `${department.code} - ${department.name}`,
+        "fa-folder-open",
+        groups.map((group) => buildEquipmentBranch(group)),
+      ),
+    );
+
+  return departmentNodes.length > 0
+    ? departmentNodes
+    : groups.map((group) => buildEquipmentBranch(group));
 }
 
 function buildArborescenceTree() {
@@ -6895,6 +6969,7 @@ function buildArborescenceTree() {
     articleGroups: article.groups,
     articleFamilies: article.families,
     articles: article.articles,
+    departmentServices: organization.departmentServices,
   };
 
   const unitNodes = organization.unites.map((unit) => {
@@ -7414,6 +7489,16 @@ function localizeAdministrationText(value, state = null) {
     ["Aucune", languageKey === "en" ? "None" : "Aucune"],
     ["Notifications", branch.topbar.notifications],
     ["Profil", branch.topbar.profile],
+    [
+      "Informations du compte connecté",
+      languageKey === "en"
+        ? "Connected account information"
+        : "Informations du compte connecté",
+    ],
+    [
+      "Utilisateur connecté",
+      languageKey === "en" ? "Connected user" : "Utilisateur connecté",
+    ],
     ["Paramètre", branch.topbar.settings],
     ["Déconnexion", branch.topbar.logout],
     ["Ouvrir / Fermer", branch.sidebarToggle],
@@ -7568,6 +7653,8 @@ function applyLocalizedShell(state = null) {
   );
   if (profileLogout) profileLogout.textContent = text.topbar.logout;
 
+  updateProfileAvatar();
+
   updateClock();
 }
 
@@ -7604,6 +7691,129 @@ function getAdministrationUserInitials(user) {
     .map((part) => part[0])
     .join("")
     .toUpperCase();
+}
+
+function getConnectedUserProfile() {
+  const state = getAdministrationState();
+  const storedUserId = (() => {
+    try {
+      return window.localStorage.getItem(connectedUserStorageKey) || "";
+    } catch (_error) {
+      return "";
+    }
+  })();
+
+  return (
+    state.users.find((user) => user.id === storedUserId) ||
+    state.users.find(
+      (user) => String(user.status || "").toLowerCase() === "actif",
+    ) ||
+    state.users[0] ||
+    null
+  );
+}
+
+function updateProfileAvatar() {
+  if (!profileBtn) return;
+
+  const connectedUser = getConnectedUserProfile();
+  const initials = connectedUser
+    ? getAdministrationUserInitials(connectedUser)
+    : "U";
+  const fullName = connectedUser
+    ? getAdministrationUserFullName(connectedUser)
+    : "Utilisateur";
+
+  profileBtn.textContent = initials;
+  profileBtn.title = `${fullName} · ${localizeAdministrationText("Profil")}`;
+  profileBtn.setAttribute(
+    "aria-label",
+    `${localizeAdministrationText("Profil")} ${fullName}`,
+  );
+}
+
+function renderProfilePage() {
+  if (pageActionsEl) {
+    pageActionsEl.innerHTML = "";
+  }
+
+  if (!pageContentEl) return;
+
+  const connectedUser = getConnectedUserProfile();
+  if (!connectedUser) {
+    pageContentEl.className = "blank-page";
+    pageContentEl.innerHTML = `
+      <div class="blank-card">
+        <div class="blank-badge"><i class="fa-regular fa-user"></i></div>
+        <h2>Profil introuvable</h2>
+        <p>Aucun utilisateur connecté n'est disponible pour afficher les informations du compte.</p>
+        <span class="blank-note">Vérifiez la configuration de l'utilisateur courant.</span>
+      </div>
+    `;
+    return;
+  }
+
+  const fullName = getAdministrationUserFullName(connectedUser);
+  const initials = getAdministrationUserInitials(connectedUser);
+  const status = connectedUser.status || "Actif";
+  const statusClass =
+    String(status).toLowerCase() === "actif" ? "success" : "warning";
+  const profileCards = [
+    ["Nom d'utilisateur", connectedUser.username || "—"],
+    ["Code utilisateur", connectedUser.code || "—"],
+    ["Rôle", connectedUser.role || "—"],
+    ["Fonction", connectedUser.functionTitle || "—"],
+    ["Email", connectedUser.email || "—"],
+    ["Téléphone", connectedUser.phone || "—"],
+    ["Unité", connectedUser.unit || "—"],
+    ["Division", connectedUser.division || "—"],
+    ["Département", connectedUser.department || "—"],
+    ["Langue", connectedUser.language || "—"],
+    ["Fuseau horaire", connectedUser.timezone || "—"],
+    ["Statut", status],
+  ];
+
+  pageContentEl.className = "organization-page profile-page";
+  pageContentEl.innerHTML = `
+    <section class="profile-hero-card">
+      <div class="profile-avatar">${escapeHtml(initials)}</div>
+      <div class="profile-hero-copy">
+        <div class="profile-kicker">Utilisateur connecté</div>
+        <h2>${escapeHtml(fullName)}</h2>
+        <p>${escapeHtml(
+          connectedUser.functionTitle || connectedUser.role || "Compte interne",
+        )}</p>
+        <div class="profile-hero-meta">
+          <span>${escapeHtml(connectedUser.role || "Rôle non défini")}</span>
+          <span>${escapeHtml(connectedUser.unit || "Unité non renseignée")}</span>
+          <span>${escapeHtml(connectedUser.email || "Email non renseigné")}</span>
+        </div>
+      </div>
+      <span class="status-badge ${statusClass}">${escapeHtml(status)}</span>
+    </section>
+
+    <section class="profile-summary-grid org-detail-grid">
+      ${profileCards
+        .map(
+          ([label, value]) => `
+            <div class="org-detail-item">
+              <span>${escapeHtml(label)}</span>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+          `,
+        )
+        .join("")}
+      <div class="org-detail-item org-detail-item--full profile-dates-card">
+        <span>Dates de compte</span>
+        <strong>Créé le ${escapeHtml(
+          formatAdministrationDateTime(connectedUser.createdAt),
+        )}</strong>
+        <strong>Dernière connexion ${escapeHtml(
+          formatAdministrationDateTime(connectedUser.lastLogin),
+        )}</strong>
+      </div>
+    </section>
+  `;
 }
 
 function buildAdministrationTabs(activeSubpageKey) {
@@ -9416,7 +9626,7 @@ function renderDashboardPage() {
       <div class="card">
         <div class="card-head">
           <div class="card-title"><i class="fa-solid fa-list-check"></i> Interventions récentes</div>
-          <a href="#" class="link-all">Voir toutes <i class="fa-solid fa-arrow-right"></i></a>
+          <a href="#interventions" class="link-all" data-dashboard-route="interventions">Voir toutes <i class="fa-solid fa-arrow-right"></i></a>
         </div>
         <div class="table-wrap">
           <table>
@@ -9478,7 +9688,7 @@ function renderDashboardPage() {
       <div class="card">
         <div class="card-head">
           <div class="card-title"><i class="fa-solid fa-gear"></i> Équipements critiques</div>
-          <a href="#" class="link-all">Tous les équipements <i class="fa-solid fa-arrow-right"></i></a>
+          <a href="#equipements" class="link-all" data-dashboard-route="equipements">Tous les équipements <i class="fa-solid fa-arrow-right"></i></a>
         </div>
         <div class="eq-grid">
           ${criticalEquipment
@@ -9563,7 +9773,7 @@ function renderDashboardPage() {
       <div class="card">
         <div class="card-head">
           <div class="card-title"><i class="fa-solid fa-timeline"></i> Activité récente</div>
-          <a href="#" class="link-all">Historique <i class="fa-solid fa-arrow-right"></i></a>
+          <a href="#stock/historique" class="link-all" data-dashboard-route="stock/historique">Historique <i class="fa-solid fa-arrow-right"></i></a>
         </div>
         <div class="card-body">
           <ul class="timeline">
@@ -9587,7 +9797,7 @@ function renderDashboardPage() {
       <div class="card">
         <div class="card-head">
           <div class="card-title"><i class="fa-solid fa-calendar-week"></i> Planning de la semaine</div>
-          <a href="#" class="link-all">Planification <i class="fa-solid fa-arrow-right"></i></a>
+          <a href="#planification" class="link-all" data-dashboard-route="planification">Planification <i class="fa-solid fa-arrow-right"></i></a>
         </div>
         <div class="card-body" style="padding:14px 20px">
           <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;text-align:center">
@@ -9628,6 +9838,16 @@ function renderDashboardPage() {
       </div>
     </div>
   `;
+
+  pageContentEl.querySelectorAll("[data-dashboard-route]").forEach((link) => {
+    link.addEventListener("click", function (event) {
+      event.preventDefault();
+      const route = this.dataset.dashboardRoute || "dashboard";
+      const routeParts = route.split("/");
+      renderPage(routeParts[0], routeParts[1]);
+      window.location.hash = route;
+    });
+  });
 }
 
 function closeMenus() {
@@ -9793,35 +10013,9 @@ function getStockDirectory() {
     const storedMovements = Array.isArray(parsed.movements)
       ? parsed.movements
       : [];
-    const recordsByKey = new Map(
-      storedRecords.map((record) => [
-        `${record.articleId}__${record.locationKey}`,
-        record,
-      ]),
-    );
-
-    getArticleRecords("articles").forEach((article) => {
-      const defaultRecord = normalizeStockRecord({
-        id: `stock-${article.id}`,
-        articleId: article.id,
-        currentQuantity: Number(article.quantity) || 0,
-        pmp: Number(article.price) || 0,
-        ...stockDefaultLocation,
-        locationLabel: buildStockLocationLabel(stockDefaultLocation),
-        locationKey: buildStockLocationLabel(stockDefaultLocation),
-        minStock: 15,
-        maxStock: 120,
-        safetyStock: 20,
-        replenishmentQty: 40,
-      });
-      const key = `${defaultRecord.articleId}__${defaultRecord.locationKey}`;
-      if (!recordsByKey.has(key)) {
-        recordsByKey.set(key, defaultRecord);
-      }
-    });
 
     return {
-      records: Array.from(recordsByKey.values()),
+      records: storedRecords,
       movements: storedMovements,
     };
   } catch (error) {
@@ -10823,15 +11017,16 @@ function openStockRecordDeleteConfirm(recordKey) {
   );
   if (!confirmed) return;
 
-  const articleId = record.articleId;
-  const locationKey = record.locationKey;
   const directory = getStockDirectory();
-  directory.records = directory.records.filter(
-    (item) =>
-      !(item.articleId === articleId && item.locationKey === locationKey),
+  const nextRecords = directory.records.filter(
+    (item) => getStockRecordKey(item) !== recordKey,
   );
+
+  if (nextRecords.length === directory.records.length) return;
+
+  directory.records = nextRecords;
   saveStockDirectory(directory);
-  syncStockArticleQuantityFromRecords(articleId);
+  syncStockArticleQuantityFromRecords(record.articleId);
   renderStockPage(getCurrentStockSubpage());
 }
 
@@ -11064,17 +11259,19 @@ function renderStockRecordCards(records) {
       const article = getArticleRecord("articles", record.articleId);
       return `
         <div class="stock-record-card">
-          <div class="card-head">
-            <div class="card-title"><i class="fa-solid fa-box"></i> ${escapeHtml(article ? `${article.code} — ${article.name}` : record.articleId || "Article")}</div>
-            <span class="status-badge ${getStockRecordRiskBadge(record)}">${getStockRecordRiskLabel(record)}</span>
+          <div class="stock-record-main">
+            <div class="stock-record-head">
+              <div class="card-title"><i class="fa-solid fa-boxes-stacked"></i> ${escapeHtml(article ? `${article.code} — ${article.name}` : record.articleId || "Article")}</div>
+              <span class="status-badge ${getStockRecordRiskBadge(record)}">${getStockRecordRiskLabel(record)}</span>
+            </div>
+            <div class="stock-record-meta">
+              <span>Qté ${escapeHtml(record.currentQuantity)}</span>
+              <span>PMP ${formatStockNumber(record.pmp)} DH</span>
+              <span>${escapeHtml(record.locationLabel || "Emplacement")}</span>
+            </div>
+            <p class="stock-record-description">${escapeHtml(getStockRecordDescription(record))}</p>
           </div>
-          <div class="stock-record-meta">
-            <span>Qté ${escapeHtml(record.currentQuantity)}</span>
-            <span>PMP ${formatStockNumber(record.pmp)} DH</span>
-            <span>${escapeHtml(record.locationLabel || "Emplacement")}</span>
-          </div>
-          <p class="stock-record-description">${escapeHtml(getStockRecordDescription(record))}</p>
-          <div class="stock-record-footer">
+          <div class="stock-record-side">
             <small>${escapeHtml(record.observations || "Aucune observation")}</small>
             <div class="org-row-actions">
               <button class="org-icon-btn" type="button" data-stock-record-action="details" data-stock-record-key="${escapeHtml(getStockRecordKey(record))}" title="Voir détails"><i class="fa-regular fa-eye"></i></button>
@@ -11571,7 +11768,7 @@ function buildStockFicheContent() {
           <span class="status-badge badge-info">${records.length} fiches</span>
         </div>
         <div class="card-body">
-          <div class="stock-record-grid">
+          <div class="stock-record-list">
             ${renderStockRecordCards(records)}
           </div>
         </div>
@@ -15969,6 +16166,8 @@ function renderPage(pageKey, subpageKey) {
   if (pageContentEl) {
     if (pageKey === "dashboard") {
       renderDashboardPage();
+    } else if (pageKey === "profil") {
+      renderProfilePage();
     } else if (pageKey === "arborescence") {
       renderArborescencePage();
     } else if (pageKey === "organisation") {
