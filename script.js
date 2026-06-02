@@ -156,8 +156,7 @@ const pages = {
   },
   parametres: {
     title: "Administration",
-    subtitle:
-      "Gestion des utilisateurs, des rôles, des paramètres globaux et des journaux système",
+    subtitle: "Gestion des utilisateurs, des rôles et des paramètres globaux",
   },
 };
 
@@ -178,11 +177,6 @@ const administrationSubpages = {
       label: "Paramètres généraux",
       title: "Paramètres généraux",
       body: "Configuration globale du logiciel, des alertes et de la numérotation.",
-    },
-    logs: {
-      label: "Journaux système",
-      title: "Journaux système",
-      body: "Traçabilité complète des actions réalisées dans l'application.",
     },
   },
 };
@@ -8590,51 +8584,6 @@ function buildAdministrationGeneralSection(state) {
       <section class="administration-section">
         <div class="administration-section-head">
           <div>
-            <div class="equipment-section-kicker">Numérotation</div>
-            <h3>Préfixes automatiques</h3>
-            <p>Réglage des préfixes, du nombre de chiffres et du reset de séquence.</p>
-          </div>
-        </div>
-        <div class="org-form-grid">
-          ${[
-            ["diPrefix", "DI"],
-            ["otPrefix", "OT"],
-            ["btPrefix", "BT"],
-            ["daPrefix", "DA"],
-            ["bcPrefix", "BC"],
-            ["recPrefix", "REC"],
-            ["plnPrefix", "PLN"],
-            ["cptPrefix", "CPT"],
-            ["frnPrefix", "FRN"],
-            ["ctrPrefix", "CTR"],
-          ]
-            .map(
-              ([key, label]) => `
-                <div class="field-group">
-                  <label for="admin${label}Prefix">${label}</label>
-                  <input id="admin${label}Prefix" type="text" value="${escapeHtml(settings.numbering[key])}" />
-                </div>
-              `,
-            )
-            .join("")}
-          <div class="field-group">
-            <label for="adminNumberDigits">Nombre de chiffres</label>
-            <select id="adminNumberDigits">
-              ${["3", "4", "5"].map((digits) => `<option value="${digits}"${settings.numbering.digits === digits ? " selected" : ""}>${digits}</option>`).join("")}
-            </select>
-          </div>
-          <div class="field-group">
-            <label for="adminResetPolicy">Remise à zéro</label>
-            <select id="adminResetPolicy">
-              ${["Annuelle", "Jamais"].map((policy) => `<option value="${policy}"${settings.numbering.resetPolicy === policy ? " selected" : ""}>${policy}</option>`).join("")}
-            </select>
-          </div>
-        </div>
-      </section>
-
-      <section class="administration-section">
-        <div class="administration-section-head">
-          <div>
             <div class="equipment-section-kicker">Stock et interventions</div>
             <h3>Workflow métier</h3>
             <p>Paramètres de valorisation du stock et règles de validation des interventions.</p>
@@ -8896,10 +8845,6 @@ function buildAdministrationSection(activeSubpageKey, state) {
     return buildAdministrationGeneralSection(state);
   }
 
-  if (activeSubpageKey === "logs") {
-    return buildAdministrationLogsSection(state);
-  }
-
   return buildAdministrationUsersSection(state);
 }
 
@@ -8925,20 +8870,6 @@ function buildAdministrationActionButtons(activeSubpageKey, state) {
       <button class="btn btn-primary" type="button" data-admin-settings-save>
         <i class="fa-solid fa-floppy-disk"></i>
         <span>${localizeAdministrationText("Enregistrer", state)}</span>
-      </button>
-    `;
-    return;
-  }
-
-  if (activeSubpageKey === "logs") {
-    pageActionsEl.innerHTML = `
-      <button class="btn btn-outline" type="button" data-admin-export-logs>
-        <i class="fa-solid fa-file-csv"></i>
-        <span>${localizeAdministrationText("Exporter CSV", state)}</span>
-      </button>
-      <button class="btn btn-primary" type="button" data-admin-print-logs>
-        <i class="fa-solid fa-print"></i>
-        <span>${localizeAdministrationText("Imprimer / PDF", state)}</span>
       </button>
     `;
     return;
