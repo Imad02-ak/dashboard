@@ -190,6 +190,7 @@ body {
 }
 .sidebar.expanded .nav-section-label {
   height: 30px;
+  opacity: 1;
 }
 
 .nav-item {
