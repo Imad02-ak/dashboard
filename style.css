@@ -2784,6 +2784,26 @@ body {
   gap: 8px;
 }
 
+.org-history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.org-history-filters .org-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.org-history-filters > button[data-int-history-clear] {
+  white-space: nowrap;
+  margin-top: 12px;
+}
+
 .field-group label {
   font-size: 12px;
   font-weight: 700;

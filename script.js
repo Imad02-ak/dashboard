@@ -13710,6 +13710,74 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
     preset.technicianId ||
     planificationTechniciens[0]?.id ||
     "";
+  const currentEquipmentLabel = plan?.equipment || preset.equipment || "";
+  const currentOrganeLabel = plan?.organ || preset.organ || "";
+  const selectedFrequency = plan?.frequency || preset.frequency || "Mensuelle";
+
+  let equipmentOptions = getEquipmentRecords("equipments")
+    .map((equipment) => {
+      const label = `${equipment.code} — ${equipment.name}`;
+      return (
+        "<option" +
+        (label === currentEquipmentLabel ? " selected" : "") +
+        ">" +
+        escapeHtml(label) +
+        "</option>"
+      );
+    })
+    .join("");
+  if (
+    currentEquipmentLabel &&
+    !equipmentOptions.includes(">" + currentEquipmentLabel + "</option>")
+  ) {
+    equipmentOptions =
+      "<option selected>" +
+      escapeHtml(currentEquipmentLabel) +
+      "</option>" +
+      equipmentOptions;
+  }
+
+  let organeOptions = getOrganeRecords("organes")
+    .map((organe) => {
+      const label = `${organe.code} — ${organe.name}`;
+      return (
+        "<option" +
+        (label === currentOrganeLabel ? " selected" : "") +
+        ">" +
+        escapeHtml(label) +
+        "</option>"
+      );
+    })
+    .join("");
+  if (
+    currentOrganeLabel &&
+    !organeOptions.includes(">" + currentOrganeLabel + "</option>")
+  ) {
+    organeOptions =
+      "<option selected>" +
+      escapeHtml(currentOrganeLabel) +
+      "</option>" +
+      organeOptions;
+  }
+
+  const frequencyOptions = [
+    "Quotidienne",
+    "Hebdomadaire",
+    "Mensuelle",
+    "Trimestrielle",
+    "Semestrielle",
+    "Annuelle",
+  ]
+    .map(
+      (frequency) =>
+        "<option" +
+        (frequency === selectedFrequency ? " selected" : "") +
+        ">" +
+        escapeHtml(frequency) +
+        "</option>",
+    )
+    .join("");
+
   const bodyHtml = isDetails
     ? `
       <div class="org-detail-list">
@@ -13739,12 +13807,11 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
       <form class="org-form-grid planning-modal-form" data-plan-form>
         <div class="field-group"><label for="planRef">Numéro</label><input id="planRef" type="text" value="${escapeHtml(initialRef)}" disabled /></div>
         <div class="field-group"><label for="planTitle">Titre</label><input id="planTitle" name="title" type="text" value="${escapeHtml(plan?.title || preset.title || "")}" required /></div>
-        <div class="field-group"><label for="planType">Type de plan</label><select id="planType" name="planType"><option${(plan?.planType || preset.planType) === "Systématique" ? " selected" : ""}>Systématique</option><option${(plan?.planType || preset.planType) === "Conditionnel" ? " selected" : ""}>Conditionnel</option><option${(plan?.planType || preset.planType) === "Prédictif" ? " selected" : ""}>Prédictif</option></select></div>
         <div class="field-group"><label for="planMaintenanceType">Type maintenance</label><select id="planMaintenanceType" name="maintenanceType"><option${(plan?.maintenanceType || preset.maintenanceType) === "Préventive" ? " selected" : ""}>Préventive</option><option${(plan?.maintenanceType || preset.maintenanceType) === "Prédictive" ? " selected" : ""}>Prédictive</option><option${(plan?.maintenanceType || preset.maintenanceType) === "Réglementaire" ? " selected" : ""}>Réglementaire</option></select></div>
-        <div class="field-group"><label for="planEquipment">Équipement</label><input id="planEquipment" name="equipment" type="text" value="${escapeHtml(plan?.equipment || preset.equipment || "")}" required /></div>
-        <div class="field-group"><label for="planOrgan">Organe</label><input id="planOrgan" name="organ" type="text" value="${escapeHtml(plan?.organ || preset.organ || "")}" /></div>
+        <div class="field-group"><label for="planEquipment">Équipement</label><select id="planEquipment" name="equipment" required>${equipmentOptions}</select></div>
+        <div class="field-group"><label for="planOrgan">Organe</label><select id="planOrgan" name="organ"><option value="">-- Aucun --</option>${organeOptions}</select></div>
         <div class="field-group"><label for="planTechnician">Technicien par défaut</label><select id="planTechnician" name="technicianId">${planificationTechniciens.map((technician) => `<option value="${technician.id}"${technician.id === selectedTechnicianId ? " selected" : ""}>${escapeHtml(technician.name)} · ${escapeHtml(technician.role)}</option>`).join("")}</select></div>
-        <div class="field-group"><label for="planFrequency">Fréquence</label><input id="planFrequency" name="frequency" type="text" value="${escapeHtml(plan?.frequency || preset.frequency || "Mensuelle")}" /></div>
+        <div class="field-group"><label for="planFrequency">Fréquence</label><select id="planFrequency" name="frequency">${frequencyOptions}</select></div>
         <div class="field-group"><label for="planDuration">Durée estimée (h)</label><input id="planDuration" name="durationHours" type="number" min="0" step="0.5" value="${escapeHtml(plan?.durationHours || preset.durationHours || 1)}" /></div>
         <div class="field-group"><label for="planTrigger">Déclenchement</label><input id="planTrigger" name="triggerLabel" type="text" value="${escapeHtml(plan?.triggerLabel || preset.triggerLabel || "")}" /></div>
         <div class="field-group"><label for="planNextDue">Prochaine échéance</label><input id="planNextDue" name="nextDueDate" type="datetime-local" value="${plan?.nextDueDate ? new Date(plan.nextDueDate).toISOString().slice(0, 16) : preset.nextDueDate ? new Date(preset.nextDueDate).toISOString().slice(0, 16) : ""}" /></div>
@@ -16772,6 +16839,15 @@ function buildInterventionsSeedState() {
 }
 
 let interventionsModalState = null;
+let interventionsHistoryFilterState = {
+  equipment: "",
+  technician: "",
+  type: "",
+  status: "",
+  priority: "",
+  from: "",
+  to: "",
+};
 
 function loadInterventionsState() {
   try {
@@ -16790,11 +16866,19 @@ function loadInterventionsState() {
       normalized.dis.some((record) => record.ref === item.ref),
     );
 
-    if (
+    const hasStoredInterventionsState = raw !== null;
+    const isEmptyStoredState =
+      hasStoredInterventionsState &&
       !normalized.dis.length &&
       !normalized.ots.length &&
-      !normalized.bts.length
-    ) {
+      !normalized.bts.length &&
+      !normalized.history.length;
+
+    if (isEmptyStoredState) {
+      return normalized;
+    }
+
+    if (!hasStoredInterventionsState) {
       try {
         window.localStorage.setItem(
           interventionsStorageKey,
@@ -17818,7 +17902,49 @@ function attachInterventionsPageHandlers(activeTabKey) {
       window.alert(
         `Export ${exportButton.dataset.intExport.toUpperCase()} à brancher sur le module Historique.`,
       );
+      return;
     }
+
+    const clearHistoryButton = event.target.closest("[data-int-history-clear]");
+    if (clearHistoryButton && pageContentEl.contains(clearHistoryButton)) {
+      const confirmed = window.confirm(
+        "Effacer tout l'historique des interventions et réinitialiser l'état ?",
+      );
+      if (!confirmed) return;
+
+      const directory = loadInterventionsState();
+      directory.dis = [];
+      directory.ots = [];
+      directory.bts = [];
+      directory.history = [];
+      saveInterventionsState(directory);
+      interventionsHistoryFilterState = {
+        equipment: "",
+        technician: "",
+        type: "",
+        status: "",
+        priority: "",
+        from: "",
+        to: "",
+      };
+      renderInterventionsPage("history");
+      return;
+    }
+  });
+
+  pageContentEl.addEventListener("change", function (event) {
+    const filterElement = event.target.closest("[data-int-history-filter]");
+    if (!filterElement || !pageContentEl.contains(filterElement)) {
+      return;
+    }
+
+    const filterKey = filterElement.dataset.intHistoryFilter;
+    if (!filterKey || !(filterKey in interventionsHistoryFilterState)) {
+      return;
+    }
+
+    interventionsHistoryFilterState[filterKey] = filterElement.value || "";
+    renderInterventionsPage("history");
   });
 }
 
@@ -18140,8 +18266,9 @@ function renderOtSection(directory) {
 }
 
 function renderBtSection(directory) {
-  const rows = directory.bts.length
-    ? directory.bts
+  const visibleBts = directory.bts.filter((item) => item.status !== "Clôturé");
+  const rows = visibleBts.length
+    ? visibleBts
         .map((bt) => {
           return `
             <tr>
@@ -18173,7 +18300,7 @@ function renderBtSection(directory) {
     <div class="card org-list-card">
       <div class="card-head">
         <div class="card-title"><i class="fa-solid fa-file-signature"></i> Liste des BT</div>
-        <span class="status-badge badge-info">${directory.bts.length} lignes</span>
+        <span class="status-badge badge-info">${visibleBts.length} lignes</span>
       </div>
       <div class="table-wrap">
         <table>
@@ -18195,7 +18322,7 @@ function renderBtSection(directory) {
   `;
 }
 
-function renderHistorySection(directory) {
+function buildInterventionsHistoryEntries(directory) {
   const entries = [];
   (Array.isArray(directory.history) ? directory.history : []).forEach(
     (event) => {
@@ -18203,14 +18330,24 @@ function renderHistorySection(directory) {
         id: event.id,
         date: event.createdAt,
         ref: event.recordRef || event.action || "Événement",
-        type: event.action || "Événement",
+        type: event.recordType || "Historique",
         label: event.message || event.action || "Transition",
         meta: event.recordType || "Journal",
         kind: "event",
+        equipment: "",
+        technician: "",
+        status: "",
+        priority: "",
       });
     },
   );
+
   directory.dis.forEach((di) => {
+    const equipment = di.equipmentId
+      ? getEquipmentRecord("equipments", di.equipmentId)
+      : null;
+    const technician = getOrganizationUser(di.requesterId);
+
     entries.push({
       id: di.id,
       date: di.createdAt,
@@ -18219,9 +18356,26 @@ function renderHistorySection(directory) {
       label: di.title,
       meta: di.status,
       kind: "record",
+      equipment:
+        equipment?.code && equipment?.name
+          ? `${equipment.code} — ${equipment.name}`
+          : di.equipmentLabel || "",
+      technician: technician ? technician.name : di.requesterLabel || "",
+      status: di.status || "",
+      priority: di.urgency || "",
     });
   });
+
   directory.ots.forEach((ot) => {
+    const equipment = ot.equipmentId
+      ? getEquipmentRecord("equipments", ot.equipmentId)
+      : null;
+    const technicianNames = (ot.technicianIds || [])
+      .map((id) => getOrganizationUser(id))
+      .filter(Boolean)
+      .map((user) => user.name)
+      .join(", ");
+
     entries.push({
       id: ot.id,
       date: ot.createdAt || ot.plannedDate,
@@ -18230,8 +18384,16 @@ function renderHistorySection(directory) {
       label: ot.equipmentLabel || ot.diRef || "Ordre",
       meta: ot.status,
       kind: "record",
+      equipment:
+        equipment?.code && equipment?.name
+          ? `${equipment.code} — ${equipment.name}`
+          : ot.equipmentLabel || "",
+      technician: technicianNames || ot.technicianLabel || "",
+      status: ot.status || "",
+      priority: ot.priority || "",
     });
   });
+
   directory.bts.forEach((bt) => {
     entries.push({
       id: bt.id,
@@ -18241,56 +18403,147 @@ function renderHistorySection(directory) {
       label: bt.otRef || "Bon",
       meta: bt.status,
       kind: "record",
+      equipment: bt.equipmentLabel || "",
+      technician: bt.technicianLabel || "",
+      status: bt.status || "",
+      priority: bt.priority || "",
     });
   });
-  entries.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
-  const list = entries.length
-    ? entries
+  entries.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  return entries;
+}
+
+function filterInterventionsHistory(entries) {
+  const state = interventionsHistoryFilterState;
+  return entries.filter((entry) => {
+    if (state.equipment && entry.equipment !== state.equipment) return false;
+    if (state.technician && entry.technician !== state.technician) return false;
+    if (state.type && entry.type !== state.type) return false;
+    if (state.status && entry.status !== state.status) return false;
+    if (state.priority && entry.priority !== state.priority) return false;
+    if (state.from || state.to) {
+      const entryDate = new Date(entry.date || "");
+      if (isNaN(entryDate)) return false;
+      if (state.from) {
+        const fromDate = new Date(`${state.from}T00:00:00`);
+        if (entryDate < fromDate) return false;
+      }
+      if (state.to) {
+        const toDate = new Date(`${state.to}T23:59:59`);
+        if (entryDate > toDate) return false;
+      }
+    }
+    return true;
+  });
+}
+
+function buildInterventionsHistorySelectOptions(values, selectedValue) {
+  const uniqueValues = [...new Set(values.filter(Boolean))].sort();
+  return ["", ...uniqueValues]
+    .map(
+      (value) =>
+        `<option value="${escapeHtml(value)}"${
+          value === selectedValue ? " selected" : ""
+        }>${escapeHtml(value || "Tous")}</option>`,
+    )
+    .join("");
+}
+
+function renderHistorySection(directory) {
+  const historyEntries = buildInterventionsHistoryEntries(directory);
+  const filteredEntries = filterInterventionsHistory(historyEntries);
+  const equipmentOptions = buildInterventionsHistorySelectOptions(
+    historyEntries.map((entry) => entry.equipment),
+    interventionsHistoryFilterState.equipment,
+  );
+  const technicianOptions = buildInterventionsHistorySelectOptions(
+    historyEntries.map((entry) => entry.technician),
+    interventionsHistoryFilterState.technician,
+  );
+  const typeOptions = buildInterventionsHistorySelectOptions(
+    historyEntries.map((entry) => entry.type),
+    interventionsHistoryFilterState.type,
+  );
+  const statusOptions = buildInterventionsHistorySelectOptions(
+    historyEntries.map((entry) => entry.status),
+    interventionsHistoryFilterState.status,
+  );
+  const priorityOptions = buildInterventionsHistorySelectOptions(
+    historyEntries.map((entry) => entry.priority),
+    interventionsHistoryFilterState.priority,
+  );
+
+  const rows = filteredEntries.length
+    ? filteredEntries
         .map(
           (entry) => `
-            <div class="intervention-history-row">
-              <div>
-                <div class="intervention-history-title"><strong>${entry.ref}</strong> · ${entry.type}</div>
-                <div class="intervention-history-sub">${escapeHtml(entry.label)} · ${escapeHtml(entry.meta)}</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:12px">
-                <div class="intervention-history-date">${entry.date ? new Date(entry.date).toLocaleString(getAdministrationLocale()) : "-"}</div>
-                ${entry.kind === "record" ? buildInterventionHistoryActions(entry.type.toLowerCase(), entry.id) : ""}
-              </div>
-            </div>
+            <tr>
+              <td><strong>${escapeHtml(entry.ref)}</strong></td>
+              <td>${escapeHtml(entry.type)}</td>
+              <td>${escapeHtml(entry.equipment || "-")}</td>
+              <td>${escapeHtml(entry.technician || "-")}</td>
+              <td>${escapeHtml(entry.status || "-")}</td>
+              <td>${escapeHtml(entry.priority || "-")}</td>
+              <td>${escapeHtml(entry.label)}</td>
+              <td class="muted">${escapeHtml(
+                entry.date
+                  ? new Date(entry.date).toLocaleString(
+                      getAdministrationLocale(),
+                    )
+                  : "-",
+              )}</td>
+            </tr>
           `,
         )
         .join("")
-    : buildInterventionEmptyState(
-        "fa-clock-rotate-left",
-        "Aucun historique disponible",
-        "Les créations, clôtures et validations apparaîtront ici.",
-        "L'export Excel / PDF est prévu sur cette vue.",
-      );
+    : `
+      <tr>
+        <td colspan="8">
+          ${buildInterventionEmptyState(
+            "fa-clock-rotate-left",
+            "Aucun historique",
+            "Aucun événement ou intervention ne correspond aux filtres sélectionnés.",
+            "Réinitialisez les filtres ou effacez l'historique pour repartir de zéro.",
+          )}
+        </td>
+      </tr>
+    `;
 
   return `
+    <div class="org-section-actions org-history-filters">
+      <div class="org-filters">
+        <div class="field-group"><label for="historyFilterEquipment">Équipement</label><select id="historyFilterEquipment" data-int-history-filter="equipment">${equipmentOptions}</select></div>
+        <div class="field-group"><label for="historyFilterTechnician">Technicien</label><select id="historyFilterTechnician" data-int-history-filter="technician">${technicianOptions}</select></div>
+        <div class="field-group"><label for="historyFilterType">Type</label><select id="historyFilterType" data-int-history-filter="type">${typeOptions}</select></div>
+        <div class="field-group"><label for="historyFilterStatus">Statut</label><select id="historyFilterStatus" data-int-history-filter="status">${statusOptions}</select></div>
+        <div class="field-group"><label for="historyFilterPriority">Priorité</label><select id="historyFilterPriority" data-int-history-filter="priority">${priorityOptions}</select></div>
+        <div class="field-group"><label for="historyFilterFrom">Date début</label><input id="historyFilterFrom" type="date" data-int-history-filter="from" value="${escapeHtml(interventionsHistoryFilterState.from)}" /></div>
+        <div class="field-group"><label for="historyFilterTo">Date fin</label><input id="historyFilterTo" type="date" data-int-history-filter="to" value="${escapeHtml(interventionsHistoryFilterState.to)}" /></div>
+      </div>
+      <button class="btn btn-outline" type="button" data-int-history-clear>Effacer historique</button>
+    </div>
     <div class="card org-list-card">
       <div class="card-head">
-        <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique consolidé</div>
-        <span class="status-badge badge-info">${entries.length} événements</span>
+        <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Journal des interventions</div>
+        <span class="status-badge badge-info">${filteredEntries.length}/${historyEntries.length} lignes</span>
       </div>
-      <div class="card-body">
-        <div class="intervention-history-toolbar">
-          <div class="org-section-pills">
-            <span class="status-badge badge-gray">Par équipement</span>
-            <span class="status-badge badge-gray">Par technicien</span>
-            <span class="status-badge badge-gray">Par type</span>
-            <span class="status-badge badge-gray">Par statut</span>
-            <span class="status-badge badge-gray">Par date</span>
-            <span class="status-badge badge-gray">Par priorité</span>
-          </div>
-          <div class="intervention-history-actions">
-            <button class="btn btn-outline" type="button" data-int-export="excel">Export Excel</button>
-            <button class="btn btn-outline" type="button" data-int-export="pdf">Export PDF</button>
-          </div>
-        </div>
-        <div class="intervention-history-list">${list}</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Réf</th>
+              <th>Type</th>
+              <th>Équipement</th>
+              <th>Technicien</th>
+              <th>Statut</th>
+              <th>Priorité</th>
+              <th>Message</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
       </div>
     </div>
   `;
@@ -18696,6 +18949,13 @@ function createBtFromOt(otId) {
     technicianSignature: null,
     managerSignature: null,
     status: "En cours",
+    equipmentId: ot.equipmentId || "",
+    equipmentLabel: ot.equipmentLabel || "",
+    technicianIds: Array.isArray(ot.technicianIds)
+      ? ot.technicianIds.slice()
+      : [],
+    technicianLabel: ot.technicianLabel || "",
+    priority: ot.priority || "",
   };
 
   directory.ots.splice(otIndex, 1);
@@ -19036,11 +19296,6 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       title: "Fiche fournisseur",
       subtitle:
         "Référentiel de base, contacts, légaux et conditions commerciales.",
-    },
-    catalogue: {
-      label: "Catalogue fournisseur",
-      title: "Catalogue fournisseur",
-      subtitle: "Articles fournis, références propres et prix négociés.",
     },
     contrats: {
       label: "Contrats & Garanties",
@@ -19469,16 +19724,6 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
         supplier,
       }));
     }
-    if (tab === "catalogue") {
-      return state.suppliers.flatMap((supplier) =>
-        (supplier.catalogue || []).map((item) => ({
-          ...item,
-          supplierNumber: supplier.number,
-          supplierName: supplier.raisonSociale,
-          supplier,
-        })),
-      );
-    }
     if (tab === "contrats") {
       return {
         contracts: state.suppliers.flatMap((supplier) =>
@@ -19579,11 +19824,14 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
 
   function renderPage() {
     const state = ensureSeedData();
+    const tab = TAB_CONFIG[activeTab] ? activeTab : "fiche";
+    if (tab !== activeTab) {
+      activeTab = tab;
+    }
     updateHeader();
     const actionsEl = root.actions();
     const contentEl = root.content();
     if (!contentEl) return;
-    const tab = activeTab;
 
     if (actionsEl) {
       actionsEl.innerHTML = `
@@ -19617,7 +19865,6 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     const tabContent = qs("#supplierTabContent", contentEl);
     if (tabContent) {
       if (tab === "fiche") tabContent.innerHTML = renderFicheTab(state);
-      if (tab === "catalogue") tabContent.innerHTML = renderCatalogueTab(state);
       if (tab === "contrats") tabContent.innerHTML = renderContractsTab(state);
       if (tab === "evaluation")
         tabContent.innerHTML = renderEvaluationTab(state);
@@ -19636,21 +19883,6 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           (supplier) => supplier.status === "Actif",
         ).length,
         score: averageScore(state).toFixed(2),
-      };
-    }
-    if (tab === "catalogue") {
-      const items = getData("catalogue", state);
-      return {
-        count: items.length,
-        active: items.filter((item) =>
-          (item.availability || "").includes("stock"),
-        ).length,
-        score: items.length
-          ? (
-              items.reduce((sum, item) => sum + Number(item.price || 0), 0) /
-              items.length
-            ).toFixed(0)
-          : "0",
       };
     }
     if (tab === "contrats") {
@@ -19959,7 +20191,6 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       button.addEventListener("click", () => {
         const kind = button.dataset.kind || activeTab;
         if (kind === "fiche") openSupplierModal();
-        if (kind === "catalogue") openCatalogueModal();
         if (kind === "contract") openContractModal(state);
         if (kind === "warranty") openWarrantyModal(state);
         if (kind === "evaluation") openEvaluationModal();
@@ -20180,24 +20411,7 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       "Formulaire de création et de modification de la fiche fournisseur.",
       `
         <form class="supplier-form-grid" id="supplierForm">
-          <div class="full"><label>Numéro</label><input name="number" value="${nextNumber}" readonly /></div>
-          <div><label>Raison sociale *</label><input name="raisonSociale" value="${current.raisonSociale || ""}" required /></div>
-          <div><label>Nom commercial</label><input name="nomCommercial" value="${current.nomCommercial || ""}" /></div>
-          <div><label>Type fournisseur</label>
-            <select name="type">
-              ${[
-                "Fabricant",
-                "Distributeur",
-                "Prestataire de service",
-                "Sous-traitant",
-              ]
-                .map(
-                  (option) =>
-                    `<option ${current.type === option ? "selected" : ""}>${option}</option>`,
-                )
-                .join("")}
-            </select>
-          </div>
+          <div><label>Code fournisseur</label><input name="number" value="${nextNumber}" readonly /></div>
           <div><label>Domaine d'activité</label>
             <select name="domaine">
               ${[
@@ -20215,15 +20429,28 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
                 .join("")}
             </select>
           </div>
+          <div><label>Nom commercial</label><input name="nomCommercial" value="${current.nomCommercial || ""}" /></div>
+          <div><label>Type fournisseur</label>
+            <select name="type">
+              ${[
+                "Fabricant",
+                "Distributeur",
+                "Prestataire de service",
+                "Sous-traitant",
+              ]
+                .map(
+                  (option) =>
+                    `<option ${current.type === option ? "selected" : ""}>${option}</option>`,
+                )
+                .join("")}
+            </select>
+          </div>
           <div class="full"><label>Adresse complète</label><input name="adresse" value="${current.adresse || ""}" /></div>
-          <div><label>Wilaya / Daira / Commune</label><input name="wilaya" value="${current.wilaya || ""}" /></div>
           <div><label>Téléphone principal</label><input name="tel1" value="${current.tel1 || ""}" /></div>
           <div><label>Téléphone secondaire</label><input name="tel2" value="${current.tel2 || ""}" /></div>
           <div><label>Email</label><input name="email" value="${current.email || ""}" /></div>
           <div><label>Site web</label><input name="website" value="${current.website || ""}" /></div>
-          <div><label>Contact principal</label><input name="contactName" value="${current.contact?.name || ""}" /></div>
           <div><label>Poste / Fonction</label><input name="contactRole" value="${current.contact?.role || ""}" /></div>
-          <div><label>Téléphone direct</label><input name="contactPhone" value="${current.contact?.phone || ""}" /></div>
           <div><label>Email direct</label><input name="contactEmail" value="${current.contact?.email || ""}" /></div>
           <div><label>Numéro RC</label><input name="rc" value="${current.legal?.rc || ""}" /></div>
           <div><label>NIF</label><input name="nif" value="${current.legal?.nif || ""}" /></div>
@@ -20273,20 +20500,17 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
         const payload = {
           id: isEdit ? current.id : `sup-${Date.now()}`,
           number: fd.get("number"),
-          raisonSociale: fd.get("raisonSociale"),
+          raisonSociale: current.raisonSociale || "",
           nomCommercial: fd.get("nomCommercial"),
           type: fd.get("type"),
           domaine: fd.get("domaine"),
           adresse: fd.get("adresse"),
-          wilaya: fd.get("wilaya"),
           tel1: fd.get("tel1"),
           tel2: fd.get("tel2"),
           email: fd.get("email"),
           website: fd.get("website"),
           contact: {
-            name: fd.get("contactName"),
             role: fd.get("contactRole"),
-            phone: fd.get("contactPhone"),
             email: fd.get("contactEmail"),
           },
           legal: {
