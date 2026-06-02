@@ -120,7 +120,7 @@ const pages = {
       "plans-maintenance": {
         label: "Plans de maintenance",
         title: "Plans de maintenance",
-        body: "Référentiel des plans, déclenchements et gammes opératoires.",
+        body: "Suivi simple des plans de maintenance et de leurs déclenchements.",
       },
       calendrier: {
         label: "Calendrier",
@@ -1803,6 +1803,13 @@ function buildArticleFamilyDetailsContent(record) {
 
 function renderArticleGroupsPage() {
   const directory = getArticleDirectory();
+  const linkedFamiliesCount = directory.families.filter(
+    (family) => family.groupId,
+  ).length;
+  const linkedArticlesCount = directory.articles.filter(
+    (article) => article.groupId,
+  ).length;
+
   renderArticlePageHeader(
     "Articles",
     "Gestion des groupes, familles et articles.",
@@ -1832,6 +1839,34 @@ function renderArticleGroupsPage() {
   pageContentEl.className = "organization-page organization-crud-page";
   pageContentEl.innerHTML = `
     ${buildArticleTabs("groupe-article")}
+
+    ${renderArticleSectionIntro(
+      "Groupes articles",
+      "Chaque groupe structure les familles et les articles rattachés.",
+      `
+        <span class="status-badge badge-info">${directory.groups.length} groupes</span>
+        <span class="status-badge badge-gray">${directory.families.length} familles</span>
+        <span class="status-badge badge-gray">${directory.articles.length} articles</span>
+      `,
+      [
+        {
+          label: "Groupes articles",
+          value: String(directory.groups.length),
+          note: "Référentiel de premier niveau",
+        },
+        {
+          label: "Familles liées",
+          value: String(linkedFamiliesCount),
+          note: "Rattachements actifs",
+        },
+        {
+          label: "Articles référencés",
+          value: String(linkedArticlesCount),
+          note: "Inventaire disponible",
+        },
+      ],
+    )}
+
     <div class="card org-list-card">
       <div class="card-head"><div class="card-title"><i class="fa-solid fa-layer-group"></i> Liste des groupes articles</div><span class="status-badge badge-info">${directory.groups.length} lignes</span></div>
       <div class="table-wrap"><table><thead><tr><th>Code</th><th>Nom</th><th>Désignations</th><th>Organes associés</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -1863,6 +1898,13 @@ function renderArticleGroupsPage() {
 
 function renderArticleFamiliesPage() {
   const directory = getArticleDirectory();
+  const familiesWithGroupCount = directory.families.filter(
+    (family) => family.groupId,
+  ).length;
+  const articlesWithFamilyCount = directory.articles.filter(
+    (article) => article.familyId,
+  ).length;
+
   renderArticlePageHeader(
     "Articles",
     "Gestion des groupes, familles et articles.",
@@ -1890,6 +1932,34 @@ function renderArticleFamiliesPage() {
   pageContentEl.className = "organization-page organization-crud-page";
   pageContentEl.innerHTML = `
     ${buildArticleTabs("famille-article")}
+
+    ${renderArticleSectionIntro(
+      "Familles articles",
+      "Chaque famille est rattachée à un groupe article.",
+      `
+        <span class="status-badge badge-info">${directory.families.length} familles</span>
+        <span class="status-badge badge-gray">${directory.groups.length} groupes</span>
+        <span class="status-badge badge-gray">${directory.articles.length} articles</span>
+      `,
+      [
+        {
+          label: "Familles articles",
+          value: String(directory.families.length),
+          note: "Référentiel intermédiaire",
+        },
+        {
+          label: "Familles liées",
+          value: String(familiesWithGroupCount),
+          note: "Association au groupe",
+        },
+        {
+          label: "Articles référencés",
+          value: String(articlesWithFamilyCount),
+          note: "Articles classés par famille",
+        },
+      ],
+    )}
+
     <div class="card org-list-card">
       <div class="card-head"><div class="card-title"><i class="fa-solid fa-layer-group"></i> Liste des familles articles</div><span class="status-badge badge-info">${directory.families.length} lignes</span></div>
       <div class="table-wrap"><table><thead><tr><th>Code</th><th>Nom</th><th>Désignations</th><th>Groupe</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -1923,6 +1993,14 @@ function renderArticleFamiliesPage() {
 
 function renderArticleItemsPage() {
   const directory = getArticleDirectory();
+  const completeArticlesCount = directory.articles.filter(
+    (article) => article.groupId && article.familyId,
+  ).length;
+  const substituteArticlesCount = directory.articles.filter(
+    (article) =>
+      Array.isArray(article.substituteIds) && article.substituteIds.length,
+  ).length;
+
   renderArticlePageHeader(
     "Articles",
     "Gestion des groupes, familles et articles.",
@@ -1951,6 +2029,34 @@ function renderArticleItemsPage() {
   pageContentEl.className = "organization-page organization-crud-page";
   pageContentEl.innerHTML = `
     ${buildArticleTabs("article")}
+
+    ${renderArticleSectionIntro(
+      "Articles",
+      "Chaque fiche article reprend le classement, les achats et la traçabilité.",
+      `
+        <span class="status-badge badge-info">${directory.articles.length} articles</span>
+        <span class="status-badge badge-gray">${directory.groups.length} groupes</span>
+        <span class="status-badge badge-gray">${directory.families.length} familles</span>
+      `,
+      [
+        {
+          label: "Articles totaux",
+          value: String(directory.articles.length),
+          note: "Inventaire principal",
+        },
+        {
+          label: "Articles complets",
+          value: String(completeArticlesCount),
+          note: "Groupe et famille renseignés",
+        },
+        {
+          label: "Articles avec substitut",
+          value: String(substituteArticlesCount),
+          note: "Ressources de remplacement",
+        },
+      ],
+    )}
+
     <div class="card org-list-card">
       <div class="card-head"><div class="card-title"><i class="fa-solid fa-boxes"></i> Liste des articles</div><span class="status-badge badge-info">${directory.articles.length} lignes</span></div>
       <div class="table-wrap"><table><thead><tr><th>Code</th><th>Nom</th><th>Groupe</th><th>Famille</th><th>Prix</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -2044,6 +2150,23 @@ function renderArticleActionButtons(pageKey, createLabel) {
     createButton.addEventListener("click", function () {
       openArticleModal(pageKey, "create");
     });
+}
+
+function renderArticleSectionIntro(title, subtitle, pillsHtml, stats) {
+  return `
+    <div class="org-section-intro">
+      <div>
+        <div class="org-section-kicker">Référentiel article</div>
+        <h2>${title}</h2>
+        <p>${subtitle}</p>
+      </div>
+      <div class="org-section-pills">
+        ${pillsHtml}
+      </div>
+    </div>
+
+    ${renderOrganizationStats(stats)}
+  `;
 }
 
 function attachArticlePageHandlers(pageKey) {
@@ -10675,27 +10798,8 @@ function refreshInventorySummary(form) {
 }
 
 function showStockToast(message, kind = "success") {
-  if (!overlayRootEl) return;
-
-  const existing = overlayRootEl.querySelector(".stock-toast");
-  if (existing) existing.remove();
-  if (stockToastTimer) {
-    clearTimeout(stockToastTimer);
-    stockToastTimer = null;
-  }
-
-  const toast = document.createElement("div");
-  toast.className = `stock-toast ${kind}`;
-  toast.innerHTML = `
-    <i class="fa-solid ${kind === "error" ? "fa-triangle-exclamation" : kind === "warn" ? "fa-circle-info" : "fa-circle-check"}"></i>
-    <span>${message}</span>
-  `;
-  overlayRootEl.appendChild(toast);
-
-  stockToastTimer = window.setTimeout(() => {
-    toast.classList.add("hide");
-    window.setTimeout(() => toast.remove(), 180);
-  }, 2200);
+  // Toasts disabled per user preference (silent mode)
+  return;
 }
 
 function buildStockArticleOptions(selectedId = "") {
@@ -11437,12 +11541,31 @@ function renderStockMovementCreateModal() {
   const articleOptions = buildStockArticleOptions(
     getArticleRecords("articles")[0]?.id || "",
   );
+  const nextNumber = String(getStockDirectory().movements.length + 1).padStart(
+    3,
+    "0",
+  );
+  const defaultId = `MVT-${nextNumber}`;
+  const nowLabel = formatStockDateTime(new Date());
+  const connectedUser = getConnectedUserProfile();
+  const connectedUserName = connectedUser
+    ? getAdministrationUserFullName(connectedUser)
+    : "Utilisateur connecté";
+
   const bodyHtml = `
     <form class="org-form stock-form" data-stock-movement-create-form>
       <div class="org-form-grid">
+        <div class="field-group">
+          <label>Code mouvement</label>
+          <input type="text" name="id" value="${escapeHtml(defaultId)}" readonly />
+        </div>
+        <div class="field-group">
+          <label>Date et heure</label>
+          <input type="text" name="createdAt" value="${escapeHtml(nowLabel)}" readonly />
+        </div>
         <div class="field-group field-group-wide">
           <label>Type de mouvement</label>
-          <select name="type" data-stock-create-movement-type>
+          <select name="type" data-stock-create-movement-type required>
             <option value="entry">Entrée</option>
             <option value="exit">Sortie</option>
             <option value="transfer">Transfert</option>
@@ -11460,29 +11583,21 @@ function renderStockMovementCreateModal() {
           <label>Prix unitaire</label>
           <input type="number" name="unitPrice" min="0" step="0.01" />
         </div>
-        <div class="field-group field-group-wide" data-stock-entry-only="true">
+        <div class="field-group field-group-wide" data-stock-entry-or-exit="true" hidden>
+          <label>Document lié</label>
+          <input type="text" name="linkedDocument" placeholder="" />
+        </div>
+        <div class="field-group field-group-wide" data-stock-source-location="true" hidden>
+          <label>Emplacement source</label>
+          <input type="text" name="source" value="${buildStockLocationLabel(stockDefaultLocation)}" />
+        </div>
+        <div class="field-group field-group-wide" data-stock-destination-location="true" hidden>
           <label>Emplacement destination</label>
           <input type="text" name="destination" value="${buildStockLocationLabel(stockDefaultLocation)}" />
         </div>
-        <div class="field-group field-group-wide" data-stock-exit-only="true" hidden>
-          <label>Bon / motif</label>
-          <input type="text" name="linkedDocument" placeholder="BT obligatoire pour consommation, motif pour rebut" />
-        </div>
-        <div class="field-group field-group-wide" data-stock-exit-only="true" hidden>
-          <label>Emplacement source</label>
-          <input type="text" name="source" value="${buildStockLocationLabel(stockDefaultLocation)}" />
-        </div>
-        <div class="field-group field-group-wide" data-stock-transfer-only="true" hidden>
-          <label>Emplacement source</label>
-          <input type="text" name="source" value="${buildStockLocationLabel(stockDefaultLocation)}" />
-        </div>
-        <div class="field-group field-group-wide" data-stock-transfer-only="true" hidden>
-          <label>Emplacement destination</label>
-          <input type="text" name="destination" value="Atelier nord / B2 / Étage 1 / D-03" />
-        </div>
         <div class="field-group field-group-wide">
-          <label>Utilisateur</label>
-          <input type="text" name="user" value="Utilisateur connecté" />
+          <label>Effectué par</label>
+          <input type="text" name="user" value="${escapeHtml(connectedUserName)}" readonly />
         </div>
         <div class="field-group field-group-wide">
           <label>Observations</label>
@@ -11522,6 +11637,34 @@ function renderStockMovementCreateModal() {
       .forEach((element) => {
         element.hidden = movementType !== "transfer";
       });
+    overlayRootEl
+      ?.querySelectorAll("[data-stock-entry-or-exit='true']")
+      .forEach((element) => {
+        element.hidden = !(movementType === "entry" || movementType === "exit");
+      });
+    overlayRootEl
+      ?.querySelectorAll("[data-stock-source-location='true']")
+      .forEach((element) => {
+        element.hidden = !(
+          movementType === "exit" || movementType === "transfer"
+        );
+      });
+    overlayRootEl
+      ?.querySelectorAll("[data-stock-destination-location='true']")
+      .forEach((element) => {
+        element.hidden = !(
+          movementType === "entry" || movementType === "transfer"
+        );
+      });
+
+    const linkedInput = overlayRootEl?.querySelector("[name='linkedDocument']");
+    if (linkedInput) {
+      if (movementType === "entry")
+        linkedInput.placeholder = "BC (bon de commande / réception)";
+      else if (movementType === "exit")
+        linkedInput.placeholder = "BT (bon de sortie)";
+      else linkedInput.placeholder = "";
+    }
   };
 
   typeSelect?.addEventListener("change", updateVisibility);
@@ -11543,7 +11686,7 @@ function renderStockMovementCreateModal() {
 
       const createdAt = new Date().toISOString();
       const movement = {
-        id: `mov-${Date.now()}`,
+        id: String(formData.get("id") || `mov-${Date.now()}`),
         type,
         articleId,
         quantity,
@@ -11582,8 +11725,8 @@ function renderStockMovementCreateModal() {
 
         movement.unitPrice = unitPrice;
         movement.linkedDocument = String(
-          formData.get("linkedDocument") || "Réception commande",
-        );
+          formData.get("linkedDocument") || "BC",
+        ).trim();
         movement.location = destination;
         movement.pmp = nextPmp;
         movement.resultingQuantity = aggregate.currentQuantity + quantity;
@@ -11620,7 +11763,9 @@ function renderStockMovementCreateModal() {
         }
         syncArticleQuantity(articleId, aggregate.currentQuantity - quantity);
 
-        movement.linkedDocument = String(formData.get("linkedDocument") || "");
+        movement.linkedDocument = String(
+          formData.get("linkedDocument") || "BT",
+        ).trim();
         movement.location = source;
         movement.pmp = aggregate.pmp;
         movement.resultingQuantity = aggregate.currentQuantity - quantity;
@@ -13169,7 +13314,7 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
         );
         if (!movementType) return;
         applyStockMovement(movementType, movementForm);
-        renderStockPage(activeSubpageKey);
+        renderStockPage(getCurrentStockSubpage());
       });
     });
 
@@ -13220,7 +13365,7 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
       event.preventDefault();
       refreshInventorySummary(inventoryForm);
       closeStockInventory(inventoryForm);
-      renderStockPage(activeSubpageKey);
+      renderStockPage(getCurrentStockSubpage());
     });
   }
 
@@ -13258,7 +13403,7 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
               )?.value || "",
             ),
           };
-          renderStockPage(activeSubpageKey);
+          renderStockPage(getCurrentStockSubpage());
         });
         control.addEventListener("change", function () {
           control.dispatchEvent(new Event("input", { bubbles: true }));
@@ -13315,7 +13460,7 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
         if (action === "edit") openStockMovementEdit(movement);
         if (action === "delete") {
           const success = cancelStockMovement(movementId);
-          if (success) renderStockPage(activeSubpageKey);
+          if (success) renderStockPage(getCurrentStockSubpage());
         }
         return;
       }
@@ -13369,7 +13514,7 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
 
       const success = cancelStockMovement(movementId);
       if (!success) return;
-      renderStockPage(activeSubpageKey);
+      renderStockPage(getCurrentStockSubpage());
     });
   });
 
@@ -13478,6 +13623,14 @@ function planificationDayKey(value) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function planificationMonthKey(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
 }
 
 function planificationMonthLabel(year, monthIndex) {
@@ -13752,13 +13905,12 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
   const activeSubpageKey = sectionSubpages.planification.tabs[subpageKey]
     ? subpageKey
     : sectionSubpages.planification.defaultSubpage;
+  const activeTab = sectionSubpages.planification.tabs[activeSubpageKey];
 
   if (pageTitleEl)
-    pageTitleEl.textContent = localizeAdministrationText("Planification");
+    pageTitleEl.textContent = localizeAdministrationText(activeTab.title);
   if (pageSubtitleEl)
-    pageSubtitleEl.textContent = localizeAdministrationText(
-      sectionSubpages.planification.tabs[activeSubpageKey].body,
-    );
+    pageSubtitleEl.textContent = localizeAdministrationText(activeTab.body);
 
   const plans = state.plans || [];
   const activePlans = plans.filter(
@@ -13794,12 +13946,25 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
     const [yearStr, monthStr] = monthValue.split("-");
     const year = Number(yearStr);
     const monthIndex = Number(monthStr) - 1;
+    const monthKey = planificationMonthKey(`${monthValue}-01T12:00:00`);
     const firstDay = new Date(year, monthIndex, 1);
     const lastDay = new Date(year, monthIndex + 1, 0);
     const startOffset = (firstDay.getDay() + 6) % 7;
     const totalCells = 42;
     const todayKey = new Date().toISOString().slice(0, 10);
     const selectedDate = state.selectedDate || todayKey;
+    const monthOrders = (state.scheduledOrders || []).filter((order) =>
+      planificationDayKey(order.scheduledDate).startsWith(monthKey),
+    );
+    const monthPlannedCount = monthOrders.filter(
+      (order) => order.status === "Planifié",
+    ).length;
+    const monthInProgressCount = monthOrders.filter(
+      (order) => order.status === "En cours",
+    ).length;
+    const monthLateCount = monthOrders.filter(
+      (order) => order.status === "En retard",
+    ).length;
     const eventsByDay = (state.scheduledOrders || []).reduce((acc, item) => {
       const key = planificationDayKey(item.scheduledDate);
       if (!key) return acc;
@@ -13820,8 +13985,8 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
       </div>
       <div class="org-section-intro">
         <div>
-          <div class="org-section-kicker">Calendrier</div>
-          <div class="org-section-title">Vue mensuelle des tâches et ordres</div>
+          <div class="org-section-kicker">Référentiel planification</div>
+          <h2>Calendrier</h2>
           <div class="org-section-subtitle">Cliquez une date pour voir le contenu planifié et ajoutez une tâche directement sur cette journée.</div>
         </div>
         <div class="org-section-pills">
@@ -13829,6 +13994,12 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
           <span class="status-badge badge-info">${state.scheduledOrders.length} événements</span>
           <span class="status-badge badge-warning">${alerts} alertes compteur</span>
         </div>
+      </div>
+      <div class="planning-kpi-grid">
+        <div class="planning-kpi-card"><strong>${monthOrders.length}</strong><span>OT du mois</span></div>
+        <div class="planning-kpi-card"><strong>${monthPlannedCount}</strong><span>Planifiés</span></div>
+        <div class="planning-kpi-card"><strong>${monthInProgressCount}</strong><span>En cours</span></div>
+        <div class="planning-kpi-card"><strong>${monthLateCount}</strong><span>En retard</span></div>
       </div>
       <div class="planning-calendar-shell">
         <div class="card">
@@ -13923,7 +14094,8 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
     pageContentEl.querySelectorAll("[data-plan-month]").forEach((button) => {
       button.addEventListener("click", function () {
         const nextState = loadPlanificationData();
-        const current = new Date(`${monthValue}-01T00:00:00`);
+        const current = new Date(`${monthValue}-01T12:00:00`);
+        if (Number.isNaN(current.getTime())) return;
         if (this.dataset.planMonth === "prev")
           current.setMonth(current.getMonth() - 1);
         if (this.dataset.planMonth === "next")
@@ -13932,8 +14104,8 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
           nextState.calendarMonth = new Date().toISOString().slice(0, 7);
           nextState.selectedDate = new Date().toISOString().slice(0, 10);
         } else {
-          nextState.calendarMonth = current.toISOString().slice(0, 7);
-          nextState.selectedDate = current.toISOString().slice(0, 10);
+          nextState.calendarMonth = planificationMonthKey(current);
+          nextState.selectedDate = planificationDayKey(current);
         }
         savePlanificationData(nextState);
         renderPlanificationPageClean("calendrier");
@@ -13951,8 +14123,8 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
       </div>
       <div class="org-section-intro">
         <div>
-          <div class="org-section-kicker">Compteurs</div>
-          <div class="org-section-title">Suivi des relevés et seuils</div>
+          <div class="org-section-kicker">Référentiel planification</div>
+          <h2>Compteurs</h2>
           <div class="org-section-subtitle">Le style a été resserré pour un usage plus lisible: compteur, dernier relevé, seuils et historique visibles ensemble.</div>
         </div>
         <div class="org-section-pills">
@@ -14106,9 +14278,9 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
       </div>
       <div class="org-section-intro">
         <div>
-          <div class="org-section-kicker">${activeSubpageKey === "plans-maintenance" ? "Référentiel" : "Planification"}</div>
-          <div class="org-section-title">${activeSubpageKey === "plans-maintenance" ? "Plans de maintenance" : "Plans liés au calendrier"}</div>
-          <div class="org-section-subtitle">Même logique que les autres pages du dashboard: KPI visibles en haut, liste centrale, puis fenêtre de création/édition par modal.</div>
+          <div class="org-section-kicker">Référentiel planification</div>
+          <h2>Plans de maintenance</h2>
+          <div class="org-section-subtitle">Cette page centralise les plans qui organisent les interventions de maintenance.</div>
         </div>
         <div class="org-section-pills">
           <span class="status-badge badge-success">${plans.length} plans</span>
@@ -16570,6 +16742,32 @@ function buildInterventionsSeedState() {
         status: "En cours",
       },
     ],
+    history: [
+      {
+        id: "hist-seed-101",
+        createdAt: new Date(now - 4.5 * 24 * 3600000).toISOString(),
+        action: "DI validée",
+        recordType: "DI",
+        recordRef: "DI-101",
+        message: "DI-101 validée",
+      },
+      {
+        id: "hist-seed-102",
+        createdAt: new Date(now - 2.5 * 24 * 3600000).toISOString(),
+        action: "DI transformée en OT",
+        recordType: "DI",
+        recordRef: "DI-102",
+        message: "DI-102 transformée en OT",
+      },
+      {
+        id: "hist-seed-103",
+        createdAt: new Date(now - 6 * 3600000).toISOString(),
+        action: "OT transformé en BT",
+        recordType: "OT",
+        recordRef: "OT-102",
+        message: "OT-102 transformé en BT",
+      },
+    ],
   };
 }
 
@@ -16584,6 +16782,7 @@ function loadInterventionsState() {
       dis: Array.isArray(parsed.dis) ? parsed.dis : [],
       ots: Array.isArray(parsed.ots) ? parsed.ots : [],
       bts: Array.isArray(parsed.bts) ? parsed.bts : [],
+      history: Array.isArray(parsed.history) ? parsed.history : [],
     };
 
     const seedState = buildInterventionsSeedState();
@@ -16610,6 +16809,7 @@ function loadInterventionsState() {
         dis: [...seedState.dis, ...normalized.dis],
         ots: [...seedState.ots, ...normalized.ots],
         bts: [...seedState.bts, ...normalized.bts],
+        history: [...seedState.history, ...normalized.history],
       };
 
       try {
@@ -16626,6 +16826,9 @@ function loadInterventionsState() {
       dis: normalized.dis,
       ots: normalized.ots,
       bts: normalized.bts,
+      history: normalized.history.length
+        ? normalized.history
+        : seedState.history,
     };
   } catch (e) {
     return buildInterventionsSeedState();
@@ -16638,6 +16841,19 @@ function saveInterventionsState(state) {
   } catch (e) {
     // Keep the UI usable if persistent storage is unavailable.
   }
+}
+
+function appendInterventionHistory(directory, entry) {
+  const history = Array.isArray(directory.history) ? directory.history : [];
+  history.unshift({
+    id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    createdAt: entry.createdAt || new Date().toISOString(),
+    action: entry.action || "Événement",
+    recordType: entry.recordType || "",
+    recordRef: entry.recordRef || "",
+    message: entry.message || entry.action || "",
+  });
+  directory.history = history;
 }
 
 function setInterventionsModalState(state) {
@@ -16777,6 +16993,46 @@ function renderInterventionsModal() {
     return;
   }
 
+  if (mode === "confirm-create-bt") {
+    const ot = getInterventionOt(recordId);
+    if (!ot) {
+      closeInterventionsModal();
+      return;
+    }
+
+    overlayRootEl.innerHTML = `
+      <div class="org-modal open" role="presentation">
+        <div class="org-modal-backdrop" data-int-close="true"></div>
+        <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intConfirmTitle">
+          <div class="org-modal-head">
+            <div>
+              <div class="org-modal-kicker">Ordre de travail</div>
+              <h3 id="intConfirmTitle">Créer un BT depuis ${escapeHtml(ot.ref)}</h3>
+              <p>Cette action supprimera l'OT de la liste des OT et créera un BT correspondant.</p>
+            </div>
+            <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="org-detail-list">
+            <div class="org-detail-item"><span>OT</span><strong>${escapeHtml(ot.ref)}</strong></div>
+            <div class="org-detail-item"><span>DI liée</span><strong>${escapeHtml(ot.diRef || "-")}</strong></div>
+            <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(ot.equipmentLabel || ot.equipmentId || "-")}</strong></div>
+            <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(ot.status || "-")}</strong></div>
+          </div>
+          <div class="org-modal-actions">
+            <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
+            <button class="btn btn-primary" type="button" data-int-action="confirm-create-bt" data-int-id="${ot.id}">
+              <i class="fa-solid fa-file-signature"></i>
+              <span>Confirmer</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   const diRecord = recordId ? getInterventionDi(recordId) : null;
   overlayRootEl.innerHTML = buildInterventionDiFormModal(diRecord);
 }
@@ -16797,6 +17053,28 @@ function bindInterventionsModalHandlers() {
     ?.addEventListener("click", function () {
       openInterventionsPrintCurrentDetails();
     });
+
+  overlayRootEl.querySelectorAll("[data-int-action]").forEach((button) => {
+    button.addEventListener("click", function () {
+      const action = this.dataset.intAction || "";
+      const recordId = this.dataset.intId || "";
+
+      if (action === "validate-di") {
+        validateInterventionDi(recordId);
+        return;
+      }
+
+      if (action === "transform-di") {
+        convertDiToOt(recordId);
+        return;
+      }
+
+      if (action === "confirm-create-bt") {
+        createBtFromOt(recordId);
+        return;
+      }
+    });
+  });
 
   const diForm = overlayRootEl.querySelector("[data-int-di-form]");
   if (!diForm) return;
@@ -17515,7 +17793,12 @@ function attachInterventionsPageHandlers(activeTabKey) {
       }
 
       if (action === "create-bt") {
-        createBtFromOt(recordId);
+        setInterventionsModalState({
+          mode: "confirm-create-bt",
+          recordId,
+          recordType: "ot",
+        });
+        renderInterventionsPage(getCurrentInterventionsTab("ot"));
         return;
       }
 
@@ -17914,6 +18197,19 @@ function renderBtSection(directory) {
 
 function renderHistorySection(directory) {
   const entries = [];
+  (Array.isArray(directory.history) ? directory.history : []).forEach(
+    (event) => {
+      entries.push({
+        id: event.id,
+        date: event.createdAt,
+        ref: event.recordRef || event.action || "Événement",
+        type: event.action || "Événement",
+        label: event.message || event.action || "Transition",
+        meta: event.recordType || "Journal",
+        kind: "event",
+      });
+    },
+  );
   directory.dis.forEach((di) => {
     entries.push({
       id: di.id,
@@ -17922,6 +18218,7 @@ function renderHistorySection(directory) {
       type: "DI",
       label: di.title,
       meta: di.status,
+      kind: "record",
     });
   });
   directory.ots.forEach((ot) => {
@@ -17932,6 +18229,7 @@ function renderHistorySection(directory) {
       type: "OT",
       label: ot.equipmentLabel || ot.diRef || "Ordre",
       meta: ot.status,
+      kind: "record",
     });
   });
   directory.bts.forEach((bt) => {
@@ -17942,6 +18240,7 @@ function renderHistorySection(directory) {
       type: "BT",
       label: bt.otRef || "Bon",
       meta: bt.status,
+      kind: "record",
     });
   });
   entries.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
@@ -17957,7 +18256,7 @@ function renderHistorySection(directory) {
               </div>
               <div style="display:flex;align-items:center;gap:12px">
                 <div class="intervention-history-date">${entry.date ? new Date(entry.date).toLocaleString(getAdministrationLocale()) : "-"}</div>
-                ${buildInterventionHistoryActions(entry.type.toLowerCase(), entry.id)}
+                ${entry.kind === "record" ? buildInterventionHistoryActions(entry.type.toLowerCase(), entry.id) : ""}
               </div>
             </div>
           `,
@@ -18009,6 +18308,15 @@ function buildInterventionEmptyState(icon, title, subtitle, note) {
 }
 
 function buildInterventionDiActions(di) {
+  const transformButton =
+    di.status === "Validée"
+      ? `
+      <button class="org-icon-btn" type="button" data-int-action="to-ot" data-int-id="${di.id}" title="Transformer en OT">
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    `
+      : "";
+
   return `
     <div class="org-row-actions">
       <button class="org-icon-btn" type="button" data-int-action="details-di" data-int-id="${di.id}" title="Voir les détails">
@@ -18017,9 +18325,7 @@ function buildInterventionDiActions(di) {
       <button class="org-icon-btn" type="button" data-int-action="edit-di" data-int-id="${di.id}" title="Modifier">
         <i class="fa-regular fa-pen-to-square"></i>
       </button>
-      <button class="org-icon-btn" type="button" data-int-action="to-ot" data-int-id="${di.id}" title="Transformer en OT">
-        <i class="fa-solid fa-arrow-right"></i>
-      </button>
+      ${transformButton}
       <button class="org-icon-btn danger" type="button" data-int-action="delete-di" data-int-id="${di.id}" title="Supprimer">
         <i class="fa-regular fa-trash-can"></i>
       </button>
@@ -18262,6 +18568,19 @@ function renderInterventionRecordDetails(recordType, record) {
     ]);
   }
 
+  const workflowButtons = [];
+  if (recordType === "di") {
+    if (record.status === "Validée") {
+      workflowButtons.push(
+        `<button class="btn btn-primary" type="button" data-int-action="transform-di" data-int-id="${record.id}"><i class="fa-solid fa-arrow-right"></i><span>Transformer en OT</span></button>`,
+      );
+    } else if (record.status !== "Transformée en OT") {
+      workflowButtons.push(
+        `<button class="btn btn-primary" type="button" data-int-action="validate-di" data-int-id="${record.id}"><i class="fa-solid fa-circle-check"></i><span>Valider</span></button>`,
+      );
+    }
+  }
+
   return `
     <div class="org-modal open" role="presentation">
       <div class="org-modal-backdrop" data-int-close="true"></div>
@@ -18283,15 +18602,42 @@ function renderInterventionRecordDetails(recordType, record) {
             <i class="fa-solid fa-print"></i>
             <span>Imprimer</span>
           </button>
+          ${workflowButtons.join("")}
         </div>
       </div>
     </div>
   `;
 }
 
-function convertDiToOt(diId) {
+function validateInterventionDi(diId) {
   const directory = loadInterventionsState();
   const di = directory.dis.find((item) => item.id === diId);
+  if (!di) return window.alert("DI introuvable.");
+  if (di.status === "Validée" || di.status === "Transformée en OT") {
+    closeInterventionsModal();
+    return;
+  }
+
+  di.status = "Validée";
+  appendInterventionHistory(directory, {
+    action: "DI validée",
+    recordType: "DI",
+    recordRef: di.ref,
+    message: `${di.ref} validée`,
+  });
+  saveInterventionsState(directory);
+  setInterventionsModalState({
+    mode: "details",
+    recordType: "di",
+    recordId: di.id,
+  });
+  renderInterventionsPage(getCurrentInterventionsTab("di"));
+}
+
+function convertDiToOt(diId) {
+  const directory = loadInterventionsState();
+  const diIndex = directory.dis.findIndex((item) => item.id === diId);
+  const di = diIndex >= 0 ? directory.dis[diIndex] : null;
   if (!di) return window.alert("DI introuvable.");
 
   const ot = {
@@ -18315,15 +18661,23 @@ function convertDiToOt(diId) {
     status: "Planifié",
   };
 
-  di.status = "Transformée en OT";
+  directory.dis.splice(diIndex, 1);
   directory.ots.unshift(ot);
+  appendInterventionHistory(directory, {
+    action: "DI transformée en OT",
+    recordType: "DI",
+    recordRef: di.ref,
+    message: `${di.ref} transformée en ${ot.ref}`,
+  });
   saveInterventionsState(directory);
-  renderInterventionsPage(getCurrentInterventionsTab("di"));
+  closeInterventionsModal();
+  renderInterventionsPage("ot");
 }
 
 function createBtFromOt(otId) {
   const directory = loadInterventionsState();
-  const ot = directory.ots.find((item) => item.id === otId);
+  const otIndex = directory.ots.findIndex((item) => item.id === otId);
+  const ot = otIndex >= 0 ? directory.ots[otIndex] : null;
   if (!ot) return window.alert("OT introuvable.");
 
   const bt = {
@@ -18344,10 +18698,17 @@ function createBtFromOt(otId) {
     status: "En cours",
   };
 
+  directory.ots.splice(otIndex, 1);
   directory.bts.unshift(bt);
-  ot.status = "En cours";
+  appendInterventionHistory(directory, {
+    action: "OT transformé en BT",
+    recordType: "OT",
+    recordRef: ot.ref,
+    message: `${ot.ref} transformé en ${bt.ref}`,
+  });
   saveInterventionsState(directory);
-  renderInterventionsPage(getCurrentInterventionsTab("bt"));
+  closeInterventionsModal();
+  renderInterventionsPage("bt");
 }
 
 function closeBt(btId) {
@@ -18386,6 +18747,13 @@ function closeBt(btId) {
 
   const ot = directory.ots.find((item) => item.id === bt.otId);
   if (ot) ot.status = "Terminé";
+
+  appendInterventionHistory(directory, {
+    action: "BT clôturé",
+    recordType: "BT",
+    recordRef: bt.ref,
+    message: `${bt.ref} clôturé`,
+  });
 
   saveInterventionsState(directory);
   renderInterventionsPage(getCurrentInterventionsTab("bt"));
