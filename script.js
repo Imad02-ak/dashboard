@@ -31,6 +31,8 @@ const notifMenu = document.getElementById("notifMenu");
 const profileMenu = document.getElementById("profileMenu");
 const stockAlertReadStorageKey = "maintflow.stockAlertReads";
 const stockInventoryStateStorageKey = "maintflow.stockInventoryState";
+const stockInventoriesStorageKey = "maintflow.stockInventories";
+const stockSelectedInventoryStorageKey = "maintflow.stockSelectedInventory";
 const planificationStorageKey = "maintflow.planificationState";
 const connectedUserStorageKey = "maintflow.connectedUserId";
 
@@ -10359,6 +10361,9 @@ function cancelStockMovement(movementId) {
     syncStockArticleQuantityFromRecords(articleId);
   }
 
+  movement.isCancelled = true;
+  saveStockDirectory(directory);
+
   appendStockMovement({
     type: movement.type,
     articleId,
@@ -10382,26 +10387,118 @@ function cancelStockMovement(movementId) {
   return true;
 }
 
-function getStockInventoryState() {
-  const fallback = {
+function getStockInventoryTemplate() {
+  return {
+    id: `INV-${Date.now()}`,
     status: "Ouvert",
     closedAt: "",
-    inventoryId: "INV-001",
+    inventoryId: `INV-${Date.now()}`,
+    type: "Général",
+    owner: "",
+    observations: "",
+    createdAt: new Date().toISOString(),
     openCount: 0,
-    closedBy: "",
+    rows: [
+      {
+        articleId: "",
+        article: "",
+        location: "",
+        theoretical: 0,
+        counted: 0,
+        observations: "",
+      },
+    ],
   };
+}
 
+function getStockInventories() {
   try {
-    const stored = window.localStorage.getItem(stockInventoryStateStorageKey);
-    if (!stored) return fallback;
-    const parsed = JSON.parse(stored);
-    return {
-      ...fallback,
-      ...(parsed && typeof parsed === "object" ? parsed : {}),
-    };
+    const raw = window.localStorage.getItem(stockInventoriesStorageKey);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(parsed)) return parsed;
   } catch (error) {
-    return fallback;
+    // ignore storage errors
   }
+
+  return [
+    {
+      id: "INV-001",
+      inventoryId: "INV-001",
+      status: "Ouvert",
+      type: "Général",
+      owner: "Nadia Rami",
+      observations: "Inventaire initial.",
+      createdAt: new Date().toISOString(),
+      closedAt: "",
+      openCount: 0,
+      rows: [
+        {
+          articleId: getArticleRecords("articles")[0]?.id || "",
+          article: "Huile minérale 5L",
+          location: "Magasin central / A4",
+          theoretical: 48,
+          counted: 46,
+          observations: "Deux bidons déplacés temporairement",
+        },
+        {
+          articleId: getArticleRecords("articles")[1]?.id || "",
+          article: "Roulement 6204",
+          location: "Atelier nord / B2",
+          theoretical: 40,
+          counted: 40,
+          observations: "Concordance parfaite",
+        },
+      ],
+    },
+  ];
+}
+
+function saveStockInventories(inventories) {
+  try {
+    window.localStorage.setItem(
+      stockInventoriesStorageKey,
+      JSON.stringify(inventories),
+    );
+  } catch (error) {
+    // ignore storage errors
+  }
+}
+
+function getStockSelectedInventoryId() {
+  try {
+    return window.localStorage.getItem(stockSelectedInventoryStorageKey) || "";
+  } catch (error) {
+    return "";
+  }
+}
+
+function saveStockSelectedInventoryId(inventoryId) {
+  try {
+    window.localStorage.setItem(
+      stockSelectedInventoryStorageKey,
+      String(inventoryId || ""),
+    );
+  } catch (error) {
+    // ignore storage errors
+  }
+}
+
+function getStockInventoryById(inventoryId) {
+  return getStockInventories().find((item) => item.id === inventoryId) || null;
+}
+
+function getStockInventoryState() {
+  const inventories = getStockInventories();
+  const selectedId = getStockSelectedInventoryId();
+  const target =
+    inventories.find((item) => item.id === selectedId) ||
+    inventories.find((item) => item.status === "Ouvert") ||
+    inventories[0] ||
+    getStockInventoryTemplate();
+  if (!selectedId && target && target.id) {
+    saveStockSelectedInventoryId(target.id);
+  }
+  return target;
 }
 
 function saveStockInventoryState(state) {
@@ -10804,7 +10901,7 @@ function renderStockPageActions(activeSubpageKey) {
       </button>
     `,
     inventaire: `
-      <button class="btn btn-primary" type="button" data-stock-action="scroll-inventory">
+      <button class="btn btn-primary" type="button" data-stock-action="create-inventory">
         <i class="fa-solid fa-clipboard-check"></i>
         <span>Nouveau inventaire</span>
       </button>
@@ -10947,10 +11044,283 @@ function renderStockModal(title, subtitle, bodyHtml) {
     });
 }
 
-function openStockRecordDetails(recordKey) {
-  const record = getStockRecords().find(
-    (item) => getStockRecordKey(item) === recordKey,
+function buildInventoryRowMarkup(row) {
+  const discrepancy = row.counted - row.theoretical;
+  const badgeClass = discrepancy === 0 ? "badge-success" : "badge-warning";
+  const badgeLabel = discrepancy === 0 ? "Validé" : "À vérifier";
+  const discrepancyLabel =
+    discrepancy > 0 ? `+${discrepancy}` : String(discrepancy);
+  return `
+    <tr data-stock-inventory-row data-stock-article-id="${escapeHtml(row.articleId)}" data-location-label="${escapeHtml(row.location)}" data-theoretical="${row.theoretical}">
+      <td><input type="text" value="${escapeHtml(row.article)}" class="stock-inline-input" data-stock-inventory-article /></td>
+      <td><input type="text" value="${escapeHtml(row.location)}" class="stock-inline-input" data-stock-inventory-location /></td>
+      <td><input type="number" value="${row.theoretical}" class="stock-inline-input" data-stock-inventory-theoretical /></td>
+      <td><input type="number" value="${row.counted}" class="stock-inline-input" data-stock-inventory-counted /></td>
+      <td class="${discrepancy === 0 ? "muted" : discrepancy > 0 ? "stock-discrepancy-positive" : "stock-discrepancy-negative"}" data-stock-inventory-discrepancy>${discrepancyLabel}</td>
+      <td><span class="status-badge ${badgeClass}" data-stock-inventory-status>${badgeLabel}</span></td>
+      <td><input type="text" value="${escapeHtml(row.observations)}" class="stock-inline-input stock-inline-text" data-stock-inventory-observations /></td>
+      <td>
+        <div class="org-row-actions">
+          <button class="org-icon-btn" type="button" data-stock-inventory-action="details" title="Voir"><i class="fa-regular fa-eye"></i></button>
+          <button class="org-icon-btn" type="button" data-stock-inventory-action="edit" title="Modifier"><i class="fa-regular fa-pen-to-square"></i></button>
+          <button class="org-icon-btn danger" type="button" data-stock-inventory-action="delete" title="Réinitialiser"><i class="fa-regular fa-trash-can"></i></button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function buildStockInventoryModalBody(inventoryState) {
+  const inventoryRows =
+    Array.isArray(inventoryState.rows) && inventoryState.rows.length
+      ? inventoryState.rows
+      : [
+          {
+            articleId: getArticleRecords("articles")[0]?.id || "",
+            article: "",
+            location: "",
+            theoretical: 0,
+            counted: 0,
+            observations: "",
+          },
+        ];
+
+  return `
+    <form class="org-form stock-form" data-stock-inventory-form>
+      <div class="org-form-grid">
+        <div class="field-group">
+          <label>Numéro</label>
+          <input type="text" name="inventoryId" value="${escapeHtml(inventoryState.inventoryId || `INV-${Date.now()}`)}" required />
+        </div>
+        <div class="field-group">
+          <label>Date inventaire</label>
+          <input type="date" name="inventoryDate" value="${escapeHtml(inventoryState.createdAt ? inventoryState.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10))}" required />
+        </div>
+        <div class="field-group field-group-wide">
+          <label>Type</label>
+          <select name="inventoryType">${getStockInventoryTypeOptions(inventoryState.type || "Général")}</select>
+        </div>
+        <div class="field-group field-group-wide">
+          <label>Responsable inventaire</label>
+          <select name="inventoryOwner">${buildStockResponsibleOptions(inventoryState.owner || "Nadia Rami")}</select>
+        </div>
+        <div class="field-group field-group-wide">
+          <label>Observations</label>
+          <textarea rows="4" placeholder="Objectif, consignes, date limite de saisie terrain..." data-stock-inventory-observations>${escapeTextarea(inventoryState.observations || "")}</textarea>
+        </div>
+      </div>
+      <div class="stock-form-actions">
+        <button class="btn btn-primary" type="submit" data-stock-submit="inventory">
+          <i class="fa-solid fa-check"></i>
+          <span>Créer l'inventaire</span>
+        </button>
+      </div>
+
+      <div class="card stock-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-table-list"></i> Feuille de comptage</div>
+          <span class="status-badge badge-warning">Saisie terrain</span>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap stock-count-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Article</th>
+                  <th>Emplacement</th>
+                  <th>Théorique</th>
+                  <th>Comptée</th>
+                  <th>Écart</th>
+                  <th>Statut</th>
+                  <th>Observations</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${inventoryRows.map(buildInventoryRowMarkup).join("")}
+              </tbody>
+            </table>
+          </div>
+          <div class="stock-form-actions">
+            <button class="btn btn-secondary" type="button" data-stock-inventory-add-row>
+              <i class="fa-solid fa-plus"></i>
+              <span>Nouvelle ligne</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  `;
+}
+
+function openStockInventoryModal() {
+  const inventoryState = getStockInventoryTemplate();
+  renderStockModal(
+    "Créer un inventaire",
+    "Saisissez un nouvel inventaire depuis une fenêtre modale.",
+    buildStockInventoryModalBody(inventoryState),
   );
+
+  const inventoryForm = overlayRootEl?.querySelector(
+    "[data-stock-inventory-form]",
+  );
+  if (!inventoryForm) return;
+
+  refreshInventorySummary(inventoryForm);
+
+  inventoryForm.addEventListener("input", function (event) {
+    const target = event.target;
+    if (!target || !target.closest("[data-stock-inventory-row]")) return;
+    refreshInventorySummary(inventoryForm);
+  });
+
+  inventoryForm.addEventListener("click", function (event) {
+    const addRowButton = event.target.closest("[data-stock-inventory-add-row]");
+    if (addRowButton) {
+      const tbody = inventoryForm.querySelector("tbody");
+      if (tbody) {
+        tbody.insertAdjacentHTML(
+          "beforeend",
+          buildInventoryRowMarkup({
+            articleId: "",
+            article: "",
+            location: "",
+            theoretical: 0,
+            counted: 0,
+            observations: "",
+          }),
+        );
+      }
+      return;
+    }
+
+    const inventoryAction = event.target.closest(
+      "[data-stock-inventory-action]",
+    );
+    if (!inventoryAction || !inventoryForm.contains(inventoryAction)) return;
+
+    const row = inventoryAction.closest("[data-stock-inventory-row]");
+    if (!row) return;
+
+    const action = String(inventoryAction.dataset.stockInventoryAction || "");
+    if (action === "details") {
+      renderStockInventoryRowDetails(row);
+    } else if (action === "edit") {
+      row.querySelector("[data-stock-inventory-counted]")?.focus();
+    } else if (action === "delete") {
+      const theoretical = Number(row.dataset.theoretical || 0) || 0;
+      const countedInput = row.querySelector("[data-stock-inventory-counted]");
+      const observationsInput = row.querySelector(
+        "[data-stock-inventory-observations]",
+      );
+      if (countedInput) countedInput.value = String(theoretical);
+      if (observationsInput) observationsInput.value = "";
+      refreshInventorySummary(inventoryForm);
+      showStockToast("Ligne inventaire réinitialisée.");
+    }
+  });
+
+  inventoryForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    refreshInventorySummary(inventoryForm);
+    createStockInventoryFromForm(inventoryForm);
+    if (overlayRootEl) overlayRootEl.innerHTML = "";
+    renderStockPage(getCurrentStockSubpage());
+  });
+}
+
+function createStockInventoryFromForm(form) {
+  const inventoryId = String(
+    form.querySelector("[name='inventoryId']")?.value || `INV-${Date.now()}`,
+  );
+  const inventoryType = String(
+    form.querySelector("[name='inventoryType']")?.value || "Général",
+  );
+  const inventoryOwner = String(
+    form.querySelector("[name='inventoryOwner']")?.value || "",
+  );
+  const observations = String(
+    form.querySelector("[data-stock-inventory-observations]")?.value || "",
+  );
+  const rows = Array.from(
+    form.querySelectorAll("[data-stock-inventory-row]"),
+  ).map((row) => {
+    const article = String(
+      row.querySelector("[data-stock-inventory-article]")?.value || "",
+    );
+    const location = String(
+      row.querySelector("[data-stock-inventory-location]")?.value || "",
+    );
+    const theoretical =
+      Number(
+        row.querySelector("[data-stock-inventory-theoretical]")?.value || 0,
+      ) || 0;
+    const counted =
+      Number(row.querySelector("[data-stock-inventory-counted]")?.value || 0) ||
+      0;
+    const observationsRow = String(
+      row.querySelector("[data-stock-inventory-observations]")?.value || "",
+    );
+    return {
+      articleId: String(row.dataset.stockArticleId || ""),
+      article,
+      location,
+      theoretical,
+      counted,
+      observations: observationsRow,
+    };
+  });
+
+  const discrepancies = rows.map((row) => row.counted - row.theoretical);
+  const openCount = discrepancies.filter((value) => value !== 0).length;
+
+  const inventories = getStockInventories();
+  const existingIndex = inventories.findIndex(
+    (item) => item.id === inventoryId,
+  );
+  const inventoryRecord = {
+    id: inventoryId,
+    inventoryId,
+    status: "Ouvert",
+    type: inventoryType,
+    owner: inventoryOwner,
+    observations,
+    createdAt: new Date().toISOString(),
+    closedAt: "",
+    openCount,
+    rows,
+  };
+
+  if (existingIndex >= 0) {
+    inventories[existingIndex] = inventoryRecord;
+  } else {
+    inventories.unshift(inventoryRecord);
+  }
+
+  saveStockInventories(inventories);
+  saveStockSelectedInventoryId(inventoryId);
+}
+
+function closeStockInventoryById(inventoryId) {
+  const inventories = getStockInventories();
+  const index = inventories.findIndex((item) => item.id === inventoryId);
+  if (index < 0) return;
+
+  const inventory = inventories[index];
+  if (inventory.status === "Clôturé") return;
+
+  inventories[index] = {
+    ...inventory,
+    status: "Clôturé",
+    closedAt: new Date().toISOString(),
+  };
+
+  saveStockInventories(inventories);
+  saveStockSelectedInventoryId(inventoryId);
+  renderStockPage(getCurrentStockSubpage());
+}
+
+function openStockRecordDetails(recordKey) {
   if (!record) return;
 
   const article = getArticleRecord("articles", record.articleId);
@@ -11273,7 +11643,8 @@ function getStockMovementRecord(movementId) {
 
 function getStockMovementsByType(type) {
   return getStockDirectory().movements.filter(
-    (movement) => movement.type === type && !movement.isReversal,
+    (movement) =>
+      movement.type === type && !movement.isReversal && !movement.isCancelled,
   );
 }
 
@@ -11855,7 +12226,7 @@ function buildStockFicheContent() {
 
 function buildStockMovementsContent() {
   const allMovements = getStockDirectory().movements.filter(
-    (movement) => !movement.isReversal,
+    (movement) => !movement.isReversal && !movement.isCancelled,
   );
   const entryMovements = allMovements
     .filter((movement) => movement.type === "entry")
@@ -11928,28 +12299,23 @@ function buildStockMovementsContent() {
 }
 
 function buildStockInventoryContent() {
-  const inventoryState = getStockInventoryState();
-  const isClosed = inventoryState.status === "Clôturé";
-  const inventoryRows = [
-    {
-      articleId: getArticleRecords("articles")[0]?.id || "",
-      article: "Huile minérale 5L",
-      location: "Magasin central / A4",
-      theoretical: 48,
-      counted: 46,
-      observations: "Deux bidons déplacés temporairement",
-    },
-    {
-      articleId: getArticleRecords("articles")[1]?.id || "",
-      article: "Roulement 6204",
-      location: "Atelier nord / B2",
-      theoretical: 40,
-      counted: 40,
-      observations: "Concordance parfaite",
-    },
-  ];
+  const inventories = getStockInventories();
+  const selectedInventoryId =
+    getStockSelectedInventoryId() ||
+    (inventories[0] && inventories[0].id) ||
+    "";
+  const selectedInventory =
+    getStockInventoryById(selectedInventoryId) ||
+    (inventories.length ? inventories[0] : null);
+  const inventoryOptions = inventories
+    .map(
+      (inventory) =>
+        `<option value="${escapeHtml(inventory.id)}"${inventory.id === selectedInventory.id ? " selected" : ""}>${escapeHtml(inventory.id)} — ${escapeHtml(inventory.type)} (${escapeHtml(inventory.status)})</option>`,
+    )
+    .join("");
 
-  const discrepancies = inventoryRows.map(
+  const selectedRows = selectedInventory.rows || [];
+  const discrepancies = selectedRows.map(
     (row) => row.counted - row.theoretical,
   );
   const positiveCount = discrepancies.filter((value) => value > 0).length;
@@ -11958,124 +12324,65 @@ function buildStockInventoryContent() {
 
   return `
     <div class="stock-page-shell">
-      <div class="stock-kpi-grid">
-        <div class="stock-kpi-card">
-          <span>Lignes comptées</span>
-          <strong>${inventoryRows.length}</strong>
-          <small>articles inventoriés</small>
-        </div>
-        <div class="stock-kpi-card">
-          <span>Écarts ouverts</span>
-          <strong>${openCount}</strong>
-          <small>lignes à valider</small>
-        </div>
-        <div class="stock-kpi-card">
-          <span>Écarts positifs</span>
-          <strong>${positiveCount}</strong>
-          <small>surstock</small>
-        </div>
-        <div class="stock-kpi-card">
-          <span>Écarts négatifs</span>
-          <strong>${negativeCount}</strong>
-          <small>manquants</small>
-        </div>
-      </div>
-
       <div class="stock-list-stack">
         <div class="card stock-card">
           <div class="card-head">
-            <div class="card-title"><i class="fa-solid fa-clipboard-check"></i> Inventaire en cours</div>
-            <span class="status-badge ${isClosed ? "badge-success" : "badge-info"}">${isClosed ? "Clôturé" : "Ouvert"}</span>
+            <div class="card-title"><i class="fa-solid fa-clipboard-list"></i> Inventaires</div>
+            <button class="btn btn-outline" type="button" data-stock-action="create-inventory">
+              <i class="fa-solid fa-plus"></i>
+              <span>Créer un inventaire</span>
+            </button>
           </div>
           <div class="card-body">
-            <form class="org-form stock-form" data-stock-inventory-form>
-              <div class="org-form-grid">
-                <div class="field-group">
-                  <label>Numéro</label>
-                  <input type="text" value="INV-001" disabled />
-                </div>
-                <div class="field-group">
-                  <label>Date inventaire</label>
-                  <input type="date" value="2026-05-29" required />
-                </div>
-                <div class="field-group field-group-wide">
-                  <label>Type</label>
-                  <select name="inventoryType">${getStockInventoryTypeOptions(inventoryState.inventoryType || "Général")}</select>
-                </div>
-                <div class="field-group field-group-wide">
-                  <label>Responsable inventaire</label>
-                  <select name="inventoryOwner">${buildStockResponsibleOptions(inventoryState.closedBy || "Nadia Rami")}</select>
-                </div>
-                <div class="field-group field-group-wide">
-                  <label>Observations</label>
-                  <textarea rows="4" placeholder="Objectif, consignes, date limite de saisie terrain..." data-stock-inventory-observations>${escapeTextarea(inventoryState.observations || "")}</textarea>
-                </div>
-              </div>
-              <div class="stock-form-actions">
-                <button class="btn btn-primary" type="submit" data-stock-submit="inventory">
-                  <i class="fa-solid fa-check"></i>
-                  <span>${isClosed ? "Reclôturer" : "Clôturer l'inventaire"}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <div class="card stock-card">
-          <div class="card-head">
-            <div class="card-title"><i class="fa-solid fa-table-list"></i> Feuille de comptage</div>
-            <span class="status-badge badge-warning">Saisie terrain</span>
-          </div>
-          <div class="card-body">
-            <div class="table-wrap stock-count-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Article</th>
-                    <th>Emplacement</th>
-                    <th>Théorique</th>
-                    <th>Comptée</th>
-                    <th>Écart</th>
-                    <th>Statut</th>
-                    <th>Observations</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${inventoryRows
-                    .map((row) => {
-                      const discrepancy = row.counted - row.theoretical;
-                      const badgeClass =
-                        discrepancy === 0 ? "badge-success" : "badge-warning";
-                      const badgeLabel =
-                        discrepancy === 0 ? "Validé" : "À vérifier";
-                      const discrepancyLabel =
-                        discrepancy > 0
-                          ? `+${discrepancy}`
-                          : String(discrepancy);
-                      return `
-                          <tr data-stock-inventory-row data-theoretical="${row.theoretical}" data-stock-article-id="${row.articleId}" data-stock-location-label="${escapeHtml(row.location)}">
-                            <td>${row.article}</td>
-                            <td>${row.location}</td>
-                            <td>${row.theoretical}</td>
-                            <td><input type="number" value="${row.counted}" class="stock-inline-input" data-stock-inventory-counted /></td>
-                            <td class="${discrepancy === 0 ? "muted" : discrepancy > 0 ? "stock-discrepancy-positive" : "stock-discrepancy-negative"}" data-stock-inventory-discrepancy>${discrepancyLabel}</td>
-                            <td><span class="status-badge ${badgeClass}" data-stock-inventory-status>${badgeLabel}</span></td>
-                            <td><input type="text" value="${row.observations}" class="stock-inline-input stock-inline-text" data-stock-inventory-observations /></td>
+            ${
+              inventories.length
+                ? `<div class="table-wrap stock-inventory-list">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Référence</th>
+                      <th>Type</th>
+                      <th>Responsable</th>
+                      <th>Statut</th>
+                      <th>Créé le</th>
+                      <th>Clôturé le</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${inventories
+                      .map((inventory) => {
+                        const createdAt = inventory.createdAt
+                          ? formatStockDateTime(new Date(inventory.createdAt))
+                          : "-";
+                        const closedAt = inventory.closedAt
+                          ? formatStockDateTime(new Date(inventory.closedAt))
+                          : "-";
+                        return `
+                          <tr>
+                            <td>${escapeHtml(inventory.id)}</td>
+                            <td>${escapeHtml(inventory.type)}</td>
+                            <td>${escapeHtml(inventory.owner || "-")}</td>
+                            <td><span class="status-badge ${inventory.status === "Clôturé" ? "badge-success" : "badge-info"}">${escapeHtml(inventory.status)}</span></td>
+                            <td>${createdAt}</td>
+                            <td>${closedAt}</td>
                             <td>
-                              <div class="org-row-actions">
-                                <button class="org-icon-btn" type="button" data-stock-inventory-action="details" title="Voir"><i class="fa-regular fa-eye"></i></button>
-                                <button class="org-icon-btn" type="button" data-stock-inventory-action="edit" title="Modifier"><i class="fa-regular fa-pen-to-square"></i></button>
-                                <button class="org-icon-btn danger" type="button" data-stock-inventory-action="delete" title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
-                              </div>
+                              <button class="btn btn-outline" type="button" data-stock-inventory-action="select" data-stock-inventory-id="${escapeHtml(inventory.id)}">Voir</button>
+                              ${
+                                inventory.status !== "Clôturé"
+                                  ? `<button class="btn btn-primary" type="button" data-stock-inventory-action="close" data-stock-inventory-id="${escapeHtml(inventory.id)}">Clôturer</button>`
+                                  : ""
+                              }
                             </td>
                           </tr>
                         `;
-                    })
-                    .join("")}
-                </tbody>
-              </table>
-            </div>
+                      })
+                      .join("")}
+                  </tbody>
+                </table>
+              </div>`
+                : `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-folder-open"></i></div><h3>Aucun inventaire</h3><p>Créez un inventaire pour commencer la saisie.</p></div>`
+            }
           </div>
         </div>
       </div>
@@ -12084,28 +12391,56 @@ function buildStockInventoryContent() {
         <div class="card stock-card">
           <div class="card-head">
             <div class="card-title"><i class="fa-solid fa-calculator"></i> Résultat inventaire</div>
+            <div class="field-group field-group-inline stock-results-select">
+              <label>Sélectionner</label>
+              <select data-stock-results-selector>
+                ${inventoryOptions}
+              </select>
+            </div>
           </div>
           <div class="card-body">
-            <div class="stock-summary-grid">
-              <div class="stock-summary-item">
-                <span>Articles contrôlés</span>
-                <strong>${inventoryRows.length}</strong>
+            ${
+              selectedInventory
+                ? `
+              <div class="stock-summary-grid">
+                <div class="stock-summary-item">
+                  <span>Inventaire</span>
+                  <strong>${escapeHtml(selectedInventory.id)}</strong>
+                </div>
+                <div class="stock-summary-item">
+                  <span>Statut</span>
+                  <strong>${escapeHtml(selectedInventory.status)}</strong>
+                </div>
+                <div class="stock-summary-item">
+                  <span>Responsable</span>
+                  <strong>${escapeHtml(selectedInventory.owner || "-")}</strong>
+                </div>
+                <div class="stock-summary-item">
+                  <span>Date création</span>
+                  <strong>${selectedInventory.createdAt ? formatStockDateTime(new Date(selectedInventory.createdAt)) : "-"}</strong>
+                </div>
+                <div class="stock-summary-item">
+                  <span>Écarts ouverts</span>
+                  <strong>${openCount}</strong>
+                </div>
+                <div class="stock-summary-item">
+                  <span>Écarts positifs</span>
+                  <strong>${positiveCount}</strong>
+                </div>
+                <div class="stock-summary-item">
+                  <span>Écarts négatifs</span>
+                  <strong>${negativeCount}</strong>
+                </div>
+                <div class="stock-summary-item">
+                  <span>Date clôture</span>
+                  <strong>${selectedInventory.closedAt ? formatStockDateTime(new Date(selectedInventory.closedAt)) : "En attente"}</strong>
+                </div>
               </div>
-              <div class="stock-summary-item">
-                <span>Écarts ouverts</span>
-                <strong>${inventoryState.openCount || openCount}</strong>
-              </div>
-              <div class="stock-summary-item">
-                <span>Date de clôture</span>
-                <strong>${inventoryState.closedAt ? formatStockDateTime(parseStockDateValue(inventoryState.closedAt) || new Date(inventoryState.closedAt)) : "En attente"}</strong>
-              </div>
-              <div class="stock-summary-item">
-                <span>Statut</span>
-                <strong>${isClosed ? "Clôturé" : "En cours"}</strong>
-              </div>
-            </div>
+            `
+                : `<p>Aucun inventaire sélectionné.</p>`
+            }
             <div class="stock-note">
-              Les écarts sont calculés automatiquement puis appliqués au stock lors de la clôture.
+              Utilisez la liste ci-dessus pour afficher les détails et clôturer un inventaire.
             </div>
           </div>
         </div>
@@ -12271,7 +12606,13 @@ function attachStockActionHandlers() {
     }
     if (action === "create-movement") {
       renderStockMovementCreateModal();
-    } else if (action === "scroll-inventory") {
+      return;
+    }
+    if (action === "create-inventory") {
+      openStockInventoryModal();
+      return;
+    }
+    if (action === "scroll-inventory") {
       pageContentEl
         ?.querySelector("[data-stock-inventory-form]")
         ?.scrollIntoView({
@@ -13342,6 +13683,18 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
       });
   }
 
+  const stockResultsSelector = pageContentEl.querySelector(
+    "[data-stock-results-selector]",
+  );
+  if (stockResultsSelector) {
+    stockResultsSelector.addEventListener("change", function () {
+      const inventoryId = String(this.value || "");
+      if (!inventoryId) return;
+      saveStockSelectedInventoryId(inventoryId);
+      renderStockPage(getCurrentStockSubpage());
+    });
+  }
+
   if (pageContentEl.dataset.stockHandlersBound !== "true") {
     pageContentEl.dataset.stockHandlersBound = "true";
     pageContentEl.addEventListener("click", function (event) {
@@ -13368,13 +13721,8 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
           openStockRecordCreate();
         } else if (action === "create-movement") {
           renderStockMovementCreateModal();
-        } else if (action === "scroll-inventory") {
-          pageContentEl
-            ?.querySelector("[data-stock-inventory-form]")
-            ?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
+        } else if (action === "create-inventory") {
+          openStockInventoryModal();
         }
         return;
       }
@@ -13400,11 +13748,26 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
         "[data-stock-inventory-action]",
       );
       if (inventoryAction && pageContentEl.contains(inventoryAction)) {
-        const row = inventoryAction.closest("[data-stock-inventory-row]");
-        if (!row) return;
+        const inventoryId = String(
+          inventoryAction.dataset.stockInventoryId || "",
+        );
         const action = String(
           inventoryAction.dataset.stockInventoryAction || "",
         );
+
+        if (inventoryId && action === "select") {
+          saveStockSelectedInventoryId(inventoryId);
+          renderStockPage(getCurrentStockSubpage());
+          return;
+        }
+
+        if (inventoryId && action === "close") {
+          closeStockInventoryById(inventoryId);
+          return;
+        }
+
+        const row = inventoryAction.closest("[data-stock-inventory-row]");
+        if (!row) return;
         if (action === "details") {
           renderStockInventoryRowDetails(row);
         } else if (action === "edit") {
