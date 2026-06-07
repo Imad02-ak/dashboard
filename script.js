@@ -194,7 +194,7 @@ const administrationRoleCatalog = [
   "Admin",
   "Responsable de maintenance",
   "Technicien de maintenance",
-  "Magasinier",
+  "Gestionnaire de stock",
   "Acheteur",
   "Consultant",
 ];
@@ -6870,6 +6870,1184 @@ function localizeAdministrationText(value, state = null) {
   return output;
 }
 
+const englishInterfaceTranslations = new Map(
+  Object.entries({
+    "Tableau de bord": "Dashboard",
+    Arborescence: "Asset tree",
+    Organisation: "Organization",
+    "\u00c9quipements": "Equipment",
+    Equipements: "Equipment",
+    Organe: "Component",
+    Organes: "Components",
+    Articles: "Items",
+    Planification: "Planning",
+    Interventions: "Work orders",
+    Achats: "Purchasing",
+    Fournisseurs: "Suppliers",
+    Administration: "Administration",
+    Principal: "Main",
+    Actifs: "Assets",
+    "Op\u00e9rations": "Operations",
+    Ressources: "Resources",
+    "Syst\u00e8me": "System",
+    Ajouter: "Add",
+    Modifier: "Edit",
+    Supprimer: "Delete",
+    Enregistrer: "Save",
+    Annuler: "Cancel",
+    Fermer: "Close",
+    Imprimer: "Print",
+    Exporter: "Export",
+    Importer: "Import",
+    Rechercher: "Search",
+    Filtrer: "Filter",
+    Valider: "Approve",
+    Refuser: "Reject",
+    R\u00e9initialiser: "Reset",
+    Actions: "Actions",
+    Action: "Action",
+    D\u00e9tails: "Details",
+    Informations: "Information",
+    Description: "Description",
+    Code: "Code",
+    Nom: "Name",
+    Pr\u00e9nom: "First name",
+    Email: "Email",
+    T\u00e9l\u00e9phone: "Phone",
+    Adresse: "Address",
+    Type: "Type",
+    Statut: "Status",
+    "\u00c9tat": "Condition",
+    Date: "Date",
+    Quantit\u00e9: "Quantity",
+    Prix: "Price",
+    Total: "Total",
+    R\u00e9f\u00e9rence: "Reference",
+    Marque: "Brand",
+    Fournisseur: "Supplier",
+    Groupe: "Group",
+    Famille: "Family",
+    Division: "Division",
+    D\u00e9partement: "Department",
+    Service: "Service",
+    Unit\u00e9: "Unit",
+    Responsable: "Manager",
+    Utilisateur: "User",
+    Utilisateurs: "Users",
+    R\u00f4le: "Role",
+    R\u00f4les: "Roles",
+    Permissions: "Permissions",
+    Devise: "Currency",
+    Langue: "Language",
+    Oui: "Yes",
+    Non: "No",
+    Aucun: "None",
+    Aucune: "None",
+    Tous: "All",
+    Toutes: "All",
+    Actif: "Active",
+    Active: "Active",
+    Actifs: "Active",
+    Inactif: "Inactive",
+    Inactive: "Inactive",
+    Suspendu: "Suspended",
+    Suspendus: "Suspended",
+    Brouillon: "Draft",
+    "En attente": "Pending",
+    Valid\u00e9: "Approved",
+    Valid\u00e9e: "Approved",
+    Annul\u00e9: "Cancelled",
+    Annul\u00e9e: "Cancelled",
+    Re\u00e7u: "Received",
+    Re\u00e7ue: "Received",
+    Conforme: "Compliant",
+    Manquant: "Missing",
+    Surstock: "Overstock",
+    Criticit\u00e9: "Criticality",
+    Faible: "Low",
+    Moyenne: "Medium",
+    "\u00c9lev\u00e9e": "High",
+    Critique: "Critical",
+    "Date cr\u00e9ation": "Creation date",
+    "Cr\u00e9\u00e9 par": "Created by",
+    "Derni\u00e8re connexion": "Last login",
+    "Nom d'utilisateur": "Username",
+    "Fuseau horaire": "Time zone",
+    "Langue par d\u00e9faut": "Default language",
+    "Format date": "Date format",
+    "Nom entreprise": "Company name",
+    Entreprise: "Company",
+    Notifications: "Notifications",
+    Profil: "Profile",
+    Param\u00e8tres: "Settings",
+    Param\u00e8tre: "Settings",
+    D\u00e9connexion: "Sign out",
+    "Sauvegarde locale": "Local save",
+    Sauvegarde: "Backup",
+    "Param\u00e8tres g\u00e9n\u00e9raux": "General settings",
+    "R\u00f4les & Permissions": "Roles & Permissions",
+    "Journaux syst\u00e8me": "System logs",
+    "Enregistrer les param\u00e8tres": "Save settings",
+    "Exporter CSV": "Export CSV",
+    "Exporter PDF": "Export PDF",
+    "Ajouter un utilisateur": "Add user",
+    "Ajouter une unit\u00e9": "Add unit",
+    "Ajouter une division": "Add division",
+    "Ajouter un d\u00e9partement": "Add department",
+    "Ajouter un \u00e9quipement": "Add equipment",
+    "Ajouter un organe": "Add component",
+    "Ajouter un article": "Add item",
+    "Ajouter le logo": "Add logo",
+    "Aucune photo disponible": "No photo available",
+    "Aucune donn\u00e9e disponible": "No data available",
+    "Aucun r\u00e9sultat": "No results",
+    "Aucune notification pour le moment.":
+      "No notifications at the moment.",
+    "S\u00e9lectionner": "Select",
+    "S\u00e9lectionner un groupe": "Select a group",
+    "S\u00e9lectionner une famille": "Select a family",
+    "S\u00e9lectionner un fournisseur": "Select a supplier",
+    "S\u00e9lectionner un responsable": "Select a manager",
+    "S\u00e9lectionner la criticit\u00e9": "Select criticality",
+    "S\u00e9lectionner l'\u00e9tat": "Select condition",
+    "S\u00e9lectionner une unit\u00e9": "Select a unit",
+    "S\u00e9lectionner un d\u00e9partement": "Select a department",
+    "Unit\u00e9 de mesure": "Unit of measure",
+    "Fournisseur principal": "Main supplier",
+    D\u00e9signations: "Descriptions",
+    Localisations: "Locations",
+    "Num\u00e9ro t\u00e9l\u00e9phone": "Phone number",
+    "Code entreprise": "Company code",
+    "Code \u00e9quipement": "Equipment code",
+    "Nom \u00e9quipement": "Equipment name",
+    "Code organe": "Component code",
+    "Nom organe": "Component name",
+    "Code article": "Item code",
+    "N\u00b0 s\u00e9rie": "Serial no.",
+    "Prix d'achat": "Purchase price",
+    "Date d'achat": "Purchase date",
+    "Date de mise en service": "Commissioning date",
+    "Dur\u00e9e de garantie": "Warranty period",
+    "Pi\u00e8ces jointes": "Attachments",
+    Photos: "Photos",
+    "Documents associ\u00e9s": "Related documents",
+    "Informations techniques et achats":
+      "Technical and purchasing information",
+    "Identification et statut": "Identification and status",
+    "Type g\u00e9n\u00e9ral": "General information",
+    "Type compl\u00e9mentaire": "Additional information",
+    "Liste des utilisateurs": "User list",
+    "Liste des unit\u00e9s": "Unit list",
+    "Liste des divisions": "Division list",
+    "Liste des d\u00e9partements": "Department list",
+    "Liste des \u00e9quipements": "Equipment list",
+    "Liste des organes": "Component list",
+    "Liste des articles": "Item list",
+    "Liste des groupes": "Group list",
+    "Liste des familles": "Family list",
+    "R\u00e9f\u00e9rentiel organisation": "Organization directory",
+    "R\u00e9f\u00e9rentiel \u00e9quipement": "Equipment directory",
+    "R\u00e9f\u00e9rentiel organe": "Component directory",
+    "R\u00e9f\u00e9rentiel article": "Item directory",
+    "Mouvements de stock": "Stock movements",
+    "Entr\u00e9e stock": "Stock entry",
+    "Sortie stock": "Stock issue",
+    Transfert: "Transfer",
+    Inventaire: "Inventory",
+    Inventaires: "Inventories",
+    Emplacement: "Location",
+    Stockage: "Storage",
+    "Stock actuel": "Current stock",
+    "Stock minimum": "Minimum stock",
+    "Demande d'achat": "Purchase request",
+    "Demandes d'achat": "Purchase requests",
+    "Bon de commande": "Purchase order",
+    "Bons de commande": "Purchase orders",
+    R\u00e9ception: "Receipt",
+    R\u00e9ceptions: "Receipts",
+    Historique: "History",
+    Demandeur: "Requester",
+    "Date souhait\u00e9e": "Required date",
+    "Quantit\u00e9 demand\u00e9e": "Requested quantity",
+    "En attente validation": "Pending approval",
+    "Valid\u00e9e": "Approved",
+    "Plans de maintenance": "Maintenance plans",
+    Calendrier: "Calendar",
+    Compteurs: "Counters",
+    "Ordre de travail": "Work order",
+    "Bon de travail": "Work report",
+    "Demande d'intervention": "Work request",
+    "Vue globale de la maintenance": "Global maintenance overview",
+  }),
+);
+
+const englishInterfacePatterns = [
+  [/^Liste des (.+)$/i, "List of $1"],
+  [/^Cr\u00e9\u00e9 le (.+)$/i, "Created on $1"],
+  [/^Derni\u00e8re connexion (.+)$/i, "Last login $1"],
+  [/^Ajouter (.+)$/i, "Add $1"],
+  [/^Modifier (.+)$/i, "Edit $1"],
+  [/^Supprimer (.+)$/i, "Delete $1"],
+];
+
+const englishInterfacePhraseTranslations = new Map(
+  Object.entries({
+    "Structure des actifs et des emplacements":
+      "Asset and location structure",
+    "Structure de l'entreprise et des \u00e9quipes":
+      "Company and team structure",
+    "Catalogue et suivi des \u00e9quipements":
+      "Equipment catalog and tracking",
+    "Gestion des organes et sous-ensembles":
+      "Component and subassembly management",
+    "R\u00e9f\u00e9rentiel des articles et consommables":
+      "Item and consumables directory",
+    "Param\u00e9trage du stock, mouvements et inventaire":
+      "Stock settings, movements and inventory",
+    "Cycle DA, BC, r\u00e9ceptions et historique":
+      "Purchase request, purchase order, receipt and history workflow",
+    "R\u00e9f\u00e9rentiel fournisseurs, catalogue, contrats et \u00e9valuations":
+      "Supplier directory, catalog, contracts and evaluations",
+    "Informations du compte connect\u00e9":
+      "Connected account information",
+    "Cycle complet DI, OT et BT avec suivi terrain":
+      "Complete request, work order and report workflow with field tracking",
+    "Gestion des utilisateurs, des r\u00f4les et des param\u00e8tres globaux":
+      "User, role and global settings management",
+    "Param\u00e8tres de valorisation du stock et r\u00e8gles de validation des interventions.":
+      "Stock valuation settings and work order approval rules.",
+    "Gestion de tous les comptes qui acc\u00e8dent au logiciel.":
+      "Manage all accounts that access the software.",
+    "D\u00e9finition de qui peut faire quoi dans chaque module de la plateforme.":
+      "Define what each role can do in every platform module.",
+    "Configuration globale du logiciel, des alertes et de la num\u00e9rotation.":
+      "Global software, alert and numbering configuration.",
+    "Configuration globale du logiciel, des alertes et de la num\u00e9rotation automatique.":
+      "Global software, alert and automatic numbering configuration.",
+    "Gestion des unit\u00e9s avec responsables et rattachements.":
+      "Manage units, managers and assignments.",
+    "Gestion des d\u00e9partements avec rattachement aux unit\u00e9s.":
+      "Manage departments and unit assignments.",
+    "Chaque d\u00e9partement peut \u00eatre rattach\u00e9 \u00e0 plusieurs unit\u00e9s.":
+      "Each department can be assigned to multiple units.",
+    "Chaque division peut appartenir \u00e0 plusieurs unit\u00e9s, avec un responsable unique et son email charg\u00e9 automatiquement.":
+      "Each division can belong to multiple units, with one manager whose email is loaded automatically.",
+    "Chaque unit\u00e9 conserve son code, ses coordonn\u00e9es et son responsable avec email synchronis\u00e9 automatiquement.":
+      "Each unit keeps its code, contact details and manager, with email synchronized automatically.",
+    "Chaque groupe associe plusieurs d\u00e9partements et sert de base aux familles puis aux \u00e9quipements.":
+      "Each group links multiple departments and serves as the basis for families and equipment.",
+    "Chaque famille d\u00e9pend d\u2019un groupe et pr\u00e9pare la cr\u00e9ation des fiches \u00e9quipements.":
+      "Each family belongs to a group and supports equipment record creation.",
+    "Chaque groupe organe peut \u00eatre associ\u00e9 \u00e0 plusieurs \u00e9quipements.":
+      "Each component group can be linked to multiple equipment records.",
+    "Chaque famille organe est rattach\u00e9e \u00e0 un groupe organe.":
+      "Each component family belongs to a component group.",
+    "Gestion des groupes d'\u00e9quipements avec affectation multi-divisions.":
+      "Manage equipment groups assigned to multiple divisions.",
+    "Gestion des familles d'\u00e9quipements rattach\u00e9es \u00e0 un groupe.":
+      "Manage equipment families assigned to a group.",
+    "Liste des \u00e9quipements avec fiche d\u00e9taill\u00e9e et formulaire en plusieurs sections.":
+      "Equipment list with detailed records and a multi-section form.",
+    "Gestion des groupes d'organes avec association multi-\u00e9quipements.":
+      "Manage component groups associated with multiple equipment records.",
+    "Gestion des familles d'organes rattach\u00e9es \u00e0 un groupe.":
+      "Manage component families assigned to a group.",
+    "Liste des organes avec formulaire complet et pi\u00e8ces jointes.":
+      "Component list with a complete form and attachments.",
+    "R\u00e9f\u00e9rentiel des plans, d\u00e9clenchements et gammes op\u00e9ratoires.":
+      "Directory of plans, triggers and operating procedures.",
+    "Vue des OT planifi\u00e9s, en cours et en retard sur plusieurs horizons.":
+      "View scheduled, active and overdue work orders across multiple periods.",
+    "Suivi des relev\u00e9s, seuils d'alerte et g\u00e9n\u00e9ration automatique d'OT.":
+      "Track readings, alert thresholds and automatic work order generation.",
+    "Param\u00e9trage du stock, emplacements et valorisation des articles.":
+      "Stock, location and item valuation settings.",
+    "Entr\u00e9es, sorties et transferts de stock avec tra\u00e7abilit\u00e9 compl\u00e8te.":
+      "Stock entries, issues and transfers with full traceability.",
+    "Cr\u00e9ation d\u2019inventaires et feuille de comptage terrain.":
+      "Create inventories and field count sheets.",
+    "Consultation des mouvements filtr\u00e9e par article, type, date ou utilisateur.":
+      "View movements filtered by item, type, date or user.",
+    "Cr\u00e9ation manuelle ou depuis le stock minimum. Les DA valid\u00e9es peuvent ensuite \u00eatre regroup\u00e9es dans un ou plusieurs BC.":
+      "Create manually or from minimum stock. Approved purchase requests can then be grouped into one or more purchase orders.",
+    "Cr\u00e9ation des commandes fournisseurs avec lien DA, totaux calcul\u00e9s et suivi de statut jusqu'\u00e0 r\u00e9ception compl\u00e8te.":
+      "Create supplier orders linked to purchase requests, with calculated totals and status tracking through full receipt.",
+    "R\u00e9ception de la marchandise li\u00e9e \u00e0 un BC avec contr\u00f4le qualit\u00e9, \u00e9carts de quantit\u00e9 et tra\u00e7abilit\u00e9 documentaire.":
+      "Receive goods linked to a purchase order with quality control, quantity discrepancies and document traceability.",
+    "Consultation des DA, BC et r\u00e9ceptions avec filtres par article, fournisseur, type document, statut, date et montant.":
+      "View purchase requests, orders and receipts filtered by item, supplier, document type, status, date and amount.",
+    "Demandes d'intervention (DI)": "Work requests (WR)",
+    "Ordres de travail (OT)": "Work orders (WO)",
+    "Bons de travail (BT)": "Work reports (WRP)",
+    "Historique des interventions": "Work order history",
+    "Demandes d'achat (DA)": "Purchase requests (PR)",
+    "Bons de commande (BC)": "Purchase orders (PO)",
+    "Contrats & Garanties": "Contracts & Warranties",
+    "Fiche fournisseur": "Supplier record",
+    "Fiche entreprise": "Company profile",
+    "Fiche stock": "Stock record",
+    "Groupe \u00e9quipement": "Equipment group",
+    "Famille \u00e9quipement": "Equipment family",
+    "Groupes \u00e9quipement": "Equipment groups",
+    "Familles \u00e9quipement": "Equipment families",
+    "Groupe organe": "Component group",
+    "Famille organe": "Component family",
+    "Groupes organes": "Component groups",
+    "Familles organes": "Component families",
+    "Groupes articles": "Item groups",
+    "Familles articles": "Item families",
+    "Arborescence hi\u00e9rarchique": "Hierarchical asset tree",
+    "Activit\u00e9 r\u00e9cente": "Recent activity",
+    "Interventions r\u00e9centes": "Recent work orders",
+    "Prochaines interventions": "Upcoming work orders",
+    "\u00c9quipements critiques": "Critical equipment",
+    "Disponibilit\u00e9 par zone": "Availability by area",
+    "Planning de la semaine": "Weekly schedule",
+    "Filtres & actions": "Filters & actions",
+    "Filtres de consultation": "View filters",
+    "Formulaire de cr\u00e9ation": "Creation form",
+    "Tableau r\u00e9capitulatif": "Summary table",
+    "Feuille de comptage": "Count sheet",
+    "R\u00e9sultat inventaire": "Inventory result",
+    "Historique des relev\u00e9s": "Reading history",
+    "Saisie de relev\u00e9": "Enter reading",
+    "Fiches compteur": "Meter records",
+    "Fiches stock": "Stock records",
+    "Flux de d\u00e9clenchement": "Trigger workflow",
+    "Journal des interventions": "Work order log",
+    "Informations de l'intervention": "Work order information",
+    "Cr\u00e9ation et mise \u00e0 jour d'une demande d'intervention.":
+      "Create and update a work request.",
+    "V\u00e9rifiez les informations de la DI et compl\u00e9tez les d\u00e9tails de l'OT.":
+      "Review the work request information and complete the work order details.",
+    "V\u00e9rifiez les informations de l'OT et compl\u00e9tez les d\u00e9tails du Bon de Travail.":
+      "Review the work order information and complete the work report details.",
+    "SECTION 1 \u2014 Informations de la DI":
+      "SECTION 1 - Work request information",
+    "SECTION 1 \u2014 Informations de l'OT":
+      "SECTION 1 - Work order information",
+    "SECTION 2 \u2014 Champs \u00e0 remplir pour l'OT":
+      "SECTION 2 - Work order fields",
+    "SECTION 2 \u2014 Champs \u00e0 remplir pour le BT":
+      "SECTION 2 - Work report fields",
+    "Articles consomm\u00e9s": "Consumed items",
+    "Travaux r\u00e9alis\u00e9s": "Work performed",
+    "Cause de la panne": "Failure cause",
+    "Actions correctives": "Corrective actions",
+    "Consommation de pi\u00e8ces": "Parts consumption",
+    "Co\u00fbt articles consomm\u00e9s :": "Consumed items cost:",
+    "Co\u00fbt total intervention :": "Total work order cost:",
+    "Signature technicien": "Technician signature",
+    "Signature responsable": "Manager signature",
+    "Date planifi\u00e9e": "Scheduled date",
+    "Dur\u00e9e estim\u00e9e": "Estimated duration",
+    "Dur\u00e9e r\u00e9elle": "Actual duration",
+    "Type maintenance": "Maintenance type",
+    "Technicien assign\u00e9": "Assigned technician",
+    "Technicien par d\u00e9faut": "Default technician",
+    "Demandeur": "Requester",
+    "Cr\u00e9\u00e9e le": "Created on",
+    "DI li\u00e9e": "Linked work request",
+    "OT li\u00e9": "Linked work order",
+    "BC li\u00e9": "Linked purchase order",
+    "Plan li\u00e9": "Linked plan",
+    "Document li\u00e9": "Linked document",
+    "\u00c9quipement li\u00e9": "Linked equipment",
+    "Organe li\u00e9": "Linked component",
+    "Adresse compl\u00e8te": "Full address",
+    "Adresse de livraison": "Delivery address",
+    "Nom commercial": "Trading name",
+    "Raison sociale": "Legal name",
+    "Domaine d'activit\u00e9": "Business activity",
+    "T\u00e9l\u00e9phone principal": "Primary phone",
+    "T\u00e9l\u00e9phone secondaire": "Secondary phone",
+    "Email direct": "Direct email",
+    "Site web": "Website",
+    "D\u00e9signation fournisseur": "Supplier name",
+    "Code fournisseur": "Supplier code",
+    "Type fournisseur": "Supplier type",
+    "Contact fournisseur (t\u00e9l\u00e9phone)": "Supplier contact (phone)",
+    "Email fournisseur": "Supplier email",
+    "Catalogue fournisseur": "Supplier catalog",
+    "Liste fournisseurs": "Supplier list",
+    "Conditions de paiement": "Payment terms",
+    "Mode de livraison": "Delivery method",
+    "D\u00e9lai de livraison moyen (jours)":
+      "Average delivery time (days)",
+    "D\u00e9lai livraison sp\u00e9cifique": "Specific delivery time",
+    "Frais de livraison": "Delivery fees",
+    "Remise habituelle %": "Standard discount %",
+    "Montant minimum (BC)": "Minimum amount (PO)",
+    "R\u00e9f\u00e9rence fournisseur": "Supplier reference",
+    "R\u00e9f fournisseur": "Supplier ref.",
+    "Prix unitaire HT": "Unit price excluding tax",
+    "Montant HT (auto)": "Amount excl. tax (auto)",
+    "Total HT (auto)": "Total excl. tax (auto)",
+    "Total TTC (auto)": "Total incl. tax (auto)",
+    "Total HT": "Total excl. tax",
+    "Total TTC": "Total incl. tax",
+    "Qt\u00e9 command\u00e9e": "Ordered qty.",
+    "Qt\u00e9 re\u00e7ue": "Received qty.",
+    "Qt\u00e9 manquante": "Missing qty.",
+    "Quantit\u00e9 command\u00e9e": "Ordered quantity",
+    "Quantit\u00e9 re\u00e7ue": "Received quantity",
+    "Quantit\u00e9 manquante (auto)": "Missing quantity (auto)",
+    "Contr\u00f4le qualit\u00e9": "Quality control",
+    "Bon de livraison fournisseur": "Supplier delivery note",
+    "BL fournisseur": "Supplier delivery note",
+    "Facture fournisseur": "Supplier invoice",
+    "R\u00e9ceptionn\u00e9 par": "Received by",
+    "Date r\u00e9ception": "Receipt date",
+    "\u00c9tat r\u00e9ception": "Receipt status",
+    "Regrouper DA valid\u00e9es": "Group approved purchase requests",
+    "Regroupement de plusieurs DA valid\u00e9es pour un m\u00eame fournisseur.":
+      "Group multiple approved purchase requests for the same supplier.",
+    "Mouvements de stock": "Stock movements",
+    "Type de mouvement": "Movement type",
+    "Code mouvement": "Movement code",
+    "Magasin source": "Source warehouse",
+    "Magasin destination": "Destination warehouse",
+    "Emplacement de stockage": "Storage location",
+    "Emplacement stock": "Stock location",
+    "Stock de s\u00e9curit\u00e9": "Safety stock",
+    "Stock maximum": "Maximum stock",
+    "Autoriser stock n\u00e9gatif": "Allow negative stock",
+    "Blocage sortie si rupture": "Block issue when out of stock",
+    "M\u00e9thode valorisation": "Valuation method",
+    "PMP calcul\u00e9": "Calculated weighted average cost",
+    "Valeur totale": "Total value",
+    "Valeur actuelle": "Current value",
+    "Valeur relev\u00e9e": "Reading value",
+    "Valorisation actuelle": "Current valuation",
+    "valorisation actuelle": "current valuation",
+    "valorisation estim\u00e9e": "estimated valuation",
+    "Stock et interventions": "Stock and work orders",
+    "Workflow m\u00e9tier": "Business workflow",
+    "R\u00e8gles de validation": "Approval rules",
+    "Validation r\u00e9ception obligatoire": "Receipt approval required",
+    "DI obligatoire avant OT": "Work request required before work order",
+    "Signature BT obligatoire": "Work report signature required",
+    "Photos obligatoires dans BT": "Photos required in work report",
+    "Checklist s\u00e9curit\u00e9 obligatoire": "Safety checklist required",
+    "D\u00e9lai max DI non trait\u00e9e (jours)":
+      "Maximum unprocessed request delay (days)",
+    "Alerte seuil compteur": "Meter threshold alert",
+    "Seuil alerte": "Alert threshold",
+    "Seuil action": "Action threshold",
+    "Valeur catalogue": "Catalog value",
+    "Valeur contrat": "Contract value",
+    "D\u00e9clenchement compteur": "Meter trigger",
+    "D\u00e9clenchement syst\u00e9matique": "Scheduled trigger",
+    "D\u00e9clenchement automatique bas\u00e9 sur l'usage":
+      "Automatic usage-based trigger",
+    "Gamme op\u00e9ratoire": "Operating procedure",
+    "Gamme op\u00e9ratoire compl\u00e8te": "Complete operating procedure",
+    "Consignation \u00e9lectrique": "Electrical lockout",
+    "Permis de travail": "Work permit",
+    "EPI requis": "Required PPE",
+    "Checklist s\u00e9curit\u00e9": "Safety checklist",
+    "Date de d\u00e9but": "Start date",
+    "Date de fin": "End date",
+    "Date d\u00e9but": "Start date",
+    "Date fin": "End date",
+    "Date commande": "Order date",
+    "Date livraison souhait\u00e9e": "Requested delivery date",
+    "Date inventaire": "Inventory date",
+    "Date cl\u00f4ture": "Closing date",
+    "Cl\u00f4tur\u00e9 le": "Closed on",
+    "Derni\u00e8re mise \u00e0 jour": "Last update",
+    "Prochaine \u00e9ch\u00e9ance": "Next due date",
+    "\u00c9ch\u00e9ances proches": "Upcoming due dates",
+    "P\u00e9riode \u00e9valu\u00e9e": "Evaluation period",
+    "\u00c9valuation fournisseur": "Supplier evaluation",
+    "\u00c9valuateur": "Evaluator",
+    "Note globale": "Overall rating",
+    "Note moyenne": "Average rating",
+    "Historique des \u00e9valuations et note globale automatique.":
+      "Evaluation history and automatic overall rating.",
+    "Objet du contrat": "Contract purpose",
+    "Type contrat": "Contract type",
+    "Date d\u00e9but garantie": "Warranty start date",
+    "Date fin garantie": "Warranty end date",
+    "Dur\u00e9e garantie (mois)": "Warranty duration (months)",
+    "Conditions de garantie": "Warranty terms",
+    "Renouvellement auto": "Automatic renewal",
+    "Alerte expiration (jours)": "Expiry alert (days)",
+    "Garanties li\u00e9es aux \u00e9quipements et documents associ\u00e9s.":
+      "Warranties linked to equipment and related documents.",
+    "Contrats cadres, maintenance et partenariats.":
+      "Framework contracts, maintenance and partnerships.",
+    "Permissions par module": "Permissions by module",
+    "Permissions actives": "Active permissions",
+    "Droits actifs": "Active permissions",
+    "Droits modifiables": "Editable permissions",
+    "R\u00f4les pr\u00e9d\u00e9finis": "Predefined roles",
+    "Profils pr\u00e9d\u00e9finis": "Predefined profiles",
+    "R\u00f4les verrouill\u00e9s": "Locked roles",
+    "Verrouill\u00e9s par d\u00e9faut": "Locked by default",
+    "Responsable de maintenance": "Maintenance manager",
+    "Technicien de maintenance": "Maintenance technician",
+    "Gestionnaire de stock": "Stock manager",
+    "Lecture seule": "Read only",
+    "Recherche des journaux": "Log search",
+    "Type d'action": "Action type",
+    "Date et heure": "Date and time",
+    "Avant:": "Before:",
+    "Apr\u00e8s:": "After:",
+    "Export donn\u00e9es": "Export data",
+    "Import donn\u00e9es": "Import data",
+    "Effacer historique": "Clear history",
+    "R\u00e9initialisation": "Reset",
+    "Modifications enregistr\u00e9es automatiquement":
+      "Changes saved automatically",
+    "Non renseign\u00e9": "Not provided",
+    "Profil introuvable": "Profile not found",
+    "Utilisateur connect\u00e9": "Connected user",
+    "Dates de compte": "Account dates",
+    "Code entreprise associ\u00e9": "Linked company code",
+    "Total des utilisateurs enregistr\u00e9s": "Total registered users",
+    "Connexions autoris\u00e9es": "Authorized logins",
+    "Acc\u00e8s temporairement bloqu\u00e9s":
+      "Temporarily blocked access",
+    "Couverture fonctionnelle": "Functional coverage",
+    "Comptes enregistr\u00e9s": "Registered accounts",
+    "R\u00f4les utilis\u00e9s": "Roles in use",
+    "Aucun journal trouv\u00e9": "No logs found",
+    "Adaptez les filtres pour afficher d'autres entr\u00e9es.":
+      "Adjust the filters to display other entries.",
+    "Aucun fournisseur disponible.": "No supplier available.",
+    "Aucun inventaire s\u00e9lectionn\u00e9.": "No inventory selected.",
+    "Aucun relev\u00e9 enregistr\u00e9": "No reading recorded",
+    "Aucune intervention visible": "No work order visible",
+    "Aucune ligne catalogue.": "No catalog line.",
+    "Aucune ligne de comptage.": "No count line.",
+    "Aucune t\u00e2che sur cette date": "No task on this date",
+    "Aucun mouvement ne correspond aux filtres actuels.":
+      "No movement matches the current filters.",
+    "Aucune fiche stock": "No stock record",
+    "Aucun contrat.": "No contract.",
+    "Aucune garantie.": "No warranty.",
+    "Aucune \u00e9valuation.": "No evaluation.",
+    "Aujourd'hui": "Today",
+    "Pr\u00e9c\u00e9dent": "Previous",
+    "Suivant": "Next",
+    "Voir toutes": "View all",
+    "Appliquer les filtres": "Apply filters",
+    "Cr\u00e9er le mouvement": "Create movement",
+    "Cr\u00e9er un inventaire": "Create inventory",
+    "Nouveau inventaire": "New inventory",
+    "Nouveau mouvement": "New movement",
+    "Nouvelle fiche stock": "New stock record",
+    "Nouveau plan": "New plan",
+    "Nouvelle ligne": "New line",
+    "Ajouter une t\u00e2che": "Add task",
+    "Ajouter sur cette date": "Add on this date",
+    "Ajouter un relev\u00e9": "Add reading",
+    "Enregistrer le relev\u00e9": "Save reading",
+    "Cr\u00e9er la fiche": "Create record",
+    "Imprimer la fiche": "Print record",
+    "Transformer en OT": "Convert to work order",
+    "Cr\u00e9er OT": "Create work order",
+    "Cr\u00e9er BT": "Create work report",
+    "Cl\u00f4turer": "Close",
+    "Confirmer et cr\u00e9er OT": "Confirm and create work order",
+    "Confirmer et cr\u00e9er BT": "Confirm and create work report",
+  }),
+);
+
+const englishInterfaceWordTranslations = new Map(
+  Object.entries({
+    "\u00e0": "to",
+    afin: "to",
+    ainsi: "thus",
+    alors: "then",
+    apr\u00e8s: "after",
+    au: "to the",
+    aucun: "no",
+    aucune: "no",
+    aux: "to the",
+    avec: "with",
+    bas\u00e9: "based",
+    bas\u00e9e: "based",
+    ce: "this",
+    ces: "these",
+    cet: "this",
+    cette: "this",
+    chaque: "each",
+    charg\u00e9: "loaded",
+    charg\u00e9e: "loaded",
+    comme: "as",
+    concern\u00e9: "affected",
+    concern\u00e9e: "affected",
+    concern\u00e9s: "affected",
+    contient: "contains",
+    d: "of",
+    dans: "in",
+    de: "of",
+    depuis: "from",
+    des: "of",
+    directement: "directly",
+    doit: "must",
+    du: "of the",
+    durant: "during",
+    d\u00e9pass\u00e9: "exceeded",
+    d\u00e9pass\u00e9e: "exceeded",
+    en: "in",
+    entre: "between",
+    est: "is",
+    et: "and",
+    fait: "done",
+    ici: "here",
+    il: "it",
+    ils: "they",
+    jusqu: "until",
+    l: "the",
+    la: "the",
+    le: "the",
+    les: "the",
+    leur: "their",
+    leurs: "their",
+    lors: "when",
+    m\u00eame: "same",
+    ne: "not",
+    ni: "nor",
+    non: "no",
+    notamment: "including",
+    nous: "we",
+    ou: "or",
+    o\u00f9: "where",
+    par: "by",
+    parce: "because",
+    pendant: "during",
+    peut: "can",
+    peuvent: "can",
+    plus: "more",
+    plusieurs: "multiple",
+    pour: "for",
+    puis: "then",
+    quand: "when",
+    que: "that",
+    quel: "which",
+    quelle: "which",
+    qui: "that",
+    reste: "remains",
+    sans: "without",
+    se: "itself",
+    selon: "depending on",
+    sera: "will be",
+    ses: "its",
+    si: "if",
+    son: "its",
+    sont: "are",
+    sous: "under",
+    sur: "on",
+    tous: "all",
+    tout: "all",
+    toute: "all",
+    toutes: "all",
+    un: "a",
+    une: "a",
+    via: "through",
+    vos: "your",
+    votre: "your",
+    vous: "you",
+    "\u00eatre": "be",
+    acc\u00e8s: "access",
+    actif: "active",
+    actifs: "active",
+    active: "active",
+    actives: "active",
+    activit\u00e9: "activity",
+    affich\u00e9: "displayed",
+    affich\u00e9e: "displayed",
+    affich\u00e9es: "displayed",
+    afficher: "display",
+    ajout\u00e9: "added",
+    ajouter: "add",
+    alerte: "alert",
+    alertes: "alerts",
+    annuler: "cancel",
+    anomalie: "issue",
+    anomalies: "issues",
+    article: "item",
+    articles: "items",
+    associ\u00e9: "linked",
+    associ\u00e9e: "linked",
+    associ\u00e9es: "linked",
+    associ\u00e9s: "linked",
+    automatique: "automatic",
+    automatiquement: "automatically",
+    autoriser: "allow",
+    autre: "other",
+    avant: "before",
+    bon: "report",
+    bons: "reports",
+    calendrier: "calendar",
+    catalogue: "catalog",
+    cause: "cause",
+    champs: "fields",
+    choisir: "choose",
+    choisissez: "choose",
+    cl\u00f4ture: "closing",
+    cl\u00f4tur\u00e9: "closed",
+    code: "code",
+    commande: "order",
+    commandes: "orders",
+    commentaire: "comment",
+    commentaires: "comments",
+    complet: "complete",
+    compl\u00e8te: "complete",
+    compl\u00e8tes: "complete",
+    compte: "account",
+    comptes: "accounts",
+    comptage: "count",
+    compteur: "meter",
+    compteurs: "meters",
+    conditionnel: "condition-based",
+    conditions: "terms",
+    conforme: "compliant",
+    conformes: "compliant",
+    connexion: "login",
+    connexions: "logins",
+    consomm\u00e9: "consumed",
+    consomm\u00e9s: "consumed",
+    consultation: "view",
+    consulter: "view",
+    contact: "contact",
+    contrat: "contract",
+    contrats: "contracts",
+    contr\u00f4le: "control",
+    corrective: "corrective",
+    correctives: "corrective",
+    courante: "current",
+    courant: "current",
+    cr\u00e9ation: "creation",
+    cr\u00e9er: "create",
+    cr\u00e9\u00e9: "created",
+    cr\u00e9\u00e9e: "created",
+    cr\u00e9\u00e9s: "created",
+    criticit\u00e9: "criticality",
+    critique: "critical",
+    date: "date",
+    d\u00e9but: "start",
+    d\u00e9clenchement: "trigger",
+    d\u00e9clenchements: "triggers",
+    d\u00e9faut: "failure",
+    d\u00e9lai: "delay",
+    demande: "request",
+    demandes: "requests",
+    demand\u00e9e: "requested",
+    d\u00e9partement: "department",
+    d\u00e9partements: "departments",
+    derni\u00e8re: "last",
+    dernier: "last",
+    description: "description",
+    d\u00e9signation: "description",
+    d\u00e9signations: "descriptions",
+    d\u00e9tail: "detail",
+    d\u00e9tails: "details",
+    devise: "currency",
+    disponibilit\u00e9: "availability",
+    division: "division",
+    divisions: "divisions",
+    document: "document",
+    documents: "documents",
+    donn\u00e9es: "data",
+    droits: "permissions",
+    dur\u00e9e: "duration",
+    \u00e9cart: "discrepancy",
+    \u00e9carts: "discrepancies",
+    \u00e9ch\u00e9ance: "due date",
+    \u00e9ch\u00e9ances: "due dates",
+    effacer: "clear",
+    \u00e9lev\u00e9e: "high",
+    email: "email",
+    emplacement: "location",
+    emplacements: "locations",
+    enregistrement: "record",
+    enregistrements: "records",
+    enregistrer: "save",
+    entr\u00e9e: "entry",
+    entr\u00e9es: "entries",
+    entreprise: "company",
+    \u00e9quipement: "equipment",
+    \u00e9quipements: "equipment",
+    estim\u00e9e: "estimated",
+    \u00e9tat: "condition",
+    \u00e9valuation: "evaluation",
+    \u00e9valuations: "evaluations",
+    \u00e9v\u00e9nements: "events",
+    expiration: "expiry",
+    export: "export",
+    famille: "family",
+    familles: "families",
+    faible: "low",
+    fiche: "record",
+    fiches: "records",
+    filtre: "filter",
+    filtres: "filters",
+    fournisseur: "supplier",
+    fournisseurs: "suppliers",
+    fr\u00e9quence: "frequency",
+    garantie: "warranty",
+    garanties: "warranties",
+    g\u00e9n\u00e9ration: "generation",
+    g\u00e9n\u00e9r\u00e9: "generated",
+    g\u00e9n\u00e9r\u00e9e: "generated",
+    gestion: "management",
+    groupe: "group",
+    groupes: "groups",
+    haute: "high",
+    heure: "time",
+    historique: "history",
+    identification: "identification",
+    import: "import",
+    impression: "print",
+    imprimer: "print",
+    inactif: "inactive",
+    intervention: "work order",
+    interventions: "work orders",
+    inventaire: "inventory",
+    inventaires: "inventories",
+    journal: "log",
+    journaux: "logs",
+    justification: "reason",
+    langue: "language",
+    lecture: "read",
+    lien: "link",
+    liens: "links",
+    ligne: "line",
+    lignes: "lines",
+    liste: "list",
+    livraison: "delivery",
+    localisation: "location",
+    localisations: "locations",
+    magasin: "warehouse",
+    manquant: "missing",
+    manquante: "missing",
+    manquants: "missing",
+    marque: "brand",
+    matrice: "matrix",
+    message: "message",
+    minimum: "minimum",
+    mise: "update",
+    modification: "change",
+    modifications: "changes",
+    modifier: "edit",
+    module: "module",
+    modules: "modules",
+    montant: "amount",
+    mouvement: "movement",
+    mouvements: "movements",
+    moyenne: "average",
+    nom: "name",
+    note: "rating",
+    notes: "ratings",
+    nouveau: "new",
+    nouvelle: "new",
+    num\u00e9ro: "number",
+    objet: "purpose",
+    obligatoire: "required",
+    obligatoires: "required",
+    observations: "observations",
+    op\u00e9rations: "operations",
+    optionnel: "optional",
+    organe: "component",
+    organes: "components",
+    origine: "source",
+    panne: "failure",
+    param\u00e8tres: "settings",
+    parc: "fleet",
+    p\u00e9riode: "period",
+    permissions: "permissions",
+    photo: "photo",
+    photos: "photos",
+    pi\u00e8ce: "part",
+    pi\u00e8ces: "parts",
+    plan: "plan",
+    planification: "planning",
+    planifi\u00e9: "scheduled",
+    planifi\u00e9e: "scheduled",
+    planifi\u00e9s: "scheduled",
+    plans: "plans",
+    pr\u00e9c\u00e9dent: "previous",
+    pr\u00e9dictif: "predictive",
+    pr\u00e9dictive: "predictive",
+    pr\u00e9ventif: "preventive",
+    pr\u00e9ventive: "preventive",
+    principal: "primary",
+    priorit\u00e9: "priority",
+    prix: "price",
+    prochaine: "next",
+    prochaines: "upcoming",
+    profil: "profile",
+    profils: "profiles",
+    quantit\u00e9: "quantity",
+    raison: "reason",
+    r\u00e9approvisionnement: "replenishment",
+    r\u00e9ception: "receipt",
+    r\u00e9ceptions: "receipts",
+    re\u00e7u: "received",
+    re\u00e7ue: "received",
+    re\u00e7us: "received",
+    recommandation: "recommendation",
+    r\u00e9f\u00e9rence: "reference",
+    r\u00e9f\u00e9rences: "references",
+    r\u00e9f\u00e9rentiel: "directory",
+    r\u00e9glementaire: "regulatory",
+    relev\u00e9: "reading",
+    relev\u00e9e: "reading",
+    relev\u00e9s: "readings",
+    remise: "discount",
+    renouvellement: "renewal",
+    r\u00e9pertoire: "directory",
+    responsable: "manager",
+    responsables: "managers",
+    ressources: "resources",
+    r\u00e9sum\u00e9: "summary",
+    r\u00f4le: "role",
+    r\u00f4les: "roles",
+    saisie: "entry",
+    sauvegarde: "backup",
+    s\u00e9curit\u00e9: "safety",
+    s\u00e9lectionner: "select",
+    service: "department",
+    seuil: "threshold",
+    seuils: "thresholds",
+    signature: "signature",
+    signatures: "signatures",
+    sortie: "issue",
+    sorties: "issues",
+    statut: "status",
+    stock: "stock",
+    suivant: "next",
+    suivi: "tracking",
+    supprimer: "delete",
+    suspendu: "suspended",
+    suspendus: "suspended",
+    surcharge: "overload",
+    surstock: "overstock",
+    surstocks: "overstock",
+    syst\u00e8me: "system",
+    syst\u00e9matique: "scheduled",
+    t\u00e2che: "task",
+    t\u00e2ches: "tasks",
+    technique: "technical",
+    techniques: "technical",
+    technicien: "technician",
+    techniciens: "technicians",
+    t\u00e9l\u00e9phone: "phone",
+    termin\u00e9: "completed",
+    termin\u00e9e: "completed",
+    termin\u00e9s: "completed",
+    th\u00e9orique: "theoretical",
+    titre: "title",
+    total: "total",
+    tra\u00e7abilit\u00e9: "traceability",
+    transfert: "transfer",
+    transferts: "transfers",
+    transformer: "convert",
+    travaux: "work",
+    type: "type",
+    unit\u00e9: "unit",
+    unit\u00e9s: "units",
+    urgence: "urgency",
+    usure: "wear",
+    utilisateur: "user",
+    utilisateurs: "users",
+    validation: "approval",
+    valider: "approve",
+    valeur: "value",
+    valorisation: "valuation",
+    verrouill\u00e9s: "locked",
+    affect\u00e9: "assigned",
+    affect\u00e9e: "assigned",
+    affect\u00e9s: "assigned",
+    appartenir: "belong",
+    calcul\u00e9: "calculated",
+    calcul\u00e9e: "calculated",
+    coordonn\u00e9es: "contact details",
+    enregistr\u00e9: "saved",
+    enregistr\u00e9e: "saved",
+    enregistr\u00e9es: "saved",
+    enregistr\u00e9s: "saved",
+    fig\u00e9: "fixed",
+    fig\u00e9e: "fixed",
+    global: "global",
+    globale: "global",
+    information: "information",
+    informations: "information",
+    joint: "attached",
+    jointe: "attached",
+    jointes: "attached",
+    li\u00e9: "linked",
+    li\u00e9e: "linked",
+    li\u00e9es: "linked",
+    li\u00e9s: "linked",
+    maximum: "maximum",
+    n\u00e9gatif: "negative",
+    n\u00e9gatifs: "negative",
+    ouvert: "open",
+    ouverte: "open",
+    ouvertes: "open",
+    ouverts: "open",
+    positif: "positive",
+    positifs: "positive",
+    pr\u00eat: "ready",
+    pr\u00eate: "ready",
+    principale: "primary",
+    rattach\u00e9: "assigned",
+    rattach\u00e9e: "assigned",
+    rattach\u00e9es: "assigned",
+    rattach\u00e9s: "assigned",
+    r\u00e8gle: "rule",
+    r\u00e8gles: "rules",
+    souhait\u00e9: "requested",
+    souhait\u00e9e: "requested",
+    synchronis\u00e9: "synchronized",
+    synchronis\u00e9e: "synchronized",
+    unique: "single",
+    visible: "visible",
+    visibles: "visible",
+    voir: "view",
+  }),
+);
+
+function preserveTranslationCase(source, translation) {
+  if (source === source.toUpperCase()) return translation.toUpperCase();
+  if (source[0] === source[0]?.toUpperCase()) {
+    return `${translation.charAt(0).toUpperCase()}${translation.slice(1)}`;
+  }
+  return translation;
+}
+
+function translateInterfaceFallback(value) {
+  let output = String(value ?? "");
+
+  [...englishInterfacePhraseTranslations.entries()]
+    .sort(([left], [right]) => right.length - left.length)
+    .forEach(([from, to]) => {
+      output = output.split(from).join(to);
+    });
+
+  output = output.replace(/[\p{L}\u00c0-\u00ff]+/gu, (word) => {
+    const translation = englishInterfaceWordTranslations.get(
+      word.toLocaleLowerCase("fr-FR"),
+    );
+    return translation ? preserveTranslationCase(word, translation) : word;
+  });
+
+  return output;
+}
+
+function translateInterfaceValue(value, allowFallback = true) {
+  const source = String(value ?? "");
+  const trimmed = source.trim();
+  if (!trimmed) return source;
+
+  let translated = englishInterfaceTranslations.get(trimmed);
+  if (!translated) {
+    for (const [pattern, replacement] of englishInterfacePatterns) {
+      if (pattern.test(trimmed)) {
+        translated = trimmed.replace(pattern, replacement);
+        break;
+      }
+    }
+  }
+  if (allowFallback) {
+    translated = translateInterfaceFallback(translated || trimmed);
+  }
+  if (!translated || translated === trimmed) return source;
+
+  const leading = source.match(/^\s*/)?.[0] || "";
+  const trailing = source.match(/\s*$/)?.[0] || "";
+  return `${leading}${translated}${trailing}`;
+}
+
+function shouldUseInterfaceFallback(element) {
+  if (!element) return false;
+  if (
+    element.closest(
+      "label, button, option, th, h1, h2, h3, h4, h5, h6, p, .nav-item, .org-field-hint, .blank-note, .status-badge, .equipment-section-kicker, .org-section-kicker, .page-title, .page-sub, .dropdown-title, .dropdown-item, .supplier-tab, .org-tabs",
+    )
+  ) {
+    return true;
+  }
+
+  if (element.closest("tbody td")) return false;
+
+  return ["SPAN", "DIV", "STRONG", "SMALL"].includes(element.tagName);
+}
+
+function translateRenderedInterface(root = document) {
+  if (getAdministrationLanguageKey() !== "en" || !root) return;
+
+  const elementRoot =
+    root.nodeType === Node.ELEMENT_NODE || root.nodeType === Node.DOCUMENT_NODE
+      ? root
+      : root.parentElement;
+  if (!elementRoot) return;
+
+  const walker = document.createTreeWalker(
+    elementRoot,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode(node) {
+        const parent = node.parentElement;
+        if (
+          !parent ||
+          ["SCRIPT", "STYLE", "TEXTAREA"].includes(parent.tagName) ||
+          parent.isContentEditable
+        ) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    },
+  );
+
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+  textNodes.forEach((node) => {
+    const translated = translateInterfaceValue(
+      node.nodeValue,
+      shouldUseInterfaceFallback(node.parentElement),
+    );
+    if (translated !== node.nodeValue) node.nodeValue = translated;
+  });
+
+  const elements =
+    elementRoot.nodeType === Node.ELEMENT_NODE
+      ? [elementRoot, ...elementRoot.querySelectorAll("*")]
+      : [...elementRoot.querySelectorAll("*")];
+  elements.forEach((element) => {
+    ["placeholder", "title", "aria-label", "data-tooltip"].forEach(
+      (attribute) => {
+        if (!element.hasAttribute(attribute)) return;
+        const current = element.getAttribute(attribute);
+        const translated = translateInterfaceValue(current);
+        if (translated !== current) element.setAttribute(attribute, translated);
+      },
+    );
+  });
+}
+
+let interfaceTranslationObserver = null;
+
+function startInterfaceTranslationObserver() {
+  if (interfaceTranslationObserver || !document.body) return;
+  interfaceTranslationObserver = new MutationObserver((mutations) => {
+    if (getAdministrationLanguageKey() !== "en") return;
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => translateRenderedInterface(node));
+    });
+  });
+  interfaceTranslationObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+}
+
 function applyLocalizedShell(state = null) {
   const languageKey = getAdministrationLanguageKey(state);
   const locale = getAdministrationLocale(state);
@@ -7604,7 +8782,7 @@ function buildAdministrationRolesSection(state) {
           </article>
           <article class="admin-role-card locked">
             <div class="admin-role-card-head">
-              <strong>Magasinier</strong>
+              <strong>Gestionnaire de stock</strong>
               <span class="status-badge badge-gray">Stock uniquement</span>
             </div>
             <p>Gère le stock, les mouvements et les validations de réception.</p>
@@ -8265,9 +9443,25 @@ function attachAdministrationGeneralHandlers() {
   if (!pageContentEl) return;
 
   const form = pageContentEl.querySelector("#adminGeneralForm");
+  const languageSelect = form?.querySelector("#adminDefaultLanguage");
   const saveButton = pageActionsEl
     ? pageActionsEl.querySelector("[data-admin-settings-save]")
     : null;
+
+  if (languageSelect) {
+    languageSelect.addEventListener("change", function () {
+      const nextState = getAdministrationState();
+      const nextLanguage = normalizeAdministrationLanguage(this.value);
+
+      if (nextState.settings.defaultLanguage === nextLanguage) return;
+
+      nextState.settings.defaultLanguage = nextLanguage;
+      saveAdministrationState(nextState);
+      applyLocalizedShell(nextState);
+      renderPage("parametres", "general");
+      window.location.hash = "parametres/general";
+    });
+  }
 
   if (saveButton) {
     saveButton.addEventListener("click", function () {
@@ -8300,8 +9494,10 @@ function attachAdministrationGeneralHandlers() {
         form.querySelector("#adminCurrency")?.value ||
         nextState.settings.currency,
       defaultLanguage:
-        form.querySelector("#adminDefaultLanguage")?.value ||
-        nextState.settings.defaultLanguage,
+        normalizeAdministrationLanguage(
+          form.querySelector("#adminDefaultLanguage")?.value ||
+            nextState.settings.defaultLanguage,
+        ),
       timezone:
         form.querySelector("#adminTimezone")?.value ||
         nextState.settings.timezone,
@@ -11739,28 +12935,28 @@ function openStockInventoryDetails(inventoryId) {
 
   const rowsMarkup = rows.length
     ? rows
-        .map((row) => {
-          const article = getArticleRecord("articles", row.articleId || "");
-          const location = locations.find(
-            (item) => item.id === row.location || item.code === row.location,
-          );
-          const theoretical = Number(row.theoretical) || 0;
-          const counted = Number(row.counted) || 0;
-          const discrepancy = counted - theoretical;
-          const statusLabel =
-            discrepancy === 0
-              ? "Conforme"
-              : discrepancy > 0
-                ? "Surstock"
-                : "Manquant";
-          const statusClass =
-            discrepancy === 0
-              ? "badge-success"
-              : discrepancy > 0
-                ? "badge-info"
-                : "badge-danger";
+      .map((row) => {
+        const article = getArticleRecord("articles", row.articleId || "");
+        const location = locations.find(
+          (item) => item.id === row.location || item.code === row.location,
+        );
+        const theoretical = Number(row.theoretical) || 0;
+        const counted = Number(row.counted) || 0;
+        const discrepancy = counted - theoretical;
+        const statusLabel =
+          discrepancy === 0
+            ? "Conforme"
+            : discrepancy > 0
+              ? "Surstock"
+              : "Manquant";
+        const statusClass =
+          discrepancy === 0
+            ? "badge-success"
+            : discrepancy > 0
+              ? "badge-info"
+              : "badge-danger";
 
-          return `
+        return `
             <tr>
               <td>${escapeHtml(article ? `${article.code} — ${article.name}` : row.article || row.articleId || "-")}</td>
               <td>${escapeHtml(location ? `${location.code} — ${location.name}` : row.location || "-")}</td>
@@ -11771,8 +12967,8 @@ function openStockInventoryDetails(inventoryId) {
               <td>${escapeHtml(row.observations || "-")}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
         <tr>
           <td colspan="7" class="muted">Aucune ligne de comptage.</td>
@@ -15196,6 +16392,31 @@ function buildAchatsFormFooter(subpageKey, mode, recordId) {
   `;
 }
 
+function buildSupplierOptions(selectedSupplier = "") {
+  const suppliers = Array.from(
+    new Set(
+      [
+        ...equipmentDefaults.equipments.map((e) => e.supplier),
+        ...organeDefaults.organes.map((o) => o.supplier),
+      ].filter(Boolean),
+    ),
+  ).sort();
+
+  return [
+    '<option value="">Sélectionner un fournisseur</option>',
+    ...suppliers.map(
+      (supplier) => `
+        <option
+          value="${supplier}"
+          ${supplier === selectedSupplier ? "selected" : ""}
+        >
+          ${supplier}
+        </option>
+      `,
+    ),
+  ].join("");
+}
+
 function buildAchatsDaForm(record, mode) {
   const codePreview =
     record?.number || buildAchatsRef("DA", loadAchatsState().demandes);
@@ -15217,28 +16438,19 @@ function buildAchatsDaForm(record, mode) {
           <input type="text" value="${escapeHtml(record?.requester || achatsCurrentUser)}" disabled />
         </div>
         <div class="field-group">
-          <label for="daOrigin">Origine demande</label>
-          <select id="daOrigin" name="origin" required>
-            <option value="Manuelle" ${record?.origin === "Manuelle" ? "selected" : ""}>Manuelle</option>
-            <option value="Stock automatique" ${record?.origin === "Stock automatique" ? "selected" : ""}>Stock automatique</option>
-          </select>
-        </div>
-        <div class="field-group">
           <label for="daArticle">Article</label>
           <select id="daArticle" name="articleId">${buildAchatsArticleOptions(record?.articleId || "")}</select>
-        </div>
-        <div class="field-group">
-          <label for="daArticleLabel">Désignation article (libre)</label>
-          <input id="daArticleLabel" name="articleLabel" type="text" value="${escapeHtml(record?.articleLabel || "")}" placeholder="Nom article" required />
         </div>
         <div class="field-group">
           <label for="daQuantity">Quantité demandée</label>
           <input id="daQuantity" name="quantity" type="number" min="1" step="1" value="${escapeHtml(String(record?.quantity || ""))}" required />
         </div>
         <div class="field-group">
-          <label for="daSupplier">Fournisseur suggéré</label>
-          <input id="daSupplier" name="preferredSupplier" type="text" value="${escapeHtml(record?.preferredSupplier || "")}" placeholder="Nom fournisseur" />
-        </div>
+  <label for="daSupplier">Fournisseur</label>
+  <select id="daSupplier" name="preferredSupplier">
+    ${buildSupplierOptions(record?.preferredSupplier || "")}
+  </select>
+</div>
         <div class="field-group">
           <label for="daNeededDate">Date souhaitée</label>
           <input id="daNeededDate" name="neededDate" type="date" value="${escapeHtml(record?.neededDate || "")}" />
@@ -15247,7 +16459,6 @@ function buildAchatsDaForm(record, mode) {
           <label for="daStatus">Statut</label>
           <select id="daStatus" name="status" required>
             ${[
-      "Brouillon",
       "En attente validation",
       "Validée",
       "Annulée",
@@ -15791,7 +17002,15 @@ function renderAchatsModal(activeSubpageKey, state) {
         origin: String(formData.get("origin") || "Manuelle"),
         status: String(formData.get("status") || "Brouillon"),
         articleId: String(formData.get("articleId") || ""),
-        articleLabel: String(formData.get("articleLabel") || "").trim(),
+        articleLabel: (() => {
+          const articleId = String(formData.get("articleId") || "");
+
+          const article = getArticleRecord("articles", articleId);
+
+          return article
+            ? `${article.code} — ${article.name}`
+            : "";
+        })(),
         quantity: Number(formData.get("quantity") || 0),
         preferredSupplier: String(
           formData.get("preferredSupplier") || "",
@@ -16406,6 +17625,7 @@ function renderPage(pageKey, subpageKey) {
   }
 
   closeMenus();
+  translateRenderedInterface(document);
 }
 
 navItems.forEach((item) => {
@@ -20874,5 +22094,6 @@ function resetApplicationData() {
   location.reload();
 }*/
 resetDemoDataIfNeeded();
+startInterfaceTranslationObserver();
 bootstrapRoute();
 renderNotifications();
