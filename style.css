@@ -1545,7 +1545,6 @@ body {
 }
 
 .stock-kpi-card span,
-.stock-summary-item span,
 .stock-location-item span {
   display: block;
   font-size: 11px;
@@ -1553,6 +1552,65 @@ body {
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: var(--text-muted);
+}
+
+.stock-summary-item span {
+  display: block;
+  margin-bottom: 6px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  color: var(--brand-dark);
+
+  letter-spacing: 0.2px;
+  text-transform: none;
+}
+.stock-summary-item strong {
+  display: block;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  color: #000;
+
+  line-height: 1.4;
+}
+.stock-summary-item {
+  padding: 6px 0;
+}
+
+.stock-summary-item strong {
+  padding-left: 4px;
+}
+
+.stock-inventory-details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stock-inventory-details-grid .stock-summary-item {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff, #f8fbfd);
+}
+
+.stock-inventory-details-grid .stock-summary-item strong {
+  padding-left: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.stock-inventory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .stock-kpi-card strong {
@@ -2851,6 +2909,10 @@ body {
 }
 
 @media (max-width: 980px) {
+  .stock-inventory-details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .enterprise-grid {
     grid-template-columns: 1fr;
   }
@@ -4604,6 +4666,10 @@ td.muted {
 }
 
 @media (max-width: 640px) {
+  .stock-inventory-details-grid {
+    grid-template-columns: 1fr;
+  }
+
   .admin-log-filters,
   .admin-summary-grid,
   .admin-users-kpi-grid {
@@ -4836,4 +4902,49 @@ body.sidebar-collapsed .sidebar-toggle {
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 10px;
+}
+
+.dashboard-select {
+  padding: 6px 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.stock-location-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stock-location-picker select {
+  flex: 1;
+}
+
+.stock-location-add-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 4px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #0ea5b7;
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stock-location-add-btn:hover {
+  transform: translateY(-1px);
+}
+
+.stock-location-add-btn i {
+  font-size: 16px;
 }

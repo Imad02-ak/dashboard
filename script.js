@@ -1,4 +1,35 @@
-﻿let administrationLocaleCache = "fr-FR";
+const StorageManager = {
+  get(key, defaultValue = null) {
+    try {
+      const value = localStorage.getItem(key);
+      return value ? JSON.parse(value) : defaultValue;
+    } catch (error) {
+      console.error(`Erreur lecture ${key}`, error);
+      return defaultValue;
+    }
+  },
+
+  set(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+      return true;
+    } catch (error) {
+      console.error(`Erreur écriture ${key}`, error);
+      return false;
+    }
+  },
+
+  remove(key) {
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  },
+};
+
+let administrationLocaleCache = "fr-FR";
 
 function updateClock() {
   const now = new Date();
@@ -41,32 +72,7 @@ let organizationModalState = null;
 const notifications = [];
 
 const organizationStorageKey = "maintflow.organizationDirectory";
-const organizationUsers = [
-  {
-    id: "user-1",
-    name: "Technicien Qualité",
-    role: "Qualité",
-    email: "technicien.qualite@maintflow.local",
-  },
-  {
-    id: "user-2",
-    name: "Responsable Production",
-    role: "Production",
-    email: "responsable.production@maintflow.local",
-  },
-  {
-    id: "user-3",
-    name: "Technicien Maintenance",
-    role: "Maintenance",
-    email: "technicien.maintenance@maintflow.local",
-  },
-  {
-    id: "user-6",
-    name: "Responsable Logistique",
-    role: "Logistique",
-    email: "responsable.logistique@maintflow.local",
-  },
-];
+const organizationUsers = [];
 const organizationDefaults = {
   unites: [],
   divisions: [],
@@ -100,7 +106,7 @@ const pages = {
     defaultSubpage: "groupe-article",
     tabs: {
       "groupe-article": {
-        label: "Groupe article",
+        label: "Groupess article",
         title: "Groupe article",
         body: "Espace vide pour construire la gestion des groupes d'articles.",
       },
@@ -185,18 +191,16 @@ const administrationSubpages = {
 
 const administrationStorageKey = "maintflow.administrationState";
 const administrationRoleCatalog = [
-  "Super Admin",
   "Admin",
-  "Responsable",
-  "Technicien",
+  "Responsable de maintenance",
+  "Technicien de maintenance",
   "Magasinier",
   "Acheteur",
-  "Demandeur",
   "Consultant",
 ];
 const administrationLanguageOptions = ["fr", "en"];
 const administrationCurrencyOptions = ["DZD", "EUR", "USD"];
-const administrationPermissionMatrix = [
+let administrationPermissionMatrix = [
   {
     module: "Dashboard",
     view: true,
@@ -308,16 +312,6 @@ function buildAdministrationRolePermissionsDefaults() {
   }, {});
 
   return {
-    "Super Admin": administrationPermissionMatrix.reduce((accumulator, row) => {
-      accumulator[row.module] = {
-        view: true,
-        create: true,
-        edit: true,
-        delete: true,
-        validate: true,
-      };
-      return accumulator;
-    }, {}),
     Admin: administrationPermissionMatrix.reduce((accumulator, row) => {
       accumulator[row.module] = {
         view: true,
@@ -413,92 +407,7 @@ function mergeAdministrationRolePermissions(basePermissions, overrides = {}) {
 }
 
 const administrationDefaults = {
-  users: [
-    {
-      id: "adm-user-1",
-      code: "USR-001",
-      firstName: "Amina",
-      lastName: "Benali",
-      username: "amina.benali",
-      passwordHint: "Hashé côté serveur",
-      email: "amina.benali@maintflow.local",
-      phone: "+213 555 010 101",
-      photo: "",
-      unit: "Site Nord Production",
-      division: "Division Énergie",
-      department: "Maintenance électrique",
-      role: "Super Admin",
-      functionTitle: "Administrateur système",
-      language: "Français",
-      timezone: "Africa/Algiers",
-      status: "Actif",
-      createdAt: "2026-05-10T08:30:00.000Z",
-      lastLogin: "2026-05-31T08:15:00.000Z",
-    },
-    {
-      id: "adm-user-2",
-      code: "USR-002",
-      firstName: "Yacine",
-      lastName: "Mekki",
-      username: "yacine.mekki",
-      passwordHint: "Hashé côté serveur",
-      email: "yacine.mekki@maintflow.local",
-      phone: "+213 555 010 102",
-      photo: "",
-      unit: "Site Sud Conditionnement",
-      division: "Division Process",
-      department: "Production",
-      role: "Responsable",
-      functionTitle: "Responsable maintenance",
-      language: "Français",
-      timezone: "Africa/Algiers",
-      status: "Actif",
-      createdAt: "2026-05-14T10:15:00.000Z",
-      lastLogin: "2026-05-30T16:50:00.000Z",
-    },
-    {
-      id: "adm-user-3",
-      code: "USR-003",
-      firstName: "Nadia",
-      lastName: "Khellaf",
-      username: "nadia.khellaf",
-      passwordHint: "Hashé côté serveur",
-      email: "nadia.khellaf@maintflow.local",
-      phone: "+213 555 010 103",
-      photo: "",
-      unit: "Site Nord Production",
-      division: "Division Process",
-      department: "Maintenance process",
-      role: "Technicien",
-      functionTitle: "Technicien",
-      language: "Arabe",
-      timezone: "Africa/Algiers",
-      status: "Actif",
-      createdAt: "2026-05-18T07:45:00.000Z",
-      lastLogin: "2026-05-31T07:12:00.000Z",
-    },
-    {
-      id: "adm-user-4",
-      code: "USR-004",
-      firstName: "Sami",
-      lastName: "Boudiaf",
-      username: "sami.boudiaf",
-      passwordHint: "Hashé côté serveur",
-      email: "sami.boudiaf@maintflow.local",
-      phone: "+213 555 010 104",
-      photo: "",
-      unit: "Site Sud Conditionnement",
-      division: "Division Logistique",
-      department: "Magasin",
-      role: "Magasinier",
-      functionTitle: "Gestionnaire stock",
-      language: "Français",
-      timezone: "Africa/Algiers",
-      status: "Suspendu",
-      createdAt: "2026-05-19T09:20:00.000Z",
-      lastLogin: "2026-05-27T11:40:00.000Z",
-    },
-  ],
+  users: [],
   settings: {
     companyName: "MaintFlow Industrie",
     logo: "",
@@ -525,20 +434,6 @@ const administrationDefaults = {
       warrantyExpiryDays: 15,
       counterThreshold: true,
     },
-    numbering: {
-      diPrefix: "DI",
-      otPrefix: "OT",
-      btPrefix: "BT",
-      daPrefix: "DA",
-      bcPrefix: "BC",
-      recPrefix: "REC",
-      plnPrefix: "PLN",
-      cptPrefix: "CPT",
-      frnPrefix: "FRN",
-      ctrPrefix: "CTR",
-      digits: "3",
-      resetPolicy: "Annuelle",
-    },
     interventions: {
       requireDiBeforeOt: true,
       requireBtSignature: true,
@@ -556,52 +451,7 @@ const administrationDefaults = {
     selectedRole: "Responsable",
     rolePermissions: buildAdministrationRolePermissionsDefaults(),
   },
-  logs: [
-    {
-      id: "log-1",
-      date: "2026-05-31T08:21:00.000Z",
-      user: "Amina Benali",
-      action: "Connexion",
-      module: "Administration",
-      record: "USR-001",
-      detail: "Connexion réussie depuis le poste d'administration.",
-      before: "—",
-      after: "Session ouverte",
-    },
-    {
-      id: "log-2",
-      date: "2026-05-30T15:42:00.000Z",
-      user: "Yacine Mekki",
-      action: "Création enregistrement",
-      module: "Organisation",
-      record: "DIV-004",
-      detail: "Division créée avec rattachement à deux sites.",
-      before: "—",
-      after: "Division Énergie 2",
-    },
-    {
-      id: "log-3",
-      date: "2026-05-29T10:11:00.000Z",
-      user: "Nadia Khellaf",
-      action: "Modification enregistrement",
-      module: "Stock",
-      record: "STK-102",
-      detail: "Mise à jour de la quantité mini et du seuil de sécurité.",
-      before: "Min 20 / Sécurité 10",
-      after: "Min 15 / Sécurité 8",
-    },
-    {
-      id: "log-4",
-      date: "2026-05-28T17:55:00.000Z",
-      user: "Sami Boudiaf",
-      action: "Export données",
-      module: "Achats",
-      record: "HIST-ACH-2026-05",
-      detail: "Export CSV de l'historique des achats.",
-      before: "—",
-      after: "Fichier exporté",
-    },
-  ],
+  logs: [],
 };
 
 let administrationUserDraftId = null;
@@ -613,223 +463,14 @@ let administrationLogFilters = {
   to: "",
 };
 
-const planificationTechniciens = [
-  {
-    id: "tech-1",
-    name: "Responsable Maintenance",
-    role: "Responsable",
-    email: "responsable.maintenance@maintflow.local",
-  },
-  {
-    id: "tech-2",
-    name: "Technicien Mécanique",
-    role: "Mécanique",
-    email: "technicien.mecanique@maintflow.local",
-  },
-  {
-    id: "tech-3",
-    name: "Technicien Instrumentation",
-    role: "Instrumentation",
-    email: "technicien.instrumentation@maintflow.local",
-  },
-];
+const planificationTechniciens = [];
 
 const planificationDefaults = {
   view: "mensuelle",
-  plans: [
-    {
-      id: "plan-1",
-      ref: "PLN-001",
-      title: "Révision préventive TGBT Atlas",
-      planType: "Systématique",
-      maintenanceType: "Préventive",
-      frequency: "Mensuelle",
-      equipment: "EQP-101",
-      organ: "ORG-103",
-      technicianId: "tech-2",
-      durationHours: 4,
-      status: "Actif",
-      triggerMode: "Période fixe",
-      triggerLabel: "Tous les 30 jours",
-      nextDueDate: "2026-06-12T08:00:00.000Z",
-      alertThreshold: "7 jours avant échéance",
-      actionThreshold: "OT planifié automatique",
-      articles: ["Fusible NH", "Nettoyant contact"],
-      tasks: [
-        "Consigner l'équipement et sécuriser la zone.",
-        "Contrôler les protections, serrages et échauffements.",
-        "Remplacer les consommables et tracer les mesures.",
-      ],
-      safety: ["Consignation requise", "EPI nécessaires", "Permis de travail"],
-      documents: [
-        "Fiche technique TGBT Atlas",
-        "Procédure maintenance énergie",
-      ],
-    },
-    {
-      id: "plan-2",
-      ref: "PLN-002",
-      title: "Surveillance conditionnelle convoyeur emballage",
-      planType: "Conditionnel",
-      maintenanceType: "Réglementaire",
-      frequency: "—",
-      equipment: "EQP-103",
-      organ: "ORG-101",
-      technicianId: "tech-1",
-      durationHours: 2,
-      status: "Actif",
-      triggerMode: "Compteur",
-      triggerLabel: "Seuil à 450 h",
-      nextDueDate: "2026-06-05T14:00:00.000Z",
-      alertThreshold: "400 h",
-      actionThreshold: "450 h",
-      compteurId: "CPT-101",
-      articles: ["Graisse de roulement", "Capteur vibratoire"],
-      tasks: [
-        "Vérifier le compteur d'heures de fonctionnement.",
-        "Inspecter les galets et l'alignement du convoyeur.",
-        "Générer l'OT si le seuil action est dépassé.",
-      ],
-      safety: ["Consignation requise", "EPI nécessaires"],
-      documents: ["Note de calcul seuil", "Plan de graissage convoyeur"],
-    },
-    {
-      id: "plan-3",
-      ref: "PLN-003",
-      title: "Inspection prédictive pompe de refroidissement R1",
-      planType: "Prédictif",
-      maintenanceType: "Prédictive",
-      frequency: "—",
-      equipment: "EQP-102",
-      organ: "ORG-102",
-      technicianId: "tech-3",
-      durationHours: 1.5,
-      status: "Inactif",
-      triggerMode: "Seuil mesure",
-      triggerLabel: "Température > 85 °C",
-      nextDueDate: "2026-06-28T11:00:00.000Z",
-      alertThreshold: "80 °C",
-      actionThreshold: "85 °C",
-      articles: ["Sonde température", "Joints mécaniques"],
-      tasks: [
-        "Relever la mesure et comparer au seuil.",
-        "Analyser la tendance sur l'historique de relevés.",
-        "Planifier une intervention si la dérive se confirme.",
-      ],
-      safety: ["Consignation requise"],
-      documents: ["Rapport de tendance", "Fiche instrument de mesure"],
-    },
-  ],
-  counters: [
-    {
-      id: "counter-1",
-      ref: "CPT-101",
-      name: "Heures convoyeur emballage",
-      equipment: "EQP-103",
-      organ: "ORG-101",
-      type: "Heures de fonctionnement",
-      unit: "h",
-      currentValue: 462,
-      initialValue: 0,
-      alertThreshold: 400,
-      actionThreshold: 450,
-      planId: "plan-2",
-      lastUpdate: "2026-05-30T07:45:00.000Z",
-    },
-    {
-      id: "counter-2",
-      ref: "CPT-102",
-      name: "Température armoire TGBT",
-      equipment: "EQP-101",
-      organ: "ORG-103",
-      type: "Nombre d'opérations",
-      unit: "°C",
-      currentValue: 78,
-      initialValue: 68,
-      alertThreshold: 75,
-      actionThreshold: 80,
-      planId: "plan-1",
-      lastUpdate: "2026-05-29T16:10:00.000Z",
-    },
-    {
-      id: "counter-3",
-      ref: "CPT-103",
-      name: "Heures pompe R1",
-      equipment: "EQP-102",
-      organ: "ORG-102",
-      type: "Mesure physique",
-      unit: "h",
-      currentValue: 2150,
-      initialValue: 2000,
-      alertThreshold: 2000,
-      actionThreshold: 2200,
-      planId: "plan-3",
-      lastUpdate: "2026-05-30T06:20:00.000Z",
-    },
-  ],
-  readings: [
-    {
-      id: "reading-1",
-      counterId: "counter-1",
-      ref: "CPT-101",
-      value: 462,
-      date: "2026-05-30T07:45:00.000Z",
-      createdBy: "Utilisateur connecté",
-      observations: "Relevé automatique depuis supervision locale.",
-      otGenerated: false,
-    },
-    {
-      id: "reading-2",
-      counterId: "counter-3",
-      ref: "CPT-103",
-      value: 2150,
-      date: "2026-05-30T06:20:00.000Z",
-      createdBy: "Utilisateur connecté",
-      observations: "Valeur au-dessus de l'alerte mais sous l'action.",
-      otGenerated: false,
-    },
-  ],
-  scheduledOrders: [
-    {
-      id: "sot-1",
-      ref: "OT-PLN-2001",
-      sourceType: "Plan",
-      sourceRef: "PLN-001",
-      title: "Révision préventive TGBT Atlas",
-      status: "Planifié",
-      priority: "Haute",
-      scheduledDate: "2026-06-12T08:00:00.000Z",
-      technician: "Technicien Mécanique",
-      equipment: "EQP-101",
-      calendarView: "Mensuelle",
-    },
-    {
-      id: "sot-2",
-      ref: "OT-PLN-2002",
-      sourceType: "Compteur",
-      sourceRef: "CPT-101",
-      title: "Contrôle compteur convoyeur emballage",
-      status: "En cours",
-      priority: "Critique",
-      scheduledDate: "2026-06-03T14:00:00.000Z",
-      technician: "Responsable Maintenance",
-      equipment: "EQP-103",
-      calendarView: "Hebdomadaire",
-    },
-    {
-      id: "sot-3",
-      ref: "OT-PLN-2003",
-      sourceType: "Plan",
-      sourceRef: "PLN-003",
-      title: "Inspection prédictive pompe de refroidissement R1",
-      status: "En retard",
-      priority: "Moyenne",
-      scheduledDate: "2026-05-26T11:00:00.000Z",
-      technician: "Technicien Instrumentation",
-      equipment: "EQP-102",
-      calendarView: "Liste",
-    },
-  ],
+  plans: [],
+  counters: [],
+  readings: [],
+  scheduledOrders: [],
 };
 
 const organizationSubpages = {
@@ -843,15 +484,10 @@ const organizationSubpages = {
     title: "Unités",
     body: "Gestion des unités avec responsables et rattachements.",
   },
-  divisions: {
-    label: "Divisions",
-    title: "Divisions",
-    body: "Gestion des divisions avec liaison multi-unités.",
-  },
   "departements-services": {
     label: "Départements",
     title: "Départements",
-    body: "Gestion des départements avec liaison multi-divisions.",
+    body: "Gestion des départements avec rattachement aux unités.",
   },
 };
 
@@ -940,85 +576,9 @@ const sectionSubpages = {
 
 function buildOrganizationSeedState() {
   return {
-    unites: [
-      {
-        id: "unit-1",
-        code: "UNI-001",
-        name: "Unité Nord Production",
-        responsibleUserId: "user-2",
-        responsibleEmail: "responsable.production@maintflow.local",
-        description: "Unité principale de production et d'assemblage",
-      },
-      {
-        id: "unit-2",
-        code: "UNI-002",
-        name: "Unité Sud Conditionnement",
-        responsibleUserId: "user-6",
-        responsibleEmail: "responsable.logistique@maintflow.local",
-        description: "Unité dédiée au conditionnement et à la logistique",
-      },
-    ],
-    divisions: [
-      {
-        id: "division-1",
-        code: "DIV-001",
-        name: "Division Énergie",
-        unitIds: ["unit-1"],
-        responsibleUserId: "user-3",
-        responsibleEmail: "technicien.maintenance@maintflow.local",
-        description: "Gestion de la distribution électrique et des utilités",
-      },
-      {
-        id: "division-2",
-        code: "DIV-002",
-        name: "Division Process",
-        unitIds: ["unit-1", "unit-2"],
-        responsibleUserId: "user-2",
-        responsibleEmail: "responsable.production@maintflow.local",
-        description: "Lignes de production et équipements de process",
-      },
-      {
-        id: "division-3",
-        code: "DIV-003",
-        name: "Division Logistique",
-        unitIds: ["unit-2"],
-        responsibleUserId: "user-6",
-        responsibleEmail: "responsable.logistique@maintflow.local",
-        description: "Convoyage, stockage et expédition",
-      },
-    ],
-    departmentServices: [
-      {
-        id: "department-1",
-        code: "DEP-001",
-        kind: "Département",
-        name: "Département Maintenance",
-        divisionIds: ["division-1"],
-        responsibleUserId: "user-3",
-        responsibleEmail: "technicien.maintenance@maintflow.local",
-        description: "Maintenance préventive et corrective des utilités",
-      },
-      {
-        id: "department-2",
-        code: "DEP-002",
-        kind: "Département",
-        name: "Département Production",
-        divisionIds: ["division-2"],
-        responsibleUserId: "user-2",
-        responsibleEmail: "responsable.production@maintflow.local",
-        description: "Suivi des équipements de production",
-      },
-      {
-        id: "department-3",
-        code: "DEP-003",
-        kind: "Département",
-        name: "Département Logistique",
-        divisionIds: ["division-3"],
-        responsibleUserId: "user-6",
-        responsibleEmail: "responsable.logistique@maintflow.local",
-        description: "Flux de convoyage, stockage et expédition",
-      },
-    ],
+    unites: [],
+    divisions: [],
+    departmentServices: [],
   };
 }
 
@@ -1094,88 +654,9 @@ let achatsHistoryFilterState = {
 
 function buildAchatsSeedState() {
   return {
-    demandes: [
-      {
-        id: "da-1",
-        number: "DA-001",
-        createdAt: "2026-05-25T08:10:00.000Z",
-        requester: "Responsable Maintenance",
-        origin: "Manuelle",
-        status: "Validée",
-        articleId: "",
-        articleLabel: "Roulement 6205 ZZ",
-        quantity: 6,
-        preferredSupplier: "MecaParts Algérie",
-        reason: "Remplacement préventif sur convoyeur ligne 2",
-        neededDate: "2026-06-05",
-      },
-      {
-        id: "da-2",
-        number: "DA-002",
-        createdAt: "2026-05-27T09:00:00.000Z",
-        requester: "Technicien Stock",
-        origin: "Stock automatique",
-        status: "Brouillon",
-        articleId: "",
-        articleLabel: "Fusible NH 125A",
-        quantity: 12,
-        preferredSupplier: "ElectroPro Distribution",
-        reason: "Seuil minimum atteint en magasin central",
-        neededDate: "2026-06-03",
-      },
-    ],
-    bons: [
-      {
-        id: "bc-1",
-        number: "BC-001",
-        createdAt: "2026-05-28T10:30:00.000Z",
-        orderDate: "2026-05-29",
-        wantedDate: "2026-06-06",
-        supplierName: "MecaParts Algérie",
-        supplierPhone: "+213 555 20 20 20",
-        supplierEmail: "contact@mecaparts.dz",
-        articleId: "",
-        articleLabel: "Roulement 6205 ZZ",
-        supplierRef: "MP-6205-ZZ",
-        quantity: 6,
-        unitPrice: 1200,
-        discountPercent: 5,
-        lineTotalHt: 6840,
-        totalHt: 6840,
-        tvaPercent: 19,
-        shippingCost: 1200,
-        totalTtc: 9339.6,
-        paymentTerm: "30 jours",
-        deliveryAddress: "Site Nord Production - Magasin central",
-        deliveryMode: "Transport fournisseur",
-        observations: "Confirmer disponibilité avant expédition.",
-        attachments: "Devis MP-2026-178",
-        status: "Envoyé au fournisseur",
-        linkedDaIds: ["da-1"],
-      },
-    ],
-    receptions: [
-      {
-        id: "rec-1",
-        number: "REC-001",
-        createdAt: "2026-05-30T14:20:00.000Z",
-        bcId: "bc-1",
-        receiver: achatsCurrentUser,
-        supplierName: "MecaParts Algérie",
-        articleId: "",
-        articleLabel: "Roulement 6205 ZZ",
-        orderedQty: 6,
-        receivedQty: 4,
-        missingQty: 2,
-        receptionState: "Conforme",
-        qualityControl: "Partiellement conforme",
-        storageLocation: "Magasin central / A2 / E1 / C5",
-        deliveryNoteRef: "BL-7741",
-        invoiceRef: "FAC-1198",
-        observations: "2 unités restantes annoncées pour la semaine prochaine.",
-        status: "Partielle",
-      },
-    ],
+    demandes: [],
+    bons: [],
+    receptions: [],
   };
 }
 
@@ -1195,141 +676,9 @@ let articleModalState = null;
 const articleStorageKey = "maintflow.articleCatalog";
 
 const articleDefaults = {
-  groups: [
-    {
-      id: "article-group-1",
-      code: "AGR-101",
-      name: "Consommables techniques",
-      designations: "Lubrifiants, nettoyants et consommables de maintenance",
-      associatedOrganeIds: ["organe-2"],
-    },
-    {
-      id: "article-group-2",
-      code: "AGR-102",
-      name: "Pièces mécaniques",
-      designations: "Roulements, joints et ensembles mécaniques",
-      associatedOrganeIds: ["organe-1"],
-    },
-    {
-      id: "article-group-3",
-      code: "AGR-103",
-      name: "Instrumentation",
-      designations: "Capteurs, contrôle et instrumentation terrain",
-      associatedOrganeIds: ["organe-3"],
-    },
-  ],
-  families: [
-    {
-      id: "article-family-1",
-      code: "AFM-101",
-      groupId: "article-group-1",
-      name: "Lubrifiants",
-      designations: "Huiles et graisses techniques",
-    },
-    {
-      id: "article-family-2",
-      code: "AFM-102",
-      groupId: "article-group-1",
-      name: "Étanchéité",
-      designations: "Joints, presse-étoupes et accessoires",
-    },
-    {
-      id: "article-family-3",
-      code: "AFM-103",
-      groupId: "article-group-2",
-      name: "Roulements",
-      designations: "Roulements standards",
-    },
-    {
-      id: "article-family-4",
-      code: "AFM-104",
-      groupId: "article-group-3",
-      name: "Capteurs",
-      designations: "Instrumentation de suivi et de contrôle",
-    },
-  ],
-  articles: [
-    {
-      id: "article-1",
-      code: "ART-101",
-      name: "Huile synthétique ISO VG 68",
-      reference: "HL-68-500",
-      brand: "LubriCo",
-      price: "62.00",
-      quantity: "18",
-      groupId: "article-group-1",
-      familyId: "article-family-1",
-      articleType: "consommable",
-      unitMeasure: "L",
-      supplier: "HydroServices",
-      substituteIds: ["article-3"],
-      designations: "Lubrification des réducteurs et paliers.",
-      createdAt: "2026-05-28T09:15:00.000Z",
-      createdById: "user-3",
-      createdBy: "Technicien Maintenance",
-      photos: [],
-    },
-    {
-      id: "article-2",
-      code: "ART-102",
-      name: "Roulement 6205 ZZ",
-      reference: "RB-6205-ZZ",
-      brand: "SKF",
-      price: "18.90",
-      quantity: "36",
-      groupId: "article-group-2",
-      familyId: "article-family-3",
-      articleType: "piece-rechange",
-      unitMeasure: "Pièce",
-      supplier: "BearingPro",
-      substituteIds: ["article-4"],
-      designations: "Roulement principal pour convoyeur et motorisation.",
-      createdAt: "2026-05-28T10:30:00.000Z",
-      createdById: "user-1",
-      createdBy: "Technicien Qualité",
-      photos: [],
-    },
-    {
-      id: "article-3",
-      code: "ART-103",
-      name: "Joint mécanique R1",
-      reference: "JM-R1-210",
-      brand: "FlowSeal",
-      price: "74.00",
-      quantity: "14",
-      groupId: "article-group-1",
-      familyId: "article-family-2",
-      articleType: "piece-rechange",
-      unitMeasure: "Pièce",
-      supplier: "HydroServices",
-      substituteIds: ["article-1"],
-      designations: "Joint d'étanchéité pour pompe de refroidissement.",
-      createdAt: "2026-05-28T11:00:00.000Z",
-      createdById: "user-2",
-      createdBy: "Responsable Production",
-      photos: [],
-    },
-    {
-      id: "article-4",
-      code: "ART-104",
-      name: "Capteur de vibration",
-      reference: "CV-450",
-      brand: "IFM",
-      price: "145.00",
-      quantity: "8",
-      groupId: "article-group-3",
-      familyId: "article-family-4",
-      articleType: "outil",
-      unitMeasure: "Pièce",
-      supplier: "ElectroPlus",
-      substituteIds: [],
-      designations: "Capteur de diagnostic pour surveillance conditionnelle.",
-      createdAt: "2026-05-28T11:30:00.000Z",
-      createdById: "user-6",
-      createdBy: "Responsable Logistique",
-      photos: [],
-    },
-  ],
+  groups: [],
+  families: [],
+  articles: [],
 };
 
 function getArticleDirectory() {
@@ -1816,8 +1165,8 @@ function renderArticleGroupsPage() {
 
   const rows = directory.groups.length
     ? directory.groups
-        .map(
-          (group) => `
+      .map(
+        (group) => `
           <tr>
             <td><strong>${group.code}</strong></td>
             <td>${group.name}</td>
@@ -1826,8 +1175,8 @@ function renderArticleGroupsPage() {
             <td>${buildArticleListActions("groupe-article", group.id)}</td>
           </tr>
         `,
-        )
-        .join("")
+      )
+      .join("")
     : `
         <tr><td colspan="5">${buildOrganizationEmptyState("fa-boxes", "Aucun groupe article", "Créez le premier groupe article.")}</td></tr>
       `;
@@ -1837,31 +1186,31 @@ function renderArticleGroupsPage() {
     ${buildArticleTabs("groupe-article")}
 
     ${renderArticleSectionIntro(
-      "Groupes articles",
-      "Chaque groupe structure les familles et les articles rattachés.",
-      `
+    "Groupes articles",
+    "Chaque groupe structure les familles et les articles rattachés.",
+    `
         <span class="status-badge badge-info">${directory.groups.length} groupes</span>
         <span class="status-badge badge-gray">${directory.families.length} familles</span>
         <span class="status-badge badge-gray">${directory.articles.length} articles</span>
       `,
-      [
-        {
-          label: "Groupes articles",
-          value: String(directory.groups.length),
-          note: "Référentiel de premier niveau",
-        },
-        {
-          label: "Familles liées",
-          value: String(linkedFamiliesCount),
-          note: "Rattachements actifs",
-        },
-        {
-          label: "Articles référencés",
-          value: String(linkedArticlesCount),
-          note: "Inventaire disponible",
-        },
-      ],
-    )}
+    [
+      {
+        label: "Groupes articles",
+        value: String(directory.groups.length),
+        note: "Référentiel de premier niveau",
+      },
+      {
+        label: "Familles liées",
+        value: String(linkedFamiliesCount),
+        note: "Rattachements actifs",
+      },
+      {
+        label: "Articles référencés",
+        value: String(linkedArticlesCount),
+        note: "Inventaire disponible",
+      },
+    ],
+  )}
 
     <div class="card org-list-card">
       <div class="card-head"><div class="card-title"><i class="fa-solid fa-layer-group"></i> Liste des groupes articles</div><span class="status-badge badge-info">${directory.groups.length} lignes</span></div>
@@ -1882,9 +1231,9 @@ function renderArticleGroupsPage() {
       modalMode === "details" && modalId
         ? buildArticleGroupDetailsContent(getArticleRecord("groups", modalId))
         : buildArticleGroupFormContent(
-            getArticleRecord("groups", modalId),
-            modalMode,
-          );
+          getArticleRecord("groups", modalId),
+          modalMode,
+        );
 
     renderArticleModal(title, subtitle, body);
   } else if (overlayRootEl) {
@@ -1911,8 +1260,8 @@ function renderArticleFamiliesPage() {
 
   const rows = directory.families.length
     ? directory.families
-        .map(
-          (family) => `
+      .map(
+        (family) => `
           <tr>
             <td><strong>${family.code}</strong></td>
             <td>${family.name}</td>
@@ -1921,8 +1270,8 @@ function renderArticleFamiliesPage() {
             <td>${buildArticleListActions("famille-article", family.id)}</td>
           </tr>
         `,
-        )
-        .join("")
+      )
+      .join("")
     : `<tr><td colspan="5">${buildOrganizationEmptyState("fa-folder-open", "Aucune famille article", "Créez la première famille article.")}</td></tr>`;
 
   pageContentEl.className = "organization-page organization-crud-page";
@@ -1930,31 +1279,31 @@ function renderArticleFamiliesPage() {
     ${buildArticleTabs("famille-article")}
 
     ${renderArticleSectionIntro(
-      "Familles articles",
-      "Chaque famille est rattachée à un groupe article.",
-      `
+    "Familles articles",
+    "Chaque famille est rattachée à un groupe article.",
+    `
         <span class="status-badge badge-info">${directory.families.length} familles</span>
         <span class="status-badge badge-gray">${directory.groups.length} groupes</span>
         <span class="status-badge badge-gray">${directory.articles.length} articles</span>
       `,
-      [
-        {
-          label: "Familles articles",
-          value: String(directory.families.length),
-          note: "Référentiel intermédiaire",
-        },
-        {
-          label: "Familles liées",
-          value: String(familiesWithGroupCount),
-          note: "Association au groupe",
-        },
-        {
-          label: "Articles référencés",
-          value: String(articlesWithFamilyCount),
-          note: "Articles classés par famille",
-        },
-      ],
-    )}
+    [
+      {
+        label: "Familles articles",
+        value: String(directory.families.length),
+        note: "Référentiel intermédiaire",
+      },
+      {
+        label: "Familles liées",
+        value: String(familiesWithGroupCount),
+        note: "Association au groupe",
+      },
+      {
+        label: "Articles référencés",
+        value: String(articlesWithFamilyCount),
+        note: "Articles classés par famille",
+      },
+    ],
+  )}
 
     <div class="card org-list-card">
       <div class="card-head"><div class="card-title"><i class="fa-solid fa-layer-group"></i> Liste des familles articles</div><span class="status-badge badge-info">${directory.families.length} lignes</span></div>
@@ -1974,12 +1323,12 @@ function renderArticleFamiliesPage() {
     const body =
       modalMode === "details" && modalId
         ? buildArticleFamilyDetailsContent(
-            getArticleRecord("families", modalId),
-          )
+          getArticleRecord("families", modalId),
+        )
         : buildArticleFamilyFormContent(
-            getArticleRecord("families", modalId),
-            modalMode,
-          );
+          getArticleRecord("families", modalId),
+          modalMode,
+        );
 
     renderArticleModal(title, subtitle, body);
   } else if (overlayRootEl) {
@@ -2007,8 +1356,8 @@ function renderArticleItemsPage() {
 
   const rows = directory.articles.length
     ? directory.articles
-        .map(
-          (item) => `
+      .map(
+        (item) => `
           <tr>
             <td><strong>${item.code}</strong></td>
             <td>${item.name}</td>
@@ -2018,8 +1367,8 @@ function renderArticleItemsPage() {
             <td>${buildArticleListActions("article", item.id)}</td>
           </tr>
         `,
-        )
-        .join("")
+      )
+      .join("")
     : `<tr><td colspan="6">${buildOrganizationEmptyState("fa-box-open", "Aucun article", "Créez le premier article.")}</td></tr>`;
 
   pageContentEl.className = "organization-page organization-crud-page";
@@ -2027,31 +1376,31 @@ function renderArticleItemsPage() {
     ${buildArticleTabs("article")}
 
     ${renderArticleSectionIntro(
-      "Articles",
-      "Chaque fiche article reprend le classement, les achats et la traçabilité.",
-      `
+    "Articles",
+    "Chaque fiche article reprend le classement, les achats et la traçabilité.",
+    `
         <span class="status-badge badge-info">${directory.articles.length} articles</span>
         <span class="status-badge badge-gray">${directory.groups.length} groupes</span>
         <span class="status-badge badge-gray">${directory.families.length} familles</span>
       `,
-      [
-        {
-          label: "Articles totaux",
-          value: String(directory.articles.length),
-          note: "Inventaire principal",
-        },
-        {
-          label: "Articles complets",
-          value: String(completeArticlesCount),
-          note: "Groupe et famille renseignés",
-        },
-        {
-          label: "Articles avec substitut",
-          value: String(substituteArticlesCount),
-          note: "Ressources de remplacement",
-        },
-      ],
-    )}
+    [
+      {
+        label: "Articles totaux",
+        value: String(directory.articles.length),
+        note: "Inventaire principal",
+      },
+      {
+        label: "Articles complets",
+        value: String(completeArticlesCount),
+        note: "Groupe et famille renseignés",
+      },
+      {
+        label: "Articles avec substitut",
+        value: String(substituteArticlesCount),
+        note: "Ressources de remplacement",
+      },
+    ],
+  )}
 
     <div class="card org-list-card">
       <div class="card-head"><div class="card-title"><i class="fa-solid fa-boxes"></i> Liste des articles</div><span class="status-badge badge-info">${directory.articles.length} lignes</span></div>
@@ -2072,9 +1421,9 @@ function renderArticleItemsPage() {
       modalMode === "details" && modalId
         ? buildArticleDetailsContent(getArticleRecord("articles", modalId))
         : buildArticleFormContent(
-            getArticleRecord("articles", modalId),
-            modalMode,
-          );
+          getArticleRecord("articles", modalId),
+          modalMode,
+        );
 
     renderArticleModal(title, subtitle, body);
   } else if (overlayRootEl) {
@@ -2086,14 +1435,14 @@ function buildArticleTabs(activeSubpageKey) {
   return `
     <div class="org-tabs" role="tablist" aria-label="Sous-pages articles">
       ${Object.entries(sectionSubpages.articles.tabs)
-        .map(
-          ([key, tab]) => `
+      .map(
+        ([key, tab]) => `
           <button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-art-subpage="${key}">
             ${tab.label}
           </button>
         `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -2300,13 +1649,13 @@ function attachArticlePageHandlers(pageKey) {
     );
     const existing = recordId
       ? getArticleRecord(
-          pageKey === "article"
-            ? "articles"
-            : pageKey === "famille-article"
-              ? "families"
-              : "groups",
-          recordId,
-        )
+        pageKey === "article"
+          ? "articles"
+          : pageKey === "famille-article"
+            ? "families"
+            : "groups",
+        recordId,
+      )
       : null;
 
     if (pageKey === "groupe-article") {
@@ -2389,7 +1738,7 @@ function attachArticlePageHandlers(pageKey) {
         existing?.code || generateOrganizationCode("ART", directory.articles),
       name,
       unitMeasure: String(
-        form.querySelector("input[name='unitMeasure']")?.value || "",
+        form.querySelector("select[name='unitMeasure']")?.value || "",
       ).trim(),
       articleType: String(
         form.querySelector("select[name='articleType']")?.value || "",
@@ -2398,7 +1747,7 @@ function attachArticlePageHandlers(pageKey) {
         form.querySelector("input[name='reference']")?.value || "",
       ).trim(),
       supplier: String(
-        form.querySelector("input[name='supplier']")?.value || "",
+        form.querySelector("select[name='supplier']")?.value || "",
       ).trim(),
       brand: String(
         form.querySelector("input[name='brand']")?.value || "",
@@ -2438,118 +1787,9 @@ let equipmentModalState = null;
 const equipmentStorageKey = "maintflow.equipmentCatalog";
 
 const equipmentDefaults = {
-  groups: [
-    {
-      id: "equipment-group-1",
-      code: "GRP-101",
-      name: "Groupe énergie",
-      designations: "Distribution électrique, automatisme et alimentation",
-      divisionIds: ["division-1"],
-    },
-    {
-      id: "equipment-group-2",
-      code: "GRP-102",
-      name: "Groupe process",
-      designations: "Pompage, circulation et traitement des fluides",
-      divisionIds: ["division-2"],
-    },
-    {
-      id: "equipment-group-3",
-      code: "GRP-103",
-      name: "Groupe logistique",
-      designations: "Convoyage, levage et lignes de transfert",
-      divisionIds: ["division-2", "division-3"],
-    },
-  ],
-  families: [
-    {
-      id: "equipment-family-1",
-      code: "FAM-101",
-      groupId: "equipment-group-1",
-      name: "Armoire électrique",
-      designations: "Tableaux, armoires et protection",
-    },
-    {
-      id: "equipment-family-2",
-      code: "FAM-102",
-      groupId: "equipment-group-1",
-      name: "Moteur électrique",
-      designations: "Moteurs, variateurs et démarrage",
-    },
-    {
-      id: "equipment-family-3",
-      code: "FAM-103",
-      groupId: "equipment-group-2",
-      name: "Pompe industrielle",
-      designations: "Pompes de process et circulation",
-    },
-    {
-      id: "equipment-family-4",
-      code: "FAM-104",
-      groupId: "equipment-group-3",
-      name: "Convoyeur",
-      designations: "Convoyeurs et lignes de transfert",
-    },
-  ],
-  equipments: [
-    {
-      id: "equipment-1",
-      code: "EQP-101",
-      name: "TGBT Atlas",
-      groupId: "equipment-group-1",
-      familyId: "equipment-family-1",
-      brand: "Schneider",
-      supplier: "ElectroPlus",
-      serialNumber: "SER-AT-101",
-      criticality: "Critique",
-      purchasePrice: "128500",
-      purchaseDate: "2025-02-10",
-      serviceDate: "2025-02-21",
-      warrantyDuration: "24 mois",
-      status: "En service",
-      designations: "Alimentation générale du site nord.",
-      photos: [],
-      documents: [],
-    },
-    {
-      id: "equipment-2",
-      code: "EQP-102",
-      name: "Pompe de refroidissement R1",
-      groupId: "equipment-group-2",
-      familyId: "equipment-family-3",
-      brand: "Grundfos",
-      supplier: "HydroServices",
-      serialNumber: "SER-RF-204",
-      criticality: "Haute",
-      purchasePrice: "84600",
-      purchaseDate: "2024-11-08",
-      serviceDate: "2024-11-22",
-      warrantyDuration: "18 mois",
-      status: "En maintenance",
-      designations: "Pompage du circuit de refroidissement principal.",
-      photos: [],
-      documents: [],
-    },
-    {
-      id: "equipment-3",
-      code: "EQP-103",
-      name: "Convoyeur ligne emballage",
-      groupId: "equipment-group-3",
-      familyId: "equipment-family-4",
-      brand: "SEW",
-      supplier: "MecaLine",
-      serialNumber: "SER-LB-330",
-      criticality: "Moyenne",
-      purchasePrice: "56200",
-      purchaseDate: "2024-08-14",
-      serviceDate: "2024-09-01",
-      warrantyDuration: "12 mois",
-      status: "En service",
-      designations: "Convoyeur de transfert vers la zone d'emballage.",
-      photos: [],
-      documents: [],
-    },
-  ],
+  groups: [],
+  families: [],
+  equipments: [],
 };
 
 let organeModalState = null;
@@ -2557,188 +1797,16 @@ let organeModalState = null;
 const organeStorageKey = "maintflow.organeCatalog";
 
 const organeDefaults = {
-  groups: [
-    {
-      id: "organe-group-1",
-      code: "GOR-101",
-      name: "Groupe transmission",
-      designations: "Roulements, accouplements et transmission mécanique",
-      associatedEquipmentIds: ["equipment-3"],
-    },
-    {
-      id: "organe-group-2",
-      code: "GOR-102",
-      name: "Groupe pompage",
-      designations: "Organes hydrauliques et étanchéité",
-      associatedEquipmentIds: ["equipment-2"],
-    },
-    {
-      id: "organe-group-3",
-      code: "GOR-103",
-      name: "Groupe commande",
-      designations: "Commande électrique, contacteurs et protection",
-      associatedEquipmentIds: ["equipment-1"],
-    },
-  ],
-  families: [
-    {
-      id: "organe-family-1",
-      code: "FGO-101",
-      groupId: "organe-group-1",
-      name: "Roulement",
-      designations: "Roulements, paliers et supports",
-    },
-    {
-      id: "organe-family-2",
-      code: "FGO-102",
-      groupId: "organe-group-1",
-      name: "Accouplement",
-      designations: "Accouplements et éléments de liaison",
-    },
-    {
-      id: "organe-family-3",
-      code: "FGO-103",
-      groupId: "organe-group-2",
-      name: "Garniture mécanique",
-      designations: "Étanchéité de pompes et circuits",
-    },
-    {
-      id: "organe-family-4",
-      code: "FGO-104",
-      groupId: "organe-group-3",
-      name: "Contacteur",
-      designations: "Protection et commande des moteurs",
-    },
-  ],
-  organes: [
-    {
-      id: "organe-1",
-      code: "ORG-101",
-      name: "Roulement convoyeur emballage",
-      groupId: "organe-group-1",
-      familyId: "organe-family-1",
-      criticality: "Haute",
-      brand: "SKF",
-      supplier: "BearingPro",
-      serialNumber: "ORG-SER-101",
-      purchasePrice: "9200",
-      purchaseDate: "2025-03-12",
-      serviceDate: "2025-03-26",
-      warrantyDuration: "12 mois",
-      status: "En service",
-      photos: [],
-      documents: [],
-    },
-    {
-      id: "organe-2",
-      code: "ORG-102",
-      name: "Garniture mécanique pompe R1",
-      groupId: "organe-group-2",
-      familyId: "organe-family-3",
-      criticality: "Critique",
-      brand: "FlowSeal",
-      supplier: "HydroServices",
-      serialNumber: "ORG-SER-204",
-      purchasePrice: "13600",
-      purchaseDate: "2024-12-09",
-      serviceDate: "2024-12-21",
-      warrantyDuration: "18 mois",
-      status: "En maintenance",
-      photos: [],
-      documents: [],
-    },
-    {
-      id: "organe-3",
-      code: "ORG-103",
-      name: "Contacteur principal TGBT Atlas",
-      groupId: "organe-group-3",
-      familyId: "organe-family-4",
-      criticality: "Haute",
-      brand: "Schneider",
-      supplier: "ElectroPlus",
-      serialNumber: "ORG-SER-303",
-      purchasePrice: "7400",
-      purchaseDate: "2025-01-18",
-      serviceDate: "2025-02-01",
-      warrantyDuration: "12 mois",
-      status: "En service",
-      photos: [],
-      documents: [],
-    },
-  ],
+  groups: [],
+  families: [],
+  organes: [],
 };
 
 const demoDataVersionKey = "maintflow.demoDataVersion";
 const demoDataVersion = "2026-05-30-v1";
 
 function resetDemoDataIfNeeded() {
-  try {
-    const storedVersion = window.localStorage.getItem(demoDataVersionKey);
-    if (storedVersion === demoDataVersion) return;
-
-    const organizationSeed = buildOrganizationSeedState();
-    const equipmentSeed = JSON.parse(JSON.stringify(equipmentDefaults));
-    const organeSeed = JSON.parse(JSON.stringify(organeDefaults));
-    const articleSeed = JSON.parse(JSON.stringify(articleDefaults));
-
-    window.localStorage.removeItem("maintflow.organizationDirectory");
-    window.localStorage.removeItem("maintflow.equipmentCatalog");
-    window.localStorage.removeItem("maintflow.organeCatalog");
-    window.localStorage.removeItem("maintflow.articleCatalog");
-    window.localStorage.removeItem("maintflow.stockLedger");
-    window.localStorage.removeItem("maintflow.interventions");
-    window.localStorage.removeItem("maintflow.planificationState");
-    window.localStorage.removeItem("maintflow.stockInventoryState");
-    window.localStorage.removeItem("maintflow.stockAlertReads");
-    window.localStorage.removeItem("maintflow.enterpriseProfile");
-
-    window.localStorage.setItem(
-      "maintflow.organizationDirectory",
-      JSON.stringify(organizationSeed),
-    );
-    window.localStorage.setItem(
-      "maintflow.equipmentCatalog",
-      JSON.stringify(equipmentSeed),
-    );
-    window.localStorage.setItem(
-      "maintflow.organeCatalog",
-      JSON.stringify(organeSeed),
-    );
-    window.localStorage.setItem(
-      "maintflow.articleCatalog",
-      JSON.stringify(articleSeed),
-    );
-    window.localStorage.setItem(
-      "maintflow.stockLedger",
-      JSON.stringify({ records: getDefaultStockRecords(), movements: [] }),
-    );
-    window.localStorage.setItem(
-      "maintflow.interventions",
-      JSON.stringify(buildInterventionsSeedState()),
-    );
-    window.localStorage.setItem(
-      "maintflow.planificationState",
-      JSON.stringify(JSON.parse(JSON.stringify(planificationDefaults))),
-    );
-    window.localStorage.setItem(
-      "maintflow.stockInventoryState",
-      JSON.stringify({
-        status: "Ouvert",
-        closedAt: "",
-        inventoryId: "INV-001",
-        openCount: 0,
-        closedBy: "",
-      }),
-    );
-    window.localStorage.setItem("maintflow.stockAlertReads", "[]");
-    window.localStorage.setItem(
-      "maintflow.enterpriseProfile",
-      JSON.stringify(enterpriseDefaults),
-    );
-    window.localStorage.setItem(demoDataVersionKey, demoDataVersion);
-  } catch (error) {
-    // ignore storage errors
-  }
+  return;
 }
 
 const enterpriseStorageKey = "maintflow.enterpriseProfile";
@@ -2762,31 +1830,14 @@ function generateEnterpriseCode() {
 }
 
 function getEnterpriseProfile() {
-  let profile = { ...enterpriseDefaults };
-
-  try {
-    const stored = window.localStorage.getItem(enterpriseStorageKey);
-    if (stored) {
-      profile = { ...profile, ...JSON.parse(stored) };
-    }
-  } catch (error) {
-    profile = { ...enterpriseDefaults };
-  }
-
-  if (!profile.code) {
-    profile.code = generateEnterpriseCode();
-    saveEnterpriseProfile(profile);
-  }
-
-  return profile;
+  return {
+    ...enterpriseDefaults,
+    ...StorageManager.get(enterpriseStorageKey, {}),
+  };
 }
 
 function saveEnterpriseProfile(profile) {
-  try {
-    window.localStorage.setItem(enterpriseStorageKey, JSON.stringify(profile));
-  } catch (error) {
-    // Local storage unavailable: keep the UI functional without persistence.
-  }
+  StorageManager.set(enterpriseStorageKey, profile);
 }
 
 function escapeHtml(value) {
@@ -2921,8 +1972,8 @@ function buildOrganizationTabs(activeSubpageKey) {
   return `
     <div class="org-tabs" role="tablist" aria-label="Sous-pages organisation">
       ${Object.entries(organizationSubpages)
-        .map(
-          ([key, subpage]) => `
+      .map(
+        ([key, subpage]) => `
             <button
               class="org-tab ${key === activeSubpageKey ? "active" : ""}"
               type="button"
@@ -2931,8 +1982,8 @@ function buildOrganizationTabs(activeSubpageKey) {
               ${subpage.label}
             </button>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -2964,38 +2015,34 @@ function getOrganizationDirectory() {
       directory = {
         unites: Array.isArray(parsed.unites)
           ? parsed.unites.map((unit) => ({
-              ...unit,
-              code:
-                typeof unit.code === "string" && unit.code.startsWith("SITE-")
-                  ? unit.code.replace(/^SITE-/, "UNI-")
-                  : unit.code,
-              name:
-                typeof unit.name === "string" && unit.name.includes("Site")
-                  ? unit.name.replace(/Site/g, "Unité")
-                  : unit.name,
-            }))
+            ...unit,
+            code:
+              typeof unit.code === "string" && unit.code.startsWith("SITE-")
+                ? unit.code.replace(/^SITE-/, "UNI-")
+                : unit.code,
+            name:
+              typeof unit.name === "string" && unit.name.includes("Site")
+                ? unit.name.replace(/Site/g, "Unité")
+                : unit.name,
+          }))
           : directory.unites,
         divisions: Array.isArray(parsed.divisions)
           ? parsed.divisions
           : directory.divisions,
         departmentServices: Array.isArray(parsed.departmentServices)
           ? parsed.departmentServices
-          : buildOrganizationSeedState().departmentServices,
+          : directory.departmentServices,
       };
     }
 
-    if (
-      !directory.unites.length &&
-      !directory.divisions.length &&
-      !directory.departmentServices.length
-    ) {
+    if (!directory.unites.length && !directory.departmentServices.length) {
       const seedState = buildOrganizationSeedState();
       try {
         window.localStorage.setItem(
           organizationStorageKey,
           JSON.stringify(seedState),
         );
-      } catch (error) {}
+      } catch (error) { }
       return seedState;
     }
   } catch (error) {
@@ -3005,7 +2052,7 @@ function getOrganizationDirectory() {
         organizationStorageKey,
         JSON.stringify(seedState),
       );
-    } catch (storageError) {}
+    } catch (storageError) { }
     return seedState;
   }
 
@@ -3103,19 +2150,6 @@ function buildUnitOptions(selectedUnitIds = []) {
     .join("");
 }
 
-function buildDivisionOptions(selectedDivisionIds = []) {
-  const divisions = getOrganizationRecords("divisions");
-  return divisions
-    .map(
-      (division) => `
-        <option value="${division.id}"${selectedDivisionIds.includes(division.id) ? " selected" : ""}>
-          ${division.code} — ${division.name}
-        </option>
-      `,
-    )
-    .join("");
-}
-
 function getSelectedValues(selectEl) {
   return Array.from(selectEl.selectedOptions).map((option) => option.value);
 }
@@ -3203,16 +2237,16 @@ function renderOrganizationStats(stats) {
   return `
     <div class="org-summary-grid">
       ${stats
-        .map(
-          (stat) => `
+      .map(
+        (stat) => `
             <div class="org-summary-card">
               <div class="org-summary-label">${stat.label}</div>
               <div class="org-summary-value">${stat.value}</div>
               <div class="org-summary-note">${stat.note}</div>
             </div>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -3269,9 +2303,9 @@ function renderUnitsManagementPage() {
 
   const rows = directory.unites.length
     ? directory.unites
-        .map((unit) => {
-          const responsible = getOrganizationUser(unit.responsibleUserId);
-          return `
+      .map((unit) => {
+        const responsible = getOrganizationUser(unit.responsibleUserId);
+        return `
             <tr>
               <td><strong>${unit.code}</strong></td>
               <td>${unit.name}</td>
@@ -3286,17 +2320,17 @@ function renderUnitsManagementPage() {
               <td>${buildOrganizationListActions("unites", unit.id)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="6">
           ${buildOrganizationEmptyState(
-            "fa-building",
-            "Aucune unité enregistrée",
-            "Créez la première unité pour commencer à structurer l’organisation.",
-            "Le bouton Nouvelle unité ouvre le formulaire de création.",
-          )}
+      "fa-building",
+      "Aucune unité enregistrée",
+      "Créez la première unité pour commencer à structurer l’organisation.",
+      "Le bouton Nouvelle unité ouvre le formulaire de création.",
+    )}
         </td>
       </tr>
     `;
@@ -3313,31 +2347,30 @@ function renderUnitsManagementPage() {
       </div>
       <div class="org-section-pills">
         <span class="status-badge badge-info">${directory.unites.length} unités</span>
-        <span class="status-badge badge-gray">${directory.divisions.length} divisions liées</span>
       </div>
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "Unités actives",
-        value: String(directory.unites.length),
-        note: "Enregistrement local dans le navigateur",
-      },
-      {
-        label: "Responsables attribués",
-        value: String(
-          directory.unites.filter((unit) => unit.responsibleUserId).length,
-        ),
-        note: "Email chargé automatiquement",
-      },
-      {
-        label: "Description moyenne",
-        value: String(
-          directory.unites.filter((unit) => unit.description).length,
-        ),
-        note: "Champs descriptifs facultatifs",
-      },
-    ])}
+    {
+      label: "Unités actives",
+      value: String(directory.unites.length),
+      note: "Enregistrement local dans le navigateur",
+    },
+    {
+      label: "Responsables attribués",
+      value: String(
+        directory.unites.filter((unit) => unit.responsibleUserId).length,
+      ),
+      note: "Email chargé automatiquement",
+    },
+    {
+      label: "Description moyenne",
+      value: String(
+        directory.unites.filter((unit) => unit.description).length,
+      ),
+      note: "Champs descriptifs facultatifs",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -3373,9 +2406,9 @@ function renderUnitsManagementPage() {
       activeRecord
       ? buildUnitsDetailsContent(activeRecord)
       : buildUnitsFormContent(
-          activeRecord,
-          organizationModalState?.mode || "create",
-        ),
+        activeRecord,
+        organizationModalState?.mode || "create",
+      ),
   );
 
   attachOrganizationPageHandlers("unites");
@@ -3460,9 +2493,9 @@ function renderDivisionsManagementPage() {
 
   const rows = directory.divisions.length
     ? directory.divisions
-        .map((division) => {
-          const responsible = getOrganizationUser(division.responsibleUserId);
-          return `
+      .map((division) => {
+        const responsible = getOrganizationUser(division.responsibleUserId);
+        return `
             <tr>
               <td><strong>${division.code}</strong></td>
               <td>${division.name}</td>
@@ -3476,17 +2509,17 @@ function renderDivisionsManagementPage() {
               <td>${buildOrganizationListActions("divisions", division.id)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="5">
           ${buildOrganizationEmptyState(
-            "fa-diagram-project",
-            "Aucune division enregistrée",
-            "Créez une division et rattachez-la à une ou plusieurs unités.",
-            "Les divisions peuvent appartenir à plusieurs unités.",
-          )}
+      "fa-diagram-project",
+      "Aucune division enregistrée",
+      "Créez une division et rattachez-la à une ou plusieurs unités.",
+      "Les divisions peuvent appartenir à plusieurs unités.",
+    )}
         </td>
       </tr>
     `;
@@ -3508,29 +2541,29 @@ function renderDivisionsManagementPage() {
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "Divisions actives",
-        value: String(directory.divisions.length),
-        note: "Liens multi-unités pris en charge",
-      },
-      {
-        label: "Divisions multi-unités",
-        value: String(
-          directory.divisions.filter(
-            (division) => (division.unitIds || []).length > 1,
-          ).length,
-        ),
-        note: "Une division peut appartenir à plusieurs unités",
-      },
-      {
-        label: "Responsables attribués",
-        value: String(
-          directory.divisions.filter((division) => division.responsibleUserId)
-            .length,
-        ),
-        note: "Email synchronisé au choix du responsable",
-      },
-    ])}
+    {
+      label: "Divisions actives",
+      value: String(directory.divisions.length),
+      note: "Liens multi-unités pris en charge",
+    },
+    {
+      label: "Divisions multi-unités",
+      value: String(
+        directory.divisions.filter(
+          (division) => (division.unitIds || []).length > 1,
+        ).length,
+      ),
+      note: "Une division peut appartenir à plusieurs unités",
+    },
+    {
+      label: "Responsables attribués",
+      value: String(
+        directory.divisions.filter((division) => division.responsibleUserId)
+          .length,
+      ),
+      note: "Email synchronisé au choix du responsable",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -3565,9 +2598,9 @@ function renderDivisionsManagementPage() {
       activeRecord
       ? buildDivisionsDetailsContent(activeRecord)
       : buildDivisionsFormContent(
-          activeRecord,
-          organizationModalState?.mode || "create",
-        ),
+        activeRecord,
+        organizationModalState?.mode || "create",
+      ),
   );
 
   attachOrganizationPageHandlers("divisions");
@@ -3637,16 +2670,16 @@ function renderDepartmentServicesManagementPage() {
   const directory = getOrganizationDirectory();
   const activeRecord =
     organizationModalState &&
-    organizationModalState.pageKey === "departements-services"
+      organizationModalState.pageKey === "departements-services"
       ? getOrganizationRecord(
-          "departmentServices",
-          organizationModalState.recordId,
-        )
+        "departmentServices",
+        organizationModalState.recordId,
+      )
       : null;
 
   renderOrganizationPageHeader(
     "Départements",
-    "Gestion des départements avec liaison multi-divisions.",
+    "Gestion des départements avec rattachement aux unités.",
   );
   renderOrganizationActionButtons(
     "departements-services",
@@ -3659,13 +2692,13 @@ function renderDepartmentServicesManagementPage() {
 
   const rows = filteredRecords.length
     ? filteredRecords
-        .map((record) => {
-          const responsible = getOrganizationUser(record.responsibleUserId);
-          return `
+      .map((record) => {
+        const responsible = getOrganizationUser(record.responsibleUserId);
+        return `
             <tr>
               <td><strong>${record.code}</strong></td>
               <td>${record.name}</td>
-              <td class="muted">${joinNames(directory.divisions, record.divisionIds || [])}</td>
+              <td class="muted">${joinNames(getOrganizationRecords("unites"), record.unitIds || [])}</td>
               <td>
                 <div class="org-person-cell">
                   <span>${responsible ? responsible.name : "Non défini"}</span>
@@ -3675,17 +2708,17 @@ function renderDepartmentServicesManagementPage() {
               <td>${buildOrganizationListActions("departements-services", record.id)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
-        <td colspan="6">
-          ${buildOrganizationEmptyState(
-            "fa-folder-open",
-            "Aucun département enregistré",
-            "Créez un département et rattachez-le à une ou plusieurs divisions.",
-            "Les départements supportent plusieurs divisions.",
-          )}
+<td colspan="5">
+           ${buildOrganizationEmptyState(
+      "fa-folder-open",
+      "Aucun département enregistré",
+      "Créez un département et rattachez-le à une ou plusieurs unités.",
+      "Les départements supportent plusieurs unités.",
+    )}
         </td>
       </tr>
     `;
@@ -3698,31 +2731,31 @@ function renderDepartmentServicesManagementPage() {
       <div>
         <div class="org-section-kicker">Référentiel organisation</div>
           <h2>Départements</h2>
-        <p>Chaque département peut être rattaché à plusieurs divisions.</p>
+        <p>Chaque département peut être rattaché à plusieurs unités.</p>
       </div>
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "Éléments référencés",
-        value: String(directory.departmentServices.length),
-        note: "Départements uniquement",
-      },
-      {
-        label: "Départements",
-        value: String(directory.departmentServices.length),
-        note: "Multiples divisions possibles",
-      },
-      {
-        label: "Responsables attribués",
-        value: String(
-          directory.departmentServices.filter(
-            (department) => department.responsibleUserId,
-          ).length,
-        ),
-        note: "Email chargé automatiquement",
-      },
-    ])}
+    {
+      label: "Éléments référencés",
+      value: String(directory.departmentServices.length),
+      note: "Départements uniquement",
+    },
+    {
+      label: "Départements",
+      value: String(directory.departmentServices.length),
+      note: "Multiples unités possibles",
+    },
+    {
+      label: "Responsables attribués",
+      value: String(
+        directory.departmentServices.filter(
+          (department) => department.responsibleUserId,
+        ).length,
+      ),
+      note: "Email chargé automatiquement",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -3735,7 +2768,7 @@ function renderDepartmentServicesManagementPage() {
             <tr>
               <th>Code</th>
               <th>Nom</th>
-              <th>Divisions liées</th>
+              <th>Unités liées</th>
               <th>Responsable</th>
               <th>Actions</th>
             </tr>
@@ -3757,9 +2790,9 @@ function renderDepartmentServicesManagementPage() {
       activeRecord
       ? buildDepartmentServicesDetailsContent(activeRecord)
       : buildDepartmentServicesFormContent(
-          activeRecord,
-          organizationModalState?.mode || "create",
-        ),
+        activeRecord,
+        organizationModalState?.mode || "create",
+      ),
   );
 
   attachOrganizationPageHandlers("departements-services");
@@ -3782,16 +2815,23 @@ function buildDepartmentServicesFormContent(record, mode) {
           <label for="departmentServiceCode">Code département</label>
           <input id="departmentServiceCode" type="text" value="${escapeHtml(codePreview)}" disabled />
         </div>
+        <div class="field-group">
+          <label for="departmentServiceKind">Type</label>
+          <select id="departmentServiceKind" name="kind">
+            <option value="Département" ${!record?.kind || record.kind === "Département" ? "selected" : ""}>Département</option>
+            <option value="Service" ${record?.kind === "Service" ? "selected" : ""}>Service</option>
+          </select>
+        </div>
         <div class="field-group field-group-wide">
           <label for="departmentServiceName">Nom</label>
           <input id="departmentServiceName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom du département" required />
         </div>
         <div class="field-group field-group-wide">
-          <label for="departmentServiceDivisions">Divisions rattachées</label>
-          <select id="departmentServiceDivisions" name="divisionIds" multiple size="5">
-            ${buildDivisionOptions(record?.divisionIds || [])}
+          <label for="departmentServiceUnits">Unités rattachées</label>
+          <select id="departmentServiceUnits" name="unitIds" multiple size="5">
+            ${buildUnitOptions(record?.unitIds || [])}
           </select>
-          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs divisions.</div>
+          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs unités.</div>
         </div>
         <div class="field-group">
           <label for="departmentServiceResponsible">Nom de responsable</label>
@@ -3820,7 +2860,7 @@ function buildDepartmentServicesDetailsContent(record) {
     <div class="org-detail-grid">
       <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Divisions liées</span><strong>${joinNames(getOrganizationRecords("divisions"), record.divisionIds || [])}</strong></div>
+      <div class="org-detail-item org-detail-item--full"><span>Unités liées</span><strong>${joinNames(getOrganizationRecords("unites"), record.unitIds || [])}</strong></div>
       <div class="org-detail-item"><span>Responsable</span><strong>${responsible ? responsible.name : "Non défini"}</strong></div>
       <div class="org-detail-item"><span>Email</span><strong>${responsible ? responsible.email : "-"}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Description</span><strong>${record.description || "Aucune description"}</strong></div>
@@ -3885,8 +2925,8 @@ function attachOrganizationPageHandlers(pageKey) {
           directory.departmentServices = directory.departmentServices.map(
             (entry) => ({
               ...entry,
-              divisionIds: (entry.divisionIds || []).filter(
-                (divisionId) => divisionId !== recordId,
+              unitIds: (entry.unitIds || []).filter(
+                (unitId) => unitId !== recordId,
               ),
             }),
           );
@@ -3935,9 +2975,9 @@ function attachOrganizationPageHandlers(pageKey) {
     const mode = organizationModalState?.mode || "create";
     const existingRecord = recordId
       ? getOrganizationRecord(
-          pageKey === "departements-services" ? "departmentServices" : pageKey,
-          recordId,
-        )
+        pageKey === "departements-services" ? "departmentServices" : pageKey,
+        recordId,
+      )
       : null;
 
     if (pageKey === "unites") {
@@ -4036,9 +3076,7 @@ function attachOrganizationPageHandlers(pageKey) {
         ),
       kind,
       name,
-      divisionIds: getSelectedValues(
-        form.querySelector("select[name='divisionIds']"),
-      ),
+      unitIds: getSelectedValues(form.querySelector("select[name='unitIds']")),
       responsibleUserId: String(
         form.querySelector("select[name='responsibleUserId']")?.value || "",
       ),
@@ -4256,16 +3294,16 @@ function getEquipmentDirectory() {
       directory = {
         groups: Array.isArray(parsed.groups)
           ? parsed.groups.map((group) => {
-              const { departmentIds, ...rest } = group;
-              return {
-                ...rest,
-                divisionIds: Array.isArray(group.divisionIds)
+            const { divisionIds, ...rest } = group;
+            return {
+              ...rest,
+              departmentIds: Array.isArray(group.departmentIds)
+                ? group.departmentIds
+                : Array.isArray(group.divisionIds)
                   ? group.divisionIds
-                  : Array.isArray(group.departmentIds)
-                    ? group.departmentIds
-                    : [],
-              };
-            })
+                  : [],
+            };
+          })
           : directory.groups,
         families: Array.isArray(parsed.families)
           ? parsed.families
@@ -4323,8 +3361,8 @@ function buildEquipmentTabs(activeSubpageKey) {
   return `
     <div class="org-tabs" role="tablist" aria-label="Sous-pages équipements">
       ${Object.entries(sectionSubpages.equipements.tabs)
-        .map(
-          ([key, tab]) => `
+      .map(
+        ([key, tab]) => `
             <button
               class="org-tab ${key === activeSubpageKey ? "active" : ""}"
               type="button"
@@ -4333,8 +3371,8 @@ function buildEquipmentTabs(activeSubpageKey) {
               ${tab.label}
             </button>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -4433,6 +3471,19 @@ function joinRecordLabels(items, ids, labelBuilder = (item) => item.name) {
     .filter((label) => label && label !== "Aucune sélection");
 
   return labels.length ? labels.join(", ") : "Aucune sélection";
+}
+
+function buildDepartmentOptions(selectedDepartmentIds = []) {
+  const departments = getOrganizationRecords("departmentServices");
+  return departments
+    .map(
+      (department) => `
+        <option value="${department.id}"${selectedDepartmentIds.includes(department.id) ? " selected" : ""}>
+          ${department.code} — ${department.name}
+        </option>
+      `,
+    )
+    .join("");
 }
 
 function buildDivisionLinkOptions(selectedIds = []) {
@@ -4647,39 +3698,36 @@ function buildStoredAttachmentsPreview(record, options = {}) {
     <div class="equipment-attachments-grid">
       <div class="equipment-asset-card">
         <div class="equipment-asset-title">${photosTitle}</div>
-        ${
-          photos.length
-            ? `
+        ${photos.length
+      ? `
           <div class="equipment-photo-grid" data-attachment-list="photos">
             ${photos
-              .map(
-                ({ item, index }) => `
+        .map(
+          ({ item, index }) => `
                   <figure class="equipment-photo-card" data-attachment-card>
                     ${editable ? buildAttachmentRemoveButton("photos", index, `Supprimer ${item.name || `Photo ${index + 1}`}`) : ""}
                     <img src="${item.dataUrl || ""}" alt="${escapeHtml(item.name || `Photo ${index + 1}`)}" />
                     <figcaption>${escapeHtml(item.name || `Photo ${index + 1}`)}</figcaption>
                   </figure>
                 `,
-              )
-              .join("")}
+        )
+        .join("")}
           </div>
         `
-            : `<div class="equipment-empty-assets" data-attachment-empty="photos">${photosEmptyText}</div>`
-        }
+      : `<div class="equipment-empty-assets" data-attachment-empty="photos">${photosEmptyText}</div>`
+    }
       </div>
 
-      ${
-        showDocuments
-          ? `
+      ${showDocuments
+      ? `
             <div class="equipment-asset-card">
               <div class="equipment-asset-title">${documentsTitle}</div>
-              ${
-                documents.length
-                  ? `
+              ${documents.length
+        ? `
                 <div class="equipment-doc-list" data-attachment-list="documents">
                   ${documents
-                    .map(
-                      ({ item, index }) => `
+          .map(
+            ({ item, index }) => `
                         <div class="equipment-doc-item" data-attachment-card>
                           <a class="equipment-doc-chip" href="${item.dataUrl || "#"}" download="${escapeHtml(item.name || `Document ${index + 1}`)}">
                             <i class="fa-regular fa-file-lines"></i>
@@ -4688,16 +3736,16 @@ function buildStoredAttachmentsPreview(record, options = {}) {
                           ${editable ? buildAttachmentRemoveButton("documents", index, `Supprimer ${item.name || `Document ${index + 1}`}`) : ""}
                         </div>
                       `,
-                    )
-                    .join("")}
+          )
+          .join("")}
                 </div>
               `
-                  : `<div class="equipment-empty-assets" data-attachment-empty="documents">${documentsEmptyText}</div>`
-              }
+        : `<div class="equipment-empty-assets" data-attachment-empty="documents">${documentsEmptyText}</div>`
+      }
             </div>
           `
-          : ""
-      }
+      : ""
+    }
     </div>
   `;
 }
@@ -4787,11 +3835,11 @@ function buildGroupEquipmentFormContent(record, mode) {
           <textarea id="equipmentGroupDesignations" name="designations" rows="4" placeholder="Désignations du groupe">${escapeTextarea(record?.designations || "")}</textarea>
         </div>
         <div class="field-group field-group-wide">
-          <label for="equipmentGroupDivisions">Divisions associées</label>
-          <select id="equipmentGroupDivisions" name="divisionIds" multiple size="5">
-            ${buildDivisionLinkOptions(record?.divisionIds || [])}
+          <label for="equipmentGroupDepartments">Départements associés</label>
+          <select id="equipmentGroupDepartments" name="departmentIds" multiple size="5">
+            ${buildDepartmentOptions(record?.departmentIds || [])}
           </select>
-          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs divisions.</div>
+          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs départements.</div>
         </div>
       </div>
 
@@ -4814,7 +3862,7 @@ function buildGroupEquipmentDetailsContent(record) {
       <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
       <div class="org-detail-item"><span>Nom</span><strong>${record.name}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Désignations</span><strong>${record.designations || "Aucune désignation"}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Divisions associées</span><strong>${joinRecordLabels(getOrganizationRecords("divisions"), record.divisionIds || [], (division) => `${division.code} — ${division.name}`)}</strong></div>
+      <div class="org-detail-item org-detail-item--full"><span>Départements associés</span><strong>${joinRecordLabels(getOrganizationRecords("departmentServices"), record.departmentIds || [], (department) => `${department.code} — ${department.name}`)}</strong></div>
       <div class="org-detail-item"><span>Familles liées</span><strong>${linkedFamilies.length}</strong></div>
       <div class="org-detail-item"><span>Équipements liés</span><strong>${linkedEquipments.length}</strong></div>
     </div>
@@ -4838,35 +3886,35 @@ function renderGroupEquipmentPage() {
 
   const rows = directory.groups.length
     ? directory.groups
-        .map((group) => {
-          const familyCount = directory.families.filter(
-            (family) => family.groupId === group.id,
-          ).length;
-          const equipmentCount = directory.equipments.filter(
-            (equipment) => equipment.groupId === group.id,
-          ).length;
+      .map((group) => {
+        const familyCount = directory.families.filter(
+          (family) => family.groupId === group.id,
+        ).length;
+        const equipmentCount = directory.equipments.filter(
+          (equipment) => equipment.groupId === group.id,
+        ).length;
 
-          return `
+        return `
             <tr>
               <td><strong>${group.code}</strong></td>
               <td>${group.name}</td>
               <td class="muted">${group.designations || "-"}</td>
-              <td class="muted">${joinRecordLabels(getOrganizationRecords("divisions"), group.divisionIds || [], (division) => `${division.code} — ${division.name}`)}</td>
+              <td class="muted">${joinRecordLabels(getOrganizationRecords("departmentServices"), group.departmentIds || [], (department) => `${department.code} — ${department.name}`)}</td>
               <td class="muted">${familyCount} familles · ${equipmentCount} équipements</td>
               <td>${buildEquipmentListActions("groupe-equipment", group.id)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="6">
           ${buildOrganizationEmptyState(
-            "fa-layer-group",
-            "Aucun groupe enregistré",
-            "Créez le premier groupe d'équipements pour commencer la structuration du référentiel.",
-            "Le bouton Nouveau groupe ouvre le formulaire de création.",
-          )}
+      "fa-layer-group",
+      "Aucun groupe enregistré",
+      "Créez le premier groupe d'équipements pour commencer la structuration du référentiel.",
+      "Le bouton Nouveau groupe ouvre le formulaire de création.",
+    )}
         </td>
       </tr>
     `;
@@ -4880,7 +3928,7 @@ function renderGroupEquipmentPage() {
       <div>
         <div class="org-section-kicker">Référentiel équipement</div>
         <h2>Groupes équipement</h2>
-          <p>Chaque groupe associe plusieurs divisions et sert de base aux familles puis aux équipements.</p>
+          <p>Chaque groupe associe plusieurs départements et sert de base aux familles puis aux équipements.</p>
       </div>
       <div class="org-section-pills">
         <span class="status-badge badge-info">${directory.groups.length} groupes</span>
@@ -4890,29 +3938,29 @@ function renderGroupEquipmentPage() {
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "Groupes actifs",
-        value: String(directory.groups.length),
-        note: "Base du référentiel équipement",
-      },
-      {
-        label: "Divisions liées",
-        value: String(
-          directory.groups.reduce(
-            (total, group) => total + (group.divisionIds || []).length,
-            0,
-          ),
+    {
+      label: "Groupes actifs",
+      value: String(directory.groups.length),
+      note: "Base du référentiel équipement",
+    },
+    {
+      label: "Départements liés",
+      value: String(
+        directory.groups.reduce(
+          (total, group) => total + (group.departmentIds || []).length,
+          0,
         ),
-        note: "Association multi-divisions",
-      },
-      {
-        label: "Équipements associés",
-        value: String(
-          directory.equipments.filter((equipment) => equipment.groupId).length,
-        ),
-        note: "Rattachement direct au groupe",
-      },
-    ])}
+      ),
+      note: "Association multi-départements",
+    },
+    {
+      label: "Équipements associés",
+      value: String(
+        directory.equipments.filter((equipment) => equipment.groupId).length,
+      ),
+      note: "Rattachement direct au groupe",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -4949,9 +3997,9 @@ function renderGroupEquipmentPage() {
       activeRecord
       ? buildGroupEquipmentDetailsContent(activeRecord)
       : buildGroupEquipmentFormContent(
-          activeRecord,
-          equipmentModalState?.mode || "create",
-        ),
+        activeRecord,
+        equipmentModalState?.mode || "create",
+      ),
   );
 
   attachEquipmentPageHandlers("groupe-equipment");
@@ -5026,13 +4074,13 @@ function renderFamilyEquipmentPage() {
 
   const rows = directory.families.length
     ? directory.families
-        .map((family) => {
-          const group = getEquipmentRecord("groups", family.groupId);
-          const equipmentCount = directory.equipments.filter(
-            (equipment) => equipment.familyId === family.id,
-          ).length;
+      .map((family) => {
+        const group = getEquipmentRecord("groups", family.groupId);
+        const equipmentCount = directory.equipments.filter(
+          (equipment) => equipment.familyId === family.id,
+        ).length;
 
-          return `
+        return `
             <tr>
               <td><strong>${family.code}</strong></td>
               <td>${family.name}</td>
@@ -5042,17 +4090,17 @@ function renderFamilyEquipmentPage() {
               <td>${buildEquipmentListActions("famille-equipment", family.id)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="6">
           ${buildOrganizationEmptyState(
-            "fa-folder-tree",
-            "Aucune famille enregistrée",
-            "Créez une famille et rattachez-la à un groupe existant.",
-            "Le bouton Nouvelle famille ouvre le formulaire de création.",
-          )}
+      "fa-folder-tree",
+      "Aucune famille enregistrée",
+      "Créez une famille et rattachez-la à un groupe existant.",
+      "Le bouton Nouvelle famille ouvre le formulaire de création.",
+    )}
         </td>
       </tr>
     `;
@@ -5075,26 +4123,26 @@ function renderFamilyEquipmentPage() {
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "Familles actives",
-        value: String(directory.families.length),
-        note: "Niveau de structuration intermédiaire",
-      },
-      {
-        label: "Familles reliées à un groupe",
-        value: String(
-          directory.families.filter((family) => family.groupId).length,
-        ),
-        note: "Relation obligatoire au groupe",
-      },
-      {
-        label: "Équipements liés",
-        value: String(
-          directory.equipments.filter((equipment) => equipment.familyId).length,
-        ),
-        note: "Le parc est rattaché à la famille",
-      },
-    ])}
+    {
+      label: "Familles actives",
+      value: String(directory.families.length),
+      note: "Niveau de structuration intermédiaire",
+    },
+    {
+      label: "Familles reliées à un groupe",
+      value: String(
+        directory.families.filter((family) => family.groupId).length,
+      ),
+      note: "Relation obligatoire au groupe",
+    },
+    {
+      label: "Équipements liés",
+      value: String(
+        directory.equipments.filter((equipment) => equipment.familyId).length,
+      ),
+      note: "Le parc est rattaché à la famille",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -5131,9 +4179,9 @@ function renderFamilyEquipmentPage() {
       activeRecord
       ? buildFamilyEquipmentDetailsContent(activeRecord)
       : buildFamilyEquipmentFormContent(
-          activeRecord,
-          equipmentModalState?.mode || "create",
-        ),
+        activeRecord,
+        equipmentModalState?.mode || "create",
+      ),
   );
 
   attachEquipmentPageHandlers("famille-equipment");
@@ -5351,11 +4399,11 @@ function renderEquipmentManagementPage() {
 
   const rows = directory.equipments.length
     ? directory.equipments
-        .map((equipment) => {
-          const group = getEquipmentRecord("groups", equipment.groupId);
-          const family = getEquipmentRecord("families", equipment.familyId);
+      .map((equipment) => {
+        const group = getEquipmentRecord("groups", equipment.groupId);
+        const family = getEquipmentRecord("families", equipment.familyId);
 
-          return `
+        return `
             <tr>
               <td><strong>${equipment.code}</strong></td>
               <td>${equipment.name}</td>
@@ -5366,17 +4414,17 @@ function renderEquipmentManagementPage() {
               <td>${buildEquipmentListActions("equipment", equipment.id)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="7">
           ${buildOrganizationEmptyState(
-            "fa-gear",
-            "Aucun équipement enregistré",
-            "Créez la première fiche équipement après avoir défini les groupes et les familles.",
-            "Le bouton Nouvel équipement ouvre le formulaire complet.",
-          )}
+      "fa-gear",
+      "Aucun équipement enregistré",
+      "Créez la première fiche équipement après avoir défini les groupes et les familles.",
+      "Le bouton Nouvel équipement ouvre le formulaire complet.",
+    )}
         </td>
       </tr>
     `;
@@ -5400,35 +4448,35 @@ function renderEquipmentManagementPage() {
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "Équipements total",
-        value: String(directory.equipments.length),
-        note: "Inventaire local du navigateur",
-      },
-      {
-        label: "Équipements en service",
-        value: String(
-          directory.equipments.filter(
-            (equipment) => equipment.status === "En service",
-          ).length,
-        ),
-        note: "Statut opérationnel",
-      },
-      {
-        label: "Équipements avec pièces jointes",
-        value: String(
-          directory.equipments.filter(
-            (equipment) =>
-              (Array.isArray(equipment.photos) ? equipment.photos.length : 0) +
-                (Array.isArray(equipment.documents)
-                  ? equipment.documents.length
-                  : 0) >
-              0,
-          ).length,
-        ),
-        note: "Photos et documents associés",
-      },
-    ])}
+    {
+      label: "Équipements total",
+      value: String(directory.equipments.length),
+      note: "Inventaire local du navigateur",
+    },
+    {
+      label: "Équipements en service",
+      value: String(
+        directory.equipments.filter(
+          (equipment) => equipment.status === "En service",
+        ).length,
+      ),
+      note: "Statut opérationnel",
+    },
+    {
+      label: "Équipements avec pièces jointes",
+      value: String(
+        directory.equipments.filter(
+          (equipment) =>
+            (Array.isArray(equipment.photos) ? equipment.photos.length : 0) +
+            (Array.isArray(equipment.documents)
+              ? equipment.documents.length
+              : 0) >
+            0,
+        ).length,
+      ),
+      note: "Photos et documents associés",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -5464,9 +4512,9 @@ function renderEquipmentManagementPage() {
       activeRecord
       ? buildEquipmentDetailsContent(activeRecord)
       : buildEquipmentFormContent(
-          activeRecord,
-          equipmentModalState?.mode || "create",
-        ),
+        activeRecord,
+        equipmentModalState?.mode || "create",
+      ),
   );
 
   attachEquipmentPageHandlers("equipment");
@@ -5586,13 +4634,13 @@ function attachEquipmentPageHandlers(pageKey) {
     );
     const existingRecord = recordId
       ? getEquipmentRecord(
-          pageKey === "equipment"
-            ? "equipments"
-            : pageKey === "famille-equipment"
-              ? "families"
-              : "groups",
-          recordId,
-        )
+        pageKey === "equipment"
+          ? "equipments"
+          : pageKey === "famille-equipment"
+            ? "families"
+            : "groups",
+        recordId,
+      )
       : null;
 
     if (pageKey === "groupe-equipment") {
@@ -5610,8 +4658,8 @@ function attachEquipmentPageHandlers(pageKey) {
         designations: String(
           form.querySelector("textarea[name='designations']")?.value || "",
         ).trim(),
-        divisionIds: getSelectedValues(
-          form.querySelector("select[name='divisionIds']"),
+        departmentIds: getSelectedValues(
+          form.querySelector("select[name='departmentIds']"),
         ),
       };
 
@@ -5804,14 +4852,14 @@ function buildOrganeTabs(activeSubpageKey) {
   return `
     <div class="org-tabs" role="tablist" aria-label="Sous-pages organes">
       ${Object.entries(sectionSubpages.organe.tabs)
-        .map(
-          ([key, tab]) => `
+      .map(
+        ([key, tab]) => `
             <button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-og-subpage="${key}">
               ${tab.label}
             </button>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -6033,14 +5081,14 @@ function renderOrganeGroupsPage() {
 
   const rows = directory.groups.length
     ? directory.groups
-        .map((group) => {
-          const familyCount = directory.families.filter(
-            (family) => family.groupId === group.id,
-          ).length;
-          const organeCount = directory.organes.filter(
-            (item) => item.groupId === group.id,
-          ).length;
-          return `
+      .map((group) => {
+        const familyCount = directory.families.filter(
+          (family) => family.groupId === group.id,
+        ).length;
+        const organeCount = directory.organes.filter(
+          (item) => item.groupId === group.id,
+        ).length;
+        return `
             <tr>
               <td><strong>${group.code}</strong></td>
               <td>${group.name}</td>
@@ -6050,17 +5098,17 @@ function renderOrganeGroupsPage() {
               <td>${buildOrganeListActions("groupe-organe", group.id)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="6">
           ${buildOrganizationEmptyState(
-            "fa-layer-group",
-            "Aucun groupe organe enregistré",
-            "Créez le premier groupe organe et associez-le à un ou plusieurs équipements.",
-            "Le bouton Nouveau groupe organe ouvre le formulaire de création.",
-          )}
+      "fa-layer-group",
+      "Aucun groupe organe enregistré",
+      "Créez le premier groupe organe et associez-le à un ou plusieurs équipements.",
+      "Le bouton Nouveau groupe organe ouvre le formulaire de création.",
+    )}
         </td>
       </tr>
     `;
@@ -6082,28 +5130,28 @@ function renderOrganeGroupsPage() {
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "Groupes organes",
-        value: String(directory.groups.length),
-        note: "Référentiel de premier niveau",
-      },
-      {
-        label: "Équipements associés",
-        value: String(
-          directory.groups.reduce(
-            (total, group) =>
-              total + (group.associatedEquipmentIds || []).length,
-            0,
-          ),
+    {
+      label: "Groupes organes",
+      value: String(directory.groups.length),
+      note: "Référentiel de premier niveau",
+    },
+    {
+      label: "Équipements associés",
+      value: String(
+        directory.groups.reduce(
+          (total, group) =>
+            total + (group.associatedEquipmentIds || []).length,
+          0,
         ),
-        note: "Association multi-équipements",
-      },
-      {
-        label: "Organes référencés",
-        value: String(directory.organes.length),
-        note: "Inventaire des organes",
-      },
-    ])}
+      ),
+      note: "Association multi-équipements",
+    },
+    {
+      label: "Organes référencés",
+      value: String(directory.organes.length),
+      note: "Inventaire des organes",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -6136,9 +5184,9 @@ function renderOrganeGroupsPage() {
     organeModalState && organeModalState.mode === "details" && activeRecord
       ? buildOrganeGroupDetailsContent(activeRecord)
       : buildOrganeGroupFormContent(
-          activeRecord,
-          organeModalState?.mode || "create",
-        ),
+        activeRecord,
+        organeModalState?.mode || "create",
+      ),
   );
 
   attachOrganePageHandlers("groupe-organe");
@@ -6212,12 +5260,12 @@ function renderOrganeFamiliesPage() {
 
   const rows = directory.families.length
     ? directory.families
-        .map((family) => {
-          const group = getOrganeRecord("groups", family.groupId);
-          const count = directory.organes.filter(
-            (item) => item.familyId === family.id,
-          ).length;
-          return `
+      .map((family) => {
+        const group = getOrganeRecord("groups", family.groupId);
+        const count = directory.organes.filter(
+          (item) => item.familyId === family.id,
+        ).length;
+        return `
             <tr>
               <td><strong>${family.code}</strong></td>
               <td>${family.name}</td>
@@ -6227,17 +5275,17 @@ function renderOrganeFamiliesPage() {
               <td>${buildOrganeListActions("famille-organe", family.id)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="6">
           ${buildOrganizationEmptyState(
-            "fa-folder-tree",
-            "Aucune famille organe enregistrée",
-            "Créez une famille organe et associez-la à un groupe existant.",
-            "Le bouton Nouvelle famille organe ouvre le formulaire de création.",
-          )}
+      "fa-folder-tree",
+      "Aucune famille organe enregistrée",
+      "Créez une famille organe et associez-la à un groupe existant.",
+      "Le bouton Nouvelle famille organe ouvre le formulaire de création.",
+    )}
         </td>
       </tr>
     `;
@@ -6259,24 +5307,24 @@ function renderOrganeFamiliesPage() {
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "Familles organes",
-        value: String(directory.families.length),
-        note: "Niveau intermédiaire",
-      },
-      {
-        label: "Familles reliées",
-        value: String(
-          directory.families.filter((family) => family.groupId).length,
-        ),
-        note: "Association obligatoire au groupe",
-      },
-      {
-        label: "Organes créés",
-        value: String(directory.organes.length),
-        note: "Inventaire des organes",
-      },
-    ])}
+    {
+      label: "Familles organes",
+      value: String(directory.families.length),
+      note: "Niveau intermédiaire",
+    },
+    {
+      label: "Familles reliées",
+      value: String(
+        directory.families.filter((family) => family.groupId).length,
+      ),
+      note: "Association obligatoire au groupe",
+    },
+    {
+      label: "Organes créés",
+      value: String(directory.organes.length),
+      note: "Inventaire des organes",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -6311,9 +5359,9 @@ function renderOrganeFamiliesPage() {
     organeModalState && organeModalState.mode === "details" && activeRecord
       ? buildOrganeFamilyDetailsContent(activeRecord)
       : buildOrganeFamilyFormContent(
-          activeRecord,
-          organeModalState?.mode || "create",
-        ),
+        activeRecord,
+        organeModalState?.mode || "create",
+      ),
   );
 
   attachOrganePageHandlers("famille-organe");
@@ -6514,10 +5562,10 @@ function renderOrganeItemsPage() {
 
   const rows = directory.organes.length
     ? directory.organes
-        .map((record) => {
-          const group = getOrganeRecord("groups", record.groupId);
-          const family = getOrganeRecord("families", record.familyId);
-          return `
+      .map((record) => {
+        const group = getOrganeRecord("groups", record.groupId);
+        const family = getOrganeRecord("families", record.familyId);
+        return `
             <tr>
               <td><strong>${record.code}</strong></td>
               <td>${record.name}</td>
@@ -6528,17 +5576,17 @@ function renderOrganeItemsPage() {
               <td>${buildOrganeListActions("organe", record.id)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="7">
           ${buildOrganizationEmptyState(
-            "fa-puzzle-piece",
-            "Aucun organe enregistré",
-            "Créez la première fiche organe après avoir défini les groupes et familles.",
-            "Le bouton Nouvel organe ouvre le formulaire complet.",
-          )}
+      "fa-puzzle-piece",
+      "Aucun organe enregistré",
+      "Créez la première fiche organe après avoir défini les groupes et familles.",
+      "Le bouton Nouvel organe ouvre le formulaire complet.",
+    )}
         </td>
       </tr>
     `;
@@ -6561,32 +5609,32 @@ function renderOrganeItemsPage() {
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "Organes total",
-        value: String(directory.organes.length),
-        note: "Inventaire local navigateur",
-      },
-      {
-        label: "Organes en service",
-        value: String(
-          directory.organes.filter((item) => item.status === "En service")
-            .length,
-        ),
-        note: "Statut opérationnel",
-      },
-      {
-        label: "Pièces jointes",
-        value: String(
-          directory.organes.filter(
-            (item) =>
-              (Array.isArray(item.photos) ? item.photos.length : 0) +
-                (Array.isArray(item.documents) ? item.documents.length : 0) >
-              0,
-          ).length,
-        ),
-        note: "Photos et documents associés",
-      },
-    ])}
+    {
+      label: "Organes total",
+      value: String(directory.organes.length),
+      note: "Inventaire local navigateur",
+    },
+    {
+      label: "Organes en service",
+      value: String(
+        directory.organes.filter((item) => item.status === "En service")
+          .length,
+      ),
+      note: "Statut opérationnel",
+    },
+    {
+      label: "Pièces jointes",
+      value: String(
+        directory.organes.filter(
+          (item) =>
+            (Array.isArray(item.photos) ? item.photos.length : 0) +
+            (Array.isArray(item.documents) ? item.documents.length : 0) >
+            0,
+        ).length,
+      ),
+      note: "Photos et documents associés",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -6620,9 +5668,9 @@ function renderOrganeItemsPage() {
     organeModalState && organeModalState.mode === "details" && activeRecord
       ? buildOrganeDetailsContent(activeRecord)
       : buildOrganeFormContent(
-          activeRecord,
-          organeModalState?.mode || "create",
-        ),
+        activeRecord,
+        organeModalState?.mode || "create",
+      ),
   );
 
   attachOrganePageHandlers("organe");
@@ -6759,13 +5807,13 @@ function attachOrganePageHandlers(pageKey) {
     );
     const existingRecord = recordId
       ? getOrganeRecord(
-          pageKey === "organe"
-            ? "organes"
-            : pageKey === "famille-organe"
-              ? "families"
-              : "groups",
-          recordId,
-        )
+        pageKey === "organe"
+          ? "organes"
+          : pageKey === "famille-organe"
+            ? "families"
+            : "groups",
+        recordId,
+      )
       : null;
 
     if (pageKey === "groupe-organe") {
@@ -7088,26 +6136,143 @@ function buildArborescenceTree() {
     articleGroups: article.groups,
     articleFamilies: article.families,
     articles: article.articles,
-    departmentServices: organization.departmentServices,
+  };
+
+  const buildEquipmentBranchForUnit = () => {
+    return datasets.equipmentGroups.map((group) => {
+      const familyNodes = datasets.equipmentFamilies
+        .filter((family) => family.groupId === group.id)
+        .map((family) => {
+          const equipmentNodes = datasets.equipments
+            .filter((equipment) => equipment.familyId === family.id)
+            .map((equipment) => {
+              const organeGroupNodes = datasets.organeGroups
+                .filter((orgGroup) =>
+                  (orgGroup.associatedEquipmentIds || []).includes(
+                    equipment.id,
+                  ),
+                )
+                .map((orgGroup) => {
+                  const organeFamilyNodes = datasets.organeFamilies
+                    .filter((orgFamily) => orgFamily.groupId === orgGroup.id)
+                    .map((orgFamily) => {
+                      const organeNodes = datasets.organes
+                        .filter((organe) => organe.familyId === orgFamily.id)
+                        .map((organe) => {
+                          const articleGroupNodes = datasets.articleGroups
+                            .filter((articleGroup) =>
+                              (articleGroup.associatedOrganeIds || []).includes(
+                                organe.id,
+                              ),
+                            )
+                            .map((articleGroup) => {
+                              const articleFamilyNodes =
+                                datasets.articleFamilies
+                                  .filter(
+                                    (articleFamily) =>
+                                      articleFamily.groupId === articleGroup.id,
+                                  )
+                                  .map((articleFamily) => {
+                                    const articleNodes = datasets.articles
+                                      .filter(
+                                        (article) =>
+                                          article.familyId === articleFamily.id,
+                                      )
+                                      .map((article) =>
+                                        buildArboNode(
+                                          `arbo-article-${article.id}`,
+                                          `${article.code} - ${article.name}`,
+                                          "fa-barcode",
+                                        ),
+                                      );
+
+                                    return buildArboNode(
+                                      `arbo-article-family-${articleFamily.id}`,
+                                      `${articleFamily.code} - ${articleFamily.name}`,
+                                      "fa-layer-group",
+                                      articleNodes,
+                                    );
+                                  });
+
+                              return buildArboNode(
+                                `arbo-article-group-${articleGroup.id}`,
+                                `${articleGroup.code} - ${articleGroup.name}`,
+                                "fa-boxes-stacked",
+                                articleFamilyNodes,
+                              );
+                            });
+
+                          return buildArboNode(
+                            `arbo-organe-${organe.id}`,
+                            `${organe.code} - ${organe.name}`,
+                            "fa-circle-nodes",
+                            articleGroupNodes,
+                          );
+                        });
+
+                      return buildArboNode(
+                        `arbo-organe-family-${orgFamily.id}`,
+                        `${orgFamily.code} - ${orgFamily.name}`,
+                        "fa-puzzle-piece",
+                        organeNodes,
+                      );
+                    });
+
+                  return buildArboNode(
+                    `arbo-organe-group-${orgGroup.id}`,
+                    `${orgGroup.code} - ${orgGroup.name}`,
+                    "fa-diagram-project",
+                    organeFamilyNodes,
+                  );
+                });
+
+              return buildArboNode(
+                `arbo-equipment-${equipment.id}`,
+                `${equipment.code} - ${equipment.name}`,
+                "fa-gear",
+                organeGroupNodes,
+              );
+            });
+
+          return buildArboNode(
+            `arbo-equipment-family-${family.id}`,
+            `${family.code} - ${family.name}`,
+            "fa-folder-tree",
+            equipmentNodes,
+          );
+        });
+
+      return buildArboNode(
+        `arbo-equipment-group-${group.id}`,
+        `${group.code} - ${group.name}`,
+        "fa-screwdriver-wrench",
+        familyNodes,
+      );
+    });
   };
 
   const unitNodes = organization.unites.map((unit) => {
-    const divisionNodes = organization.divisions
-      .filter((division) => (division.unitIds || []).includes(unit.id))
-      .map((division) => {
+    const departmentNodes = (organization.departmentServices || [])
+      .filter((department) => (department.unitIds || []).includes(unit.id))
+      .map((department) => {
         return buildArboNode(
-          `arbo-division-${unit.id}__${division.id}`,
-          `${division.code} - ${division.name}`,
-          "fa-diagram-project",
-          getArboDivisionChildren(division, datasets),
+          `arbo-department-${department.id}`,
+          `${department.code} - ${department.name}`,
+          "fa-folder-open",
+          buildEquipmentBranchForUnit(),
         );
       });
+
+    const hasDepartments = departmentNodes.length > 0;
+    const childrenNodes = hasDepartments
+      ? departmentNodes
+      : buildEquipmentBranchForUnit();
 
     return buildArboNode(
       `arbo-unit-${unit.id}`,
       `${unit.code} - ${unit.name}`,
       "fa-industry",
-      divisionNodes,
+      childrenNodes,
     );
   });
 
@@ -7900,8 +7065,8 @@ function renderProfilePage() {
         <div class="profile-kicker">Utilisateur connecté</div>
         <h2>${escapeHtml(fullName)}</h2>
         <p>${escapeHtml(
-          connectedUser.functionTitle || connectedUser.role || "Compte interne",
-        )}</p>
+    connectedUser.functionTitle || connectedUser.role || "Compte interne",
+  )}</p>
         <div class="profile-hero-meta">
           <span>${escapeHtml(connectedUser.role || "Rôle non défini")}</span>
           <span>${escapeHtml(connectedUser.unit || "Unité non renseignée")}</span>
@@ -7913,23 +7078,23 @@ function renderProfilePage() {
 
     <section class="profile-summary-grid org-detail-grid">
       ${profileCards
-        .map(
-          ([label, value]) => `
+      .map(
+        ([label, value]) => `
             <div class="org-detail-item">
               <span>${escapeHtml(label)}</span>
               <strong>${escapeHtml(value)}</strong>
             </div>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
       <div class="org-detail-item org-detail-item--full profile-dates-card">
         <span>Dates de compte</span>
         <strong>Créé le ${escapeHtml(
-          formatAdministrationDateTime(connectedUser.createdAt),
-        )}</strong>
+        formatAdministrationDateTime(connectedUser.createdAt),
+      )}</strong>
         <strong>Dernière connexion ${escapeHtml(
-          formatAdministrationDateTime(connectedUser.lastLogin),
-        )}</strong>
+        formatAdministrationDateTime(connectedUser.lastLogin),
+      )}</strong>
       </div>
     </section>
   `;
@@ -7939,14 +7104,14 @@ function buildAdministrationTabs(activeSubpageKey) {
   return `
     <div class="org-tabs administration-tabs" role="tablist" aria-label="${localizeAdministrationText("Sous-pages administration")}">
       ${Object.entries(administrationSubpages.tabs)
-        .map(
-          ([key, tab]) => `
+      .map(
+        ([key, tab]) => `
             <button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-admin-subpage="${key}">
               ${localizeAdministrationText(tab.label)}
             </button>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -8250,8 +7415,8 @@ function buildAdministrationUsersSection(state) {
       </div>
       <div class="admin-user-list">
         ${state.users
-          .map(
-            (user) => `
+      .map(
+        (user) => `
               <article class="admin-user-list-item">
                 <div class="admin-user-list-avatar ${user.status === "Suspendu" ? "is-muted" : ""}">
                   ${buildAdministrationPhotoMarkup(user)}
@@ -8290,8 +7455,8 @@ function buildAdministrationUsersSection(state) {
                 </div>
               </article>
             `,
-          )
-          .join("")}
+      )
+      .join("")}
       </div>
     </section>
   `;
@@ -8356,11 +7521,11 @@ function buildAdministrationRolesSection(state) {
           <label for="adminRoleSelect">Rôle</label>
           <select id="adminRoleSelect" class="admin-role-select">
             ${administrationRoleCatalog
-              .map(
-                (roleName) =>
-                  `<option value="${roleName}"${roleName === selectedRole ? " selected" : ""}>${roleName}</option>`,
-              )
-              .join("")}
+      .map(
+        (roleName) =>
+          `<option value="${roleName}"${roleName === selectedRole ? " selected" : ""}>${roleName}</option>`,
+      )
+      .join("")}
           </select>
         </div>
 
@@ -8389,8 +7554,8 @@ function buildAdministrationRolesSection(state) {
             </thead>
             <tbody>
               ${administrationPermissionMatrix
-                .map(
-                  (row) => `
+      .map(
+        (row) => `
                   <tr>
                     <td>${escapeHtml(row.module)}</td>
                     <td>${renderAdministrationPermissionToggle(state, selectedRole, row.module, "view")}</td>
@@ -8400,8 +7565,8 @@ function buildAdministrationRolesSection(state) {
                     <td>${renderAdministrationPermissionToggle(state, selectedRole, row.module, "validate")}</td>
                   </tr>
                 `,
-                )
-                .join("")}
+      )
+      .join("")}
             </tbody>
           </table>
         </div>
@@ -8418,13 +7583,6 @@ function buildAdministrationRolesSection(state) {
         <div class="admin-role-cards">
           <article class="admin-role-card locked">
             <div class="admin-role-card-head">
-              <strong>Super Admin</strong>
-              <span class="status-badge badge-warning">Accès total</span>
-            </div>
-            <p>Contrôle complet de tous les modules, de la configuration et des données.</p>
-          </article>
-          <article class="admin-role-card locked">
-            <div class="admin-role-card-head">
               <strong>Admin</strong>
               <span class="status-badge badge-info">Quasi total</span>
             </div>
@@ -8432,14 +7590,14 @@ function buildAdministrationRolesSection(state) {
           </article>
           <article class="admin-role-card locked">
             <div class="admin-role-card-head">
-              <strong>Responsable</strong>
+              <strong>Responsable de maintenance</strong>
               <span class="status-badge badge-success">Voir + créer + modifier + valider</span>
             </div>
             <p>Profil d'exploitation pour les responsables de service et les validateurs.</p>
           </article>
           <article class="admin-role-card locked">
             <div class="admin-role-card-head">
-              <strong>Technicien</strong>
+              <strong>Technicien de maintenance</strong>
               <span class="status-badge badge-gray">Opérations terrain</span>
             </div>
             <p>Lecture large et création des DI/BT avec modification des OT affectés.</p>
@@ -8502,22 +7660,22 @@ function buildAdministrationGeneralSection(state) {
             <label for="adminCurrency">${localizeAdministrationText("Devise", state)}</label>
             <select id="adminCurrency">
               ${administrationCurrencyOptions
-                .map(
-                  (currency) =>
-                    `<option value="${currency}"${settings.currency === currency ? " selected" : ""}>${currency}</option>`,
-                )
-                .join("")}
+      .map(
+        (currency) =>
+          `<option value="${currency}"${settings.currency === currency ? " selected" : ""}>${currency}</option>`,
+      )
+      .join("")}
             </select>
           </div>
           <div class="field-group">
             <label for="adminDefaultLanguage">${localizeAdministrationText("Langue par défaut", state)}</label>
             <select id="adminDefaultLanguage">
               ${administrationLanguageOptions
-                .map(
-                  (language) =>
-                    `<option value="${language}"${normalizeAdministrationLanguage(settings.defaultLanguage) === language ? " selected" : ""}>${getAdministrationLanguageLabel(language, state)}</option>`,
-                )
-                .join("")}
+      .map(
+        (language) =>
+          `<option value="${language}"${normalizeAdministrationLanguage(settings.defaultLanguage) === language ? " selected" : ""}>${getAdministrationLanguageLabel(language, state)}</option>`,
+      )
+      .join("")}
             </select>
           </div>
           <div class="field-group">
@@ -8811,10 +7969,9 @@ function buildAdministrationLogsSection(state) {
             </tr>
           </thead>
           <tbody>
-            ${
-              filteredLogs
-                .map(
-                  (log) => `
+            ${filteredLogs
+      .map(
+        (log) => `
                   <tr>
                     <td>${formatAdministrationDateTime(log.date)}</td>
                     <td>${escapeHtml(log.user)}</td>
@@ -8827,10 +7984,10 @@ function buildAdministrationLogsSection(state) {
                     </td>
                   </tr>
                 `,
-                )
-                .join("") ||
-              `<tr><td colspan="6"><div class="org-empty-card admin-empty-card"><div class="blank-badge"><i class="fa-regular fa-folder-open"></i></div><h2>Aucun journal trouvé</h2><p>Adaptez les filtres pour afficher d'autres entrées.</p></div></td></tr>`
-            }
+      )
+      .join("") ||
+    `<tr><td colspan="6"><div class="org-empty-card admin-empty-card"><div class="blank-badge"><i class="fa-regular fa-folder-open"></i></div><h2>Aucun journal trouvé</h2><p>Adaptez les filtres pour afficher d'autres entrées.</p></div></td></tr>`
+    }
           </tbody>
         </table>
       </div>
@@ -9362,8 +8519,8 @@ function renderSectionSubpages(pageKey, subpageKey) {
   pageContentEl.innerHTML = `
     <div class="org-tabs" role="tablist" aria-label="Sous-pages ${pages[pageKey].title}">
       ${Object.entries(config.tabs)
-        .map(
-          ([key, tab]) => `
+      .map(
+        ([key, tab]) => `
             <button
               class="org-tab ${key === activeSubpageKey ? "active" : ""}"
               type="button"
@@ -9372,8 +8529,8 @@ function renderSectionSubpages(pageKey, subpageKey) {
               ${tab.label}
             </button>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
 
     <div class="org-empty-card">
@@ -9507,6 +8664,52 @@ function getDashboardRecentInterventions() {
     .slice(0, 5);
 }
 
+function getDashboardInterventionStats(type) {
+  const directory = loadInterventionsState();
+  let total = 0;
+  let planifie = 0;
+  let encours = 0;
+  let termine = 0;
+
+  if (type === "DI") {
+    const items = directory.dis || [];
+    total = items.length;
+    planifie = items.filter((item) => item.status === "En attente").length;
+    termine = items.filter(
+      (item) =>
+        item.status === "Validée" ||
+        item.status === "Transformée en OT" ||
+        item.status === "Terminé",
+    ).length;
+  } else if (type === "OT") {
+    const items = directory.ots || [];
+    total = items.length;
+    planifie = items.filter((item) => item.status === "Planifié").length;
+    encours = items.filter((item) => item.status === "En cours").length;
+    termine = items.filter(
+      (item) =>
+        item.status === "Terminé" ||
+        item.status === "Validé" ||
+        item.status === "Clôturé",
+    ).length;
+  } else if (type === "BT") {
+    const items = directory.bts || [];
+    total = items.length;
+    planifie = items.filter((item) => item.status === "En cours").length;
+    encours = items.filter((item) => item.status === "En cours").length;
+    termine = items.filter(
+      (item) =>
+        item.status === "Validé" ||
+        item.status === "Clôturé" ||
+        item.status === "Terminé",
+    ).length;
+  }
+
+  const pctTermine = total > 0 ? Math.round((termine / total) * 100) : 0;
+
+  return { total, planifie, encours, termine, pctTermine };
+}
+
 function renderDashboardPage() {
   if (pageActionsEl) {
     renderDashboardActions();
@@ -9541,52 +8744,14 @@ function renderDashboardPage() {
             : "fill-success",
       fillWidth: `${Math.max(35, 100 - index * 18)}%`,
     }));
-  const workOrderStatus = [
-    {
-      label: "Planifié",
-      count: interventionDirectory.ots.filter(
-        (item) => String(item.status || "").toLowerCase() === "planifié",
-      ).length,
-      color: "var(--info)",
-    },
-    {
-      label: "En cours",
-      count: interventionDirectory.ots.filter(
-        (item) => String(item.status || "").toLowerCase() === "en cours",
-      ).length,
-      color: "var(--warning)",
-    },
-    {
-      label: "Terminé",
-      count: interventionDirectory.ots.filter((item) =>
-        [
-          "terminé",
-          "termine",
-          "validé",
-          "valide",
-          "clôturé",
-          "cloture",
-        ].includes(String(item.status || "").toLowerCase()),
-      ).length,
-      color: "var(--success)",
-    },
-    {
-      label: "BT actifs",
-      count: interventionDirectory.bts.filter(
-        (item) => String(item.status || "").toLowerCase() === "en cours",
-      ).length,
-      color: "var(--brand)",
-    },
-  ];
   const availabilityByZone = (equipmentDirectory.groups || [])
     .slice(0, 4)
     .map((group, index) => ({
       label: `${group.code} — ${group.name}`,
-      value: `${
-        (equipmentDirectory.equipments || []).filter(
-          (equipment) => equipment.groupId === group.id,
-        ).length
-      } équipements`,
+      value: `${(equipmentDirectory.equipments || []).filter(
+        (equipment) => equipment.groupId === group.id,
+      ).length
+        } équipements`,
       width: `${Math.max(25, 100 - index * 18)}%`,
       fillClass:
         index === 0
@@ -9657,11 +8822,70 @@ function renderDashboardPage() {
     }));
 
   pageContentEl.className = "dashboard-page";
+  const selectedType = localStorage.getItem("dashboardType") || "OT";
+
+  const stats = getDashboardInterventionStats(selectedType);
+
+  let kpi1Label = "";
+  let kpi2Label = "";
+  let kpi3Label = "";
+
+  let kpi1Value = "";
+  let kpi2Value = "";
+  let kpi3Value = "";
+
+  if (selectedType === "DI") {
+    kpi1Label = "Total DI";
+    kpi2Label = "En attente";
+    kpi3Label = "Taux validation";
+
+    kpi1Value = stats.total;
+    kpi2Value = stats.planifie;
+    kpi3Value = stats.pctTermine + "%";
+  }
+
+  if (selectedType === "OT") {
+    kpi1Label = "Total OT";
+    kpi2Label = "En cours";
+    kpi3Label = "Taux clôture";
+
+    kpi1Value = stats.total;
+    kpi2Value = stats.encours;
+    kpi3Value = stats.pctTermine + "%";
+  }
+
+  if (selectedType === "BT") {
+    kpi1Label = "Total BT";
+    kpi2Label = "Actifs";
+    kpi3Label = "Taux clôture";
+
+    kpi1Value = stats.total;
+    kpi2Value = stats.encours;
+    kpi3Value = stats.pctTermine + "%";
+  }
+
+  const workOrderStatus = [
+    {
+      label: "Planifié",
+      count: stats.planifie,
+      color: "#0e7490",
+    },
+    {
+      label: "En cours",
+      count: stats.encours,
+      color: "#d97706",
+    },
+    {
+      label: "Terminé",
+      count: stats.termine,
+      color: "#16a34a",
+    },
+  ];
   pageContentEl.innerHTML = `
     <div class="kpi-grid">
       ${dashboardKpis
-        .map(
-          (kpi) => `
+      .map(
+        (kpi) => `
             <div class="kpi-card">
               <div class="kpi-header">
                 <div class="kpi-label">${kpi.label}</div>
@@ -9674,8 +8898,8 @@ function renderDashboardPage() {
               </div>
             </div>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
 
     <div class="grid-3-1">
@@ -9698,8 +8922,8 @@ function renderDashboardPage() {
             </thead>
             <tbody>
               ${recentInterventions
-                .map(
-                  (intervention) => `
+      .map(
+        (intervention) => `
                     <tr>
                       <td><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted)">${intervention.ref}</span></td>
                       <td><strong>${intervention.equipment}</strong></td>
@@ -9709,8 +8933,8 @@ function renderDashboardPage() {
                       <td class="muted">${intervention.technician}</td>
                     </tr>
                   `,
-                )
-                .join("")}
+      )
+      .join("")}
             </tbody>
           </table>
         </div>
@@ -9723,8 +8947,8 @@ function renderDashboardPage() {
         </div>
         <div class="alert-list">
           ${dashboardAlertItems
-            .map(
-              (alert) => `
+      .map(
+        (alert) => `
                 <div class="alert-item ${alert.type}">
                   <i class="fa-solid ${alert.icon} alert-icon"></i>
                   <div>
@@ -9734,8 +8958,8 @@ function renderDashboardPage() {
                   <div class="alert-time">${alert.time}</div>
                 </div>
               `,
-            )
-            .join("")}
+      )
+      .join("")}
         </div>
       </div>
     </div>
@@ -9748,8 +8972,8 @@ function renderDashboardPage() {
         </div>
         <div class="eq-grid">
           ${criticalEquipment
-            .map(
-              (equipment) => `
+      .map(
+        (equipment) => `
                 <div class="eq-card">
                   <div class="eq-icon"><i class="fa-solid ${equipment.icon}"></i></div>
                   <div class="eq-name">${equipment.name}</div>
@@ -9758,51 +8982,64 @@ function renderDashboardPage() {
                   <div class="health-bar"><div class="health-fill ${equipment.fillClass}" style="width:${equipment.fillWidth};${equipment.fillStyle || ""}"></div></div>
                 </div>
               `,
-            )
-            .join("")}
+      )
+      .join("")}
         </div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:16px">
         <div class="card">
           <div class="card-head">
-            <div class="card-title"><i class="fa-solid fa-chart-pie"></i> Statut des ordres de travail</div>
-          </div>
+  <div class="card-title">
+    <i class="fa-solid fa-chart-pie"></i>
+    Statut des interventions
+  </div>
+
+  <select id="dashboardInterventionType" class="dashboard-select">
+      <option value="DI">DI</option>
+      <option value="OT" selected>OT</option>
+      <option value="BT">BT</option>
+  </select>
+</div>
           <div class="donut-wrap">
             <div class="donut">
               <div class="donut-center">
-                <div class="donut-pct">52%</div>
+                <div class="donut-pct">${stats.pctTermine}%</div>
                 <div class="donut-lbl">Terminé</div>
               </div>
             </div>
             <div class="legend">
               ${workOrderStatus
-                .map(
-                  (item) => `
+      .map(
+        (item) => `
                     <div class="legend-item">
                       <div class="legend-dot" style="background:${item.color}"></div>
                       <span class="muted">${item.label}</span>
                       <span class="legend-count">${item.count}</span>
                     </div>
                   `,
-                )
-                .join("")}
+      )
+      .join("")}
             </div>
           </div>
           <div class="stats-row">
-            <div class="stat-cell">
-              <div class="stat-num" style="color:var(--brand)">42</div>
-              <div class="stat-lbl">Total OT</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-num" style="color:var(--success)">3.2h</div>
-              <div class="stat-lbl">Délai moy.</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-num" style="color:var(--warning)">87%</div>
-              <div class="stat-lbl">Taux respect</div>
-            </div>
-          </div>
+
+  <div class="stat-cell">
+      <div class="stat-num">${kpi1Value}</div>
+      <div class="stat-lbl">${kpi1Label}</div>
+  </div>
+
+  <div class="stat-cell">
+      <div class="stat-num">${kpi2Value}</div>
+      <div class="stat-lbl">${kpi2Label}</div>
+  </div>
+
+  <div class="stat-cell">
+      <div class="stat-num">${kpi3Value}</div>
+      <div class="stat-lbl">${kpi3Label}</div>
+  </div>
+
+</div>
         </div>
 
         <div class="card">
@@ -9811,15 +9048,15 @@ function renderDashboardPage() {
           </div>
           <div class="card-body">
             ${availabilityByZone
-              .map(
-                (zone, index) => `
+      .map(
+        (zone, index) => `
                   <div class="progress-row"${index === availabilityByZone.length - 1 ? ' style="margin-bottom:0"' : ""}>
                     <div class="progress-label"><span>${zone.label}</span><span>${zone.value}</span></div>
                     <div class="progress-bar"><div class="progress-fill ${zone.fillClass}" style="width:${zone.width}"></div></div>
                   </div>
                 `,
-              )
-              .join("")}
+      )
+      .join("")}
           </div>
         </div>
       </div>
@@ -9834,8 +9071,8 @@ function renderDashboardPage() {
         <div class="card-body">
           <ul class="timeline">
             ${recentActivity
-              .map(
-                (item, index) => `
+      .map(
+        (item, index) => `
                   <li class="tl-item"${index === recentActivity.length - 1 ? ' style="padding-bottom:0"' : ""}>
                     <div class="tl-dot" style="${item.dotStyle}"><i class="fa-solid ${item.icon}" style="font-size:12px"></i></div>
                     <div class="tl-content">
@@ -9844,8 +9081,8 @@ function renderDashboardPage() {
                     </div>
                   </li>
                 `,
-              )
-              .join("")}
+      )
+      .join("")}
           </ul>
         </div>
       </div>
@@ -9858,8 +9095,8 @@ function renderDashboardPage() {
         <div class="card-body" style="padding:14px 20px">
           <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;text-align:center">
             ${weeklyPlanning
-              .map(
-                (day) => `
+      .map(
+        (day) => `
                   <div>
                     <div style="display:flex;flex-direction:column;align-items:center;gap:3px;height:70px;justify-content:flex-end">
                       <div style="width:100%;background:${day.active ? "var(--brand)" : "var(--brand-light)"};border-radius:4px 4px 0 0;height:${day.height}"></div>
@@ -9868,16 +9105,16 @@ function renderDashboardPage() {
                     <div style="font-size:12px;font-weight:600;color:${day.active ? "var(--brand)" : "var(--text-primary)"}">${day.value}</div>
                   </div>
                 `,
-              )
-              .join("")}
+      )
+      .join("")}
           </div>
 
           <div style="border-top:1px solid var(--border-light);padding-top:14px;display:flex;flex-direction:column;gap:10px">
             <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Prochaines interventions</div>
 
             ${upcomingWork
-              .map(
-                (item) => `
+      .map(
+        (item) => `
                   <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--body-bg);border-radius:var(--radius-md)">
                     <div style="width:4px;height:36px;background:${item.accent};border-radius:4px;flex-shrink:0"></div>
                     <div style="flex:1">
@@ -9887,13 +9124,24 @@ function renderDashboardPage() {
                     <span class="priority-tag ${item.priorityClass}">${item.priorityLabel}</span>
                   </div>
                 `,
-              )
-              .join("")}
+      )
+      .join("")}
           </div>
         </div>
       </div>
     </div>
   `;
+  const typeSelect = document.getElementById("dashboardInterventionType");
+
+  if (typeSelect) {
+    typeSelect.value = selectedType;
+
+    typeSelect.addEventListener("change", function () {
+      localStorage.setItem("dashboardType", this.value);
+
+      renderDashboardPage();
+    });
+  }
 
   pageContentEl.querySelectorAll("[data-dashboard-route]").forEach((link) => {
     link.addEventListener("click", function (event) {
@@ -10004,21 +9252,21 @@ function normalizeStockRecord(record) {
     bin: String(record.bin || stockDefaultLocation.bin),
     locationLabel: String(
       record.locationLabel ||
-        buildStockLocationLabel({
-          warehouse: record.warehouse || stockDefaultLocation.warehouse,
-          aisle: record.aisle || stockDefaultLocation.aisle,
-          shelf: record.shelf || stockDefaultLocation.shelf,
-          bin: record.bin || stockDefaultLocation.bin,
-        }),
+      buildStockLocationLabel({
+        warehouse: record.warehouse || stockDefaultLocation.warehouse,
+        aisle: record.aisle || stockDefaultLocation.aisle,
+        shelf: record.shelf || stockDefaultLocation.shelf,
+        bin: record.bin || stockDefaultLocation.bin,
+      }),
     ),
     locationKey: String(
       record.locationKey ||
-        buildStockLocationLabel({
-          warehouse: record.warehouse || stockDefaultLocation.warehouse,
-          aisle: record.aisle || stockDefaultLocation.aisle,
-          shelf: record.shelf || stockDefaultLocation.shelf,
-          bin: record.bin || stockDefaultLocation.bin,
-        }),
+      buildStockLocationLabel({
+        warehouse: record.warehouse || stockDefaultLocation.warehouse,
+        aisle: record.aisle || stockDefaultLocation.aisle,
+        shelf: record.shelf || stockDefaultLocation.shelf,
+        bin: record.bin || stockDefaultLocation.bin,
+      }),
     ),
     currentQuantity: quantity,
     pmp,
@@ -10034,47 +9282,130 @@ function normalizeStockRecord(record) {
 }
 
 function getDefaultStockRecords() {
-  return getArticleRecords("articles").map((article, index) =>
-    normalizeStockRecord({
-      id: `stock-${article.id || index}`,
-      articleId: article.id,
-      currentQuantity: Number(article.quantity) || 0,
-      pmp: Number(article.price) || 0,
-      ...stockDefaultLocation,
-      locationLabel: buildStockLocationLabel(stockDefaultLocation),
-      locationKey: buildStockLocationLabel(stockDefaultLocation),
-      minStock: 15,
-      maxStock: 120,
-      safetyStock: 20,
-      replenishmentQty: 40,
-      observations: "",
+  return [];
+}
+
+function openStockLocationCreateModal() {
+  const directory = getStockDirectory();
+
+  const maxCode = Math.max(
+    0,
+    ...directory.locations.map((location) => {
+      const match = String(location.code || "").match(/MAG-(\d+)/);
+      return match ? Number(match[1]) : 0;
     }),
   );
+
+  const nextCode = `MAG-${String(maxCode + 1).padStart(3, "0")}`;
+  const bodyHtml = `
+    <form class="org-form" data-stock-location-form>
+      <div class="org-form-grid">
+
+       <div class="field-group">
+  <label>Code magasin</label>
+  <input
+    type="text"
+    name="code"
+    value="${nextCode}"
+    readonly
+  />
+</div>
+
+        <div class="field-group">
+          <label>Nom magasin</label>
+          <input type="text" name="name" required />
+        </div>
+
+        <div class="field-group field-group-wide">
+          <label>Description</label>
+          <textarea name="description" rows="3"></textarea>
+        </div>
+
+      </div>
+
+      <div class="org-modal-actions">
+        <button type="button" class="btn btn-outline" data-stock-close="true">
+          Annuler
+        </button>
+
+        <button type="submit" class="btn btn-primary">
+          Enregistrer
+        </button>
+      </div>
+    </form>
+  `;
+
+  renderStockModal(
+    "Nouveau magasin",
+    "Création d'un emplacement de stockage",
+    bodyHtml,
+  );
+
+  overlayRootEl
+    ?.querySelector("[data-stock-location-form]")
+    ?.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const formData = new FormData(this);
+
+      const directory = getStockDirectory();
+
+      directory.locations.push({
+        id: `LOC-${Date.now()}`,
+        code: nextCode,
+        name: String(formData.get("name") || "").trim(),
+        description: String(formData.get("description") || "").trim(),
+      });
+
+      saveStockDirectory(directory);
+
+      showStockToast("Magasin créé avec succès.");
+
+      if (overlayRootEl) overlayRootEl.innerHTML = "";
+
+      renderStockMovementCreateModal();
+    });
 }
 
 function getStockDirectory() {
   const fallback = {
     records: getDefaultStockRecords(),
     movements: [],
+    locations: [
+      {
+        id: "LOC-001",
+        code: "MAG-001",
+        name: "Magasin Principal",
+        description: "",
+      },
+    ],
   };
 
   try {
     const stored = window.localStorage.getItem(stockStorageKey);
-    if (!stored) return fallback;
+
+    if (!stored) {
+      return fallback;
+    }
 
     const parsed = JSON.parse(stored);
-    const storedRecords = Array.isArray(parsed.records)
-      ? parsed.records.map(normalizeStockRecord)
-      : [];
-    const storedMovements = Array.isArray(parsed.movements)
-      ? parsed.movements
-      : [];
 
     return {
-      records: storedRecords,
-      movements: storedMovements,
+      records: Array.isArray(parsed.records)
+        ? parsed.records.map(normalizeStockRecord)
+        : fallback.records,
+
+      movements: Array.isArray(parsed.movements)
+        ? parsed.movements
+        : fallback.movements,
+
+      locations:
+        Array.isArray(parsed.locations) && parsed.locations.length > 0
+          ? parsed.locations
+          : fallback.locations,
     };
   } catch (error) {
+    console.error("Erreur lecture stock :", error);
     return fallback;
   }
 }
@@ -10186,11 +9517,11 @@ function upsertStockRecord(articleId, locationData, patch = {}) {
     existingIndex >= 0
       ? directory.records[existingIndex]
       : normalizeStockRecord({
-          articleId,
-          ...stockDefaultLocation,
-          locationLabel,
-          locationKey,
-        });
+        articleId,
+        ...stockDefaultLocation,
+        locationLabel,
+        locationKey,
+      });
   const nextRecord = normalizeStockRecord({
     ...baseRecord,
     ...patch,
@@ -10420,37 +9751,7 @@ function getStockInventories() {
     // ignore storage errors
   }
 
-  return [
-    {
-      id: "INV-001",
-      inventoryId: "INV-001",
-      status: "Ouvert",
-      type: "Général",
-      owner: "Nadia Rami",
-      observations: "Inventaire initial.",
-      createdAt: new Date().toISOString(),
-      closedAt: "",
-      openCount: 0,
-      rows: [
-        {
-          articleId: getArticleRecords("articles")[0]?.id || "",
-          article: "Huile minérale 5L",
-          location: "Magasin central / A4",
-          theoretical: 48,
-          counted: 46,
-          observations: "Deux bidons déplacés temporairement",
-        },
-        {
-          articleId: getArticleRecords("articles")[1]?.id || "",
-          article: "Roulement 6204",
-          location: "Atelier nord / B2",
-          theoretical: 40,
-          counted: 40,
-          observations: "Concordance parfaite",
-        },
-      ],
-    },
-  ];
+  return [];
 }
 
 function saveStockInventories(inventories) {
@@ -10765,7 +10066,12 @@ function getInventoryRows(form) {
 }
 
 function refreshInventoryRow(row) {
-  const theoretical = Number(row.dataset.theoretical || 0) || 0;
+  const theoreticalInput = row.querySelector(
+    "[data-stock-inventory-theoretical]"
+  );
+
+  const theoretical =
+    Number(theoreticalInput?.value || 0) || 0;
   const countedInput = row.querySelector("[data-stock-inventory-counted]");
   const discrepancyCell = row.querySelector(
     "[data-stock-inventory-discrepancy]",
@@ -10774,8 +10080,13 @@ function refreshInventoryRow(row) {
   const observationsInput = row.querySelector(
     "[data-stock-inventory-observations]",
   );
-  const counted = Number(countedInput?.value || 0) || 0;
+  const counted =
+    Number(
+      row.querySelector("[data-stock-inventory-counted]")?.value || 0
+    ) || 0;
+
   const discrepancy = counted - theoretical;
+
 
   if (discrepancyCell) {
     discrepancyCell.textContent =
@@ -10789,9 +10100,22 @@ function refreshInventoryRow(row) {
   }
 
   if (statusBadge) {
-    const status = discrepancy === 0 ? "Validé" : "À vérifier";
-    statusBadge.textContent = status;
-    statusBadge.className = `status-badge ${discrepancy === 0 ? "badge-success" : "badge-warning"}`;
+    let badgeClass = "";
+    let badgeLabel = "";
+
+    if (discrepancy === 0) {
+      badgeClass = "badge-success";
+      badgeLabel = "Conforme";
+    } else if (discrepancy > 0) {
+      badgeClass = "badge-info";
+      badgeLabel = "Surstock";
+    } else {
+      badgeClass = "badge-danger";
+      badgeLabel = "Manquant";
+    }
+
+    statusBadge.textContent = badgeLabel;
+    statusBadge.className = `status-badge ${badgeClass}`;
   }
 
   if (
@@ -10806,6 +10130,7 @@ function refreshInventoryRow(row) {
 }
 
 function refreshInventorySummary(form) {
+  console.count("refreshInventorySummary");
   const rows = getInventoryRows(form);
   const discrepancies = rows.map((row) => refreshInventoryRow(row));
   const openCount = discrepancies.filter((value) => value !== 0).length;
@@ -10872,14 +10197,14 @@ function buildStockTabs(activeSubpageKey) {
   return `
     <div class="org-tabs stock-tabs" role="tablist" aria-label="Sous-pages stock">
       ${Object.entries(stockSubpages.tabs)
-        .map(
-          ([key, tab]) => `
+      .map(
+        ([key, tab]) => `
             <button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-stock-subpage="${key}">
               ${tab.label}
             </button>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -11043,17 +10368,66 @@ function renderStockModal(title, subtitle, bodyHtml) {
       });
     });
 }
+function buildInventoryArticleOptions(selectedId = "") {
+  return getArticleRecords("articles")
+    .map(
+      (article) => `
+        <option value="${article.id}"
+          ${article.id === selectedId ? "selected" : ""}>
+          ${article.code} - ${article.name}
+        </option>
+      `,
+    )
+    .join("");
+}
+
+function buildInventoryLocationOptions(selectedLocation = "") {
+  const directory = getStockDirectory();
+
+  return (directory.locations || [])
+    .map(
+      (location) => `
+        <option value="${location.id}"
+          ${location.id === selectedLocation ? "selected" : ""}>
+          ${location.code} - ${location.name}
+        </option>
+      `,
+    )
+    .join("");
+}
 
 function buildInventoryRowMarkup(row) {
+  const selectedArticleId = row.articleId || row.article || "";
   const discrepancy = row.counted - row.theoretical;
-  const badgeClass = discrepancy === 0 ? "badge-success" : "badge-warning";
-  const badgeLabel = discrepancy === 0 ? "Validé" : "À vérifier";
+  let badgeClass = "";
+  let badgeLabel = "";
+
+  if (discrepancy === 0) {
+    badgeClass = "badge-success";
+    badgeLabel = "Conforme";
+  } else if (discrepancy > 0) {
+    badgeClass = "badge-info";
+    badgeLabel = "Surstock";
+  } else {
+    badgeClass = "badge-danger";
+    badgeLabel = "Manquant";
+  }
   const discrepancyLabel =
     discrepancy > 0 ? `+${discrepancy}` : String(discrepancy);
   return `
-    <tr data-stock-inventory-row data-stock-article-id="${escapeHtml(row.articleId)}" data-location-label="${escapeHtml(row.location)}" data-theoretical="${row.theoretical}">
-      <td><input type="text" value="${escapeHtml(row.article)}" class="stock-inline-input" data-stock-inventory-article /></td>
-      <td><input type="text" value="${escapeHtml(row.location)}" class="stock-inline-input" data-stock-inventory-location /></td>
+    <tr data-stock-inventory-row data-stock-article-id="${escapeHtml(selectedArticleId)}" data-location-label="${escapeHtml(row.location)}" data-theoretical="${row.theoretical}">
+      <td><select
+  class="stock-inline-input"
+  data-stock-inventory-article
+>
+  ${buildInventoryArticleOptions(selectedArticleId)}
+</select></td>
+      <td><select
+  class="stock-inline-input"
+  data-stock-inventory-location
+>
+  ${buildInventoryLocationOptions(row.location)}
+</select></td>
       <td><input type="number" value="${row.theoretical}" class="stock-inline-input" data-stock-inventory-theoretical /></td>
       <td><input type="number" value="${row.counted}" class="stock-inline-input" data-stock-inventory-counted /></td>
       <td class="${discrepancy === 0 ? "muted" : discrepancy > 0 ? "stock-discrepancy-positive" : "stock-discrepancy-negative"}" data-stock-inventory-discrepancy>${discrepancyLabel}</td>
@@ -11071,26 +10445,27 @@ function buildInventoryRowMarkup(row) {
 }
 
 function buildStockInventoryModalBody(inventoryState) {
+  const isEditing = Boolean(inventoryState.isEditing);
   const inventoryRows =
     Array.isArray(inventoryState.rows) && inventoryState.rows.length
       ? inventoryState.rows
       : [
-          {
-            articleId: getArticleRecords("articles")[0]?.id || "",
-            article: "",
-            location: "",
-            theoretical: 0,
-            counted: 0,
-            observations: "",
-          },
-        ];
+        {
+          articleId: getArticleRecords("articles")[0]?.id || "",
+          article: "",
+          location: "",
+          theoretical: 0,
+          counted: 0,
+          observations: "",
+        },
+      ];
 
   return `
     <form class="org-form stock-form" data-stock-inventory-form>
       <div class="org-form-grid">
         <div class="field-group">
           <label>Numéro</label>
-          <input type="text" name="inventoryId" value="${escapeHtml(inventoryState.inventoryId || `INV-${Date.now()}`)}" required />
+          <input type="text" name="inventoryId" value="${escapeHtml(inventoryState.inventoryId || `INV-${Date.now()}`)}" ${isEditing ? "readonly" : ""} required />
         </div>
         <div class="field-group">
           <label>Date inventaire</label>
@@ -11112,7 +10487,7 @@ function buildStockInventoryModalBody(inventoryState) {
       <div class="stock-form-actions">
         <button class="btn btn-primary" type="submit" data-stock-submit="inventory">
           <i class="fa-solid fa-check"></i>
-          <span>Créer l'inventaire</span>
+          <span>${isEditing ? "Enregistrer les modifications" : "Créer l'inventaire"}</span>
         </button>
       </div>
 
@@ -11153,11 +10528,21 @@ function buildStockInventoryModalBody(inventoryState) {
   `;
 }
 
-function openStockInventoryModal() {
-  const inventoryState = getStockInventoryTemplate();
+function openStockInventoryModal(inventoryId = "") {
+  const existingInventory = inventoryId
+    ? getStockInventoryById(inventoryId)
+    : null;
+  if (inventoryId && !existingInventory) return;
+  if (existingInventory?.status === "Clôturé") return;
+
+  const inventoryState = existingInventory
+    ? { ...existingInventory, isEditing: true }
+    : getStockInventoryTemplate();
   renderStockModal(
-    "Créer un inventaire",
-    "Saisissez un nouvel inventaire depuis une fenêtre modale.",
+    existingInventory ? `Modifier ${existingInventory.id}` : "Créer un inventaire",
+    existingInventory
+      ? "Mettez à jour les informations et la feuille de comptage."
+      : "Saisissez un nouvel inventaire depuis une fenêtre modale.",
     buildStockInventoryModalBody(inventoryState),
   );
 
@@ -11262,7 +10647,7 @@ function createStockInventoryFromForm(form) {
       row.querySelector("[data-stock-inventory-observations]")?.value || "",
     );
     return {
-      articleId: String(row.dataset.stockArticleId || ""),
+      articleId: article,
       article,
       location,
       theoretical,
@@ -11278,15 +10663,23 @@ function createStockInventoryFromForm(form) {
   const existingIndex = inventories.findIndex(
     (item) => item.id === inventoryId,
   );
+  const existingInventory =
+    existingIndex >= 0 ? inventories[existingIndex] : null;
+  const inventoryDate = String(
+    form.querySelector("[name='inventoryDate']")?.value || "",
+  );
   const inventoryRecord = {
+    ...existingInventory,
     id: inventoryId,
     inventoryId,
-    status: "Ouvert",
+    status: existingInventory?.status || "Ouvert",
     type: inventoryType,
     owner: inventoryOwner,
     observations,
-    createdAt: new Date().toISOString(),
-    closedAt: "",
+    createdAt: inventoryDate
+      ? `${inventoryDate}T00:00:00.000Z`
+      : existingInventory?.createdAt || new Date().toISOString(),
+    closedAt: existingInventory?.closedAt || "",
     openCount,
     rows,
   };
@@ -11320,10 +10713,41 @@ function closeStockInventoryById(inventoryId) {
   renderStockPage(getCurrentStockSubpage());
 }
 
+function deleteStockInventoryById(inventoryId) {
+  const inventory = getStockInventoryById(inventoryId);
+  if (!inventory) return;
+
+  const confirmed = window.confirm(
+    `Supprimer définitivement l'inventaire ${inventory.id} ?`,
+  );
+  if (!confirmed) return;
+
+  const inventories = getStockInventories().filter(
+    (item) => item.id !== inventoryId,
+  );
+  saveStockInventories(inventories);
+
+  if (getStockSelectedInventoryId() === inventoryId) {
+    saveStockSelectedInventoryId(inventories[0]?.id || "");
+  }
+
+  renderStockPage(getCurrentStockSubpage());
+}
+
 function openStockRecordDetails(recordKey) {
-  if (!record) return;
+  const directory = getStockDirectory();
+
+  const record = directory.records.find(
+    (item) => getStockRecordKey(item) === recordKey,
+  );
+
+  if (!record) {
+    showToast?.("Fiche stock introuvable");
+    return;
+  }
 
   const article = getArticleRecord("articles", record.articleId);
+
   const totalValue =
     (Number(record.currentQuantity) || 0) * (Number(record.pmp) || 0);
   const bodyHtml = `
@@ -11730,20 +11154,96 @@ function renderStockMovementList(type, movements) {
 
 function renderStockMovementDetails(movement) {
   const article = getArticleRecord("articles", movement.articleId);
+
+  const directory = getStockDirectory();
+
+  const sourceLocation = directory.locations?.find(
+    (location) => location.id === movement.source,
+  );
+
+  const destinationLocation = directory.locations?.find(
+    (location) => location.id === movement.destination,
+  );
+
   const bodyHtml = `
     <div class="org-detail-list">
-      <div class="org-detail-item"><span>Référence</span><strong>${escapeHtml(movement.id)}</strong></div>
-      <div class="org-detail-item"><span>Article</span><strong>${escapeHtml(article ? `${article.code} — ${article.name}` : movement.articleId || "-")}</strong></div>
-      <div class="org-detail-item"><span>Type</span><strong>${escapeHtml(getStockMovementTypeLabel(movement.type))}</strong></div>
-      <div class="org-detail-item"><span>Quantité</span><strong>${escapeHtml(movement.quantity || 0)}</strong></div>
-      <div class="org-detail-item"><span>Document lié</span><strong>${escapeHtml(movement.linkedDocument || "-")}</strong></div>
-      <div class="org-detail-item"><span>Emplacement</span><strong>${escapeHtml(movement.location || movement.source || movement.destination || "-")}</strong></div>
-      <div class="org-detail-item"><span>Utilisateur</span><strong>${escapeHtml(movement.user || "Utilisateur connecté")}</strong></div>
-      <div class="org-detail-item"><span>Date</span><strong>${formatStockDateTime(parseStockDateValue(movement.createdAt) || new Date(movement.createdAt))}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Observations</span><strong>${escapeHtml(movement.observations || "Aucune observation")}</strong></div>
+
+      <div class="org-detail-item">
+        <span>Référence</span>
+        <strong>${escapeHtml(movement.id || "-")}</strong>
+      </div>
+
+      <div class="org-detail-item">
+        <span>Article</span>
+        <strong>
+          ${escapeHtml(
+    article
+      ? `${article.code} — ${article.name}`
+      : movement.articleId || "-",
+  )}
+        </strong>
+      </div>
+
+      <div class="org-detail-item">
+        <span>Type</span>
+        <strong>
+          ${escapeHtml(getStockMovementTypeLabel(movement.type))}
+        </strong>
+      </div>
+
+      <div class="org-detail-item">
+        <span>Quantité</span>
+        <strong>
+          ${escapeHtml(movement.quantity || 0)}
+        </strong>
+      </div>
+
+      <div class="org-detail-item">
+        <span>Magasin source</span>
+        <strong>
+          ${escapeHtml(
+    sourceLocation
+      ? `${sourceLocation.code} - ${sourceLocation.name}`
+      : "-",
+  )}
+        </strong>
+      </div>
+
+      <div class="org-detail-item">
+        <span>Magasin destination</span>
+        <strong>
+          ${escapeHtml(
+    destinationLocation
+      ? `${destinationLocation.code} - ${destinationLocation.name}`
+      : "-",
+  )}
+        </strong>
+      </div>
+
+      <div class="org-detail-item">
+        <span>Pièce jointe</span>
+        <strong>
+          ${escapeHtml(movement.attachmentName || "Aucune pièce jointe")}
+        </strong>
+      </div>
+
+      <div class="org-detail-item org-detail-item--full">
+        <span>Observations</span>
+        <strong>
+          ${escapeHtml(movement.observations || "Aucune observation")}
+        </strong>
+      </div>
+
     </div>
+
     <div class="org-modal-actions">
-      <button class="btn btn-outline" type="button" data-stock-close="true">Fermer</button>
+      <button
+        class="btn btn-outline"
+        type="button"
+        data-stock-close="true"
+      >
+        Fermer
+      </button>
     </div>
   `;
 
@@ -11752,6 +11252,7 @@ function renderStockMovementDetails(movement) {
     "Détails du mouvement stock.",
     bodyHtml,
   );
+  console.log("movement =", movement);
 }
 
 function renderStockMovementEdit(movement) {
@@ -11861,10 +11362,7 @@ function renderStockMovementCreateModal() {
           <label>Code mouvement</label>
           <input type="text" name="id" value="${escapeHtml(defaultId)}" readonly />
         </div>
-        <div class="field-group">
-          <label>Date et heure</label>
-          <input type="text" name="createdAt" value="${escapeHtml(nowLabel)}" readonly />
-        </div>
+        
         <div class="field-group field-group-wide">
           <label>Type de mouvement</label>
           <select name="type" data-stock-create-movement-type required>
@@ -11885,22 +11383,54 @@ function renderStockMovementCreateModal() {
           <label>Prix unitaire</label>
           <input type="number" name="unitPrice" min="0" step="0.01" />
         </div>
-        <div class="field-group field-group-wide" data-stock-entry-or-exit="true" hidden>
-          <label>Document lié</label>
-          <input type="text" name="linkedDocument" placeholder="" />
-        </div>
-        <div class="field-group field-group-wide" data-stock-source-location="true" hidden>
-          <label>Emplacement source</label>
-          <input type="text" name="source" value="${buildStockLocationLabel(stockDefaultLocation)}" />
-        </div>
-        <div class="field-group field-group-wide" data-stock-destination-location="true" hidden>
-          <label>Emplacement destination</label>
-          <input type="text" name="destination" value="${buildStockLocationLabel(stockDefaultLocation)}" />
-        </div>
-        <div class="field-group field-group-wide">
-          <label>Effectué par</label>
-          <input type="text" name="user" value="${escapeHtml(connectedUserName)}" readonly />
-        </div>
+       <div class="field-group field-group-wide">
+  <label>Pièce jointe</label>
+  <input
+    type="file"
+    name="attachment"
+    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+  />
+</div>
+        
+<div class="field-group">
+  <label>Magasin source</label>
+
+  <div class="stock-location-picker">
+    <select name="source">
+      ${buildStockLocationOptions()}
+    </select>
+
+    <button
+      type="button"
+      class="stock-location-add-btn"
+      data-stock-create-location="true"
+      title="Créer un magasin"
+    >
+      <i class="fa-solid fa-plus"></i>
+    </button>
+  </div>
+</div>
+
+<div class="field-group">
+  <label>Magasin destination</label>
+
+  <div class="stock-location-picker">
+    <select name="destination">
+      ${buildStockLocationOptions()}
+    </select>
+
+    <button
+      type="button"
+      class="stock-location-add-btn"
+      data-stock-create-location="true"
+      title="Créer un magasin"
+    >
+      <i class="fa-solid fa-plus"></i>
+    </button>
+  </div>
+</div>
+       
+        
         <div class="field-group field-group-wide">
           <label>Observations</label>
           <textarea name="observations" rows="4"></textarea>
@@ -11969,8 +11499,31 @@ function renderStockMovementCreateModal() {
     }
   };
 
+  function buildStockLocationOptions(selected = "") {
+    const directory = getStockDirectory();
+
+    return (directory.locations || [])
+      .map(
+        (location) => `
+        <option value="${location.id}"
+          ${location.id === selected ? "selected" : ""}>
+          ${location.code} - ${location.name}
+        </option>
+      `,
+      )
+      .join("");
+  }
+
   typeSelect?.addEventListener("change", updateVisibility);
   updateVisibility();
+
+  overlayRootEl
+    ?.querySelectorAll("[data-stock-create-location='true']")
+    .forEach((button) => {
+      button.addEventListener("click", function () {
+        openStockLocationCreateModal();
+      });
+    });
 
   overlayRootEl
     ?.querySelector("[data-stock-movement-create-form]")
@@ -11987,17 +11540,24 @@ function renderStockMovementCreateModal() {
       if (quantity <= 0) return;
 
       const createdAt = new Date().toISOString();
+      const attachment = formData.get("attachment");
       const movement = {
         id: String(formData.get("id") || `mov-${Date.now()}`),
         type,
         articleId,
         quantity,
-        user: String(formData.get("user") || "Utilisateur connecté").trim(),
+
         observations: String(formData.get("observations") || "").trim(),
+
+        attachmentName: attachment && attachment.name ? attachment.name : "",
+
         createdAt,
       };
 
       if (type === "entry") {
+        const source =
+          String(formData.get("source") || "").trim() ||
+          buildStockLocationLabel(stockDefaultLocation);
         const unitPrice = Number(formData.get("unitPrice") || 0);
         const destination =
           String(formData.get("destination") || "").trim() ||
@@ -12026,15 +11586,17 @@ function renderStockMovementCreateModal() {
         syncArticleQuantity(articleId, aggregate.currentQuantity + quantity);
 
         movement.unitPrice = unitPrice;
-        movement.linkedDocument = String(
-          formData.get("linkedDocument") || "BC",
-        ).trim();
+        movement.source = source;
         movement.location = destination;
+        movement.destination = destination;
         movement.pmp = nextPmp;
         movement.resultingQuantity = aggregate.currentQuantity + quantity;
         movement.resultingValue =
           (aggregate.currentQuantity + quantity) * nextPmp;
       } else if (type === "exit") {
+        const destination =
+          String(formData.get("destination") || "").trim() ||
+          buildStockLocationLabel(stockDefaultLocation);
         const source =
           String(formData.get("source") || "").trim() ||
           buildStockLocationLabel(stockDefaultLocation);
@@ -12064,11 +11626,8 @@ function renderStockMovementCreateModal() {
           });
         }
         syncArticleQuantity(articleId, aggregate.currentQuantity - quantity);
-
-        movement.linkedDocument = String(
-          formData.get("linkedDocument") || "BT",
-        ).trim();
-        movement.location = source;
+        movement.source = source;
+        movement.destination = destination;
         movement.pmp = aggregate.pmp;
         movement.resultingQuantity = aggregate.currentQuantity - quantity;
         movement.resultingValue =
@@ -12157,6 +11716,103 @@ function renderStockInventoryRowDetails(row) {
         <div class="org-detail-item"><span>Comptée</span><strong>${escapeHtml(counted)}</strong></div>
         <div class="org-detail-item"><span>Écart</span><strong>${discrepancy > 0 ? `+${discrepancy}` : discrepancy}</strong></div>
         <div class="org-detail-item"><span>Statut</span><strong>${discrepancy === 0 ? "Validé" : "À vérifier"}</strong></div>
+      </div>
+      <div class="org-modal-actions">
+        <button class="btn btn-outline" type="button" data-stock-close="true">Fermer</button>
+      </div>
+    `,
+  );
+}
+
+function openStockInventoryDetails(inventoryId) {
+  const inventory = getStockInventoryById(inventoryId);
+  if (!inventory) return;
+
+  const rows = Array.isArray(inventory.rows) ? inventory.rows : [];
+  const discrepancies = rows.map(
+    (row) => (Number(row.counted) || 0) - (Number(row.theoretical) || 0),
+  );
+  const openCount = discrepancies.filter((value) => value !== 0).length;
+  const positiveCount = discrepancies.filter((value) => value > 0).length;
+  const negativeCount = discrepancies.filter((value) => value < 0).length;
+  const locations = getStockDirectory().locations || [];
+
+  const rowsMarkup = rows.length
+    ? rows
+        .map((row) => {
+          const article = getArticleRecord("articles", row.articleId || "");
+          const location = locations.find(
+            (item) => item.id === row.location || item.code === row.location,
+          );
+          const theoretical = Number(row.theoretical) || 0;
+          const counted = Number(row.counted) || 0;
+          const discrepancy = counted - theoretical;
+          const statusLabel =
+            discrepancy === 0
+              ? "Conforme"
+              : discrepancy > 0
+                ? "Surstock"
+                : "Manquant";
+          const statusClass =
+            discrepancy === 0
+              ? "badge-success"
+              : discrepancy > 0
+                ? "badge-info"
+                : "badge-danger";
+
+          return `
+            <tr>
+              <td>${escapeHtml(article ? `${article.code} — ${article.name}` : row.article || row.articleId || "-")}</td>
+              <td>${escapeHtml(location ? `${location.code} — ${location.name}` : row.location || "-")}</td>
+              <td>${formatStockNumber(theoretical)}</td>
+              <td>${formatStockNumber(counted)}</td>
+              <td>${discrepancy > 0 ? `+${formatStockNumber(discrepancy)}` : formatStockNumber(discrepancy)}</td>
+              <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+              <td>${escapeHtml(row.observations || "-")}</td>
+            </tr>
+          `;
+        })
+        .join("")
+    : `
+        <tr>
+          <td colspan="7" class="muted">Aucune ligne de comptage.</td>
+        </tr>
+      `;
+
+  saveStockSelectedInventoryId(inventory.id);
+  renderStockModal(
+    `Inventaire ${escapeHtml(inventory.id)}`,
+    "Détails et résultats de l'inventaire sélectionné.",
+    `
+      <div class="stock-inventory-details-grid">
+        <div class="stock-summary-item"><span>Type</span><strong>${escapeHtml(inventory.type || "-")}</strong></div>
+        <div class="stock-summary-item"><span>Responsable</span><strong>${escapeHtml(inventory.owner || "-")}</strong></div>
+        <div class="stock-summary-item"><span>Statut</span><strong>${escapeHtml(inventory.status || "-")}</strong></div>
+        <div class="stock-summary-item"><span>Créé le</span><strong>${inventory.createdAt ? formatStockDateTime(new Date(inventory.createdAt)) : "-"}</strong></div>
+        <div class="stock-summary-item"><span>Lignes</span><strong>${rows.length}</strong></div>
+        <div class="stock-summary-item"><span>Écarts ouverts</span><strong>${openCount}</strong></div>
+        <div class="stock-summary-item"><span>Surstocks</span><strong>${positiveCount}</strong></div>
+        <div class="stock-summary-item"><span>Manquants</span><strong>${negativeCount}</strong></div>
+      </div>
+      <div class="stock-modal-notes">
+        <strong>Observations</strong>
+        <p>${escapeHtml(inventory.observations || "Aucune observation.")}</p>
+      </div>
+      <div class="table-wrap stock-count-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Article</th>
+              <th>Emplacement</th>
+              <th>Théorique</th>
+              <th>Comptée</th>
+              <th>Écart</th>
+              <th>Statut</th>
+              <th>Observations</th>
+            </tr>
+          </thead>
+          <tbody>${rowsMarkup}</tbody>
+        </table>
       </div>
       <div class="org-modal-actions">
         <button class="btn btn-outline" type="button" data-stock-close="true">Fermer</button>
@@ -12314,7 +11970,7 @@ function buildStockInventoryContent() {
     )
     .join("");
 
-  const selectedRows = selectedInventory.rows || [];
+  const selectedRows = selectedInventory ? selectedInventory.rows || [] : [];
   const discrepancies = selectedRows.map(
     (row) => row.counted - row.theoretical,
   );
@@ -12334,9 +11990,8 @@ function buildStockInventoryContent() {
             </button>
           </div>
           <div class="card-body">
-            ${
-              inventories.length
-                ? `<div class="table-wrap stock-inventory-list">
+            ${inventories.length
+      ? `<div class="table-wrap stock-inventory-list">
                 <table>
                   <thead>
                     <tr>
@@ -12351,14 +12006,14 @@ function buildStockInventoryContent() {
                   </thead>
                   <tbody>
                     ${inventories
-                      .map((inventory) => {
-                        const createdAt = inventory.createdAt
-                          ? formatStockDateTime(new Date(inventory.createdAt))
-                          : "-";
-                        const closedAt = inventory.closedAt
-                          ? formatStockDateTime(new Date(inventory.closedAt))
-                          : "-";
-                        return `
+        .map((inventory) => {
+          const createdAt = inventory.createdAt
+            ? formatStockDateTime(new Date(inventory.createdAt))
+            : "-";
+          const closedAt = inventory.closedAt
+            ? formatStockDateTime(new Date(inventory.closedAt))
+            : "-";
+          return `
                           <tr>
                             <td>${escapeHtml(inventory.id)}</td>
                             <td>${escapeHtml(inventory.type)}</td>
@@ -12367,22 +12022,34 @@ function buildStockInventoryContent() {
                             <td>${createdAt}</td>
                             <td>${closedAt}</td>
                             <td>
-                              <button class="btn btn-outline" type="button" data-stock-inventory-action="select" data-stock-inventory-id="${escapeHtml(inventory.id)}">Voir</button>
-                              ${
-                                inventory.status !== "Clôturé"
-                                  ? `<button class="btn btn-primary" type="button" data-stock-inventory-action="close" data-stock-inventory-id="${escapeHtml(inventory.id)}">Clôturer</button>`
-                                  : ""
-                              }
+                              <div class="stock-inventory-actions">
+                                <button class="org-icon-btn" type="button" data-stock-inventory-action="details" data-stock-inventory-id="${escapeHtml(inventory.id)}" title="Voir les détails" aria-label="Voir les détails">
+                                  <i class="fa-regular fa-eye"></i>
+                                </button>
+                                ${inventory.status !== "Clôturé"
+              ? `<button class="org-icon-btn" type="button" data-stock-inventory-action="edit-inventory" data-stock-inventory-id="${escapeHtml(inventory.id)}" title="Modifier" aria-label="Modifier">
+                                  <i class="fa-regular fa-pen-to-square"></i>
+                                </button>`
+              : ""
+            }
+                                <button class="org-icon-btn danger" type="button" data-stock-inventory-action="delete-inventory" data-stock-inventory-id="${escapeHtml(inventory.id)}" title="Supprimer" aria-label="Supprimer">
+                                  <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                              ${inventory.status !== "Clôturé"
+              ? `<button class="btn btn-primary" type="button" data-stock-inventory-action="close" data-stock-inventory-id="${escapeHtml(inventory.id)}">Clôturer</button>`
+              : ""
+            }
+                              </div>
                             </td>
                           </tr>
                         `;
-                      })
-                      .join("")}
+        })
+        .join("")}
                   </tbody>
                 </table>
               </div>`
-                : `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-folder-open"></i></div><h3>Aucun inventaire</h3><p>Créez un inventaire pour commencer la saisie.</p></div>`
-            }
+      : `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-folder-open"></i></div><h3>Aucun inventaire</h3><p>Créez un inventaire pour commencer la saisie.</p></div>`
+    }
           </div>
         </div>
       </div>
@@ -12399,10 +12066,9 @@ function buildStockInventoryContent() {
             </div>
           </div>
           <div class="card-body">
-            ${
-              selectedInventory
-                ? `
-              <div class="stock-summary-grid">
+            ${selectedInventory
+      ? `
+              <div class="stock-inventory-details-grid">
                 <div class="stock-summary-item">
                   <span>Inventaire</span>
                   <strong>${escapeHtml(selectedInventory.id)}</strong>
@@ -12437,11 +12103,9 @@ function buildStockInventoryContent() {
                 </div>
               </div>
             `
-                : `<p>Aucun inventaire sélectionné.</p>`
-            }
-            <div class="stock-note">
-              Utilisez la liste ci-dessus pour afficher les détails et clôturer un inventaire.
-            </div>
+      : `<p>Aucun inventaire sélectionné.</p>`
+    }
+            
           </div>
         </div>
       </div>
@@ -12533,18 +12197,17 @@ function buildStockHistoryContent() {
                 </tr>
               </thead>
               <tbody>
-                ${
-                  historyRows.length
-                    ? historyRows
-                        .map((row) => {
-                          const article = getArticleRecord(
-                            "articles",
-                            row.articleId,
-                          );
-                          const ref = `${getStockMovementTypeLabel(row.type).slice(0, 3).toUpperCase()}-${String(
-                            String(row.id || "").slice(-3),
-                          )}`;
-                          return `
+                ${historyRows.length
+      ? historyRows
+        .map((row) => {
+          const article = getArticleRecord(
+            "articles",
+            row.articleId,
+          );
+          const ref = `${getStockMovementTypeLabel(row.type).slice(0, 3).toUpperCase()}-${String(
+            String(row.id || "").slice(-3),
+          )}`;
+          return `
                           <tr>
                             <td>${ref}</td>
                             <td>${article ? `${article.code} — ${article.name}` : "Mouvement stock"}</td>
@@ -12553,22 +12216,21 @@ function buildStockHistoryContent() {
                             <td>${formatStockDateTime(parseStockDateValue(row.createdAt) || new Date(row.createdAt))}</td>
                             <td class="muted">${escapeHtml(row.linkedDocument || row.destination || row.source || "—")}</td>
                             <td>
-                              ${
-                                row.type === "inventory" || row.isReversal
-                                  ? `<span class="muted">—</span>`
-                                  : `<button class="btn btn-outline stock-history-action" type="button" data-stock-cancel-id="${row.id}">Annuler</button>`
-                              }
+                              ${row.type === "inventory" || row.isReversal
+              ? `<span class="muted">—</span>`
+              : `<button class="btn btn-outline stock-history-action" type="button" data-stock-cancel-id="${row.id}">Annuler</button>`
+            }
                             </td>
                           </tr>
                         `;
-                        })
-                        .join("")
-                    : `
+        })
+        .join("")
+      : `
                     <tr>
                       <td colspan="7" class="muted">Aucun mouvement ne correspond aux filtres actuels.</td>
                     </tr>
                   `
-                }
+    }
               </tbody>
             </table>
           </div>
@@ -12626,8 +12288,8 @@ function attachStockActionHandlers() {
 function getStockArticleFromForm(form) {
   return String(
     form.querySelector("[data-stock-article-select]")?.value ||
-      form.querySelector("select[name='articleId']")?.value ||
-      "",
+    form.querySelector("select[name='articleId']")?.value ||
+    "",
   );
 }
 
@@ -12645,7 +12307,7 @@ function loadPlanificationState() {
           planificationStorageKey,
           JSON.stringify(seedState),
         );
-      } catch (error) {}
+      } catch (error) { }
       return seedState;
     }
 
@@ -12676,7 +12338,7 @@ function loadPlanificationState() {
 function savePlanificationState(state) {
   try {
     window.localStorage.setItem(planificationStorageKey, JSON.stringify(state));
-  } catch (error) {}
+  } catch (error) { }
 }
 
 function buildPlanificationCode(prefix, items) {
@@ -12733,12 +12395,12 @@ function buildPlanificationTabs(activeSubpageKey) {
   return `
     <div class="org-tabs" role="tablist" aria-label="Sous-pages planification">
       ${Object.entries(sectionSubpages.planification.tabs)
-        .map(
-          ([key, tab]) => `
+      .map(
+        ([key, tab]) => `
             <button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-plan-subpage="${key}">${tab.label}</button>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -12776,7 +12438,7 @@ function renderPlanificationActionButtons(activeSubpageKey) {
       activeSubpageKey === "compteurs"
         ? pageContentEl?.querySelector("[data-plan-reading-form]")
         : pageContentEl?.querySelector(".planning-architecture-card") ||
-          pageContentEl;
+        pageContentEl;
     if (target && typeof target.scrollIntoView === "function") {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -12927,15 +12589,15 @@ function renderPlanificationCalendarPage(state, activeSubpageKey) {
     <div class="planning-calendar-toolbar">
       <div class="planning-view-switches">
         ${[
-          ["mensuelle", "Mensuelle"],
-          ["hebdomadaire", "Hebdomadaire"],
-          ["liste", "Liste"],
-        ]
-          .map(
-            ([key, label]) =>
-              `<button class="org-tab ${key === viewKey ? "active" : ""}" type="button" data-plan-view="${key}">${label}</button>`,
-          )
-          .join("")}
+      ["mensuelle", "Mensuelle"],
+      ["hebdomadaire", "Hebdomadaire"],
+      ["liste", "Liste"],
+    ]
+      .map(
+        ([key, label]) =>
+          `<button class="org-tab ${key === viewKey ? "active" : ""}" type="button" data-plan-view="${key}">${label}</button>`,
+      )
+      .join("")}
       </div>
       <div class="org-section-pills">
         <span class="status-badge badge-gray">Par équipement</span>
@@ -12948,11 +12610,10 @@ function renderPlanificationCalendarPage(state, activeSubpageKey) {
       <div class="card">
         <div class="card-head"><div class="card-title"><i class="fa-solid fa-calendar-days"></i> OT visibles sur la vue ${viewKey}</div><span class="status-badge badge-info">${items.length} éléments</span></div>
         <div class="card-body">
-          ${
-            items.length
-              ? items
-                  .map(
-                    (item) => `
+          ${items.length
+      ? items
+        .map(
+          (item) => `
             <div class="org-list-item planning-calendar-item">
               <div>
                 <div class="intervention-history-title"><strong>${escapeHtml(item.ref)}</strong> · ${escapeHtml(item.title)}</div>
@@ -12965,10 +12626,10 @@ function renderPlanificationCalendarPage(state, activeSubpageKey) {
                 <span class="status-badge badge-gray">${escapeHtml(item.sourceType)} · ${escapeHtml(item.sourceRef)}</span>
               </div>
             </div>`,
-                  )
-                  .join("")
-              : `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-calendar-xmark"></i></div><h3>Aucune intervention visible</h3><p>La vue courante ne contient pas d'OT planifiés.</p><small>Basculer sur une autre vue ou élargir les filtres.</small></div>`
-          }
+        )
+        .join("")
+      : `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-calendar-xmark"></i></div><h3>Aucune intervention visible</h3><p>La vue courante ne contient pas d'OT planifiés.</p><small>Basculer sur une autre vue ou élargir les filtres.</small></div>`
+    }
         </div>
       </div>
       <div class="planning-side-column">
@@ -13030,8 +12691,8 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
         <div class="card-head"><div class="card-title"><i class="fa-solid fa-gauge-high"></i> Fiches compteur</div><span class="status-badge badge-info">CPT-XXX automatique</span></div>
         <div class="card-body">
           ${counters
-            .map(
-              (counter) => `
+      .map(
+        (counter) => `
             <div class="org-list-item planning-counter-card">
               <div class="card-head" style="margin-bottom:10px">
                 <div class="card-title"><i class="fa-solid fa-scale-balanced"></i> ${counter.ref} · ${escapeHtml(counter.name)}</div>
@@ -13048,8 +12709,8 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
                 <div class="org-detail-item"><span>Mise à jour</span><strong>${formatPlanificationDate(counter.lastUpdate)}</strong></div>
               </div>
             </div>`,
-            )
-            .join("")}
+      )
+      .join("")}
         </div>
       </div>
       <div class="planning-side-column">
@@ -13068,11 +12729,10 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
         <div class="card">
           <div class="card-head"><div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique des relevés</div><span class="status-badge badge-info">${readings.length} saisies</span></div>
           <div class="card-body">
-            ${
-              readings.length
-                ? readings
-                    .map(
-                      (reading) => `
+            ${readings.length
+      ? readings
+        .map(
+          (reading) => `
               <div class="org-list-item planning-reading-item">
                 <div>
                   <div class="intervention-history-title"><strong>${escapeHtml(reading.ref)}</strong> · ${escapeHtml(reading.value)} ${escapeHtml(counters.find((counter) => counter.id === reading.counterId)?.unit || "")}</div>
@@ -13083,10 +12743,10 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
                   <span class="status-badge ${reading.otGenerated ? "badge-danger" : "badge-success"}">${reading.otGenerated ? "OT généré" : "Saisie tracée"}</span>
                 </div>
               </div>`,
-                    )
-                    .join("")
-                : `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-chart-line"></i></div><h3>Aucun relevé enregistré</h3><p>Les saisies apparaîtront ici avec leur traçabilité complète.</p><small>Le compteur lié pourra déclencher un OT automatique.</small></div>`
-            }
+        )
+        .join("")
+      : `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-chart-line"></i></div><h3>Aucun relevé enregistré</h3><p>Les saisies apparaîtront ici avec leur traçabilité complète.</p><small>Le compteur lié pourra déclencher un OT automatique.</small></div>`
+    }
           </div>
         </div>
       </div>
@@ -13188,33 +12848,24 @@ function renderPlanificationPage(subpageKey = "plans-maintenance") {
   attachPlanificationTabHandlers();
 }
 
-function getStockArticleFromForm(form) {
-  const articleId = String(
-    form.querySelector("[data-stock-article-select]")?.value ||
-      form.querySelector("select[name='articleId']")?.value ||
-      "",
-  );
-  return articleId;
-}
-
 function getStockLocationFromForm(form, selectorPrefix = "") {
   const suffix = selectorPrefix ? `-${selectorPrefix}` : "";
   return {
     warehouse: String(
       form.querySelector(`[data-stock${suffix}-warehouse]`)?.value ||
-        stockDefaultLocation.warehouse,
+      stockDefaultLocation.warehouse,
     ),
     aisle: String(
       form.querySelector(`[data-stock${suffix}-aisle]`)?.value ||
-        stockDefaultLocation.aisle,
+      stockDefaultLocation.aisle,
     ),
     shelf: String(
       form.querySelector(`[data-stock${suffix}-shelf]`)?.value ||
-        stockDefaultLocation.shelf,
+      stockDefaultLocation.shelf,
     ),
     bin: String(
       form.querySelector(`[data-stock${suffix}-bin]`)?.value ||
-        stockDefaultLocation.bin,
+      stockDefaultLocation.bin,
     ),
   };
 }
@@ -13755,9 +13406,18 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
           inventoryAction.dataset.stockInventoryAction || "",
         );
 
-        if (inventoryId && action === "select") {
-          saveStockSelectedInventoryId(inventoryId);
-          renderStockPage(getCurrentStockSubpage());
+        if (inventoryId && action === "details") {
+          openStockInventoryDetails(inventoryId);
+          return;
+        }
+
+        if (inventoryId && action === "edit-inventory") {
+          openStockInventoryModal(inventoryId);
+          return;
+        }
+
+        if (inventoryId && action === "delete-inventory") {
+          deleteStockInventoryById(inventoryId);
           return;
         }
 
@@ -13784,7 +13444,7 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
           if (observationsInput) observationsInput.value = "";
           refreshInventorySummary(
             pageContentEl.querySelector("[data-stock-inventory-form]") ||
-              pageContentEl,
+            pageContentEl,
           );
           showStockToast("Ligne inventaire réinitialisée.");
         }
@@ -13849,14 +13509,13 @@ function renderStockPage(subpageKey) {
 
     ${buildStockTabs(activeSubpageKey)}
 
-    ${
-      activeSubpageKey === "fiche-stock"
-        ? buildStockFicheContent()
-        : activeSubpageKey === "mouvements"
-          ? buildStockMovementsContent()
-          : activeSubpageKey === "inventaire"
-            ? buildStockInventoryContent()
-            : buildStockHistoryContent()
+    ${activeSubpageKey === "fiche-stock"
+      ? buildStockFicheContent()
+      : activeSubpageKey === "mouvements"
+        ? buildStockMovementsContent()
+        : activeSubpageKey === "inventaire"
+          ? buildStockInventoryContent()
+          : buildStockHistoryContent()
     }
   `;
 
@@ -13872,19 +13531,19 @@ function loadPlanificationData() {
     const parsed = raw ? JSON.parse(raw) : null;
     const state = parsed
       ? {
-          ...seedState,
-          ...parsed,
-          plans: Array.isArray(parsed.plans) ? parsed.plans : seedState.plans,
-          counters: Array.isArray(parsed.counters)
-            ? parsed.counters
-            : seedState.counters,
-          readings: Array.isArray(parsed.readings)
-            ? parsed.readings
-            : seedState.readings,
-          scheduledOrders: Array.isArray(parsed.scheduledOrders)
-            ? parsed.scheduledOrders
-            : seedState.scheduledOrders,
-        }
+        ...seedState,
+        ...parsed,
+        plans: Array.isArray(parsed.plans) ? parsed.plans : seedState.plans,
+        counters: Array.isArray(parsed.counters)
+          ? parsed.counters
+          : seedState.counters,
+        readings: Array.isArray(parsed.readings)
+          ? parsed.readings
+          : seedState.readings,
+        scheduledOrders: Array.isArray(parsed.scheduledOrders)
+          ? parsed.scheduledOrders
+          : seedState.scheduledOrders,
+      }
       : seedState;
 
     if (!state.calendarMonth) {
@@ -13907,7 +13566,7 @@ function loadPlanificationData() {
 function savePlanificationData(state) {
   try {
     window.localStorage.setItem(planificationStorageKey, JSON.stringify(state));
-  } catch (error) {}
+  } catch (error) { }
 }
 
 function planificationDayKey(value) {
@@ -13945,14 +13604,6 @@ function buildPlanificationRef(prefix, items) {
     return match ? Math.max(max, Number(match[1])) : max;
   }, 0);
   return `${prefix}-${String(maxNumber + 1).padStart(3, "0")}`;
-}
-
-function getPlanificationTechnicianName(technicianId) {
-  return (
-    planificationTechniciens.find(
-      (technician) => technician.id === technicianId,
-    )?.name || "Technicien non attribué"
-  );
 }
 
 function getPlanificationTechnicianEmail(technicianId) {
@@ -14338,11 +13989,11 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
     pageContentEl.innerHTML = `
       <div class="org-tabs" role="tablist" aria-label="Sous-pages planification">
         ${Object.entries(sectionSubpages.planification.tabs)
-          .map(
-            ([key, tab]) =>
-              `<button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-plan-subpage="${key}">${tab.label}</button>`,
-          )
-          .join("")}
+        .map(
+          ([key, tab]) =>
+            `<button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-plan-subpage="${key}">${tab.label}</button>`,
+        )
+        .join("")}
       </div>
       <div class="org-section-intro">
         <div>
@@ -14377,39 +14028,38 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
           </div>
           <div class="planning-calendar-gridview">
             ${Array.from({ length: totalCells }, (_, index) => {
-              const cellDate = new Date(
-                year,
-                monthIndex,
-                1 - startOffset + index,
-              );
-              const cellKey = planificationDayKey(cellDate);
-              const inMonth = cellDate.getMonth() === monthIndex;
-              const events = eventsByDay[cellKey] || [];
-              return `
+          const cellDate = new Date(
+            year,
+            monthIndex,
+            1 - startOffset + index,
+          );
+          const cellKey = planificationDayKey(cellDate);
+          const inMonth = cellDate.getMonth() === monthIndex;
+          const events = eventsByDay[cellKey] || [];
+          return `
                 <button class="planning-day ${inMonth ? "in-month" : "out-month"} ${cellKey === selectedDate ? "selected" : ""} ${events.length ? "has-events" : ""}" type="button" data-plan-day="${cellKey}">
                   <span class="planning-day-number">${cellDate.getDate()}</span>
                   <div class="planning-day-events">${events
-                    .slice(0, 2)
-                    .map(
-                      (event) =>
-                        `<span class="planning-chip">${escapeHtml(event.ref)} ${escapeHtml(event.title)}</span>`,
-                    )
-                    .join("")}</div>
+              .slice(0, 2)
+              .map(
+                (event) =>
+                  `<span class="planning-chip">${escapeHtml(event.ref)} ${escapeHtml(event.title)}</span>`,
+              )
+              .join("")}</div>
                   ${events.length > 2 ? `<small>+${events.length - 2} autres</small>` : ""}
                 </button>
               `;
-            }).join("")}
+        }).join("")}
           </div>
         </div>
         <div class="planning-side-column">
           <div class="card">
             <div class="card-head"><div class="card-title"><i class="fa-solid fa-calendar-check"></i> ${selectedDate}</div></div>
             <div class="card-body">
-              ${
-                selectedEvents.length
-                  ? selectedEvents
-                      .map(
-                        (event) => `
+              ${selectedEvents.length
+        ? selectedEvents
+          .map(
+            (event) => `
                 <div class="org-list-item planning-calendar-item">
                   <div class="card-title"><strong>${escapeHtml(event.ref)}</strong> ${escapeHtml(event.title)}</div>
                   <div class="planning-inline-tags">
@@ -14419,10 +14069,10 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
                   <p>${escapeHtml(formatPlanificationDate(event.scheduledDate))}</p>
                 </div>
               `,
-                      )
-                      .join("")
-                  : `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-calendar-plus"></i></div><h3>Aucune tâche sur cette date</h3><p>Vous pouvez sélectionner une date puis ajouter une tâche ou un OT planifié.</p><small>La date sélectionnée reste active pendant la navigation du calendrier.</small></div>`
-              }
+          )
+          .join("")
+        : `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-calendar-plus"></i></div><h3>Aucune tâche sur cette date</h3><p>Vous pouvez sélectionner une date puis ajouter une tâche ou un OT planifié.</p><small>La date sélectionnée reste active pendant la navigation du calendrier.</small></div>`
+      }
             </div>
           </div>
           <div class="card">
@@ -14476,11 +14126,11 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
     pageContentEl.innerHTML = `
       <div class="org-tabs" role="tablist" aria-label="Sous-pages planification">
         ${Object.entries(sectionSubpages.planification.tabs)
-          .map(
-            ([key, tab]) =>
-              `<button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-plan-subpage="${key}">${tab.label}</button>`,
-          )
-          .join("")}
+        .map(
+          ([key, tab]) =>
+            `<button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-plan-subpage="${key}">${tab.label}</button>`,
+        )
+        .join("")}
       </div>
       <div class="org-section-intro">
         <div>
@@ -14497,16 +14147,16 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
       <div class="planning-counter-layout">
         <div class="planning-counter-list">
           ${counters
-            .map((counter) => {
-              const thresholdState =
-                Number(counter.currentValue) >=
-                Number(counter.actionThreshold || 0)
-                  ? "badge-danger"
-                  : Number(counter.currentValue) >=
-                      Number(counter.alertThreshold || 0)
-                    ? "badge-warning"
-                    : "badge-success";
-              return `
+        .map((counter) => {
+          const thresholdState =
+            Number(counter.currentValue) >=
+              Number(counter.actionThreshold || 0)
+              ? "badge-danger"
+              : Number(counter.currentValue) >=
+                Number(counter.alertThreshold || 0)
+                ? "badge-warning"
+                : "badge-success";
+          return `
               <div class="card planning-counter-card">
                 <div class="card-head">
                   <div class="card-title"><i class="fa-solid fa-gauge-high"></i> ${counter.ref} · ${escapeHtml(counter.name)}</div>
@@ -14525,8 +14175,8 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
                 </div>
               </div>
             `;
-            })
-            .join("")}
+        })
+        .join("")}
         </div>
         <div class="planning-side-column">
           <div class="card">
@@ -14544,9 +14194,9 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
             <div class="card-head"><div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique des relevés</div></div>
             <div class="card-body">
               ${(state.readings || [])
-                .slice(0, 10)
-                .map(
-                  (reading) => `
+        .slice(0, 10)
+        .map(
+          (reading) => `
                 <div class="org-list-item planning-reading-item">
                   <div>
                     <div class="intervention-history-title"><strong>${escapeHtml(reading.ref)}</strong> · ${escapeHtml(reading.value)}</div>
@@ -14555,8 +14205,8 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
                   <div class="intervention-history-date">${formatPlanificationDate(reading.date)}</div>
                 </div>
               `,
-                )
-                .join("")}
+        )
+        .join("")}
             </div>
           </div>
         </div>
@@ -14631,11 +14281,11 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
     pageContentEl.innerHTML = `
       <div class="org-tabs" role="tablist" aria-label="Sous-pages planification">
         ${Object.entries(sectionSubpages.planification.tabs)
-          .map(
-            ([key, tab]) =>
-              `<button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-plan-subpage="${key}">${tab.label}</button>`,
-          )
-          .join("")}
+        .map(
+          ([key, tab]) =>
+            `<button class="org-tab ${key === activeSubpageKey ? "active" : ""}" type="button" data-plan-subpage="${key}">${tab.label}</button>`,
+        )
+        .join("")}
       </div>
       <div class="org-section-intro">
         <div>
@@ -14662,10 +14312,9 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
           <span class="status-badge badge-info">Créer, modifier, supprimer, consulter</span>
         </div>
         <div class="card-body planning-plan-list">
-          ${
-            plans
-              .map(
-                (plan) => `
+          ${plans
+        .map(
+          (plan) => `
             <div class="planning-plan-row">
               <div class="planning-plan-main">
                 <div class="planning-plan-title"><strong>${escapeHtml(plan.ref)}</strong> · ${escapeHtml(plan.title)}</div>
@@ -14686,10 +14335,10 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
               </div>
             </div>
           `,
-              )
-              .join("") ||
-            `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-folder-open"></i></div><h3>Aucun plan</h3><p>Créez un premier plan de maintenance pour alimenter la liste et le calendrier.</p><small>La création se fait via la fenêtre modale du bouton Nouveau plan.</small></div>`
-          }
+        )
+        .join("") ||
+      `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-folder-open"></i></div><h3>Aucun plan</h3><p>Créez un premier plan de maintenance pour alimenter la liste et le calendrier.</p><small>La création se fait via la fenêtre modale du bouton Nouveau plan.</small></div>`
+      }
         </div>
       </div>
     `;
@@ -14897,8 +14546,8 @@ function buildAchatsTabs(activeSubpageKey) {
   return `
     <div class="org-tabs" role="tablist" aria-label="Sous-pages achats">
       ${Object.entries(achatsSubpages.tabs)
-        .map(
-          ([key, tab]) => `
+      .map(
+        ([key, tab]) => `
             <button
               class="org-tab ${key === activeSubpageKey ? "active" : ""}"
               type="button"
@@ -14907,8 +14556,8 @@ function buildAchatsTabs(activeSubpageKey) {
               ${tab.label}
             </button>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -14990,8 +14639,8 @@ function renderAchatsDemandsPage(state, activeSubpageKey) {
 
   const rows = state.demandes.length
     ? state.demandes
-        .map(
-          (da) => `
+      .map(
+        (da) => `
             <tr>
               <td><strong>${escapeHtml(da.number)}</strong></td>
               <td class="muted">${formatAchatsDate(da.createdAt)}</td>
@@ -15003,17 +14652,17 @@ function renderAchatsDemandsPage(state, activeSubpageKey) {
               <td>${buildAchatsListActions("demandes-achat", da.id)}</td>
             </tr>
           `,
-        )
-        .join("")
+      )
+      .join("")
     : `
       <tr>
         <td colspan="8">
           ${buildOrganizationEmptyState(
-            "fa-file-lines",
-            "Aucune demande d'achat",
-            "Créez votre première DA pour lancer le flux achat.",
-            "Le numéro DA est généré automatiquement.",
-          )}
+      "fa-file-lines",
+      "Aucune demande d'achat",
+      "Créez votre première DA pour lancer le flux achat.",
+      "Le numéro DA est généré automatiquement.",
+    )}
         </td>
       </tr>
     `;
@@ -15036,29 +14685,29 @@ function renderAchatsDemandsPage(state, activeSubpageKey) {
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "DA en brouillon",
-        value: String(
-          state.demandes.filter((item) => item.status === "Brouillon").length,
-        ),
-        note: "À compléter avant validation",
-      },
-      {
-        label: "DA validées",
-        value: String(
-          state.demandes.filter((item) => item.status === "Validée").length,
-        ),
-        note: "Prêtes pour transformation en BC",
-      },
-      {
-        label: "Origine stock auto",
-        value: String(
-          state.demandes.filter((item) => item.origin === "Stock automatique")
-            .length,
-        ),
-        note: "Demandes issues du seuil minimum",
-      },
-    ])}
+    {
+      label: "DA en brouillon",
+      value: String(
+        state.demandes.filter((item) => item.status === "Brouillon").length,
+      ),
+      note: "À compléter avant validation",
+    },
+    {
+      label: "DA validées",
+      value: String(
+        state.demandes.filter((item) => item.status === "Validée").length,
+      ),
+      note: "Prêtes pour transformation en BC",
+    },
+    {
+      label: "Origine stock auto",
+      value: String(
+        state.demandes.filter((item) => item.origin === "Stock automatique")
+          .length,
+      ),
+      note: "Demandes issues du seuil minimum",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -15091,8 +14740,8 @@ function renderAchatsOrdersPage(state, activeSubpageKey) {
 
   const rows = state.bons.length
     ? state.bons
-        .map(
-          (bc) => `
+      .map(
+        (bc) => `
             <tr>
               <td><strong>${escapeHtml(bc.number)}</strong></td>
               <td class="muted">${formatAchatsDate(bc.createdAt)}</td>
@@ -15104,17 +14753,17 @@ function renderAchatsOrdersPage(state, activeSubpageKey) {
               <td>${buildAchatsListActions("bons-commande", bc.id)}</td>
             </tr>
           `,
-        )
-        .join("")
+      )
+      .join("")
     : `
       <tr>
         <td colspan="8">
           ${buildOrganizationEmptyState(
-            "fa-cart-shopping",
-            "Aucun bon de commande",
-            "Créez un BC à partir d'une ou plusieurs DA validées.",
-            "Le calcul HT/TVA/TTC se fait automatiquement.",
-          )}
+      "fa-cart-shopping",
+      "Aucun bon de commande",
+      "Créez un BC à partir d'une ou plusieurs DA validées.",
+      "Le calcul HT/TVA/TTC se fait automatiquement.",
+    )}
         </td>
       </tr>
     `;
@@ -15137,32 +14786,32 @@ function renderAchatsOrdersPage(state, activeSubpageKey) {
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "BC envoyés",
-        value: String(
-          state.bons.filter((item) => item.status === "Envoyé au fournisseur")
-            .length,
+    {
+      label: "BC envoyés",
+      value: String(
+        state.bons.filter((item) => item.status === "Envoyé au fournisseur")
+          .length,
+      ),
+      note: "En attente de confirmation fournisseur",
+    },
+    {
+      label: "Montant cumulé TTC",
+      value: formatAchatsMoney(
+        state.bons.reduce(
+          (sum, item) => sum + (Number(item.totalTtc) || 0),
+          0,
         ),
-        note: "En attente de confirmation fournisseur",
-      },
-      {
-        label: "Montant cumulé TTC",
-        value: formatAchatsMoney(
-          state.bons.reduce(
-            (sum, item) => sum + (Number(item.totalTtc) || 0),
-            0,
-          ),
-        ),
-        note: "Frais de livraison inclus",
-      },
-      {
-        label: "BC reçus complets",
-        value: String(
-          state.bons.filter((item) => item.status === "Reçu complet").length,
-        ),
-        note: "Clôturés côté approvisionnement",
-      },
-    ])}
+      ),
+      note: "Frais de livraison inclus",
+    },
+    {
+      label: "BC reçus complets",
+      value: String(
+        state.bons.filter((item) => item.status === "Reçu complet").length,
+      ),
+      note: "Clôturés côté approvisionnement",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -15195,8 +14844,8 @@ function renderAchatsReceptionsPage(state, activeSubpageKey) {
 
   const rows = state.receptions.length
     ? state.receptions
-        .map(
-          (rec) => `
+      .map(
+        (rec) => `
             <tr>
               <td><strong>${escapeHtml(rec.number)}</strong></td>
               <td class="muted">${formatAchatsDate(rec.createdAt)}</td>
@@ -15209,17 +14858,17 @@ function renderAchatsReceptionsPage(state, activeSubpageKey) {
               <td>${buildAchatsListActions("receptions", rec.id)}</td>
             </tr>
           `,
-        )
-        .join("")
+      )
+      .join("")
     : `
       <tr>
         <td colspan="9">
           ${buildOrganizationEmptyState(
-            "fa-box-open",
-            "Aucune réception",
-            "Enregistrez une réception à partir d'un BC existant.",
-            "La quantité manquante est calculée automatiquement.",
-          )}
+      "fa-box-open",
+      "Aucune réception",
+      "Enregistrez une réception à partir d'un BC existant.",
+      "La quantité manquante est calculée automatiquement.",
+    )}
         </td>
       </tr>
     `;
@@ -15242,33 +14891,33 @@ function renderAchatsReceptionsPage(state, activeSubpageKey) {
     </div>
 
     ${renderOrganizationStats([
-      {
-        label: "Réceptions conformes",
-        value: String(
-          state.receptions.filter((item) => item.receptionState === "Conforme")
-            .length,
+    {
+      label: "Réceptions conformes",
+      value: String(
+        state.receptions.filter((item) => item.receptionState === "Conforme")
+          .length,
+      ),
+      note: "Conformité ligne article",
+    },
+    {
+      label: "Qté reçue totale",
+      value: formatStockNumber(
+        state.receptions.reduce(
+          (sum, item) => sum + (Number(item.receivedQty) || 0),
+          0,
         ),
-        note: "Conformité ligne article",
-      },
-      {
-        label: "Qté reçue totale",
-        value: formatStockNumber(
-          state.receptions.reduce(
-            (sum, item) => sum + (Number(item.receivedQty) || 0),
-            0,
-          ),
-        ),
-        note: "Cumul toutes réceptions",
-      },
-      {
-        label: "Contrôle qualité refusé",
-        value: String(
-          state.receptions.filter((item) => item.qualityControl === "Refusé")
-            .length,
-        ),
-        note: "Retours ou litiges fournisseurs",
-      },
-    ])}
+      ),
+      note: "Cumul toutes réceptions",
+    },
+    {
+      label: "Contrôle qualité refusé",
+      value: String(
+        state.receptions.filter((item) => item.qualityControl === "Refusé")
+          .length,
+      ),
+      note: "Retours ou litiges fournisseurs",
+    },
+  ])}
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -15404,8 +15053,8 @@ function renderAchatsHistoryPage(state, activeSubpageKey) {
 
   const rows = filteredRows.length
     ? filteredRows
-        .map(
-          (row) => `
+      .map(
+        (row) => `
             <tr>
               <td><strong>${escapeHtml(row.number)}</strong></td>
               <td><span class="status-badge badge-info">${escapeHtml(row.type)}</span></td>
@@ -15416,17 +15065,17 @@ function renderAchatsHistoryPage(state, activeSubpageKey) {
               <td>${row.type === "BC" ? formatAchatsMoney(row.amount) : "-"}</td>
             </tr>
           `,
-        )
-        .join("")
+      )
+      .join("")
     : `
       <tr>
         <td colspan="7">
           ${buildOrganizationEmptyState(
-            "fa-filter-circle-xmark",
-            "Aucun résultat",
-            "Aucun document ne correspond aux filtres sélectionnés.",
-            "Ajustez les filtres puis relancez la recherche.",
-          )}
+      "fa-filter-circle-xmark",
+      "Aucun résultat",
+      "Aucun document ne correspond aux filtres sélectionnés.",
+      "Ajustez les filtres puis relancez la recherche.",
+    )}
         </td>
       </tr>
     `;
@@ -15477,11 +15126,11 @@ function renderAchatsHistoryPage(state, activeSubpageKey) {
               <select id="historyStatus" name="status">
                 <option value="">Tous</option>
                 ${uniqueStatuses
-                  .map(
-                    (status) =>
-                      `<option value="${escapeHtml(status)}" ${achatsHistoryFilterState.status === status ? "selected" : ""}>${escapeHtml(status)}</option>`,
-                  )
-                  .join("")}
+      .map(
+        (status) =>
+          `<option value="${escapeHtml(status)}" ${achatsHistoryFilterState.status === status ? "selected" : ""}>${escapeHtml(status)}</option>`,
+      )
+      .join("")}
               </select>
             </div>
             <div class="field-group">
@@ -15598,17 +15247,17 @@ function buildAchatsDaForm(record, mode) {
           <label for="daStatus">Statut</label>
           <select id="daStatus" name="status" required>
             ${[
-              "Brouillon",
-              "En attente validation",
-              "Validée",
-              "Annulée",
-              "Clôturée",
-            ]
-              .map(
-                (status) =>
-                  `<option value="${status}" ${record?.status === status ? "selected" : ""}>${status}</option>`,
-              )
-              .join("")}
+      "Brouillon",
+      "En attente validation",
+      "Validée",
+      "Annulée",
+      "Clôturée",
+    ]
+      .map(
+        (status) =>
+          `<option value="${status}" ${record?.status === status ? "selected" : ""}>${status}</option>`,
+      )
+      .join("")}
           </select>
         </div>
         <div class="field-group field-group-wide">
@@ -15737,29 +15386,29 @@ function buildAchatsBcForm(record, mode, state) {
           <label for="bcPaymentTerm">Conditions de paiement</label>
           <select id="bcPaymentTerm" name="paymentTerm">
             ${["Comptant", "30 jours", "60 jours", "Autre"]
-              .map(
-                (term) =>
-                  `<option value="${term}" ${record?.paymentTerm === term ? "selected" : ""}>${term}</option>`,
-              )
-              .join("")}
+      .map(
+        (term) =>
+          `<option value="${term}" ${record?.paymentTerm === term ? "selected" : ""}>${term}</option>`,
+      )
+      .join("")}
           </select>
         </div>
         <div class="field-group">
           <label for="bcStatus">Statut</label>
           <select id="bcStatus" name="status" required>
             ${[
-              "Brouillon",
-              "Envoyé au fournisseur",
-              "Confirmé par fournisseur",
-              "Partiellement reçu",
-              "Reçu complet",
-              "Annulé",
-            ]
-              .map(
-                (status) =>
-                  `<option value="${status}" ${record?.status === status ? "selected" : ""}>${status}</option>`,
-              )
-              .join("")}
+      "Brouillon",
+      "Envoyé au fournisseur",
+      "Confirmé par fournisseur",
+      "Partiellement reçu",
+      "Reçu complet",
+      "Annulé",
+    ]
+      .map(
+        (status) =>
+          `<option value="${status}" ${record?.status === status ? "selected" : ""}>${status}</option>`,
+      )
+      .join("")}
           </select>
         </div>
         <div class="field-group field-group-wide">
@@ -15835,22 +15484,22 @@ function buildAchatsReceptionForm(record, mode, state) {
           <label for="recState">État réception</label>
           <select id="recState" name="receptionState" required>
             ${["Conforme", "Non conforme", "Endommagé"]
-              .map(
-                (stateOption) =>
-                  `<option value="${stateOption}" ${record?.receptionState === stateOption ? "selected" : ""}>${stateOption}</option>`,
-              )
-              .join("")}
+      .map(
+        (stateOption) =>
+          `<option value="${stateOption}" ${record?.receptionState === stateOption ? "selected" : ""}>${stateOption}</option>`,
+      )
+      .join("")}
           </select>
         </div>
         <div class="field-group">
           <label for="recQuality">Contrôle qualité</label>
           <select id="recQuality" name="qualityControl" required>
             ${["Conforme total", "Partiellement conforme", "Refusé"]
-              .map(
-                (quality) =>
-                  `<option value="${quality}" ${record?.qualityControl === quality ? "selected" : ""}>${quality}</option>`,
-              )
-              .join("")}
+      .map(
+        (quality) =>
+          `<option value="${quality}" ${record?.qualityControl === quality ? "selected" : ""}>${quality}</option>`,
+      )
+      .join("")}
           </select>
         </div>
         <div class="field-group field-group-wide">
@@ -15869,11 +15518,11 @@ function buildAchatsReceptionForm(record, mode, state) {
           <label for="recStatus">Statut</label>
           <select id="recStatus" name="status">
             ${["Partielle", "Complète"]
-              .map(
-                (status) =>
-                  `<option value="${status}" ${record?.status === status ? "selected" : ""}>${status}</option>`,
-              )
-              .join("")}
+      .map(
+        (status) =>
+          `<option value="${status}" ${record?.status === status ? "selected" : ""}>${status}</option>`,
+      )
+      .join("")}
           </select>
         </div>
         <div class="field-group field-group-wide">
@@ -16131,12 +15780,12 @@ function renderAchatsModal(activeSubpageKey, state) {
         number:
           modeType === "edit"
             ? (nextState.demandes.find((item) => item.id === recordId) || {})
-                .number || buildAchatsRef("DA", nextState.demandes)
+              .number || buildAchatsRef("DA", nextState.demandes)
             : buildAchatsRef("DA", nextState.demandes),
         createdAt:
           modeType === "edit"
             ? (nextState.demandes.find((item) => item.id === recordId) || {})
-                .createdAt || new Date().toISOString()
+              .createdAt || new Date().toISOString()
             : new Date().toISOString(),
         requester: achatsCurrentUser,
         origin: String(formData.get("origin") || "Manuelle"),
@@ -16182,12 +15831,12 @@ function renderAchatsModal(activeSubpageKey, state) {
         number:
           modeType === "edit"
             ? (nextState.bons.find((item) => item.id === recordId) || {})
-                .number || buildAchatsRef("BC", nextState.bons)
+              .number || buildAchatsRef("BC", nextState.bons)
             : buildAchatsRef("BC", nextState.bons),
         createdAt:
           modeType === "edit"
             ? (nextState.bons.find((item) => item.id === recordId) || {})
-                .createdAt || new Date().toISOString()
+              .createdAt || new Date().toISOString()
             : new Date().toISOString(),
         orderDate: String(formData.get("orderDate") || ""),
         wantedDate: String(formData.get("wantedDate") || ""),
@@ -16245,12 +15894,12 @@ function renderAchatsModal(activeSubpageKey, state) {
         number:
           modeType === "edit"
             ? (nextState.receptions.find((item) => item.id === recordId) || {})
-                .number || buildAchatsRef("REC", nextState.receptions)
+              .number || buildAchatsRef("REC", nextState.receptions)
             : buildAchatsRef("REC", nextState.receptions),
         createdAt:
           modeType === "edit"
             ? (nextState.receptions.find((item) => item.id === recordId) || {})
-                .createdAt || new Date().toISOString()
+              .createdAt || new Date().toISOString()
             : new Date().toISOString(),
         bcId,
         receiver: achatsCurrentUser,
@@ -16917,218 +16566,10 @@ function buildInterventionsSeedState() {
   const articleRoulement = getArticleRecord("articles", "article-2");
 
   return {
-    dis: [
-      {
-        id: "di-seed-101",
-        ref: "DI-101",
-        createdAt: new Date(now - 5 * 24 * 3600000).toISOString(),
-        title: "Vibration anormale sur convoyeur L4",
-        description:
-          "Le convoyeur présente des vibrations en charge avec bruit de roulement côté arrière.",
-        equipmentId: equipmentConvoyeur?.id || "equipment-3",
-        equipmentLabel: equipmentConvoyeur
-          ? `${equipmentConvoyeur.code} — ${equipmentConvoyeur.name}`
-          : "EQP-003 — Convoyeur L4",
-        organeId: organRoulement?.id || "organe-1",
-        organeLabel: organRoulement
-          ? `${organRoulement.code} — ${organRoulement.name}`
-          : "ORG-001 — Roulement AR Convoyeur L4",
-        location: "Ligne 4 / Zone transfert",
-        requestType: "Panne",
-        urgency: "Haute",
-        requesterId: userLogistique?.id || "user-6",
-        requesterLabel: userLogistique ? userLogistique.name : "Omar Haddad",
-        photos: [],
-        status: "Validée",
-      },
-      {
-        id: "di-seed-102",
-        ref: "DI-102",
-        createdAt: new Date(now - 3 * 24 * 3600000).toISOString(),
-        title: "Fuite sur garniture de la pompe P2",
-        description:
-          "Présence de fuite au niveau du presse-étoupe, surveillance demandée avant arrêt complet.",
-        equipmentId: equipmentPompe?.id || "equipment-2",
-        equipmentLabel: equipmentPompe
-          ? `${equipmentPompe.code} — ${equipmentPompe.name}`
-          : "EQP-002 — Pompe P2",
-        organeId: organGarniture?.id || "organe-2",
-        organeLabel: organGarniture
-          ? `${organGarniture.code} — ${organGarniture.name}`
-          : "ORG-002 — Garniture Pompe P2",
-        location: "Zone B / Sous-sol",
-        requestType: "Anomalie",
-        urgency: "Critique",
-        requesterId: userMaintenance?.id || "user-3",
-        requesterLabel: userMaintenance ? userMaintenance.name : "Nadia Rami",
-        photos: [],
-        status: "Transformée en OT",
-      },
-      {
-        id: "di-seed-103",
-        ref: "DI-103",
-        createdAt: new Date(now - 1 * 24 * 3600000).toISOString(),
-        title: "Contrôle préventif du TGBT principal",
-        description:
-          "Demande de contrôle visuel et resserrage préventif des connexions du tableau principal.",
-        equipmentId: equipmentTgbt?.id || "equipment-1",
-        equipmentLabel: equipmentTgbt
-          ? `${equipmentTgbt.code} — ${equipmentTgbt.name}`
-          : "EQP-001 — TGBT principal",
-        organeId: "",
-        organeLabel: "",
-        location: "Zone A / Atelier électrique",
-        requestType: "Sécurité",
-        urgency: "Moyenne",
-        requesterId: userQualite?.id || "user-1",
-        requesterLabel: userQualite ? userQualite.name : "Amina El Idrissi",
-        photos: [],
-        status: "En attente",
-      },
-    ],
-    ots: [
-      {
-        id: "ot-seed-101",
-        ref: "OT-101",
-        diId: "di-seed-101",
-        diRef: "DI-101",
-        createdAt: new Date(now - 4 * 24 * 3600000).toISOString(),
-        plannedDate: new Date(now + 1 * 24 * 3600000)
-          .toISOString()
-          .slice(0, 10),
-        durationEstimated: 3,
-        typeMaintenance: "Corrective",
-        equipmentId: equipmentConvoyeur?.id || "equipment-3",
-        equipmentLabel: equipmentConvoyeur
-          ? `${equipmentConvoyeur.code} — ${equipmentConvoyeur.name}`
-          : "EQP-003 — Convoyeur L4",
-        organeId: organRoulement?.id || "organe-1",
-        organeLabel: organRoulement
-          ? `${organRoulement.code} — ${organRoulement.name}`
-          : "ORG-001 — Roulement AR Convoyeur L4",
-        technicianIds: [
-          userMaintenance?.id || "user-3",
-          userProduction?.id || "user-2",
-        ],
-        technicianLabel:
-          userMaintenance && userProduction
-            ? `${userMaintenance.name}, ${userProduction.name}`
-            : "Nadia Rami, Youssef Bensaid",
-        priority: "Haute",
-        instructions:
-          "Vérifier le roulement arrière, contrôler l'alignement et resserrer les fixations du châssis.",
-        articles: [{ articleId: articleRoulement?.id || "article-2", qty: 1 }],
-        documents: [],
-        status: "Planifié",
-      },
-      {
-        id: "ot-seed-102",
-        ref: "OT-102",
-        diId: "di-seed-102",
-        diRef: "DI-102",
-        createdAt: new Date(now - 2 * 24 * 3600000).toISOString(),
-        plannedDate: new Date(now).toISOString().slice(0, 10),
-        durationEstimated: 4,
-        typeMaintenance: "Corrective",
-        equipmentId: equipmentPompe?.id || "equipment-2",
-        equipmentLabel: equipmentPompe
-          ? `${equipmentPompe.code} — ${equipmentPompe.name}`
-          : "EQP-002 — Pompe P2",
-        organeId: organGarniture?.id || "organe-2",
-        organeLabel: organGarniture
-          ? `${organGarniture.code} — ${organGarniture.name}`
-          : "ORG-002 — Garniture Pompe P2",
-        technicianIds: [userMaintenance?.id || "user-3"],
-        technicianLabel: userMaintenance ? userMaintenance.name : "Nadia Rami",
-        priority: "Critique",
-        instructions:
-          "Prévoir arrêt contrôlé, remplacement de la garniture et contrôle de fuite en redémarrage.",
-        articles: [
-          { articleId: articleHuile?.id || "article-1", qty: 2 },
-          { articleId: articleRoulement?.id || "article-2", qty: 1 },
-        ],
-        documents: [],
-        status: "En cours",
-      },
-    ],
-    bts: [
-      {
-        id: "bt-seed-101",
-        ref: "BT-101",
-        otId: "ot-seed-102",
-        otRef: "OT-102",
-        startDate: new Date(now - 8 * 3600000).toISOString(),
-        endDate: new Date(now - 5 * 3600000).toISOString(),
-        duration: "3h",
-        works:
-          "Remplacement de la garniture, nettoyage du corps de pompe et contrôle du retour en service.",
-        articles: [
-          { articleId: articleHuile?.id || "article-1", qty: 1 },
-          { articleId: articleRoulement?.id || "article-2", qty: 1 },
-        ],
-        observations:
-          "Aucune fuite après redémarrage, surveillance recommandée sur 24h.",
-        causes: ["Défaut de lubrification"],
-        photos: [],
-        technicianSignature: {
-          name: userMaintenance ? userMaintenance.name : "Nadia Rami",
-          signedAt: new Date(now - 5 * 3600000).toISOString(),
-        },
-        managerSignature: {
-          name: userMaintenance ? userMaintenance.name : "Nadia Rami",
-          signedAt: new Date(now - 4 * 3600000).toISOString(),
-        },
-        status: "Validé",
-      },
-      {
-        id: "bt-seed-102",
-        ref: "BT-102",
-        otId: "ot-seed-101",
-        otRef: "OT-101",
-        startDate: new Date(now - 90 * 60000).toISOString(),
-        endDate: null,
-        duration: null,
-        works:
-          "Contrôle en cours du roulement arrière, alignement et graissage préventif.",
-        articles: [{ articleId: articleRoulement?.id || "article-2", qty: 1 }],
-        observations:
-          "Vibrations en baisse après graissage, test final en cours.",
-        causes: ["Usure normale"],
-        photos: [],
-        technicianSignature: {
-          name: userProduction ? userProduction.name : "Youssef Bensaid",
-          signedAt: new Date(now - 30 * 60000).toISOString(),
-        },
-        managerSignature: null,
-        status: "En cours",
-      },
-    ],
-    history: [
-      {
-        id: "hist-seed-101",
-        createdAt: new Date(now - 4.5 * 24 * 3600000).toISOString(),
-        action: "DI validée",
-        recordType: "DI",
-        recordRef: "DI-101",
-        message: "DI-101 validée",
-      },
-      {
-        id: "hist-seed-102",
-        createdAt: new Date(now - 2.5 * 24 * 3600000).toISOString(),
-        action: "DI transformée en OT",
-        recordType: "DI",
-        recordRef: "DI-102",
-        message: "DI-102 transformée en OT",
-      },
-      {
-        id: "hist-seed-103",
-        createdAt: new Date(now - 6 * 3600000).toISOString(),
-        action: "OT transformé en BT",
-        recordType: "OT",
-        recordRef: "OT-102",
-        message: "OT-102 transformé en BT",
-      },
-    ],
+    dis: [],
+    ots: [],
+    bts: [],
+    history: [],
   };
 }
 
@@ -17178,7 +16619,7 @@ function loadInterventionsState() {
           interventionsStorageKey,
           JSON.stringify(seedState),
         );
-      } catch (error) {}
+      } catch (error) { }
       return seedState;
     }
 
@@ -17195,7 +16636,7 @@ function loadInterventionsState() {
           interventionsStorageKey,
           JSON.stringify(mergedState),
         );
-      } catch (error) {}
+      } catch (error) { }
 
       return mergedState;
     }
@@ -17312,7 +16753,7 @@ function buildInterventionDiFormModal(record = null) {
             </div>
             <div class="field-group">
               <label for="intDiRequester">Demandeur</label>
-              <select id="intDiRequester" name="requesterId" required>
+              <select id="intDiRequester" name="requesterId">
                 <option value="">Sélectionner</option>
                 ${requesterOptions}
               </select>
@@ -17329,11 +16770,11 @@ function buildInterventionDiFormModal(record = null) {
               <label for="intDiUrgency">Urgence</label>
               <select id="intDiUrgency" name="urgency">
                 ${interventionUrgencyOptions
-                  .map(
-                    (option) =>
-                      `<option${option === (record?.urgency || "Moyenne") ? " selected" : ""}>${option}</option>`,
-                  )
-                  .join("")}
+      .map(
+        (option) =>
+          `<option${option === (record?.urgency || "Moyenne") ? " selected" : ""}>${option}</option>`,
+      )
+      .join("")}
               </select>
             </div>
             <div class="field-group field-group-wide">
@@ -17377,37 +16818,17 @@ function renderInterventionsModal() {
       closeInterventionsModal();
       return;
     }
+    overlayRootEl.innerHTML = buildInterventionTransformBtModal(ot);
+    return;
+  }
 
-    overlayRootEl.innerHTML = `
-      <div class="org-modal open" role="presentation">
-        <div class="org-modal-backdrop" data-int-close="true"></div>
-        <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intConfirmTitle">
-          <div class="org-modal-head">
-            <div>
-              <div class="org-modal-kicker">Ordre de travail</div>
-              <h3 id="intConfirmTitle">Créer un BT depuis ${escapeHtml(ot.ref)}</h3>
-              <p>Cette action supprimera l'OT de la liste des OT et créera un BT correspondant.</p>
-            </div>
-            <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-          <div class="org-detail-list">
-            <div class="org-detail-item"><span>OT</span><strong>${escapeHtml(ot.ref)}</strong></div>
-            <div class="org-detail-item"><span>DI liée</span><strong>${escapeHtml(ot.diRef || "-")}</strong></div>
-            <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(ot.equipmentLabel || ot.equipmentId || "-")}</strong></div>
-            <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(ot.status || "-")}</strong></div>
-          </div>
-          <div class="org-modal-actions">
-            <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
-            <button class="btn btn-primary" type="button" data-int-action="confirm-create-bt" data-int-id="${ot.id}">
-              <i class="fa-solid fa-file-signature"></i>
-              <span>Confirmer</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
+  if (mode === "transform-to-ot") {
+    const diRecord = getInterventionDi(recordId);
+    if (!diRecord) {
+      closeInterventionsModal();
+      return;
+    }
+    overlayRootEl.innerHTML = buildInterventionTransformOtModal(diRecord);
     return;
   }
 
@@ -17455,59 +16876,349 @@ function bindInterventionsModalHandlers() {
   });
 
   const diForm = overlayRootEl.querySelector("[data-int-di-form]");
-  if (!diForm) return;
+  if (diForm) {
+    diForm.addEventListener("submit", function (event) {
+      event.preventDefault();
 
-  diForm.addEventListener("submit", function (event) {
-    event.preventDefault();
-
-    const formData = new FormData(diForm);
-    const directory = loadInterventionsState();
-    const nowIso = new Date().toISOString();
-    const existing = interventionsModalState?.recordId
-      ? directory.dis.find(
+      const formData = new FormData(diForm);
+      const directory = loadInterventionsState();
+      const nowIso = new Date().toISOString();
+      const existing = interventionsModalState?.recordId
+        ? directory.dis.find(
           (item) => item.id === interventionsModalState.recordId,
         )
-      : null;
+        : null;
 
-    const equipmentId = String(formData.get("equipmentId") || "");
-    const organeId = String(formData.get("organeId") || "");
-    const requesterId = String(formData.get("requesterId") || "");
-    const equipment = equipmentId
-      ? getEquipmentRecord("equipments", equipmentId)
-      : null;
-    const organ = organeId ? getOrganeRecord("organes", organeId) : null;
-    const requester = requesterId ? getOrganizationUser(requesterId) : null;
+      const equipmentId = String(formData.get("equipmentId") || "");
+      const organeId = String(formData.get("organeId") || "");
+      const requesterId = String(formData.get("requesterId") || "");
+      const equipment = equipmentId
+        ? getEquipmentRecord("equipments", equipmentId)
+        : null;
+      const organ = organeId ? getOrganeRecord("organes", organeId) : null;
+      const requester = requesterId ? getOrganizationUser(requesterId) : null;
 
-    const nextRecord = {
-      ...(existing || {}),
-      id: existing?.id || `di-${Date.now()}`,
-      ref: existing?.ref || buildInterventionRef("DI", directory.dis),
-      createdAt: existing?.createdAt || nowIso,
-      title: String(formData.get("title") || "").trim(),
-      description: String(formData.get("description") || "").trim(),
-      equipmentId,
-      equipmentLabel: equipment ? `${equipment.code} — ${equipment.name}` : "",
-      organeId,
-      organeLabel: organ ? `${organ.code} — ${organ.name}` : "",
-      requesterId,
-      requesterLabel: requester ? requester.name : "",
-      requestType: String(formData.get("requestType") || "Panne"),
-      urgency: String(formData.get("urgency") || "Moyenne"),
-      location: String(formData.get("location") || "").trim(),
-      status: existing?.status || "En attente",
-      documents: Array.isArray(existing?.documents) ? existing.documents : [],
-    };
+      const nextRecord = {
+        ...(existing || {}),
+        id: existing?.id || `di-${Date.now()}`,
+        ref: existing?.ref || buildInterventionRef("DI", directory.dis),
+        createdAt: existing?.createdAt || nowIso,
+        title: String(formData.get("title") || "").trim(),
+        description: String(formData.get("description") || "").trim(),
+        equipmentId,
+        equipmentLabel: equipment
+          ? `${equipment.code} — ${equipment.name}`
+          : "",
+        organeId,
+        organeLabel: organ ? `${organ.code} — ${organ.name}` : "",
+        requesterId,
+        requesterLabel: requester ? requester.name : "",
+        requestType: String(formData.get("requestType") || "Panne"),
+        urgency: String(formData.get("urgency") || "Moyenne"),
+        location: String(formData.get("location") || "").trim(),
+        status: existing?.status || "En attente",
+        documents: Array.isArray(existing?.documents) ? existing.documents : [],
+      };
 
-    if (existing) {
-      const index = directory.dis.findIndex((item) => item.id === existing.id);
-      if (index >= 0) directory.dis[index] = nextRecord;
-    } else {
-      directory.dis.unshift(nextRecord);
-    }
+      if (existing) {
+        const index = directory.dis.findIndex(
+          (item) => item.id === existing.id,
+        );
+        if (index >= 0) directory.dis[index] = nextRecord;
+      } else {
+        directory.dis.unshift(nextRecord);
+      }
 
-    saveInterventionsState(directory);
-    closeInterventionsModal();
+      saveInterventionsState(directory);
+      closeInterventionsModal();
+    });
+  }
+
+  const otAddArticleBtn = overlayRootEl.querySelector("#otAddArticleBtn");
+  if (otAddArticleBtn) {
+    otAddArticleBtn.addEventListener("click", () => {
+      const container = overlayRootEl.querySelector("#otArticleLinesContainer");
+      const line = document.createElement("div");
+      line.style.display = "flex";
+      line.style.gap = "0.5rem";
+      line.style.marginBottom = "0.5rem";
+      line.innerHTML = `
+        <select name="articleIds[]" style="flex:1;" required>
+          <option value="">Sélectionner un article</option>
+          ${otAddArticleBtn.dataset.options}
+        </select>
+        <input type="number" name="articleQtys[]" min="1" value="1" required style="width:80px;" />
+        <button type="button" class="org-icon-btn danger" onclick="this.parentElement.remove()" title="Supprimer">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      `;
+      container.appendChild(line);
+    });
+  }
+
+  const transformOtForm = overlayRootEl.querySelector(
+    "[data-int-transform-ot-form]",
+  );
+  if (transformOtForm) {
+    transformOtForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const formData = new FormData(transformOtForm);
+      const diId = transformOtForm.dataset.diId;
+
+      const directory = loadInterventionsState();
+      const diIndex = directory.dis.findIndex((item) => item.id === diId);
+      const di = diIndex >= 0 ? directory.dis[diIndex] : null;
+      if (!di) {
+        window.alert("DI introuvable.");
+        return;
+      }
+
+      const plannedDate = formData.get("plannedDate");
+      if (!plannedDate) {
+        window.alert("La date planifiée est obligatoire.");
+        return;
+      }
+
+      const articleIds = formData.getAll("articleIds[]");
+      const articleQtys = formData.getAll("articleQtys[]");
+      const articles = articleIds
+        .map((id, index) => ({
+          articleId: id,
+          qty: Number(articleQtys[index]) || 1,
+        }))
+        .filter((a) => a.articleId);
+
+      const technicianId = formData.get("technicianId");
+      const technicianLabel = technicianId
+        ? getOrganizationUser(technicianId)?.name || ""
+        : "";
+
+      const ot = {
+        id: `ot-${Date.now()}`,
+        ref: buildInterventionRef("OT", directory.ots),
+        diId: di.id,
+        diRef: di.ref,
+        createdAt: new Date().toISOString(),
+        plannedDate: plannedDate,
+        durationEstimated: Number(formData.get("durationEstimated")) || null,
+        typeMaintenance: formData.get("typeMaintenance"),
+        equipmentId: di.equipmentId || "",
+        equipmentLabel: di.equipmentLabel || di.equipment || "",
+        organeId: di.organeId || "",
+        organeLabel: di.organeLabel || di.organe || "",
+        technicianIds: technicianId ? [technicianId] : [],
+        technicianLabel: technicianLabel,
+        priority: formData.get("priority"),
+        instructions: formData.get("instructions") || "",
+        safetyChecklist: formData.getAll("safetyChecklist"),
+        articles: articles,
+        documents: [],
+        status: "Planifié",
+      };
+
+      directory.dis.splice(diIndex, 1);
+      directory.ots.unshift(ot);
+      appendInterventionHistory(directory, {
+        action: "DI transformée en OT",
+        recordType: "DI",
+        recordRef: di.ref,
+        message: `${di.ref} transformée en ${ot.ref}`,
+      });
+      saveInterventionsState(directory);
+      closeInterventionsModal();
+
+      showInterventionsToast("OT créé avec succès", "success");
+
+      renderInterventionsPage("ot");
+    });
+  }
+
+  const btAddArticleBtn = overlayRootEl.querySelector("#btAddArticleBtn");
+  if (btAddArticleBtn) {
+    btAddArticleBtn.addEventListener("click", () => {
+      const container = overlayRootEl.querySelector("#btArticleLinesContainer");
+      const line = document.createElement("div");
+      line.className = "bt-article-line";
+      line.style.display = "flex";
+      line.style.gap = "0.5rem";
+      line.style.marginBottom = "0.5rem";
+      line.innerHTML = `
+        <select name="articleIds[]" style="flex:1;" required class="bt-article-select">
+          <option value="" data-pmp="0">Sélectionner un article</option>
+          ${btAddArticleBtn.dataset.options}
+        </select>
+        <input type="number" name="articleQtys[]" min="1" value="1" required style="width:80px;" class="bt-article-qty" />
+        <button type="button" class="org-icon-btn danger" onclick="this.parentElement.remove(); window.dispatchEvent(new Event('bt-cost-update'));" title="Supprimer">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      `;
+      container.appendChild(line);
+
+      const select = line.querySelector(".bt-article-select");
+      const qty = line.querySelector(".bt-article-qty");
+      select.addEventListener("change", () =>
+        window.dispatchEvent(new Event("bt-cost-update")),
+      );
+      qty.addEventListener("input", () =>
+        window.dispatchEvent(new Event("bt-cost-update")),
+      );
+    });
+  }
+
+  const btEndDate = overlayRootEl.querySelector("#btEndDate");
+  const btStartDate = overlayRootEl.querySelector("#btStartDate");
+  const btDurationReal = overlayRootEl.querySelector("#btDurationReal");
+
+  if (btEndDate && btStartDate && btDurationReal) {
+    btEndDate.addEventListener("change", () => {
+      const start = new Date(btStartDate.value);
+      const end = new Date(btEndDate.value);
+      if (!isNaN(start) && !isNaN(end) && end > start) {
+        const hours = Math.round(((end - start) / 3600000) * 10) / 10;
+        btDurationReal.value = hours + "h";
+      } else {
+        btDurationReal.value = "0h";
+      }
+    });
+  }
+
+  window.addEventListener("bt-cost-update", () => {
+    const costArticlesEl = overlayRootEl.querySelector("#btCostArticles");
+    const costTotalEl = overlayRootEl.querySelector("#btCostTotal");
+    if (!costArticlesEl || !costTotalEl) return;
+
+    let totalArticles = 0;
+    const lines = overlayRootEl.querySelectorAll(".bt-article-line");
+    lines.forEach((line) => {
+      const select = line.querySelector(".bt-article-select");
+      const qty = line.querySelector(".bt-article-qty");
+      const opt = select.options[select.selectedIndex];
+      if (opt && opt.value) {
+        const pmp = Number(opt.dataset.pmp) || 0;
+        const q = Number(qty.value) || 0;
+        totalArticles += pmp * q;
+      }
+    });
+
+    const formattedCost = new Intl.NumberFormat("fr-DZ", {
+      style: "currency",
+      currency: "DZD",
+    }).format(totalArticles);
+    costArticlesEl.textContent = formattedCost;
+    costTotalEl.textContent = formattedCost;
   });
+
+  const transformBtForm = overlayRootEl.querySelector(
+    "[data-int-transform-bt-form]",
+  );
+  if (transformBtForm) {
+    transformBtForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const formData = new FormData(transformBtForm);
+      const otId = transformBtForm.dataset.otId;
+
+      const directory = loadInterventionsState();
+      const otIndex = directory.ots.findIndex((item) => item.id === otId);
+      const ot = otIndex >= 0 ? directory.ots[otIndex] : null;
+      if (!ot) {
+        window.alert("OT introuvable.");
+        return;
+      }
+
+      const works = formData.get("works");
+      if (!works) {
+        window.alert("Les travaux réalisés sont obligatoires.");
+        return;
+      }
+
+      const start = new Date(formData.get("startDate"));
+      const end = new Date(formData.get("endDate"));
+      let durationHours = "0h";
+      if (!isNaN(start) && !isNaN(end) && end > start) {
+        durationHours = Math.round(((end - start) / 3600000) * 10) / 10 + "h";
+      }
+
+      const articleIds = formData.getAll("articleIds[]");
+      const articleQtys = formData.getAll("articleQtys[]");
+      const articles = articleIds
+        .map((id, index) => ({
+          articleId: id,
+          qty: Number(articleQtys[index]) || 1,
+        }))
+        .filter((a) => a.articleId);
+
+      const cause = formData.get("cause");
+      const causes = cause ? [cause] : [];
+
+      const bt = {
+        id: `bt-${Date.now()}`,
+        ref: buildInterventionRef("BT", directory.bts),
+        otId: ot.id,
+        otRef: ot.ref,
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+        duration: durationHours,
+        works: works,
+        articles: articles,
+        observations: formData.get("observations") || "",
+        causes: causes,
+        anomalies: formData.get("anomalies") || "",
+        photos: [],
+        technicianSignature: null,
+        managerSignature: null,
+        status: "En cours",
+        equipmentId: ot.equipmentId || "",
+        equipmentLabel: ot.equipmentLabel || "",
+        technicianIds: Array.isArray(ot.technicianIds)
+          ? ot.technicianIds.slice()
+          : [],
+        technicianLabel: ot.technicianLabel || "",
+        priority: ot.priority || "",
+      };
+
+      articles.forEach((articleLine) => {
+        const primary = getPrimaryStockRecord(articleLine.articleId);
+        if (!primary) return;
+
+        const quantity = Number(articleLine.qty) || 0;
+        const nextQuantity = Math.max(
+          0,
+          Number(primary.currentQuantity || 0) - quantity,
+        );
+        upsertStockRecord(articleLine.articleId, primary, {
+          currentQuantity: nextQuantity,
+          updatedAt: new Date().toISOString(),
+        });
+        appendStockMovement({
+          articleId: articleLine.articleId,
+          quantity,
+          type: "exit",
+          source: "BT",
+          linkedRef: bt.ref,
+          pmp: primary.pmp || 0,
+          location: primary.locationLabel,
+        });
+        syncStockArticleQuantityFromRecords(articleLine.articleId);
+      });
+
+      directory.ots.splice(otIndex, 1);
+      directory.bts.unshift(bt);
+      appendInterventionHistory(directory, {
+        action: "OT transformé en BT",
+        recordType: "OT",
+        recordRef: ot.ref,
+        message: `${ot.ref} transformé en ${bt.ref}`,
+      });
+      saveInterventionsState(directory);
+      closeInterventionsModal();
+
+      showInterventionsToast("BT créé avec succès", "success");
+
+      renderInterventionsPage("bt");
+    });
+  }
 }
 
 function buildInterventionPrintDetails(recordType, record) {
@@ -17973,14 +17684,14 @@ function buildInterventionsTabs(activeTabKey) {
   return `
     <div class="org-tabs" role="tablist" aria-label="Sous-pages interventions">
       ${Object.entries(tabs)
-        .map(
-          ([key, label]) => `
+      .map(
+        ([key, label]) => `
             <button class="org-tab ${key === activeTabKey ? "active" : ""}" type="button" data-int-subpage="${key}">
               ${label}
             </button>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -18000,14 +17711,12 @@ function attachInterventionsTabHandlers(selector) {
 function renderInterventionsActionButtons(activeTabKey) {
   if (!pageActionsEl) return;
 
-  const primaryLabel =
-    activeTabKey === "di"
-      ? "Nouvelle DI"
-      : activeTabKey === "ot"
-        ? "Nouveau OT"
-        : activeTabKey === "bt"
-          ? "Nouveau BT"
-          : "Exporter";
+  if (activeTabKey === "ot" || activeTabKey === "bt") {
+    pageActionsEl.innerHTML = "";
+    return;
+  }
+
+  const primaryLabel = activeTabKey === "di" ? "Nouvelle DI" : "Exporter";
 
   pageActionsEl.innerHTML = `
     <button class="btn btn-primary" type="button" data-int-action="primary">
@@ -18022,20 +17731,6 @@ function renderInterventionsActionButtons(activeTabKey) {
   button.addEventListener("click", function () {
     if (activeTabKey === "di") {
       openInterventionsModal("create-di");
-      return;
-    }
-
-    if (activeTabKey === "ot") {
-      window.alert(
-        "La création manuelle d'OT peut être ajoutée ensuite sur la même base de modal.",
-      );
-      return;
-    }
-
-    if (activeTabKey === "bt") {
-      window.alert(
-        "La création manuelle de BT peut être ajoutée ensuite sur la même base de modal.",
-      );
       return;
     }
 
@@ -18390,8 +18085,8 @@ function renderInterventionsKpis(tabKey, directory) {
   return `
     <div class="kpi-grid interventions-kpi-grid">
       ${kpiSets[tabKey]
-        .map(
-          (item) => `
+      .map(
+        (item) => `
             <div class="kpi-card">
               <div class="kpi-header">
                 <div class="kpi-label">${item.label}</div>
@@ -18404,8 +18099,8 @@ function renderInterventionsKpis(tabKey, directory) {
               </div>
             </div>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -18429,16 +18124,16 @@ function renderInterventionsTabContent(tabKey, directory) {
 function renderDiSection(directory) {
   const rows = directory.dis.length
     ? directory.dis
-        .map((di) => {
-          const equipment = di.equipmentId
-            ? getEquipmentRecord("equipments", di.equipmentId)
-            : null;
-          const organ = di.organeId
-            ? getOrganeRecord("organes", di.organeId)
-            : null;
-          const requester = getOrganizationUser(di.requesterId);
+      .map((di) => {
+        const equipment = di.equipmentId
+          ? getEquipmentRecord("equipments", di.equipmentId)
+          : null;
+        const organ = di.organeId
+          ? getOrganeRecord("organes", di.organeId)
+          : null;
+        const requester = getOrganizationUser(di.requesterId);
 
-          return `
+        return `
             <tr>
               <td><strong>${di.ref}</strong></td>
               <td>${escapeHtml(di.title)}</td>
@@ -18450,17 +18145,17 @@ function renderDiSection(directory) {
               <td>${buildInterventionDiActions(di)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="8">
           ${buildInterventionEmptyState(
-            "fa-clipboard-list",
-            "Aucune DI enregistrée",
-            "Créez la première demande d'intervention depuis le bouton Nouvelle DI.",
-            "La fenêtre popup reprend le formulaire métier et les liens vers les autres modules.",
-          )}
+      "fa-clipboard-list",
+      "Aucune DI enregistrée",
+      "Créez la première demande d'intervention depuis le bouton Nouvelle DI.",
+      "La fenêtre popup reprend le formulaire métier et les liens vers les autres modules.",
+    )}
         </td>
       </tr>
     `;
@@ -18495,17 +18190,17 @@ function renderDiSection(directory) {
 function renderOtSection(directory) {
   const rows = directory.ots.length
     ? directory.ots
-        .map((ot) => {
-          const equipment = ot.equipmentId
-            ? getEquipmentRecord("equipments", ot.equipmentId)
-            : null;
-          const technicianNames = (ot.technicianIds || [])
-            .map((id) => getOrganizationUser(id))
-            .filter(Boolean)
-            .map((user) => user.name)
-            .join(", ");
+      .map((ot) => {
+        const equipment = ot.equipmentId
+          ? getEquipmentRecord("equipments", ot.equipmentId)
+          : null;
+        const technicianNames = (ot.technicianIds || [])
+          .map((id) => getOrganizationUser(id))
+          .filter(Boolean)
+          .map((user) => user.name)
+          .join(", ");
 
-          return `
+        return `
             <tr>
               <td><strong>${ot.ref}</strong></td>
               <td class="muted">${ot.diRef || "-"}</td>
@@ -18517,17 +18212,17 @@ function renderOtSection(directory) {
               <td>${buildInterventionOtActions(ot)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="8">
           ${buildInterventionEmptyState(
-            "fa-screwdriver-wrench",
-            "Aucun OT planifié",
-            "Les OT issus d'une DI validée apparaîtront ici.",
-            "Le tableau gardera le même langage visuel que les pages Équipements et Organe.",
-          )}
+      "fa-screwdriver-wrench",
+      "Aucun OT planifié",
+      "Les OT issus d'une DI validée apparaîtront ici.",
+      "Le tableau gardera le même langage visuel que les pages Équipements et Organe.",
+    )}
         </td>
       </tr>
     `;
@@ -18563,8 +18258,8 @@ function renderBtSection(directory) {
   const visibleBts = directory.bts.filter((item) => item.status !== "Clôturé");
   const rows = visibleBts.length
     ? visibleBts
-        .map((bt) => {
-          return `
+      .map((bt) => {
+        return `
             <tr>
               <td><strong>${bt.ref}</strong></td>
               <td class="muted">${bt.otRef || "-"}</td>
@@ -18575,17 +18270,17 @@ function renderBtSection(directory) {
               <td>${buildInterventionBtActions(bt)}</td>
             </tr>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `
       <tr>
         <td colspan="7">
           ${buildInterventionEmptyState(
-            "fa-file-signature",
-            "Aucun BT saisi",
-            "Les bons de travail remplis par les techniciens s'afficheront ici.",
-            "La clôture BT déclenchera les sorties de stock automatiques.",
-          )}
+      "fa-file-signature",
+      "Aucun BT saisi",
+      "Les bons de travail remplis par les techniciens s'afficheront ici.",
+      "La clôture BT déclenchera les sorties de stock automatiques.",
+    )}
         </td>
       </tr>
     `;
@@ -18737,8 +18432,7 @@ function buildInterventionsHistorySelectOptions(values, selectedValue) {
   return ["", ...uniqueValues]
     .map(
       (value) =>
-        `<option value="${escapeHtml(value)}"${
-          value === selectedValue ? " selected" : ""
+        `<option value="${escapeHtml(value)}"${value === selectedValue ? " selected" : ""
         }>${escapeHtml(value || "Tous")}</option>`,
     )
     .join("");
@@ -18770,8 +18464,8 @@ function renderHistorySection(directory) {
 
   const rows = filteredEntries.length
     ? filteredEntries
-        .map(
-          (entry) => `
+      .map(
+        (entry) => `
             <tr>
               <td><strong>${escapeHtml(entry.ref)}</strong></td>
               <td>${escapeHtml(entry.type)}</td>
@@ -18781,25 +18475,25 @@ function renderHistorySection(directory) {
               <td>${escapeHtml(entry.priority || "-")}</td>
               <td>${escapeHtml(entry.label)}</td>
               <td class="muted">${escapeHtml(
-                entry.date
-                  ? new Date(entry.date).toLocaleString(
-                      getAdministrationLocale(),
-                    )
-                  : "-",
-              )}</td>
+          entry.date
+            ? new Date(entry.date).toLocaleString(
+              getAdministrationLocale(),
+            )
+            : "-",
+        )}</td>
             </tr>
           `,
-        )
-        .join("")
+      )
+      .join("")
     : `
       <tr>
         <td colspan="8">
           ${buildInterventionEmptyState(
-            "fa-clock-rotate-left",
-            "Aucun historique",
-            "Aucun événement ou intervention ne correspond aux filtres sélectionnés.",
-            "Réinitialisez les filtres ou effacez l'historique pour repartir de zéro.",
-          )}
+      "fa-clock-rotate-left",
+      "Aucun historique",
+      "Aucun événement ou intervention ne correspond aux filtres sélectionnés.",
+      "Réinitialisez les filtres ou effacez l'historique pour repartir de zéro.",
+    )}
         </td>
       </tr>
     `;
@@ -18963,15 +18657,15 @@ function buildInterventionDetailRows(rows) {
   return `
     <div class="org-detail-list">
       ${rows
-        .map(
-          (row) => `
+      .map(
+        (row) => `
             <div class="org-detail-item">
               <span>${row.label}</span>
               <strong>${row.value}</strong>
             </div>
           `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -19097,7 +18791,7 @@ function renderInterventionRecordDetails(recordType, record) {
         label: "Articles consommés",
         value: Array.isArray(record.articles)
           ? record.articles.map(formatInterventionArticleLine).join("<br />") ||
-            "-"
+          "-"
           : "-",
       },
       {
@@ -19182,87 +18876,311 @@ function validateInterventionDi(diId) {
 }
 
 function convertDiToOt(diId) {
-  const directory = loadInterventionsState();
-  const diIndex = directory.dis.findIndex((item) => item.id === diId);
-  const di = diIndex >= 0 ? directory.dis[diIndex] : null;
-  if (!di) return window.alert("DI introuvable.");
-
-  const ot = {
-    id: `ot-${Date.now()}`,
-    ref: buildInterventionRef("OT", directory.ots),
-    diId: di.id,
-    diRef: di.ref,
-    createdAt: new Date().toISOString(),
-    plannedDate: new Date(Date.now() + 24 * 3600000).toISOString().slice(0, 10),
-    durationEstimated: 2,
-    typeMaintenance: "Corrective",
-    equipmentId: di.equipmentId || "",
-    equipmentLabel: di.equipmentLabel || di.equipment || "",
-    organeId: di.organeId || "",
-    organeLabel: di.organeLabel || di.organe || "",
-    technicianIds: [],
-    priority: di.urgency || "Moyenne",
-    instructions: di.description || "",
-    articles: [],
-    documents: [],
-    status: "Planifié",
-  };
-
-  directory.dis.splice(diIndex, 1);
-  directory.ots.unshift(ot);
-  appendInterventionHistory(directory, {
-    action: "DI transformée en OT",
-    recordType: "DI",
-    recordRef: di.ref,
-    message: `${di.ref} transformée en ${ot.ref}`,
+  setInterventionsModalState({
+    mode: "transform-to-ot",
+    recordId: diId,
+    recordType: "di",
   });
-  saveInterventionsState(directory);
-  closeInterventionsModal();
-  renderInterventionsPage("ot");
+  renderInterventionsPage(getCurrentInterventionsTab("di"));
 }
 
-function createBtFromOt(otId) {
-  const directory = loadInterventionsState();
-  const otIndex = directory.ots.findIndex((item) => item.id === otId);
-  const ot = otIndex >= 0 ? directory.ots[otIndex] : null;
-  if (!ot) return window.alert("OT introuvable.");
+function showInterventionsToast(message, type = "success") {
+  const toast = document.createElement("div");
+  toast.style.position = "fixed";
+  toast.style.bottom = "20px";
+  toast.style.right = "20px";
+  toast.style.padding = "1rem 1.5rem";
+  toast.style.background = type === "success" ? "#10b981" : "#ef4444";
+  toast.style.color = "#fff";
+  toast.style.borderRadius = "8px";
+  toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+  toast.style.zIndex = "9999";
+  toast.style.transition = "opacity 0.3s ease";
+  toast.style.fontFamily = "inherit";
+  toast.textContent = message;
+  document.body.appendChild(toast);
 
-  const bt = {
-    id: `bt-${Date.now()}`,
-    ref: buildInterventionRef("BT", directory.bts),
-    otId: ot.id,
-    otRef: ot.ref,
-    startDate: new Date().toISOString(),
-    endDate: null,
-    duration: null,
-    works: "",
-    articles: [],
-    observations: "",
-    causes: [],
-    photos: [],
-    technicianSignature: null,
-    managerSignature: null,
-    status: "En cours",
-    equipmentId: ot.equipmentId || "",
-    equipmentLabel: ot.equipmentLabel || "",
-    technicianIds: Array.isArray(ot.technicianIds)
-      ? ot.technicianIds.slice()
-      : [],
-    technicianLabel: ot.technicianLabel || "",
-    priority: ot.priority || "",
-  };
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
 
-  directory.ots.splice(otIndex, 1);
-  directory.bts.unshift(bt);
-  appendInterventionHistory(directory, {
-    action: "OT transformé en BT",
-    recordType: "OT",
-    recordRef: ot.ref,
-    message: `${ot.ref} transformé en ${bt.ref}`,
-  });
-  saveInterventionsState(directory);
-  closeInterventionsModal();
-  renderInterventionsPage("bt");
+function buildInterventionTransformOtModal(di) {
+  const equipment = di.equipmentId
+    ? getEquipmentRecord("equipments", di.equipmentId)
+    : null;
+  const organ = di.organeId ? getOrganeRecord("organes", di.organeId) : null;
+  const requester = di.requesterId ? getOrganizationUser(di.requesterId) : null;
+
+  const equipmentLabel = equipment
+    ? `${equipment.code} — ${equipment.name}`
+    : di.equipmentLabel || "-";
+  const organLabel = organ
+    ? `${organ.code} — ${organ.name}`
+    : di.organeLabel || "-";
+  const requesterLabel = requester ? requester.name : di.requesterLabel || "-";
+
+  const technicianOptions = organizationUsers
+    .map(
+      (user) =>
+        `<option value="${user.id}">${escapeHtml(user.name)} - ${escapeHtml(user.role)}</option>`,
+    )
+    .join("");
+
+  const articleOptions = getArticleRecords("articles")
+    .map(
+      (a) =>
+        `<option value="${a.id}">${escapeHtml(a.code)} - ${escapeHtml(a.name)}</option>`,
+    )
+    .join("");
+
+  return `
+    <div class="org-modal open" role="presentation">
+      <div class="org-modal-backdrop" data-int-close="true"></div>
+      <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intTransformTitle" style="max-width: 800px;">
+        <div class="org-modal-head">
+          <div>
+            <div class="org-modal-kicker">Transformer en OT</div>
+            <h3 id="intTransformTitle">Créer un OT depuis ${escapeHtml(di.ref || "DI")}</h3>
+            <p>Vérifiez les informations de la DI et complétez les détails de l'OT.</p>
+          </div>
+          <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <form class="org-form" data-int-transform-ot-form data-di-id="${di.id}">
+          <div class="org-form-section" style="padding: 1.5rem;">
+            <h4 class="org-form-section-title" style="margin-top: 0;">SECTION 1 — Informations de la DI</h4>
+            <div class="org-detail-list" style="margin-bottom: 0;">
+              <div class="org-detail-item"><span>Numéro DI lié</span><strong>${escapeHtml(di.ref || "-")}</strong></div>
+              <div class="org-detail-item"><span>Titre</span><strong>${escapeHtml(di.title || "-")}</strong></div>
+              <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(equipmentLabel)}</strong></div>
+              <div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(organLabel)}</strong></div>
+              <div class="org-detail-item"><span>Type demande</span><strong>${escapeHtml(di.requestType || "-")}</strong></div>
+              <div class="org-detail-item"><span>Urgence</span><strong>${escapeHtml(di.urgency || "-")}</strong></div>
+              <div class="org-detail-item"><span>Demandeur</span><strong>${escapeHtml(requesterLabel)}</strong></div>
+              <div class="org-detail-item"><span>Description</span><strong>${escapeHtml(di.description || "-")}</strong></div>
+            </div>
+          </div>
+          
+          <div class="org-form-section" style="padding: 1.5rem; border-top: 1px solid var(--org-border);">
+            <h4 class="org-form-section-title" style="margin-top: 0;">SECTION 2 — Champs à remplir pour l'OT</h4>
+            <div class="org-form-grid">
+              <div class="field-group">
+                <label>Numéro OT</label>
+                <input type="text" value="Généré automatiquement (OT-XXX)" disabled />
+              </div>
+              <div class="field-group">
+                <label for="otTypeMaintenance">Type maintenance</label>
+                <select id="otTypeMaintenance" name="typeMaintenance" required>
+                  <option value="Corrective">Corrective</option>
+                  <option value="Préventive">Préventive</option>
+                  <option value="Prédictive">Prédictive</option>
+                  <option value="Réglementaire">Réglementaire</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="otPlannedDate">Date planifiée <span style="color:var(--org-danger);">*</span></label>
+                <input id="otPlannedDate" name="plannedDate" type="date" required />
+              </div>
+              <div class="field-group">
+                <label for="otDuration">Durée estimée (heures)</label>
+                <input id="otDuration" name="durationEstimated" type="number" step="0.5" min="0" placeholder="Ex: 2" />
+              </div>
+              <div class="field-group">
+                <label for="otTechnician">Technicien assigné</label>
+                <select id="otTechnician" name="technicianId">
+                  <option value="">Sélectionner</option>
+                  ${technicianOptions}
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="otPriority">Priorité</label>
+                <select id="otPriority" name="priority">
+                  <option value="Faible"${di.urgency === "Faible" ? " selected" : ""}>Faible</option>
+                  <option value="Moyenne"${!di.urgency || di.urgency === "Moyenne" ? " selected" : ""}>Moyenne</option>
+                  <option value="Haute"${di.urgency === "Haute" ? " selected" : ""}>Haute</option>
+                  <option value="Critique"${di.urgency === "Critique" ? " selected" : ""}>Critique</option>
+                </select>
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="otInstructions">Instructions techniques</label>
+                <textarea id="otInstructions" name="instructions" rows="3" placeholder="Saisissez les instructions pour le technicien..."></textarea>
+              </div>
+              <div class="field-group field-group-wide">
+                <label>Checklist sécurité</label>
+                <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-top:0.5rem; padding: 0.5rem; background: var(--org-bg-alt); border-radius: 6px;">
+                  <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" name="safetyChecklist" value="Consignation électrique" /> Consignation électrique</label>
+                  <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" name="safetyChecklist" value="EPI requis" /> EPI requis</label>
+                  <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" name="safetyChecklist" value="Permis de travail" /> Permis de travail</label>
+                </div>
+              </div>
+              <div class="field-group field-group-wide">
+                <label>Articles prévus</label>
+                <div id="otArticleLinesContainer" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.75rem;">
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" id="otAddArticleBtn" data-options="${escapeHtml(articleOptions)}">
+                  <i class="fa-solid fa-plus"></i> Ajouter un article
+                </button>
+              </div>
+              <div class="field-group">
+                <label>Statut</label>
+                <input type="text" value="Planifié" disabled />
+              </div>
+            </div>
+          </div>
+          
+          <div class="org-modal-actions">
+            <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
+            <button class="btn btn-primary" type="submit">
+              <i class="fa-solid fa-arrow-right"></i>
+              <span>Confirmer et créer OT</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function buildInterventionTransformBtModal(ot) {
+  const equipment = ot.equipmentId
+    ? getEquipmentRecord("equipments", ot.equipmentId)
+    : null;
+  const organ = ot.organeId ? getOrganeRecord("organes", ot.organeId) : null;
+
+  const equipmentLabel = equipment
+    ? `${equipment.code} — ${equipment.name}`
+    : ot.equipmentLabel || "-";
+  const organLabel = organ
+    ? `${organ.code} — ${organ.name}`
+    : ot.organeLabel || "-";
+
+  const articleOptions = getArticleRecords("articles")
+    .map(
+      (a) =>
+        `<option value="${a.id}" data-pmp="${getPrimaryStockRecord(a.id)?.pmp || 0}">${escapeHtml(a.code)} - ${escapeHtml(a.name)}</option>`,
+    )
+    .join("");
+  const formattedArticles =
+    ot.articles && ot.articles.length
+      ? ot.articles.map(formatInterventionArticleLine).join("<br/>")
+      : "-";
+
+  return `
+    <div class="org-modal open" role="presentation">
+      <div class="org-modal-backdrop" data-int-close="true"></div>
+      <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intTransformBtTitle" style="max-width: 800px;">
+        <div class="org-modal-head">
+          <div>
+            <div class="org-modal-kicker">Créer BT</div>
+            <h3 id="intTransformBtTitle">Créer un BT depuis ${escapeHtml(ot.ref || "OT")}</h3>
+            <p>Vérifiez les informations de l'OT et complétez les détails du Bon de Travail.</p>
+          </div>
+          <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <form class="org-form" data-int-transform-bt-form data-ot-id="${ot.id}">
+          <div class="org-form-section" style="padding: 1.5rem;">
+            <h4 class="org-form-section-title" style="margin-top: 0;">SECTION 1 — Informations de l'OT</h4>
+            <div class="org-detail-list" style="margin-bottom: 0;">
+              <div class="org-detail-item"><span>Numéro OT lié</span><strong>${escapeHtml(ot.ref || "-")}</strong></div>
+              <div class="org-detail-item"><span>Titre / Réf DI</span><strong>${escapeHtml(ot.diRef || "-")}</strong></div>
+              <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(equipmentLabel)}</strong></div>
+              <div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(organLabel)}</strong></div>
+              <div class="org-detail-item"><span>Type maintenance</span><strong>${escapeHtml(ot.typeMaintenance || "-")}</strong></div>
+              <div class="org-detail-item"><span>Technicien assigné</span><strong>${escapeHtml(ot.technicianLabel || "-")}</strong></div>
+              <div class="org-detail-item"><span>Date planifiée</span><strong>${escapeHtml(ot.plannedDate || "-")}</strong></div>
+              <div class="org-detail-item"><span>Durée estimée</span><strong>${ot.durationEstimated ? ot.durationEstimated + " h" : "-"}</strong></div>
+              <div class="org-detail-item" style="grid-column: 1 / -1;"><span>Instructions techniques</span><strong>${escapeHtml(ot.instructions || "-")}</strong></div>
+              <div class="org-detail-item" style="grid-column: 1 / -1;"><span>Articles prévus</span><strong>${formattedArticles}</strong></div>
+            </div>
+          </div>
+          
+          <div class="org-form-section" style="padding: 1.5rem; border-top: 1px solid var(--org-border);">
+            <h4 class="org-form-section-title" style="margin-top: 0;">SECTION 2 — Champs à remplir pour le BT</h4>
+            <div class="org-form-grid">
+              <div class="field-group">
+                <label>Numéro BT</label>
+                <input type="text" value="Généré automatiquement (BT-XXX)" disabled />
+              </div>
+              <div class="field-group">
+                <label for="btStartDate">Date de début</label>
+                <input id="btStartDate" name="startDate" type="datetime-local" value="${new Date().toISOString().slice(0, 16)}" readonly />
+              </div>
+              <div class="field-group">
+                <label for="btEndDate">Date de fin <span style="color:var(--org-danger);">*</span></label>
+                <input id="btEndDate" name="endDate" type="datetime-local" required />
+              </div>
+              <div class="field-group">
+                <label for="btDurationReal">Durée réelle</label>
+                <input id="btDurationReal" type="text" value="0h" readonly />
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="btWorks">Travaux réalisés <span style="color:var(--org-danger);">*</span></label>
+                <textarea id="btWorks" name="works" rows="3" required placeholder="Détaillez les actions menées..."></textarea>
+              </div>
+              <div class="field-group">
+                <label for="btCause">Cause de la panne</label>
+                <select id="btCause" name="cause">
+                  <option value="">Sélectionner</option>
+                  <option value="Usure normale">Usure normale</option>
+                  <option value="Défaut lubrification">Défaut lubrification</option>
+                  <option value="Surcharge">Surcharge</option>
+                  <option value="Défaut matière">Défaut matière</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label>Statut</label>
+                <input type="text" value="Clôturé" disabled />
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="btAnomalies">Anomalies détectées</label>
+                <textarea id="btAnomalies" name="anomalies" rows="2" placeholder="Ex: Fuite mineure constatée sur joint secondaire..."></textarea>
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="btObservations">Observations</label>
+                <textarea id="btObservations" name="observations" rows="2" placeholder="Remarques éventuelles..."></textarea>
+              </div>
+              <div class="field-group field-group-wide">
+                <label>Photos après intervention</label>
+                <input type="file" accept="image/*" multiple />
+              </div>
+              <div class="field-group field-group-wide">
+                <label>Articles consommés</label>
+                <div id="btArticleLinesContainer" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.75rem;">
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" id="btAddArticleBtn" data-options="${escapeHtml(articleOptions)}">
+                  <i class="fa-solid fa-plus"></i> Ajouter un article consommé
+                </button>
+              </div>
+            </div>
+            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--org-bg-alt); border-radius: 6px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Coût articles consommés :</span>
+                <strong id="btCostArticles">0,00 DZD</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 1.1em; font-weight: bold; border-top: 1px solid var(--org-border); padding-top: 0.5rem;">
+                <span>Coût total intervention :</span>
+                <strong id="btCostTotal">0,00 DZD</strong>
+              </div>
+            </div>
+          </div>
+          
+          <div class="org-modal-actions">
+            <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
+            <button class="btn btn-primary" type="submit">
+              <i class="fa-solid fa-check"></i>
+              <span>Confirmer et créer BT</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
 }
 
 function closeBt(btId) {
@@ -19311,18 +19229,6 @@ function closeBt(btId) {
 
   saveInterventionsState(directory);
   renderInterventionsPage(getCurrentInterventionsTab("bt"));
-}
-
-function escapeHtml(value) {
-  return String(value || "").replace(/[&<>\"']/g, function (character) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    }[character];
-  });
 }
 
 function showArboContextMenu(x, y, arboId) {
@@ -19637,337 +19543,10 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
 
   function seededState() {
     return {
-      suppliers: [
-        {
-          id: "sup-1",
-          number: "FRN-001",
-          raisonSociale: "MecaParts Algérie",
-          nomCommercial: "MecaParts",
-          type: "Distributeur",
-          domaine: "Mécanique",
-          adresse: "Zone industrielle, Blida, Algérie",
-          wilaya: "Blida / Blida / Oued El Alleug",
-          tel1: "+213 555 20 20 20",
-          tel2: "+213 555 20 20 21",
-          email: "contact@mecaparts.dz",
-          website: "https://mecaparts.dz",
-          contact: {
-            name: "Karim Benali",
-            role: "Responsable commercial",
-            phone: "+213 555 20 20 22",
-            email: "karim.benali@mecaparts.dz",
-          },
-          legal: {
-            rc: "16/00-123456B",
-            nif: "001612345678901",
-            nis: "0016123456789",
-            articleImposition: "A-123",
-            rib: "AL12 0001 2345 6789 0123 4567",
-          },
-          deliveryDays: 5,
-          paymentTerm: "30 jours",
-          currency: "DZD",
-          discount: 5,
-          status: "Actif",
-          observations: "Fournisseur principal pour pièces mécaniques.",
-          bcCount: 18,
-          totalOrdered: 248000,
-          avgDeliveryDays: 4.8,
-          conformityRate: 98,
-          disputes: 1,
-          catalogue: [
-            {
-              id: "cat-1",
-              supplierNumber: "FRN-001",
-              article: "Roulement 6205 ZZ",
-              refFourn: "MP-6205-ZZ",
-              designation: "Roulement standard étanche",
-              price: 1200,
-              unit: "Pièce",
-              moq: 6,
-              leadTime: 4,
-              discount: 2,
-              availability: "En stock fournisseur",
-              observations: "Tarif négocié trimestriellement",
-              updatedAt: "2026-05-28T10:30:00.000Z",
-            },
-          ],
-          contracts: [
-            {
-              id: "ctr-1",
-              number: "CTR-001",
-              supplierNumber: "FRN-001",
-              type: "Contrat cadre",
-              objet: "Contrat cadre pièces mécaniques",
-              debut: "2026-01-01",
-              fin: "2026-12-31",
-              valeur: 1200000,
-              conditions: "Livraison sous 5 jours ouvrés.",
-              equipmentRefs: ["EQP-103"],
-              articleRefs: ["ART-102"],
-              alertDays: 30,
-              autoRenew: true,
-              documents: "Contrat signé + annexes",
-              responsible: "Responsable Maintenance",
-              status: "En cours",
-            },
-          ],
-          warranties: [
-            {
-              id: "war-1",
-              supplierNumber: "FRN-001",
-              equipment: "EQP-103 — Convoyeur ligne emballage",
-              debut: "2026-03-01",
-              durationMonths: 12,
-              endDate: "2027-03-01",
-              conditions: "Garantie pièces et main d'oeuvre.",
-              documents: "Bon de garantie, facture",
-              status: "En garantie",
-            },
-          ],
-          evaluations: [
-            {
-              id: "evl-1",
-              number: "EVL-001",
-              supplierNumber: "FRN-001",
-              periode: "T1 2026",
-              evaluator: "Responsable Maintenance",
-              scores: {
-                quality: 5,
-                delay: 4,
-                conformity: 5,
-                sav: 4,
-                price: 4,
-                communication: 5,
-              },
-              global: 4.5,
-              comments: "Bon niveau de service et réactivité correcte.",
-              correctiveActions: "Suivi du délai de confirmation de commande.",
-              recommendation: "Fournisseur recommandé",
-            },
-          ],
-        },
-        {
-          id: "sup-2",
-          number: "FRN-002",
-          raisonSociale: "ElectroPro Distribution",
-          nomCommercial: "ElectroPro",
-          type: "Distributeur",
-          domaine: "Électrique",
-          adresse: "Rue des ateliers, Alger, Algérie",
-          wilaya: "Alger / Kouba / Kouba",
-          tel1: "+213 561 10 11 12",
-          tel2: "+213 561 10 11 13",
-          email: "support@electropro.dz",
-          website: "https://electropro.dz",
-          contact: {
-            name: "Nadia Ziani",
-            role: "Chargée comptes",
-            phone: "+213 561 10 11 14",
-            email: "nadia.ziani@electropro.dz",
-          },
-          legal: {
-            rc: "16/00-223456B",
-            nif: "001622345678901",
-            nis: "0016223456789",
-            articleImposition: "A-221",
-            rib: "AL12 0002 2345 6789 0123 4567",
-          },
-          deliveryDays: 3,
-          paymentTerm: "60 jours",
-          currency: "DZD",
-          discount: 8,
-          status: "Actif",
-          observations: "Délai rapide sur composants électriques et capteurs.",
-          bcCount: 12,
-          totalOrdered: 156500,
-          avgDeliveryDays: 3.1,
-          conformityRate: 95,
-          disputes: 0,
-          catalogue: [
-            {
-              id: "cat-2",
-              supplierNumber: "FRN-002",
-              article: "Fusible NH 125A",
-              refFourn: "EP-NH125",
-              designation: "Fusible NH pour armoire TGBT",
-              price: 850,
-              unit: "Pièce",
-              moq: 10,
-              leadTime: 2,
-              discount: 3,
-              availability: "En stock fournisseur",
-              observations: "Stock disponible en permanence",
-              updatedAt: "2026-05-27T08:15:00.000Z",
-            },
-          ],
-          contracts: [
-            {
-              id: "ctr-2",
-              number: "CTR-002",
-              supplierNumber: "FRN-002",
-              type: "Accord de partenariat",
-              objet: "Accord de partenariat composants électriques",
-              debut: "2026-02-01",
-              fin: "2027-01-31",
-              valeur: 850000,
-              conditions: "Révision tarifaire trimestrielle.",
-              equipmentRefs: ["EQP-101"],
-              articleRefs: ["ART-101"],
-              alertDays: 45,
-              autoRenew: false,
-              documents: "Accord signé",
-              responsible: "Responsable Production",
-              status: "En cours",
-            },
-          ],
-          warranties: [
-            {
-              id: "war-2",
-              supplierNumber: "FRN-002",
-              equipment: "EQP-101 — TGBT Atlas",
-              debut: "2026-04-10",
-              durationMonths: 24,
-              endDate: "2028-04-10",
-              conditions: "Garantie constructeur + support technique.",
-              documents: "Facture, certificat",
-              status: "En garantie",
-            },
-          ],
-          evaluations: [
-            {
-              id: "evl-2",
-              number: "EVL-002",
-              supplierNumber: "FRN-002",
-              periode: "T1 2026",
-              evaluator: "Responsable Production",
-              scores: {
-                quality: 4,
-                delay: 5,
-                conformity: 5,
-                sav: 4,
-                price: 5,
-                communication: 4,
-              },
-              global: 4.5,
-              comments: "Livraisons conformes, bonne communication.",
-              correctiveActions:
-                "Continuer le suivi des confirmations de livraison.",
-              recommendation: "Fournisseur recommandé",
-            },
-          ],
-        },
-        {
-          id: "sup-3",
-          number: "FRN-003",
-          raisonSociale: "HydroServices",
-          nomCommercial: "HydroServices",
-          type: "Prestataire de service",
-          domaine: "Hydraulique",
-          adresse: "Zone industrielle, Oran, Algérie",
-          wilaya: "Oran / Es-Sénia / Es-Sénia",
-          tel1: "+213 550 33 44 55",
-          tel2: "+213 550 33 44 56",
-          email: "contact@hydroservices.dz",
-          website: "https://hydroservices.dz",
-          contact: {
-            name: "Sofiane Hadj",
-            role: "Directeur technique",
-            phone: "+213 550 33 44 57",
-            email: "sofiane.hadj@hydroservices.dz",
-          },
-          legal: {
-            rc: "31/00-445566A",
-            nif: "003144556677889",
-            nis: "0031445566778",
-            articleImposition: "A-041",
-            rib: "AL12 0003 2345 6789 0123 4567",
-          },
-          deliveryDays: 7,
-          paymentTerm: "Comptant",
-          currency: "DZD",
-          discount: 3,
-          status: "Suspendu",
-          observations:
-            "Interventions hydrauliques et lubrification spécialisée.",
-          bcCount: 7,
-          totalOrdered: 103200,
-          avgDeliveryDays: 6.2,
-          conformityRate: 89,
-          disputes: 2,
-          catalogue: [
-            {
-              id: "cat-3",
-              supplierNumber: "FRN-003",
-              article: "Huile hydraulique ISO VG 46",
-              refFourn: "HS-H46",
-              designation: "Huile hydraulique premium",
-              price: 980,
-              unit: "L",
-              moq: 12,
-              leadTime: 5,
-              discount: 0,
-              availability: "Sur commande",
-              observations: "Livraison sur commande",
-              updatedAt: "2026-05-26T14:00:00.000Z",
-            },
-          ],
-          contracts: [
-            {
-              id: "ctr-3",
-              number: "CTR-003",
-              supplierNumber: "FRN-003",
-              type: "Contrat de maintenance",
-              objet: "Contrat maintenance hydraulique",
-              debut: "2025-11-01",
-              fin: "2026-10-31",
-              valeur: 620000,
-              conditions: "Intervention sous 72 h.",
-              equipmentRefs: ["EQP-102"],
-              articleRefs: ["ART-103"],
-              alertDays: 20,
-              autoRenew: false,
-              documents: "Contrat signé",
-              responsible: "Technicien Maintenance",
-              status: "En cours",
-            },
-          ],
-          warranties: [
-            {
-              id: "war-3",
-              supplierNumber: "FRN-003",
-              equipment: "EQP-102 — Pompe de refroidissement R1",
-              debut: "2026-05-01",
-              durationMonths: 12,
-              endDate: "2027-05-01",
-              conditions: "Sous réserve d'entretien périodique.",
-              documents: "Bon de garantie, facture",
-              status: "En garantie",
-            },
-          ],
-          evaluations: [
-            {
-              id: "evl-3",
-              number: "EVL-003",
-              supplierNumber: "FRN-003",
-              periode: "T1 2026",
-              evaluator: "Technicien Maintenance",
-              scores: {
-                quality: 4,
-                delay: 3,
-                conformity: 4,
-                sav: 3,
-                price: 4,
-                communication: 3,
-              },
-              global: 3.5,
-              comments: "À surveiller sur le respect des délais.",
-              correctiveActions: "Relance des confirmations de disponibilité.",
-              recommendation: "À surveiller",
-            },
-          ],
-        },
-      ],
+      suppliers: [],
+      contracts: [],
+      warranties: [],
+      evaluations: [],
     };
   }
 
@@ -20198,9 +19777,9 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       ).length,
       score: items.length
         ? (
-            items.reduce((sum, item) => sum + Number(item.global || 0), 0) /
-            items.length
-          ).toFixed(2)
+          items.reduce((sum, item) => sum + Number(item.global || 0), 0) /
+          items.length
+        ).toFixed(2)
         : "0",
     };
   }
@@ -20709,34 +20288,34 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           <div><label>Domaine d'activité</label>
             <select name="domaine">
               ${[
-                "Mécanique",
-                "Électrique",
-                "Hydraulique",
-                "Lubrifiants",
-                "EPI / Sécurité",
-                "Autre",
-              ]
-                .map(
-                  (option) =>
-                    `<option ${current.domaine === option ? "selected" : ""}>${option}</option>`,
-                )
-                .join("")}
+        "Mécanique",
+        "Électrique",
+        "Hydraulique",
+        "Lubrifiants",
+        "EPI / Sécurité",
+        "Autre",
+      ]
+        .map(
+          (option) =>
+            `<option ${current.domaine === option ? "selected" : ""}>${option}</option>`,
+        )
+        .join("")}
             </select>
           </div>
           <div><label>Nom commercial</label><input name="nomCommercial" value="${current.nomCommercial || ""}" /></div>
           <div><label>Type fournisseur</label>
             <select name="type">
               ${[
-                "Fabricant",
-                "Distributeur",
-                "Prestataire de service",
-                "Sous-traitant",
-              ]
-                .map(
-                  (option) =>
-                    `<option ${current.type === option ? "selected" : ""}>${option}</option>`,
-                )
-                .join("")}
+        "Fabricant",
+        "Distributeur",
+        "Prestataire de service",
+        "Sous-traitant",
+      ]
+        .map(
+          (option) =>
+            `<option ${current.type === option ? "selected" : ""}>${option}</option>`,
+        )
+        .join("")}
             </select>
           </div>
           <div class="full"><label>Adresse complète</label><input name="adresse" value="${current.adresse || ""}" /></div>
@@ -20755,11 +20334,11 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           <div><label>Conditions de paiement</label>
             <select name="paymentTerm">
               ${["Comptant", "30 jours", "60 jours", "Autre"]
-                .map(
-                  (option) =>
-                    `<option ${current.paymentTerm === option ? "selected" : ""}>${option}</option>`,
-                )
-                .join("")}
+        .map(
+          (option) =>
+            `<option ${current.paymentTerm === option ? "selected" : ""}>${option}</option>`,
+        )
+        .join("")}
             </select>
           </div>
           <div><label>Devise</label><input name="currency" value="${current.currency || "DZD"}" /></div>
@@ -20767,11 +20346,11 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           <div class="full"><label>Statut</label>
             <select name="status">
               ${["Actif", "Suspendu", "Blacklisté"]
-                .map(
-                  (option) =>
-                    `<option ${current.status === option ? "selected" : ""}>${option}</option>`,
-                )
-                .join("")}
+        .map(
+          (option) =>
+            `<option ${current.status === option ? "selected" : ""}>${option}</option>`,
+        )
+        .join("")}
             </select>
           </div>
           <div class="full"><label>Observations</label><textarea name="observations">${current.observations || ""}</textarea></div>
@@ -20868,11 +20447,11 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           <div><label>Disponibilité</label>
             <select name="availability">
               ${["En stock fournisseur", "Sur commande", "Délai spécial"]
-                .map(
-                  (option) =>
-                    `<option ${current.availability === option ? "selected" : ""}>${option}</option>`,
-                )
-                .join("")}
+        .map(
+          (option) =>
+            `<option ${current.availability === option ? "selected" : ""}>${option}</option>`,
+        )
+        .join("")}
             </select>
           </div>
           <div class="full"><label>Observations</label><textarea name="observations">${current.observations || ""}</textarea></div>
@@ -20945,16 +20524,16 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           <div><label>Type contrat</label>
             <select name="type">
               ${[
-                "Contrat cadre",
-                "Contrat de maintenance",
-                "Garantie équipement",
-                "Accord de partenariat",
-              ]
-                .map(
-                  (option) =>
-                    `<option ${current.type === option ? "selected" : ""}>${option}</option>`,
-                )
-                .join("")}
+        "Contrat cadre",
+        "Contrat de maintenance",
+        "Garantie équipement",
+        "Accord de partenariat",
+      ]
+        .map(
+          (option) =>
+            `<option ${current.type === option ? "selected" : ""}>${option}</option>`,
+        )
+        .join("")}
             </select>
           </div>
           <div><label>Objet du contrat</label><input name="objet" value="${current.objet || ""}" /></div>
@@ -20973,11 +20552,11 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           <div class="full"><label>Statut</label>
             <select name="status">
               ${["En cours", "Expiré", "Résilié", "En renouvellement"]
-                .map(
-                  (option) =>
-                    `<option ${current.status === option ? "selected" : ""}>${option}</option>`,
-                )
-                .join("")}
+        .map(
+          (option) =>
+            `<option ${current.status === option ? "selected" : ""}>${option}</option>`,
+        )
+        .join("")}
             </select>
           </div>
         </form>
@@ -21004,7 +20583,7 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           id: isEdit ? current.id : `ctr-${Date.now()}`,
           number: isEdit
             ? current.number ||
-              nextRef("CTR-", supplier.contracts || [], "number")
+            nextRef("CTR-", supplier.contracts || [], "number")
             : nextRef("CTR-", supplier.contracts || [], "number"),
           supplierNumber: supplier.number,
           type: fd.get("type"),
@@ -21067,11 +20646,11 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           <div><label>Statut</label>
             <select name="status">
               ${["En garantie", "Garantie expirée"]
-                .map(
-                  (option) =>
-                    `<option ${current.status === option ? "selected" : ""}>${option}</option>`,
-                )
-                .join("")}
+        .map(
+          (option) =>
+            `<option ${current.status === option ? "selected" : ""}>${option}</option>`,
+        )
+        .join("")}
             </select>
           </div>
         </form>
@@ -21150,32 +20729,31 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       `
         <form class="supplier-form-grid" id="evaluationForm">
           <div><label>Fournisseur</label><select name="supplierId">${supplierOptions(currentSupplierId)}</select></div>
-          <div><label>Numéro</label><input name="number" value="${
-            current.number ||
-            nextRef(
-              "EVL-",
-              state.suppliers.flatMap((supplier) => supplier.evaluations || []),
-              "number",
-            )
-          }" readonly /></div>
+          <div><label>Numéro</label><input name="number" value="${current.number ||
+      nextRef(
+        "EVL-",
+        state.suppliers.flatMap((supplier) => supplier.evaluations || []),
+        "number",
+      )
+      }" readonly /></div>
           <div><label>Période évaluée</label><input name="periode" value="${current.periode || ""}" /></div>
           <div><label>Évaluateur</label><input name="evaluator" value="${current.evaluator || ""}" /></div>
           ${scoreNames
-            .map(
-              ([field, label]) =>
-                `<div><label>${label} (1 à 5)</label><input name="${field}" type="number" min="1" max="5" value="${current.scores?.[field] || ""}" /></div>`,
-            )
-            .join("")}
+        .map(
+          ([field, label]) =>
+            `<div><label>${label} (1 à 5)</label><input name="${field}" type="number" min="1" max="5" value="${current.scores?.[field] || ""}" /></div>`,
+        )
+        .join("")}
           <div class="full"><label>Commentaires</label><textarea name="comments">${current.comments || ""}</textarea></div>
           <div class="full"><label>Actions correctives</label><textarea name="correctiveActions">${current.correctiveActions || ""}</textarea></div>
           <div><label>Recommandation</label>
             <select name="recommendation">
               ${["Fournisseur recommandé", "À surveiller", "À remplacer"]
-                .map(
-                  (option) =>
-                    `<option ${current.recommendation === option ? "selected" : ""}>${option}</option>`,
-                )
-                .join("")}
+        .map(
+          (option) =>
+            `<option ${current.recommendation === option ? "selected" : ""}>${option}</option>`,
+        )
+        .join("")}
             </select>
           </div>
         </form>
@@ -21269,7 +20847,32 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
 
   window._fournisseurs = { loadState, saveState, seededState, renderPage };
 })();
+/*
+function resetApplicationData() {
+  const keys = [
+    "maintflow.organizationDirectory",
+    "maintflow.articleCatalog",
+    "maintflow.purchaseFlow",
+    "maintflow.planificationState",
+    "maintflow.administrationState",
+    "maintflow.stockInventoryState",
+    "maintflow.stockInventories",
+    "maintflow.stockSelectedInventory",
+    "maintflow.stockAlertReads",
+    "maintflow.connectedUserId",
+    "maintflow.equipmentCatalog",
+    "maintflow.organeCatalog",
+    "maintflow.demoDataVersion",
+    "maintflow.enterpriseProfile",
+    "maintflow.stockLedger",
+    "maintflow.interventions",
+    "maintflow.fournisseurs",
+  ];
 
+  keys.forEach((key) => localStorage.removeItem(key));
+
+  location.reload();
+}*/
 resetDemoDataIfNeeded();
 bootstrapRoute();
 renderNotifications();
