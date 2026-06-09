@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MaintFlow - Inscription</title>
+    <link rel="shortcut icon" href="icone.ico" type="image/x-icon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="auth.css" />
+  </head>
+  <body class="auth-page">
+    <main class="auth-layout" aria-label="Authentification MaintFlow">
+      <aside class="auth-brand-panel" aria-label="Présentation MaintFlow">
+        <div class="auth-blur-shape auth-blur-shape-one"></div>
+        <div class="auth-blur-shape auth-blur-shape-two"></div>
+        <div class="auth-blur-shape auth-blur-shape-three"></div>
+
+        <div class="auth-brand-content">
+          <a class="auth-logo" href="index.html" aria-label="MaintFlow accueil">
+            <img src="white.png" alt="Logo MaintFlow" />
+          </a>
+
+          <div class="auth-brand-copy">
+            <h1>Maint<span>Flow</span></h1>
+            <p>Plateforme intelligente de gestion de maintenance</p>
+          </div>
+
+          <div class="auth-feature-grid" aria-label="Fonctionnalités MaintFlow">
+            <div class="auth-feature-card">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              <span>Gestion des équipements</span>
+            </div>
+            <div class="auth-feature-card">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              <span>Maintenance préventive</span>
+            </div>
+            <div class="auth-feature-card">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              <span>Gestion des stocks</span>
+            </div>
+            <div class="auth-feature-card">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              <span>Analyse des performances</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="auth-brand-footer">Optimisez votre maintenance avec MaintFlow.</p>
+      </aside>
+
+      <section class="auth-form-panel auth-form-panel-wide">
+        <div class="auth-card auth-card-register" data-auth-card>
+          <div class="auth-card-head">
+            <div class="auth-kicker">Nouvel accès</div>
+            <h2>Créer un compte</h2>
+            <p>Rejoignez votre plateforme MaintFlow</p>
+          </div>
+
+          <form class="auth-form" id="registerForm" novalidate>
+            <div class="auth-form-grid">
+              <div class="auth-field" data-field>
+                <label for="firstName">Prénom</label>
+                <div class="auth-input-wrap">
+                  <i class="fa-regular fa-user" aria-hidden="true"></i>
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    placeholder="Prénom"
+                    autocomplete="given-name"
+                    required
+                  />
+                </div>
+                <p class="auth-error" aria-live="polite"></p>
+              </div>
+
+              <div class="auth-field" data-field>
+                <label for="lastName">Nom</label>
+                <div class="auth-input-wrap">
+                  <i class="fa-regular fa-user" aria-hidden="true"></i>
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    placeholder="Nom"
+                    autocomplete="family-name"
+                    required
+                  />
+                </div>
+                <p class="auth-error" aria-live="polite"></p>
+              </div>
+
+              <div class="auth-field" data-field>
+                <label for="birthDate">Date de naissance</label>
+                <div class="auth-input-wrap">
+                  <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                  <input
+                    id="birthDate"
+                    name="birthDate"
+                    type="date"
+                    autocomplete="bday"
+                    required
+                  />
+                </div>
+                <p class="auth-error" aria-live="polite"></p>
+              </div>
+
+              <div class="auth-field" data-field>
+                <label for="registerEmail">Adresse e-mail</label>
+                <div class="auth-input-wrap">
+                  <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                  <input
+                    id="registerEmail"
+                    name="email"
+                    type="email"
+                    placeholder="nom@entreprise.com"
+                    autocomplete="email"
+                    required
+                  />
+                </div>
+                <p class="auth-error" aria-live="polite"></p>
+              </div>
+
+              <div class="auth-field" data-field>
+                <label for="registerPassword">Mot de passe</label>
+                <div class="auth-input-wrap">
+                  <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                  <input
+                    id="registerPassword"
+                    name="password"
+                    type="password"
+                    placeholder="8 caractères minimum"
+                    autocomplete="new-password"
+                    required
+                    minlength="8"
+                  />
+                  <button
+                    class="auth-password-toggle"
+                    type="button"
+                    data-password-toggle
+                    aria-label="Afficher le mot de passe"
+                    aria-pressed="false"
+                  >
+                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <p class="auth-error" aria-live="polite"></p>
+              </div>
+
+              <div class="auth-field" data-field>
+                <label for="confirmPassword">Confirmation</label>
+                <div class="auth-input-wrap">
+                  <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="Confirmer le mot de passe"
+                    autocomplete="new-password"
+                    required
+                    minlength="8"
+                  />
+                  <button
+                    class="auth-password-toggle"
+                    type="button"
+                    data-password-toggle
+                    aria-label="Afficher le mot de passe"
+                    aria-pressed="false"
+                  >
+                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <p class="auth-error" aria-live="polite"></p>
+              </div>
+            </div>
+
+            <label class="auth-check auth-company-toggle" for="createCompany">
+              <input id="createCompany" name="createCompany" type="checkbox" />
+              <span>Créer une nouvelle entreprise</span>
+            </label>
+
+            <div class="auth-field" id="companyCodeField" data-field>
+              <label for="companyCode">Code entreprise</label>
+              <div class="auth-input-wrap">
+                <i class="fa-solid fa-barcode" aria-hidden="true"></i>
+                <input
+                  id="companyCode"
+                  name="companyCode"
+                  type="text"
+                  placeholder="Ex : MF-2026-ALGER"
+                  autocomplete="organization"
+                  required
+                />
+              </div>
+              <p class="auth-error" aria-live="polite"></p>
+            </div>
+
+            <section class="auth-company-card is-hidden" id="companyInfoCard" aria-labelledby="companyInfoTitle">
+              <div class="auth-section-head">
+                <div>
+                  <div class="card-mini-title">Entreprise</div>
+                  <h3 id="companyInfoTitle">Informations de l'entreprise</h3>
+                </div>
+                <span class="auth-section-badge">
+                  <i class="fa-solid fa-building" aria-hidden="true"></i>
+                  Nouvelle
+                </span>
+              </div>
+
+              <div class="auth-company-grid">
+                <div class="auth-upload-block">
+                  <label class="auth-upload-preview" for="companyLogo">
+                    <img id="companyLogoPreview" alt="" hidden />
+                    <i class="fa-solid fa-building" aria-hidden="true"></i>
+                  </label>
+                  <label class="btn btn-outline auth-upload-btn" for="companyLogo">
+                    <i class="fa-solid fa-upload" aria-hidden="true"></i>
+                    <span>Logo entreprise</span>
+                  </label>
+                  <input id="companyLogo" name="companyLogo" type="file" accept="image/*" />
+                  <p class="auth-field-hint">PNG, JPG ou WEBP.</p>
+                </div>
+
+                <div class="auth-company-fields">
+                  <div class="auth-field" data-field>
+                    <label for="companyName">Nom entreprise</label>
+                    <div class="auth-input-wrap">
+                      <i class="fa-solid fa-building" aria-hidden="true"></i>
+                      <input id="companyName" name="companyName" type="text" placeholder="MaintFlow Industrie" />
+                    </div>
+                    <p class="auth-error" aria-live="polite"></p>
+                  </div>
+
+                  <div class="auth-field" data-field>
+                    <label for="wilaya">Wilaya</label>
+                    <div class="auth-input-wrap">
+                      <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                      <input id="wilaya" name="wilaya" type="text" placeholder="Alger" />
+                    </div>
+                    <p class="auth-error" aria-live="polite"></p>
+                  </div>
+
+                  <div class="auth-field" data-field>
+                    <label for="daira">Daira</label>
+                    <div class="auth-input-wrap">
+                      <i class="fa-solid fa-map" aria-hidden="true"></i>
+                      <input id="daira" name="daira" type="text" placeholder="Daira" />
+                    </div>
+                    <p class="auth-error" aria-live="polite"></p>
+                  </div>
+
+                  <div class="auth-field" data-field>
+                    <label for="commune">Commune</label>
+                    <div class="auth-input-wrap">
+                      <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+                      <input id="commune" name="commune" type="text" placeholder="Commune" />
+                    </div>
+                    <p class="auth-error" aria-live="polite"></p>
+                  </div>
+
+                  <div class="auth-field" data-field>
+                    <label for="companyCreatedAt">Date de création</label>
+                    <div class="auth-input-wrap">
+                      <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+                      <input id="companyCreatedAt" name="companyCreatedAt" type="date" />
+                    </div>
+                    <p class="auth-error" aria-live="polite"></p>
+                  </div>
+
+                  <div class="auth-field" data-field>
+                    <label for="companyPhone">Téléphone</label>
+                    <div class="auth-input-wrap">
+                      <i class="fa-solid fa-phone" aria-hidden="true"></i>
+                      <input id="companyPhone" name="companyPhone" type="tel" placeholder="+213 000 00 00 00" autocomplete="tel" />
+                    </div>
+                    <p class="auth-error" aria-live="polite"></p>
+                  </div>
+
+                  <div class="auth-field auth-field-wide" data-field>
+                    <label for="companyAddress">Adresse</label>
+                    <div class="auth-input-wrap auth-textarea-wrap">
+                      <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+                      <textarea id="companyAddress" name="companyAddress" rows="3" placeholder="Adresse complète"></textarea>
+                    </div>
+                    <p class="auth-error" aria-live="polite"></p>
+                  </div>
+
+                  <div class="auth-field auth-field-wide" data-field>
+                    <label for="companyWebsite">Site web</label>
+                    <div class="auth-input-wrap">
+                      <i class="fa-solid fa-globe" aria-hidden="true"></i>
+                      <input id="companyWebsite" name="companyWebsite" type="url" placeholder="https://entreprise.com" autocomplete="url" />
+                    </div>
+                    <p class="auth-error" aria-live="polite"></p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div class="auth-status" role="status" aria-live="polite"></div>
+
+            <button class="btn btn-primary auth-submit" type="submit">
+              <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+              <span>Créer mon compte</span>
+            </button>
+          </form>
+
+          <p class="auth-switch">
+            Vous avez déjà un compte ?
+            <a class="auth-link" href="login.html">Se connecter</a>
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="auth.js"></script>
+  </body>
+</html>

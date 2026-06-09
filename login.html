@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MaintFlow - Connexion</title>
+    <link rel="shortcut icon" href="icone.ico" type="image/x-icon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="auth.css" />
+  </head>
+  <body class="auth-page">
+    <main class="auth-layout" aria-label="Authentification MaintFlow">
+      <aside class="auth-brand-panel" aria-label="Présentation MaintFlow">
+        <div class="auth-blur-shape auth-blur-shape-one"></div>
+        <div class="auth-blur-shape auth-blur-shape-two"></div>
+        <div class="auth-blur-shape auth-blur-shape-three"></div>
+
+        <div class="auth-brand-content">
+          <a class="auth-logo" href="index.html" aria-label="MaintFlow accueil">
+            <img src="white.png" alt="Logo MaintFlow" />
+          </a>
+
+          <div class="auth-brand-copy">
+            <h1>Maint<span>Flow</span></h1>
+            <p>Plateforme intelligente de gestion de maintenance</p>
+          </div>
+
+          <div class="auth-feature-grid" aria-label="Fonctionnalités MaintFlow">
+            <div class="auth-feature-card">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              <span>Gestion des équipements</span>
+            </div>
+            <div class="auth-feature-card">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              <span>Maintenance préventive</span>
+            </div>
+            <div class="auth-feature-card">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              <span>Gestion des stocks</span>
+            </div>
+            <div class="auth-feature-card">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              <span>Analyse des performances</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="auth-brand-footer">Optimisez votre maintenance avec MaintFlow.</p>
+      </aside>
+
+      <section class="auth-form-panel">
+        <div class="auth-card" data-auth-card>
+          <div class="auth-card-head">
+            <div class="auth-kicker">Espace utilisateur</div>
+            <h2>Connexion</h2>
+            <p>Connectez-vous à votre espace MaintFlow</p>
+          </div>
+
+          <form class="auth-form" id="loginForm" novalidate>
+            <div class="auth-field" data-field>
+              <label for="loginEmail">Adresse e-mail</label>
+              <div class="auth-input-wrap">
+                <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                <input
+                  id="loginEmail"
+                  name="email"
+                  type="email"
+                  placeholder="nom@entreprise.com"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+              <p class="auth-error" id="loginEmailError" aria-live="polite"></p>
+            </div>
+
+            <div class="auth-field" data-field>
+              <label for="loginPassword">Mot de passe</label>
+              <div class="auth-input-wrap">
+                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                <input
+                  id="loginPassword"
+                  name="password"
+                  type="password"
+                  placeholder="Votre mot de passe"
+                  autocomplete="current-password"
+                  required
+                  minlength="8"
+                />
+                <button
+                  class="auth-password-toggle"
+                  type="button"
+                  data-password-toggle
+                  aria-label="Afficher le mot de passe"
+                  aria-pressed="false"
+                >
+                  <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+              </div>
+              <p class="auth-error" id="loginPasswordError" aria-live="polite"></p>
+            </div>
+
+            <div class="auth-form-row">
+              <label class="auth-check" for="rememberMe">
+                <input id="rememberMe" name="remember" type="checkbox" />
+                <span>Se souvenir de moi</span>
+              </label>
+              <a class="auth-link" href="#" aria-label="Mot de passe oublié">
+                Mot de passe oublié ?
+              </a>
+            </div>
+
+            <div class="auth-status" role="status" aria-live="polite"></div>
+
+            <button class="btn btn-primary auth-submit" type="submit">
+              <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+              <span>Se connecter</span>
+            </button>
+          </form>
+
+          <p class="auth-switch">
+            Vous n'avez pas de compte ?
+            <a class="auth-link" href="register.html">Créer un compte</a>
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="auth.js"></script>
+  </body>
+</html>

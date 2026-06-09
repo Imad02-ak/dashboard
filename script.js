@@ -6881,7 +6881,7 @@ const englishInterfaceTranslations = new Map(
     Organes: "Components",
     Articles: "Items",
     Planification: "Planning",
-    Interventions: "Work orders",
+    Interventions: "interventions",
     Achats: "Purchasing",
     Fournisseurs: "Suppliers",
     Administration: "Administration",
@@ -7077,8 +7077,8 @@ const englishInterfaceTranslations = new Map(
     Calendrier: "Calendar",
     Compteurs: "Counters",
     "Ordre de travail": "Work order",
-    "Bon de travail": "Work report",
-    "Demande d'intervention": "Work request",
+    "Bon de travail": "Work ticket",
+    "Demande d'intervention": "work Request",
     "Vue globale de la maintenance": "Global maintenance overview",
     Wilaya: "Province",
     Daira: "District",
@@ -7129,7 +7129,7 @@ const englishInterfaceTranslations = new Map(
       "to simplify data entry.",
     DI: "WR",
     OT: "WO",
-    BT: "WRP",
+    BT: "WT",
     DA: "PR",
     BC: "PO",
     REC: "Receipt",
@@ -7138,7 +7138,7 @@ const englishInterfaceTranslations = new Map(
 
 const englishInterfacePatterns = [
   [/^Cr\u00e9er un OT depuis (.+)$/i, "Create a WO from $1"],
-  [/^Cr\u00e9er un BT depuis (.+)$/i, "Create a WRP from $1"],
+  [/^Cr\u00e9er un BT depuis (.+)$/i, "Create a WT from $1"],
   [/^Transformer en OT$/i, "Convert to WO"],
   [/^1 familles\s*·\s*1 \u00e9quipements$/i, "1 family · 1 equipment"],
   [/^1 familles\s*·\s*1 organes$/i, "1 family · 1 component"],
@@ -7159,16 +7159,24 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.":
+      "Hold Ctrl ou Cmd for select multiple component ",
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.":
+      "Hold Ctrl or Cmd for select multiple equipment.",
+
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs départements.":
+      "Hold Ctrl or Cmd for select multiple department.",
+
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs unités.":
-    "Hold Ctrl or Cmd for select multiple units.",
+      "Hold Ctrl or Cmd for select multiple units.",
     "Saisissez les informations du nouvel article.":
-    "Enter the information of the new item.",
+      "Enter the information of the new item.",
     "Saisissez les informations du nouvel organe.":
-    "Enter the information of the new component.",
+      "Enter the information of the new component.",
     "Saisissez les informations du nouveau groupe organe.":
-    "Enter the information of the new group component.",
+      "Enter the information of the new group component.",
     "Saisissez les informations du nouvel équipement":
-    "Enter the information of the new equipment",
+      "Enter the information of the new equipment",
     "Saisissez les informations de la nouvelle famille":
       "Enter the information of the new family",
     "Saisissez les informations du nouveau groupe.":
@@ -7279,10 +7287,10 @@ const englishInterfacePhraseTranslations = new Map(
       "Receive goods linked to a purchase order with quality control, quantity discrepancies and document traceability.",
     "Consultation des DA, BC et r\u00e9ceptions avec filtres par article, fournisseur, type document, statut, date et montant.":
       "View purchase requests, orders and receipts filtered by item, supplier, document type, status, date and amount.",
-    "Demandes d'intervention (DI)": "interventions requests (WR)",
+    "Demande d'intervention (DI)": "work request (WR)",
     "Ordres de travail (OT)": "Work orders (WO)",
-    "Bons de travail (BT)": "Work reports (WRP)",
-    "Historique des interventions": "Work order history",
+    "Bons de travail (BT)": "Work Tickets (WT)",
+    "Historique des interventions": "Intervention history",
     "Demandes d'achat (DA)": "Purchase requests (PR)",
     "Bons de commande (BC)": "Purchase orders (PO)",
     "Contrats & Garanties": "Contracts & Warranties",
@@ -7301,8 +7309,8 @@ const englishInterfacePhraseTranslations = new Map(
     "Familles articles": "Item families",
     "Arborescence hi\u00e9rarchique": "Hierarchical asset tree",
     "Activit\u00e9 r\u00e9cente": "Recent activity",
-    "Interventions r\u00e9centes": "Recent work orders",
-    "Prochaines interventions": "Upcoming work orders",
+    "Interventions r\u00e9centes": "Recent intervention",
+    "Prochaines interventions": "Upcoming intervention",
     "\u00c9quipements critiques": "Critical equipment",
     "Disponibilit\u00e9 par zone": "Availability by area",
     "Planning de la semaine": "Weekly schedule",
@@ -7556,7 +7564,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Liste des BC": "PO list",
     "Liste des DI": "WR list",
     "Liste des OT": "WO list",
-    "Liste des BT": "WRP list",
+    "Liste des BT": "WT list",
     "S\u00e9lectionner un BC": "Select a PO",
     "S\u00e9lectionner une DA": "Select a PR",
     "Fournisseur (auto BC)": "Supplier (auto PO)",
@@ -7625,6 +7633,19 @@ const englishInterfacePhraseTranslations = new Map(
     "Cl\u00f4turer": "Close",
     "Confirmer et cr\u00e9er OT": "Confirm and create work order",
     "Confirmer et cr\u00e9er BT": "Confirm and create work report",
+    "Cette page centralise les plans qui organisent les interventions de maintenance.":
+    "This page centralizes the plans that organize maintenance interventions.",
+    "Référentiel de base, contacts, légaux et conditions commerciales." :
+    "Basic repository, contacts, legal and commercial terms.",
+    "Demande d'intervention":
+    "Work Request ",
+    "Ordre de travail":
+    "Work order",
+    "Bon de travail":
+      "Work ticket",
+    "Demandes d'intervention (DI)":
+    "Work Request (WR)"
+    
   }),
 );
 
@@ -7730,7 +7751,7 @@ const englishInterfaceWordTranslations = new Map(
     da: "PR",
     di: "WR",
     ot: "WO",
-    bt: "WRP",
+    bt: "Wt",
     bc: "PO",
     rec: "receipt",
     acc\u00e8s: "access",
