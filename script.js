@@ -6424,7 +6424,7 @@ const administrationUiText = {
       systeme: "Système",
     },
     topbar: {
-      greetingMain: "Bonjour,الهايشة 🐮",
+      greetingMain: "Bonjour",
       greetingSub: "Votre tableau de bord de maintenance",
       searchPlaceholder: "Rechercher équipement, intervention…",
       notifications: "Notifications",
@@ -6511,7 +6511,7 @@ const administrationUiText = {
       systeme: "System",
     },
     topbar: {
-      greetingMain: "Hello,الهايشة 🐮",
+      greetingMain: "Hello",
       greetingSub: "Your maintenance dashboard",
       searchPlaceholder: "Search equipment, intervention…",
       notifications: "Notifications",
@@ -6788,7 +6788,7 @@ function localizeAdministrationText(value, state = null) {
     ["Ouvrir / Fermer", branch.sidebarToggle],
     ["Rechercher équipement, intervention…", branch.topbar.searchPlaceholder],
     ["Votre tableau de bord de maintenance", branch.topbar.greetingSub],
-    ["Bonjour,الهايشة 🐮", branch.topbar.greetingMain],
+    ["Bonjour,", branch.topbar.greetingMain],
     ["Généré le", languageKey === "en" ? "Generated on" : "Généré le"],
     ["Planification", languageKey === "en" ? "Planning" : "Planification"],
     [
@@ -7066,6 +7066,8 @@ const englishInterfaceTranslations = new Map(
     R\u00e9ception: "Receipt",
     R\u00e9ceptions: "Receipts",
     Historique: "History",
+    "Tous les équipements": "All equipment",
+    "Voir toutes": "View all",
     Demandeur: "Requester",
     "Date souhait\u00e9e": "Required date",
     "Quantit\u00e9 demand\u00e9e": "Requested quantity",
@@ -7078,10 +7080,75 @@ const englishInterfaceTranslations = new Map(
     "Bon de travail": "Work report",
     "Demande d'intervention": "Work request",
     "Vue globale de la maintenance": "Global maintenance overview",
+    Wilaya: "Province",
+    Daira: "District",
+    Commune: "Municipality",
+    "Informations verrouill\u00e9es": "Locked information",
+    "Information verrouill\u00e9es": "Locked information",
+    "Modification active": "Editing enabled",
+    "Non d\u00e9fini": "Not defined",
+    "Code non d\u00e9fini": "Code not defined",
+    "R\u00f4le non d\u00e9fini": "Role not defined",
+    "Cliquez sur > pour ouvrir un niveau": "Click > to open a level",
+    "R\u00e9f\u00e9rentiel de premier niveau": "Top-level directory",
+    "Directory of premier niveau": "Top-level directory",
+    "Niveau de structuration interm\u00e9diaire":
+      "Intermediate structure level",
+    "Niveau of structuration interm\u00e9diaire":
+      "Intermediate structure level",
+    "Niveau interm\u00e9diaire": "Intermediate level",
+    "Statut op\u00e9rationnel": "Operational status",
+    "Status op\u00e9rationnel": "Operational status",
+    "Nouvel \u00e9quipement": "New equipment",
+    "Nouvel equipment": "New equipment",
+    "Nouvel organe": "New component",
+    "Nouvel component": "New component",
+    "Nouvelle famille": "New family",
+    "Nouvelle famille \u00e9quipement": "New equipment family",
+    "Nouvelle famille organe": "New component family",
+    "\u00c9l\u00e9ments r\u00e9f\u00e9renc\u00e9s": "Referenced items",
+    "Elements r\u00e9f\u00e9renc\u00e9s": "Referenced items",
+    "D\u00e9partements uniquement": "Departments only",
+    "Departments uniquement": "Departments only",
+    "Unit\u00e9s multiples possibles": "Multiple units possible",
+    "Multiples units possibles": "Multiple units possible",
+    "Responsables attribu\u00e9s": "Assigned managers",
+    "Managers attribu\u00e9s": "Assigned managers",
+    "Familles reli\u00e9es": "Linked families",
+    "Families reli\u00e9es": "Linked families",
+    "Familles reli\u00e9es \u00e0 un groupe": "Families linked to a group",
+    "Rattachements actifs": "Active assignments",
+    "Articles r\u00e9f\u00e9renc\u00e9s": "Referenced items",
+    "Components r\u00e9f\u00e9renc\u00e9s": "Referenced components",
+    "Organes r\u00e9f\u00e9renc\u00e9s": "Referenced components",
+    "Le formulaire est d\u00e9coup\u00e9 entre les champs principaux et les informations compl\u00e9mentaires pour simplifier la saisie.":
+      "The form is split between main fields and additional information to simplify data entry.",
+    "The formulaire is d\u00e9coup\u00e9 between the fields principaux and the information":
+      "The form is split between main fields and additional information",
+    "compl\u00e9mentaires for simplifier the entry.":
+      "to simplify data entry.",
+    DI: "WR",
+    OT: "WO",
+    BT: "WRP",
+    DA: "PR",
+    BC: "PO",
+    REC: "Receipt",
   }),
 );
 
 const englishInterfacePatterns = [
+  [/^Cr\u00e9er un OT depuis (.+)$/i, "Create a WO from $1"],
+  [/^Cr\u00e9er un BT depuis (.+)$/i, "Create a WRP from $1"],
+  [/^Transformer en OT$/i, "Convert to WO"],
+  [/^1 familles\s*·\s*1 \u00e9quipements$/i, "1 family · 1 equipment"],
+  [/^1 familles\s*·\s*1 organes$/i, "1 family · 1 component"],
+  [/^1 familles$/i, "1 family"],
+  [/^1 organes$/i, "1 component"],
+  [/^(\d+) familles\s*·\s*(\d+) \u00e9quipements$/i, "$1 families · $2 equipment"],
+  [/^(\d+) familles\s*·\s*(\d+) organes$/i, "$1 families · $2 components"],
+  [/^(\d+) familles$/i, "$1 families"],
+  [/^(\d+) \u00e9quipements$/i, "$1 equipment"],
+  [/^(\d+) organes$/i, "$1 components"],
   [/^Liste des (.+)$/i, "List of $1"],
   [/^Cr\u00e9\u00e9 le (.+)$/i, "Created on $1"],
   [/^Derni\u00e8re connexion (.+)$/i, "Last login $1"],
@@ -7092,6 +7159,31 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs unités.":
+    "Hold Ctrl or Cmd for select multiple units.",
+    "Saisissez les informations du nouvel article.":
+    "Enter the information of the new item.",
+    "Saisissez les informations du nouvel organe.":
+    "Enter the information of the new component.",
+    "Saisissez les informations du nouveau groupe organe.":
+    "Enter the information of the new group component.",
+    "Saisissez les informations du nouvel équipement":
+    "Enter the information of the new equipment",
+    "Saisissez les informations de la nouvelle famille":
+      "Enter the information of the new family",
+    "Saisissez les informations du nouveau groupe.":
+      "Enter the information of the new group.",
+    "Saisissez les informations du nouveau département.":
+      "Enter the information of the new department.",
+
+    "Saisissez les informations de la nouvelle unité.":
+      "Enter the information of the new unit.",
+
+    "Saisissez les informations du nouveau groupe article.":
+      "Enter the information of the new item group.",
+
+    "Saisissez les informations de la nouvelle famille article.":
+      "Enter the information of the new item family.",
     "Structure des actifs et des emplacements":
       "Asset and location structure",
     "Structure de l'entreprise et des \u00e9quipes":
@@ -7124,6 +7216,17 @@ const englishInterfacePhraseTranslations = new Map(
       "Global software, alert and numbering configuration.",
     "Configuration globale du logiciel, des alertes et de la num\u00e9rotation automatique.":
       "Global software, alert and automatic numbering configuration.",
+    "Ajoutez les fichiers de r\u00e9f\u00e9rence de l'organe.":
+      "Add the component reference files.",
+    "D\u00e9finir qui peut faire quoi dans chaque module, avec une matrice \u00e9ditable par r\u00f4le.":
+      "Define who can do what in each module, with an editable matrix by role.",
+    "Choisissez un r\u00f4le, puis modifiez ses permissions via des boutons \u00e0 \u00e9tat.":
+      "Choose a role, then edit its permissions with status buttons.",
+    "Lecture large et cr\u00e9ation des DI/BT avec modification des OT affect\u00e9s.":
+      "Broad read access plus WR/WRP creation and assigned WO editing.",
+    "Stock uniquement": "Stock only",
+    "G\u00e8re le stock, les mouvements et les validations de r\u00e9ception.":
+      "Manages stock, movements and receipt approvals.",
     "Gestion des unit\u00e9s avec responsables et rattachements.":
       "Manage units, managers and assignments.",
     "Gestion des d\u00e9partements avec rattachement aux unit\u00e9s.":
@@ -7176,7 +7279,7 @@ const englishInterfacePhraseTranslations = new Map(
       "Receive goods linked to a purchase order with quality control, quantity discrepancies and document traceability.",
     "Consultation des DA, BC et r\u00e9ceptions avec filtres par article, fournisseur, type document, statut, date et montant.":
       "View purchase requests, orders and receipts filtered by item, supplier, document type, status, date and amount.",
-    "Demandes d'intervention (DI)": "Work requests (WR)",
+    "Demandes d'intervention (DI)": "interventions requests (WR)",
     "Ordres de travail (OT)": "Work orders (WO)",
     "Bons de travail (BT)": "Work reports (WRP)",
     "Historique des interventions": "Work order history",
@@ -7424,6 +7527,76 @@ const englishInterfacePhraseTranslations = new Map(
     "Aucune t\u00e2che sur cette date": "No task on this date",
     "Aucun mouvement ne correspond aux filtres actuels.":
       "No movement matches the current filters.",
+    "Les fiches stock appara\u00eetront ici avec les actions voir, modifier et supprimer.":
+      "Stock records will appear here with view, edit and delete actions.",
+    "Structuration compl\u00e8te des plans, de la r\u00e8gle de d\u00e9clenchement jusqu'\u00e0 la g\u00e9n\u00e9ration des OT.":
+      "Complete plan structure, from the trigger rule through WO generation.",
+    "OT planifi\u00e9s, en cours et en retard, avec pr\u00e9paration pour glisser-d\u00e9poser et cr\u00e9ation depuis une date.":
+      "Scheduled, active and overdue WO, prepared for drag-and-drop and date-based creation.",
+    "La vue courante ne contient pas d'OT planifi\u00e9s.":
+      "The current view contains no scheduled WO.",
+    "Plan actif \u2192 \u00e9ch\u00e9ance atteinte \u2192 OT g\u00e9n\u00e9r\u00e9 automatiquement \u2192 notification \u2192 assignation technicien \u2192 visible dans le calendrier.":
+      "Active plan -> due date reached -> WO generated automatically -> notification -> technician assignment -> visible in the calendar.",
+    "Relev\u00e9 saisi \u2192 seuil action atteint \u2192 OT g\u00e9n\u00e9r\u00e9 \u2192 compteur remis \u00e0 z\u00e9ro apr\u00e8s cl\u00f4ture BT \u2192 prochain d\u00e9clenchement recalcul\u00e9.":
+      "Reading entered -> action threshold reached -> WO generated -> meter reset after WRP closure -> next trigger recalculated.",
+    "Les relev\u00e9s alimentent les seuils d'alerte et d'action, avec g\u00e9n\u00e9ration d'OT quand la valeur critique est atteinte.":
+      "Readings feed alert and action thresholds, with WO generation when the critical value is reached.",
+    "Si le seuil d'action est d\u00e9pass\u00e9, un OT est ajout\u00e9 \u00e0 la file planifi\u00e9e et le plan concern\u00e9 reste tra\u00e7able dans l'historique.":
+      "If the action threshold is exceeded, a WO is added to the planned queue and the related plan remains traceable in history.",
+    "Le compteur li\u00e9 pourra d\u00e9clencher un OT automatique.":
+      "The linked meter can trigger an automatic WO.",
+    "Cliquez une date pour voir le contenu planifi\u00e9 et ajoutez une t\u00e2che directement sur cette journ\u00e9e.":
+      "Click a date to view scheduled content and add a task directly to that day.",
+    "Vous pouvez s\u00e9lectionner une date puis ajouter une t\u00e2che ou un OT planifi\u00e9.":
+      "You can select a date, then add a task or a scheduled WO.",
+    "La date s\u00e9lectionn\u00e9e reste active pendant la navigation du calendrier.":
+      "The selected date remains active while navigating the calendar.",
+    "OT du mois": "WO this month",
+    "Liste des DA": "PR list",
+    "Liste des BC": "PO list",
+    "Liste des DI": "WR list",
+    "Liste des OT": "WO list",
+    "Liste des BT": "WRP list",
+    "S\u00e9lectionner un BC": "Select a PO",
+    "S\u00e9lectionner une DA": "Select a PR",
+    "Fournisseur (auto BC)": "Supplier (auto PO)",
+    "Article (auto BC)": "Item (auto PO)",
+    "DA li\u00e9e": "Linked PR",
+    "Date impression": "Print date",
+    "Num\u00e9ro DI li\u00e9": "Linked WR number",
+    "Num\u00e9ro OT li\u00e9": "Linked WO number",
+    "Num\u00e9ro OT": "WO number",
+    "Num\u00e9ro BT": "WRP number",
+    "Titre / R\u00e9f DI": "Title / WR ref.",
+    "RIB / Coordonn\u00e9es bancaires": "Bank details / account information",
+    "Point de d\u00e9part du flux achat, avec cr\u00e9ation manuelle ou automatique depuis le stock.":
+      "Starting point of the purchasing workflow, with manual or automatic creation from stock.",
+    "Commandes fournisseurs, regroupement des DA et suivi des statuts de livraison.":
+      "Supplier orders, PR grouping and delivery status tracking.",
+    "Enregistrement de la marchandise re\u00e7ue, contr\u00f4le qualit\u00e9 et mise \u00e0 jour du stock.":
+      "Record received goods, quality control and stock updates.",
+    "Consultation consolid\u00e9e DA/BC/REC avec filtres multi-crit\u00e8res et export.":
+      "Consolidated PR/PO/receipt view with multi-criteria filters and export.",
+    "Quantit\u00e9 en stock": "Quantity in stock",
+    "Sous-pages stock": "Stock subpages",
+    "Objectif, consignes, date limite de saisie terrain...":
+      "Objective, instructions and field entry deadline...",
+    "BC (bon de commande / r\u00e9ception)": "PO (purchase order / receipt)",
+    "BT (bon de sortie)": "Issue note",
+    "BT / BC / inventaire...": "WRP / PO / inventory...",
+    "DA en attente": "Pending PR",
+    "DA urgentes": "Urgent PR",
+    "DA valid\u00e9es": "Approved PR",
+    "BC envoy\u00e9s": "Sent PO",
+    "BC re\u00e7us complets": "Fully received PO",
+    "Nom ou r\u00e9f\u00e9rence article": "Item name or reference",
+    "Cr\u00e9ation, validation et transformation en OT avec \u00e9quipements, organes et demandeur li\u00e9s au r\u00e9f\u00e9rentiel.":
+      "Create, approve and convert to WO with equipment, components and requester linked to the directory.",
+    "Vue consolid\u00e9e des DI, OT et BT avec filtres et export Excel / PDF.":
+      "Consolidated WR, WO and WRP view with filters and Excel / PDF export.",
+    "Total DI": "Total WR",
+    "Total OT": "Total WO",
+    "Total BT": "Total WRP",
     "Aucune fiche stock": "No stock record",
     "Aucun contrat.": "No contract.",
     "Aucune garantie.": "No warranty.",
@@ -7524,6 +7697,8 @@ const englishInterfaceWordTranslations = new Map(
     plus: "more",
     plusieurs: "multiple",
     pour: "for",
+    pourra: "can",
+    pr\u00e9paration: "preparation",
     puis: "then",
     quand: "when",
     que: "that",
@@ -7552,6 +7727,12 @@ const englishInterfaceWordTranslations = new Map(
     votre: "your",
     vous: "you",
     "\u00eatre": "be",
+    da: "PR",
+    di: "WR",
+    ot: "WO",
+    bt: "WRP",
+    bc: "PO",
+    rec: "receipt",
     acc\u00e8s: "access",
     actif: "active",
     actifs: "active",
@@ -7562,11 +7743,15 @@ const englishInterfaceWordTranslations = new Map(
     affich\u00e9e: "displayed",
     affich\u00e9es: "displayed",
     afficher: "display",
+    ajoutez: "add",
     ajout\u00e9: "added",
     ajouter: "add",
+    alimentent: "feed",
     alerte: "alert",
     alertes: "alerts",
     annuler: "cancel",
+    attente: "pending",
+    matières: "materials",
     anomalie: "issue",
     anomalies: "issues",
     article: "item",
@@ -7588,6 +7773,7 @@ const englishInterfaceWordTranslations = new Map(
     champs: "fields",
     choisir: "choose",
     choisissez: "choose",
+    cliquez: "click",
     cl\u00f4ture: "closing",
     cl\u00f4tur\u00e9: "closed",
     code: "code",
@@ -7611,6 +7797,7 @@ const englishInterfaceWordTranslations = new Map(
     connexions: "logins",
     consomm\u00e9: "consumed",
     consomm\u00e9s: "consumed",
+    consignes: "instructions",
     consultation: "view",
     consulter: "view",
     contact: "contact",
@@ -7621,6 +7808,7 @@ const englishInterfaceWordTranslations = new Map(
     correctives: "corrective",
     courante: "current",
     courant: "current",
+    cr\u00e9er: "create",
     cr\u00e9ation: "creation",
     cr\u00e9er: "create",
     cr\u00e9\u00e9: "created",
@@ -7634,6 +7822,8 @@ const englishInterfaceWordTranslations = new Map(
     d\u00e9clenchements: "triggers",
     d\u00e9faut: "failure",
     d\u00e9lai: "delay",
+    d\u00e9clencher: "trigger",
+    d\u00e9finir: "define",
     demande: "request",
     demandes: "requests",
     demand\u00e9e: "requested",
@@ -7642,6 +7832,7 @@ const englishInterfaceWordTranslations = new Map(
     derni\u00e8re: "last",
     dernier: "last",
     description: "description",
+    d\u00e9part: "start",
     d\u00e9signation: "description",
     d\u00e9signations: "descriptions",
     d\u00e9tail: "detail",
@@ -7686,6 +7877,8 @@ const englishInterfaceWordTranslations = new Map(
     fiches: "records",
     filtre: "filter",
     filtres: "filters",
+    classés: "classified",
+    intermédiaire: "intermediate",
     fournisseur: "supplier",
     fournisseurs: "suppliers",
     fr\u00e9quence: "frequency",
@@ -7694,6 +7887,7 @@ const englishInterfaceWordTranslations = new Map(
     g\u00e9n\u00e9ration: "generation",
     g\u00e9n\u00e9r\u00e9: "generated",
     g\u00e9n\u00e9r\u00e9e: "generated",
+    glisser: "drag",
     gestion: "management",
     groupe: "group",
     groupes: "groups",
@@ -7705,6 +7899,7 @@ const englishInterfaceWordTranslations = new Map(
     impression: "print",
     imprimer: "print",
     inactif: "inactive",
+    journ\u00e9e: "day",
     intervention: "work order",
     interventions: "work orders",
     inventaire: "inventory",
@@ -7728,12 +7923,14 @@ const englishInterfaceWordTranslations = new Map(
     manquants: "missing",
     marque: "brand",
     matrice: "matrix",
+    marchandise: "goods",
     message: "message",
     minimum: "minimum",
     mise: "update",
     modification: "change",
     modifications: "changes",
     modifier: "edit",
+    modifiez: "edit",
     module: "module",
     modules: "modules",
     montant: "amount",
@@ -7808,6 +8005,7 @@ const englishInterfaceWordTranslations = new Map(
     r\u00f4le: "role",
     r\u00f4les: "roles",
     saisie: "entry",
+    saisi: "entered",
     sauvegarde: "backup",
     s\u00e9curit\u00e9: "safety",
     s\u00e9lectionner: "select",
@@ -7819,6 +8017,7 @@ const englishInterfaceWordTranslations = new Map(
     sortie: "issue",
     sorties: "issues",
     statut: "status",
+    statuts: "statuses",
     stock: "stock",
     suivant: "next",
     suivi: "tracking",
@@ -7844,6 +8043,7 @@ const englishInterfaceWordTranslations = new Map(
     titre: "title",
     total: "total",
     tra\u00e7abilit\u00e9: "traceability",
+    tra\u00e7able: "traceable",
     transfert: "transfer",
     transferts: "transfers",
     transformer: "convert",
@@ -7866,13 +8066,25 @@ const englishInterfaceWordTranslations = new Map(
     appartenir: "belong",
     calcul\u00e9: "calculated",
     calcul\u00e9e: "calculated",
+    commune: "municipality",
+    communes: "municipalities",
+    compl\u00e9mentaire: "additional",
+    compl\u00e9mentaires: "additional",
     coordonn\u00e9es: "contact details",
+    daira: "district",
+    d\u00e9coup\u00e9: "split",
+    d\u00e9coup\u00e9e: "split",
+    d\u00e9fini: "defined",
+    d\u00e9finie: "defined",
+    \u00e9l\u00e9ment: "item",
+    \u00e9l\u00e9ments: "items",
     enregistr\u00e9: "saved",
     enregistr\u00e9e: "saved",
     enregistr\u00e9es: "saved",
     enregistr\u00e9s: "saved",
     fig\u00e9: "fixed",
     fig\u00e9e: "fixed",
+    formulaire: "form",
     global: "global",
     globale: "global",
     information: "information",
@@ -7887,6 +8099,9 @@ const englishInterfaceWordTranslations = new Map(
     maximum: "maximum",
     n\u00e9gatif: "negative",
     n\u00e9gatifs: "negative",
+    niveau: "level",
+    nouvel: "new",
+    ouvrir: "open",
     ouvert: "open",
     ouverte: "open",
     ouvertes: "open",
@@ -7896,19 +8111,41 @@ const englishInterfaceWordTranslations = new Map(
     pr\u00eat: "ready",
     pr\u00eate: "ready",
     principale: "primary",
+    principaux: "main",
+    possible: "possible",
+    possibles: "possible",
+    premier: "first",
+    r\u00e9f\u00e9renc\u00e9: "referenced",
+    r\u00e9f\u00e9renc\u00e9e: "referenced",
+    r\u00e9f\u00e9renc\u00e9es: "referenced",
+    r\u00e9f\u00e9renc\u00e9s: "referenced",
+    reli\u00e9: "linked",
+    reli\u00e9e: "linked",
+    reli\u00e9es: "linked",
+    reli\u00e9s: "linked",
     rattach\u00e9: "assigned",
     rattach\u00e9e: "assigned",
     rattach\u00e9es: "assigned",
     rattach\u00e9s: "assigned",
+    recalcul\u00e9: "recalculated",
+    remis: "reset",
+    retard: "late",
     r\u00e8gle: "rule",
     r\u00e8gles: "rules",
+    simplifier: "simplify",
     souhait\u00e9: "requested",
     souhait\u00e9e: "requested",
     synchronis\u00e9: "synchronized",
     synchronis\u00e9e: "synchronized",
+    structuration: "structure",
     unique: "single",
+    uniquement: "only",
+    verrouill\u00e9: "locked",
+    verrouill\u00e9e: "locked",
+    verrouill\u00e9es: "locked",
     visible: "visible",
     visibles: "visible",
+    wilaya: "province",
     voir: "view",
   }),
 );
@@ -9496,7 +9733,7 @@ function attachAdministrationGeneralHandlers() {
       defaultLanguage:
         normalizeAdministrationLanguage(
           form.querySelector("#adminDefaultLanguage")?.value ||
-            nextState.settings.defaultLanguage,
+          nextState.settings.defaultLanguage,
         ),
       timezone:
         form.querySelector("#adminTimezone")?.value ||
@@ -10604,6 +10841,27 @@ function getStockDirectory() {
     console.error("Erreur lecture stock :", error);
     return fallback;
   }
+}
+
+function buildStockLocationOptions(selectedValue = "") {
+  const locations = getStockDirectory().locations || [];
+
+  if (!locations.length) {
+    return `<option value="">Aucun magasin</option>`;
+  }
+
+  return locations
+    .map(
+      (location) => `
+        <option
+          value="${escapeHtml(location.name)}"
+          ${location.name === selectedValue ? "selected" : ""}
+        >
+          ${escapeHtml(location.code)} - ${escapeHtml(location.name)}
+        </option>
+      `,
+    )
+    .join("");
 }
 
 function saveStockDirectory(directory) {
@@ -12558,7 +12816,7 @@ function renderStockMovementCreateModal() {
           <label>Code mouvement</label>
           <input type="text" name="id" value="${escapeHtml(defaultId)}" readonly />
         </div>
-        
+
         <div class="field-group field-group-wide">
           <label>Type de mouvement</label>
           <select name="type" data-stock-create-movement-type required>
@@ -12587,7 +12845,7 @@ function renderStockMovementCreateModal() {
     accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
   />
 </div>
-        
+
 <div class="field-group">
   <label>Magasin source</label>
 
@@ -12625,8 +12883,8 @@ function renderStockMovementCreateModal() {
     </button>
   </div>
 </div>
-       
-        
+
+
         <div class="field-group field-group-wide">
           <label>Observations</label>
           <textarea name="observations" rows="4"></textarea>
@@ -13301,7 +13559,7 @@ function buildStockInventoryContent() {
             `
       : `<p>Aucun inventaire sélectionné.</p>`
     }
-            
+
           </div>
         </div>
       </div>
@@ -15717,14 +15975,24 @@ function buildAchatsArticleOptions(selectedValue) {
   return options.join("");
 }
 
-function buildAchatsDaOptions(demandes, selectedIds) {
-  const selectedSet = new Set(selectedIds || []);
+function buildAchatsDaOptions(
+  demandes,
+  selectedId = ""
+) {
   return demandes
-    .filter((item) => item.status === "Validée" || selectedSet.has(item.id))
-    .map((item) => {
-      const selected = selectedSet.has(item.id) ? "selected" : "";
-      return `<option value="${escapeHtml(item.id)}" ${selected}>${escapeHtml(item.number)} - ${escapeHtml(item.articleLabel || "Article non défini")}</option>`;
-    })
+    .map((item) => `
+      <option
+        value="${item.id}"
+        ${item.id === selectedId
+        ? "selected"
+        : ""
+      }
+      >
+        ${item.number}
+        -
+        ${item.articleLabel || "Article"}
+      </option>
+    `)
     .join("");
 }
 
@@ -15758,16 +16026,55 @@ function buildAchatsTabs(activeSubpageKey) {
   `;
 }
 
-function buildAchatsListActions(subpageKey, recordId) {
+function buildAchatsListActions(
+  subpageKey,
+  recordId,
+  status = ""
+) {
+  const hideEdit =
+    subpageKey === "demandes-achat" &&
+    status === "Transformée en BC";
+
   return `
     <div class="org-row-actions">
-      <button class="org-icon-btn" data-org-action="details" type="button" data-ach-action="details" data-ach-subpage="${subpageKey}" data-ach-id="${recordId}" title="Voir">
+      <button
+        class="org-icon-btn"
+        data-org-action="details"
+        type="button"
+        data-ach-action="details"
+        data-ach-subpage="${subpageKey}"
+        data-ach-id="${recordId}"
+        title="Voir"
+      >
         <i class="fa-regular fa-eye"></i>
       </button>
-      <button class="org-icon-btn" data-org-action="edit" type="button" data-ach-action="edit" data-ach-subpage="${subpageKey}" data-ach-id="${recordId}" title="Modifier">
+
+      ${!hideEdit
+      ? `
+      <button
+        class="org-icon-btn"
+        data-org-action="edit"
+        type="button"
+        data-ach-action="edit"
+        data-ach-subpage="${subpageKey}"
+        data-ach-id="${recordId}"
+        title="Modifier"
+      >
         <i class="fa-regular fa-pen-to-square"></i>
       </button>
-      <button class="org-icon-btn danger" data-org-action="delete" type="button" data-ach-action="delete" data-ach-subpage="${subpageKey}" data-ach-id="${recordId}" title="Supprimer">
+      `
+      : ""
+    }
+
+      <button
+        class="org-icon-btn danger"
+        data-org-action="delete"
+        type="button"
+        data-ach-action="delete"
+        data-ach-subpage="${subpageKey}"
+        data-ach-id="${recordId}"
+        title="Supprimer"
+      >
         <i class="fa-regular fa-trash-can"></i>
       </button>
     </div>
@@ -15810,30 +16117,20 @@ function renderAchatsPageActions(activeSubpageKey) {
     "bons-commande": "Nouveau BC",
     receptions: "Nouvelle réception",
   };
-
-  const regroupButton =
-    activeSubpageKey === "bons-commande"
-      ? `
-        <button class="btn btn-outline" type="button" data-ach-group-da="true">
-          <i class="fa-solid fa-object-group"></i>
-          <span>Regrouper DA validées</span>
-        </button>
-      `
-      : "";
-
   pageActionsEl.innerHTML = `
-    ${regroupButton}
-    <button class="btn btn-primary" type="button" data-ach-create="${activeSubpageKey}">
-      <i class="fa-solid fa-plus"></i>
-      <span>${labels[activeSubpageKey] || "Créer"}</span>
-    </button>
-  `;
+  <button class="btn btn-primary" type="button" data-ach-create="${activeSubpageKey}">
+    <i class="fa-solid fa-plus"></i>
+    <span>${labels[activeSubpageKey] || "Créer"}</span>
+  </button>
+`;
 }
 
 function renderAchatsDemandsPage(state, activeSubpageKey) {
   if (!pageContentEl) return;
 
-  const rows = state.demandes.length
+  const activeDemandes = state.demandes;
+
+  const rows = activeDemandes.length
     ? state.demandes
       .map(
         (da) => `
@@ -15841,11 +16138,25 @@ function renderAchatsDemandsPage(state, activeSubpageKey) {
               <td><strong>${escapeHtml(da.number)}</strong></td>
               <td class="muted">${formatAchatsDate(da.createdAt)}</td>
               <td>${escapeHtml(da.requester || "-")}</td>
-              <td>${escapeHtml(da.origin || "-")}</td>
+              <td>
+  <span class="status-badge ${da.urgency === "Critique"
+            ? "badge-danger"
+            : da.urgency === "Urgente"
+              ? "badge-warning"
+              : "badge-info"
+          }">
+    ${escapeHtml(da.urgency || "Normale")}
+  </span>
+</td>
               <td>${escapeHtml(da.articleLabel || "-")}</td>
               <td>${formatStockNumber(da.quantity || 0)}</td>
+              <td>
+  ${formatStockNumber(
+            da.estimatedUnitPrice || 0
+          )} DA
+</td>
               <td><span class="status-badge ${getAchatsStatusBadgeClass(da.status)}">${escapeHtml(da.status || "-")}</span></td>
-              <td>${buildAchatsListActions("demandes-achat", da.id)}</td>
+              <td>${buildAchatsListActions("demandes-achat", da.id, da.status)}</td>
             </tr>
           `,
       )
@@ -15872,43 +16183,52 @@ function renderAchatsDemandsPage(state, activeSubpageKey) {
       <div>
         <div class="org-section-kicker">Achats</div>
         <h2>Demandes d'achat (DA)</h2>
-        <p>Création manuelle ou depuis le stock minimum. Les DA validées peuvent ensuite être regroupées dans un ou plusieurs BC.</p>
+        <p>Gestion des demandes d'achat avec validation,
+priorisation par niveau d'urgence et
+transformation en bons de commande.</p>
       </div>
       <div class="org-section-pills">
-        <span class="status-badge badge-info">${state.demandes.length} DA</span>
+        <span class="status-badge badge-info">${activeDemandes.length} DA</span>
         <span class="status-badge badge-success">${state.demandes.filter((item) => item.status === "Validée").length} validées</span>
       </div>
     </div>
-
-    ${renderOrganizationStats([
+${renderOrganizationStats([
     {
-      label: "DA en brouillon",
+      label: "DA en attente",
       value: String(
-        state.demandes.filter((item) => item.status === "Brouillon").length,
+        state.demandes.filter(
+          (item) => item.status === "En attente"
+        ).length,
       ),
-      note: "À compléter avant validation",
+      note: "À traiter",
+    },
+    {
+      label: "DA urgentes",
+      value: String(
+        state.demandes.filter(
+          (item) =>
+            item.urgency === "Urgente" ||
+            item.urgency === "Critique"
+        ).length,
+      ),
+      note: "Priorité élevée",
     },
     {
       label: "DA validées",
       value: String(
-        state.demandes.filter((item) => item.status === "Validée").length,
+        state.demandes.filter(
+          (item) => item.status === "Validée"
+        ).length,
       ),
-      note: "Prêtes pour transformation en BC",
-    },
-    {
-      label: "Origine stock auto",
-      value: String(
-        state.demandes.filter((item) => item.origin === "Stock automatique")
-          .length,
-      ),
-      note: "Demandes issues du seuil minimum",
+      note: "Prêtes pour BC",
     },
   ])}
+
 
     <div class="card org-list-card">
       <div class="card-head">
         <div class="card-title"><i class="fa-solid fa-list-check"></i> Liste des DA</div>
-        <span class="status-badge badge-info">${state.demandes.length} lignes</span>
+        <span class="status-badge badge-info">${activeDemandes.length} lignes</span>
       </div>
       <div class="table-wrap">
         <table>
@@ -15917,9 +16237,10 @@ function renderAchatsDemandsPage(state, activeSubpageKey) {
               <th>Numéro</th>
               <th>Date création</th>
               <th>Demandeur</th>
-              <th>Origine</th>
+              <th>Urgence</th>
               <th>Article</th>
               <th>Qté</th>
+              <th>Prix estimé</th>
               <th>Statut</th>
               <th>Actions</th>
             </tr>
@@ -16391,30 +16712,52 @@ function buildAchatsFormFooter(subpageKey, mode, recordId) {
     <input type="hidden" name="subpageKey" value="${subpageKey}" />
   `;
 }
+function getSuppliersDirectory() {
+  try {
+    const stored = localStorage.getItem("maintflow.fournisseurs");
+    console.log("Fournisseurs stockés :", stored);
+    if (!stored) {
+      return { suppliers: [] };
+    }
+
+    return JSON.parse(stored);
+  } catch (error) {
+    return { suppliers: [] };
+  }
+}
 
 function buildSupplierOptions(selectedSupplier = "") {
-  const suppliers = Array.from(
-    new Set(
-      [
-        ...equipmentDefaults.equipments.map((e) => e.supplier),
-        ...organeDefaults.organes.map((o) => o.supplier),
-      ].filter(Boolean),
-    ),
-  ).sort();
+  const suppliers =
+    getSuppliersDirectory().suppliers || [];
 
   return [
     '<option value="">Sélectionner un fournisseur</option>',
     ...suppliers.map(
       (supplier) => `
         <option
-          value="${supplier}"
-          ${supplier === selectedSupplier ? "selected" : ""}
+          value="${supplier.nomCommercial}"
+          ${supplier.nomCommercial === selectedSupplier
+          ? "selected"
+          : ""
+        }
         >
-          ${supplier}
+          ${supplier.number} - ${supplier.nomCommercial}
         </option>
-      `,
+      `
     ),
   ].join("");
+}
+
+function getSupplierByName(name) {
+  const suppliers =
+    getSuppliersDirectory().suppliers || [];
+
+  return (
+    suppliers.find(
+      (supplier) =>
+        supplier.nomCommercial === name
+    ) || null
+  );
 }
 
 function buildAchatsDaForm(record, mode) {
@@ -16430,14 +16773,6 @@ function buildAchatsDaForm(record, mode) {
           <input type="text" value="${escapeHtml(codePreview)}" disabled />
         </div>
         <div class="field-group">
-          <label>Date création</label>
-          <input type="text" value="${escapeHtml(formatAchatsDate(datePreview))}" disabled />
-        </div>
-        <div class="field-group">
-          <label>Demandeur</label>
-          <input type="text" value="${escapeHtml(record?.requester || achatsCurrentUser)}" disabled />
-        </div>
-        <div class="field-group">
           <label for="daArticle">Article</label>
           <select id="daArticle" name="articleId">${buildAchatsArticleOptions(record?.articleId || "")}</select>
         </div>
@@ -16445,6 +16780,17 @@ function buildAchatsDaForm(record, mode) {
           <label for="daQuantity">Quantité demandée</label>
           <input id="daQuantity" name="quantity" type="number" min="1" step="1" value="${escapeHtml(String(record?.quantity || ""))}" required />
         </div>
+        <div class="field-group">
+  <label for="daEstimatedPrice">Prix unitaire estimé</label>
+  <input
+    id="daEstimatedPrice"
+    name="estimatedUnitPrice"
+    type="number"
+    min="0"
+    step="0.01"
+    value="${escapeHtml(String(record?.estimatedUnitPrice || ""))}"
+  />
+</div>
         <div class="field-group">
   <label for="daSupplier">Fournisseur</label>
   <select id="daSupplier" name="preferredSupplier">
@@ -16456,21 +16802,14 @@ function buildAchatsDaForm(record, mode) {
           <input id="daNeededDate" name="neededDate" type="date" value="${escapeHtml(record?.neededDate || "")}" />
         </div>
         <div class="field-group">
-          <label for="daStatus">Statut</label>
-          <select id="daStatus" name="status" required>
-            ${[
-      "En attente validation",
-      "Validée",
-      "Annulée",
-      "Clôturée",
-    ]
-      .map(
-        (status) =>
-          `<option value="${status}" ${record?.status === status ? "selected" : ""}>${status}</option>`,
-      )
-      .join("")}
-          </select>
-        </div>
+  <label for="daUrgency">Urgence</label>
+  <select id="daUrgency" name="urgency" required>
+    <option value="Normale" ${record?.urgency === "Normale" ? "selected" : ""}>Normale</option>
+    <option value="Urgente" ${record?.urgency === "Urgente" ? "selected" : ""}>Urgente</option>
+    <option value="Critique" ${record?.urgency === "Critique" ? "selected" : ""}>Critique</option>
+  </select>
+</div>
+
         <div class="field-group field-group-wide">
           <label for="daReason">Justification</label>
           <textarea id="daReason" name="reason" rows="4" placeholder="Motif de la demande">${escapeTextarea(record?.reason || "")}</textarea>
@@ -16532,39 +16871,80 @@ function buildAchatsBcForm(record, mode, state) {
           <input id="bcWantedDate" name="wantedDate" type="date" value="${escapeHtml(record?.wantedDate || "")}" required />
         </div>
         <div class="field-group">
-          <label for="bcSupplierName">Fournisseur</label>
-          <input id="bcSupplierName" name="supplierName" type="text" value="${escapeHtml(record?.supplierName || "")}" placeholder="Nom fournisseur" required />
-        </div>
+  <label for="bcSupplierName">Fournisseur</label>
+  <select id="bcSupplierName" name="supplierName" required>
+    ${buildSupplierOptions(record?.supplierName || "")}
+  </select>
+</div>
         <div class="field-group">
-          <label for="bcSupplierPhone">Contact fournisseur (téléphone)</label>
-          <input id="bcSupplierPhone" name="supplierPhone" type="tel" value="${escapeHtml(record?.supplierPhone || "")}" placeholder="Téléphone" />
-        </div>
-        <div class="field-group">
-          <label for="bcSupplierEmail">Email fournisseur</label>
-          <input id="bcSupplierEmail" name="supplierEmail" type="email" value="${escapeHtml(record?.supplierEmail || "")}" placeholder="Email" />
-        </div>
-        <div class="field-group field-group-wide">
-          <label for="bcLinkedDaIds">DA liée (sélection multiple)</label>
-          <select id="bcLinkedDaIds" name="linkedDaIds" multiple size="4">${buildAchatsDaOptions(state.demandes, record?.linkedDaIds || [])}</select>
-          <div class="org-field-hint">Regroupement de plusieurs DA validées pour un même fournisseur.</div>
-        </div>
+  <label for="bcSupplierPhone">Contact fournisseur</label>
+  <input
+    id="bcSupplierPhone"
+    name="supplierPhone"
+    type="text"
+    value="${escapeHtml(record?.supplierPhone || "")}"
+    readonly
+  />
+</div>
+       <div class="field-group">
+  <label for="bcSupplierEmail">Email fournisseur</label>
+  <input
+    id="bcSupplierEmail"
+    name="supplierEmail"
+    type="email"
+    value="${escapeHtml(record?.supplierEmail || "")}"
+    readonly
+  />
+</div>
 
-        <div class="field-group">
-          <label for="bcArticle">Article (lien Articles)</label>
-          <select id="bcArticle" name="articleId">${buildAchatsArticleOptions(record?.articleId || "")}</select>
-        </div>
-        <div class="field-group">
-          <label for="bcArticleLabel">Désignation article</label>
-          <input id="bcArticleLabel" name="articleLabel" type="text" value="${escapeHtml(record?.articleLabel || "")}" placeholder="Article commandé" required />
-        </div>
         <div class="field-group">
           <label for="bcSupplierRef">Référence fournisseur</label>
           <input id="bcSupplierRef" name="supplierRef" type="text" value="${escapeHtml(record?.supplierRef || "")}" placeholder="Référence" />
         </div>
-        <div class="field-group">
-          <label for="bcQuantity">Quantité commandée</label>
-          <input id="bcQuantity" name="quantity" type="number" min="1" step="1" value="${escapeHtml(String(record?.quantity || ""))}" required />
-        </div>
+         <div class="field-group field-group-wide">
+  <label for="bcDaLinked">
+    Demande d'achat liée
+  </label>
+
+  <select
+    id="bcDaLinked"
+    name="linkedDaId"
+    required
+  >
+    <option value="">
+      Sélectionner une DA
+    </option>
+
+    ${buildAchatsDaOptions(
+    state.demandes.filter(
+      (da) => da.status === "Validée" ||
+        da.id === record?.linkedDaId
+    ),
+    record?.linkedDaId || ""
+  )}
+  </select>
+
+  <div class="org-field-hint">
+    Sélectionnez une demande d'achat validée.
+  </div>
+</div>
+
+<div class="field-group">
+  <label for="bcQuantity">
+    Quantité commandée
+  </label>
+
+  <input
+    id="bcQuantity"
+    name="quantity"
+    type="number"
+    min="1"
+    step="1"
+    value="${escapeHtml(String(record?.quantity || ""))}"
+    readonly
+  />
+</div>
+
         <div class="field-group">
           <label for="bcUnitPrice">Prix unitaire HT</label>
           <input id="bcUnitPrice" name="unitPrice" type="number" min="0" step="0.01" value="${escapeHtml(String(record?.unitPrice || ""))}" required />
@@ -16650,7 +17030,7 @@ function buildAchatsReceptionForm(record, mode, state) {
   const linkedBc = state.bons.find((item) => item.id === record?.bcId);
   const orderedQty = Number(record?.orderedQty || linkedBc?.quantity || 0);
   const receivedQty = Number(record?.receivedQty || 0);
-  const missingQty = Math.max(0, orderedQty - receivedQty);
+  const gapQty = receivedQty - orderedQty;
 
   return `
     <form class="org-form" data-ach-form="receptions">
@@ -16688,54 +17068,66 @@ function buildAchatsReceptionForm(record, mode, state) {
           <input id="recReceivedQty" name="receivedQty" type="number" min="0" step="1" value="${escapeHtml(String(receivedQty || ""))}" required />
         </div>
         <div class="field-group">
-          <label for="recMissingQty">Quantité manquante (auto)</label>
-          <input id="recMissingQty" name="missingQty" type="number" value="${escapeHtml(String(missingQty))}" readonly />
-        </div>
-        <div class="field-group">
-          <label for="recState">État réception</label>
-          <select id="recState" name="receptionState" required>
-            ${["Conforme", "Non conforme", "Endommagé"]
-      .map(
-        (stateOption) =>
-          `<option value="${stateOption}" ${record?.receptionState === stateOption ? "selected" : ""}>${stateOption}</option>`,
-      )
-      .join("")}
-          </select>
-        </div>
-        <div class="field-group">
-          <label for="recQuality">Contrôle qualité</label>
-          <select id="recQuality" name="qualityControl" required>
-            ${["Conforme total", "Partiellement conforme", "Refusé"]
-      .map(
-        (quality) =>
-          `<option value="${quality}" ${record?.qualityControl === quality ? "selected" : ""}>${quality}</option>`,
-      )
-      .join("")}
-          </select>
-        </div>
+  <label for="recGapQty">Écart</label>
+  <input
+      id="recGapQty"
+      name="gapQty"
+      type="text"
+      value="${gapQty > 0 ? "+" + gapQty : gapQty}"
+      readonly
+  />
+</div>
+       <div class="field-group">
+  <label for="recState">État réception</label>
+
+  <input
+    id="recState"
+    name="receptionState"
+    type="text"
+    value="${gapQty === 0
+      ? "Réception complète"
+      : gapQty < 0
+        ? "Réception partielle"
+        : "Sur-réception"
+    }"
+    readonly
+  />
+</div>
+
         <div class="field-group field-group-wide">
-          <label for="recStorage">Emplacement de stockage</label>
-          <input id="recStorage" name="storageLocation" type="text" value="${escapeHtml(record?.storageLocation || "")}" placeholder="Magasin / Allée / Étagère / Case" />
-        </div>
+  <label for="recStorage">Emplacement de stockage</label>
+
+  <select
+      id="recStorage"
+      name="storageLocation"
+      required
+  >
+      ${buildStockLocationOptions(record?.storageLocation || "")}
+  </select>
+
+</div>
         <div class="field-group">
-          <label for="recDeliveryNote">Bon de livraison fournisseur</label>
-          <input id="recDeliveryNote" name="deliveryNoteRef" type="text" value="${escapeHtml(record?.deliveryNoteRef || "")}" placeholder="Référence + photo" />
-        </div>
+  <label for="recDeliveryNote">Bon de livraison fournisseur</label>
+
+  <input
+    id="recDeliveryNote"
+    name="deliveryNoteFile"
+    type="file"
+    accept=".pdf,.jpg,.jpeg,.png"
+  />
+
+</div>
         <div class="field-group">
-          <label for="recInvoiceRef">Facture fournisseur</label>
-          <input id="recInvoiceRef" name="invoiceRef" type="text" value="${escapeHtml(record?.invoiceRef || "")}" placeholder="Référence + document" />
-        </div>
-        <div class="field-group">
-          <label for="recStatus">Statut</label>
-          <select id="recStatus" name="status">
-            ${["Partielle", "Complète"]
-      .map(
-        (status) =>
-          `<option value="${status}" ${record?.status === status ? "selected" : ""}>${status}</option>`,
-      )
-      .join("")}
-          </select>
-        </div>
+  <label for="recInvoiceRef">Facture fournisseur</label>
+
+  <input
+    id="recInvoiceRef"
+    name="invoiceFile"
+    type="file"
+    accept=".pdf,.jpg,.jpeg,.png"
+  />
+
+</div>
         <div class="field-group field-group-wide">
           <label for="recObservations">Observations générales</label>
           <textarea id="recObservations" name="observations" rows="4">${escapeTextarea(record?.observations || "")}</textarea>
@@ -16752,22 +17144,66 @@ function buildAchatsDaDetails(record) {
       <div class="org-detail-item"><span>Numéro</span><strong>${escapeHtml(record.number)}</strong></div>
       <div class="org-detail-item"><span>Date création</span><strong>${formatAchatsDate(record.createdAt)}</strong></div>
       <div class="org-detail-item"><span>Demandeur</span><strong>${escapeHtml(record.requester || "-")}</strong></div>
-      <div class="org-detail-item"><span>Origine</span><strong>${escapeHtml(record.origin || "-")}</strong></div>
+      <div class="org-detail-item">
+  <span>Urgence</span>
+  <strong>${escapeHtml(record.urgency || "Normale")}</strong>
+</div>
       <div class="org-detail-item"><span>Article</span><strong>${escapeHtml(record.articleLabel || "-")}</strong></div>
       <div class="org-detail-item"><span>Quantité</span><strong>${formatStockNumber(record.quantity || 0)}</strong></div>
+      <div class="org-detail-item">
+  <span>Prix unitaire estimé</span>
+  <strong>${formatStockNumber(record.estimatedUnitPrice || 0)} DH</strong>
+</div>
       <div class="org-detail-item"><span>Fournisseur suggéré</span><strong>${escapeHtml(record.preferredSupplier || "-")}</strong></div>
       <div class="org-detail-item"><span>Date souhaitée</span><strong>${escapeHtml(record.neededDate || "-")}</strong></div>
       <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(record.status || "-")}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Justification</span><strong>${escapeHtml(record.reason || "-")}</strong></div>
     </div>
+    <div class="org-modal-actions">
+    ${record.status === "En attente"
+      ? `
+          <button
+            type="button"
+            class="btn btn-success"
+            data-da-validate="${record.id}"
+          >
+            <i class="fa-solid fa-check"></i>
+            Valider
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-danger"
+            data-da-reject="${record.id}"
+          >
+            <i class="fa-solid fa-xmark"></i>
+            Refuser
+          </button>
+        `
+      : ""
+    }
+
+    <button
+      type="button"
+      class="btn btn-outline"
+      data-ach-close="true"
+    >
+      Fermer
+    </button>
+  </div>
+
   `;
 }
 
 function buildAchatsBcDetails(record, state) {
-  const linkedDaNumbers = (record.linkedDaIds || [])
-    .map((id) => (state.demandes.find((item) => item.id === id) || {}).number)
-    .filter(Boolean)
-    .join(", ");
+  const linkedDa =
+    state.demandes.find(
+      (item) =>
+        item.id === record.linkedDaId
+    );
+
+  const linkedDaNumber =
+    linkedDa?.number || "-";
 
   return `
     <div class="org-detail-grid">
@@ -16783,7 +17219,7 @@ function buildAchatsBcDetails(record, state) {
       <div class="org-detail-item"><span>Total HT</span><strong>${formatAchatsMoney(record.totalHt || 0)}</strong></div>
       <div class="org-detail-item"><span>Total TTC</span><strong>${formatAchatsMoney(record.totalTtc || 0)}</strong></div>
       <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(record.status || "-")}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>DA liées</span><strong>${escapeHtml(linkedDaNumbers || "Aucune")}</strong></div>
+      <div class="org-detail-item org-detail-item--full"><span>DA liée</span><strong>${escapeHtml(linkedDaNumber)}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Adresse de livraison</span><strong>${escapeHtml(record.deliveryAddress || "-")}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Observations</span><strong>${escapeHtml(record.observations || "-")}</strong></div>
     </div>
@@ -16802,10 +17238,8 @@ function buildAchatsReceptionDetails(record, state) {
       <div class="org-detail-item"><span>Article</span><strong>${escapeHtml(record.articleLabel || "-")}</strong></div>
       <div class="org-detail-item"><span>Qté commandée</span><strong>${formatStockNumber(record.orderedQty || 0)}</strong></div>
       <div class="org-detail-item"><span>Qté reçue</span><strong>${formatStockNumber(record.receivedQty || 0)}</strong></div>
-      <div class="org-detail-item"><span>Qté manquante</span><strong>${formatStockNumber(record.missingQty || 0)}</strong></div>
+      <div class="org-detail-item"><span>Écart</span><strong>${formatStockNumber(record.missingQty || 0)}</strong></div>
       <div class="org-detail-item"><span>État réception</span><strong>${escapeHtml(record.receptionState || "-")}</strong></div>
-      <div class="org-detail-item"><span>Contrôle qualité</span><strong>${escapeHtml(record.qualityControl || "-")}</strong></div>
-      <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(record.status || "-")}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Emplacement stock</span><strong>${escapeHtml(record.storageLocation || "-")}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>BL fournisseur</span><strong>${escapeHtml(record.deliveryNoteRef || "-")}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Facture fournisseur</span><strong>${escapeHtml(record.invoiceRef || "-")}</strong></div>
@@ -16897,12 +17331,81 @@ function renderAchatsModal(activeSubpageKey, state) {
     </div>
   `;
 
+
   const modal = overlayRootEl.querySelector(".org-modal");
   if (!modal) return;
+
+  const supplierSelect =
+    modal.querySelector("#bcSupplierName");
+
+  supplierSelect?.addEventListener(
+    "change",
+    function () {
+      const supplier =
+        getSupplierByName(this.value);
+
+      if (!supplier) return;
+
+      const phoneInput =
+        modal.querySelector("#bcSupplierPhone");
+
+      const emailInput =
+        modal.querySelector("#bcSupplierEmail");
+
+      if (phoneInput) {
+        phoneInput.value =
+          supplier.tel1 || "";
+      }
+
+      if (emailInput) {
+        emailInput.value =
+          supplier.email || "";
+      }
+    }
+  );
+
 
   modal.querySelectorAll("[data-ach-close]").forEach((button) => {
     button.addEventListener("click", function () {
       closeAchatsModal(activeSubpageKey);
+    });
+  });
+
+  modal.querySelectorAll("[data-da-validate]").forEach((button) => {
+    button.addEventListener("click", function () {
+      const recordId = this.dataset.daValidate;
+
+      const state = loadAchatsState();
+
+      state.demandes = state.demandes.map((item) =>
+        item.id === recordId
+          ? { ...item, status: "Validée" }
+          : item
+      );
+
+      saveAchatsState(state);
+
+      closeAchatsModal("demandes-achat");
+      renderAchatsPage("demandes-achat");
+    });
+  });
+
+  modal.querySelectorAll("[data-da-reject]").forEach((button) => {
+    button.addEventListener("click", function () {
+      const recordId = this.dataset.daReject;
+
+      const state = loadAchatsState();
+
+      state.demandes = state.demandes.map((item) =>
+        item.id === recordId
+          ? { ...item, status: "Refusée" }
+          : item
+      );
+
+      saveAchatsState(state);
+
+      closeAchatsModal("demandes-achat");
+      renderAchatsPage("demandes-achat");
     });
   });
 
@@ -16912,6 +17415,8 @@ function renderAchatsModal(activeSubpageKey, state) {
   const formType = form.getAttribute("data-ach-form");
 
   if (formType === "bons-commande") {
+    const linkedDaSelect =
+      form.querySelector("select[name='linkedDaId']");
     const qtyInput = form.querySelector("input[name='quantity']");
     const unitPriceInput = form.querySelector("input[name='unitPrice']");
     const discountInput = form.querySelector("input[name='discountPercent']");
@@ -16939,6 +17444,23 @@ function renderAchatsModal(activeSubpageKey, state) {
         input?.addEventListener("input", refreshTotals);
       },
     );
+    refreshTotals();
+    linkedDaSelect?.addEventListener(
+      "change",
+      function () {
+        const da = state.demandes.find(
+          (item) => item.id === this.value
+        );
+
+        if (!da) return;
+
+        if (qtyInput) {
+          qtyInput.value = da.quantity || 0;
+        }
+
+        refreshTotals();
+      }
+    );
   }
 
   if (formType === "receptions") {
@@ -16947,8 +17469,10 @@ function renderAchatsModal(activeSubpageKey, state) {
     const articleInput = form.querySelector("input[name='articleLabel']");
     const orderedQtyInput = form.querySelector("input[name='orderedQty']");
     const receivedQtyInput = form.querySelector("input[name='receivedQty']");
-    const missingQtyInput = form.querySelector("input[name='missingQty']");
-
+    const gapQtyInput = form.querySelector("input[name='gapQty']");
+    const receptionStateInput = form.querySelector(
+      "input[name='receptionState']"
+    );
     const refreshFromBc = () => {
       const selectedBc = state.bons.find((item) => item.id === bcSelect?.value);
       if (supplierInput)
@@ -16962,19 +17486,46 @@ function renderAchatsModal(activeSubpageKey, state) {
 
       const orderedQty = Number(orderedQtyInput?.value || 0);
       const receivedQty = Number(receivedQtyInput?.value || 0);
-      if (missingQtyInput)
-        missingQtyInput.value = String(Math.max(0, orderedQty - receivedQty));
+
+      const gap = receivedQty - orderedQty;
+
+      if (gapQtyInput) {
+        gapQtyInput.value = gap > 0 ? `+${gap}` : String(gap);
+      }
+
+      if (receptionStateInput) {
+        if (gap === 0) {
+          receptionStateInput.value = "Réception complète";
+        } else if (gap < 0) {
+          receptionStateInput.value = "Réception partielle";
+        } else {
+          receptionStateInput.value = "Sur-réception";
+        }
+      }
     };
 
     const refreshMissingQty = () => {
       const orderedQty = Number(orderedQtyInput?.value || 0);
       const receivedQty = Number(receivedQtyInput?.value || 0);
-      if (missingQtyInput)
-        missingQtyInput.value = String(Math.max(0, orderedQty - receivedQty));
+
+      const gap = receivedQty - orderedQty;
+
+      if (gapQtyInput) {
+        gapQtyInput.value = gap > 0 ? `+${gap}` : String(gap);
+      }
+
+      if (receptionStateInput) {
+        receptionStateInput.value =
+          gap === 0 ? "Conforme" : "Non conforme";
+      }
+      console.log("Gap =", gap);
+      console.log("Etat =", receptionStateInput?.value);
     };
 
     bcSelect?.addEventListener("change", refreshFromBc);
     receivedQtyInput?.addEventListener("input", refreshMissingQty);
+    refreshFromBc();
+    refreshMissingQty();
   }
 
   form.addEventListener("submit", function (event) {
@@ -16999,8 +17550,9 @@ function renderAchatsModal(activeSubpageKey, state) {
               .createdAt || new Date().toISOString()
             : new Date().toISOString(),
         requester: achatsCurrentUser,
-        origin: String(formData.get("origin") || "Manuelle"),
-        status: String(formData.get("status") || "Brouillon"),
+        status: modeType === "edit"
+          ? (nextState.demandes.find((item) => item.id === recordId) || {}).status || "En attente"
+          : "En attente",
         articleId: String(formData.get("articleId") || ""),
         articleLabel: (() => {
           const articleId = String(formData.get("articleId") || "");
@@ -17012,9 +17564,15 @@ function renderAchatsModal(activeSubpageKey, state) {
             : "";
         })(),
         quantity: Number(formData.get("quantity") || 0),
+        estimatedUnitPrice: Number(
+          formData.get("estimatedUnitPrice") || 0
+        ),
         preferredSupplier: String(
           formData.get("preferredSupplier") || "",
         ).trim(),
+        urgency: String(
+          formData.get("urgency") || "Normale"
+        ),
         reason: String(formData.get("reason") || "").trim(),
         neededDate: String(formData.get("neededDate") || ""),
       };
@@ -17041,10 +17599,12 @@ function renderAchatsModal(activeSubpageKey, state) {
         tvaPercent,
         shippingCost,
       );
-      const linkedDaIds = Array.from(
-        form.querySelector("select[name='linkedDaIds']")?.selectedOptions || [],
-      ).map((option) => option.value);
-
+      const linkedDaId = String(
+        formData.get("linkedDaId") || ""
+      );
+      const linkedDa = nextState.demandes.find(
+        da => da.id === linkedDaId
+      );
       const record = {
         id: modeType === "edit" ? recordId : `bc-${Date.now()}`,
         number:
@@ -17062,8 +17622,8 @@ function renderAchatsModal(activeSubpageKey, state) {
         supplierName: String(formData.get("supplierName") || "").trim(),
         supplierPhone: String(formData.get("supplierPhone") || "").trim(),
         supplierEmail: String(formData.get("supplierEmail") || "").trim(),
-        articleId: String(formData.get("articleId") || ""),
-        articleLabel: String(formData.get("articleLabel") || "").trim(),
+        articleId: linkedDa?.articleId || "",
+        articleLabel: linkedDa?.articleLabel || "",
         supplierRef: String(formData.get("supplierRef") || "").trim(),
         quantity,
         unitPrice,
@@ -17079,7 +17639,7 @@ function renderAchatsModal(activeSubpageKey, state) {
         observations: String(formData.get("observations") || "").trim(),
         attachments: String(formData.get("attachments") || "").trim(),
         status: String(formData.get("status") || "Brouillon"),
-        linkedDaIds,
+        linkedDaId,
       };
 
       if (modeType === "edit") {
@@ -17091,7 +17651,7 @@ function renderAchatsModal(activeSubpageKey, state) {
       }
 
       nextState.demandes = nextState.demandes.map((item) => {
-        if (linkedDaIds.includes(item.id) && item.status !== "Annulée") {
+        if (item.id === linkedDaId && item.status !== "Annulée") {
           return { ...item, status: "Transformée en BC" };
         }
         return item;
@@ -17107,7 +17667,13 @@ function renderAchatsModal(activeSubpageKey, state) {
       const receivedQty = Number(formData.get("receivedQty") || 0);
       const missingQty = Math.max(0, orderedQty - receivedQty);
       const finalStatus = missingQty > 0 ? "Partielle" : "Complète";
+      const deliveryFile = form.querySelector(
+        "input[name='deliveryNoteFile']"
+      )?.files?.[0] || null;
 
+      const invoiceFile = form.querySelector(
+        "input[name='invoiceFile']"
+      )?.files?.[0] || null;
       const record = {
         id: modeType === "edit" ? recordId : `rec-${Date.now()}`,
         number:
@@ -17133,14 +17699,23 @@ function renderAchatsModal(activeSubpageKey, state) {
         receivedQty,
         missingQty,
         receptionState: String(formData.get("receptionState") || "Conforme"),
-        qualityControl: String(
-          formData.get("qualityControl") || "Conforme total",
-        ),
         storageLocation: String(formData.get("storageLocation") || "").trim(),
-        deliveryNoteRef: String(formData.get("deliveryNoteRef") || "").trim(),
-        invoiceRef: String(formData.get("invoiceRef") || "").trim(),
+        deliveryNote: deliveryFile
+          ? {
+            name: deliveryFile.name,
+            type: deliveryFile.type,
+            size: deliveryFile.size,
+          }
+          : null,
+
+        invoice: invoiceFile
+          ? {
+            name: invoiceFile.name,
+            type: invoiceFile.type,
+            size: invoiceFile.size,
+          }
+          : null,
         observations: String(formData.get("observations") || "").trim(),
-        status: String(formData.get("status") || finalStatus),
       };
 
       if (modeType === "edit") {
@@ -17161,7 +17736,7 @@ function renderAchatsModal(activeSubpageKey, state) {
         });
 
         nextState.demandes = nextState.demandes.map((item) => {
-          if (!linkedBc.linkedDaIds?.includes(item.id)) return item;
+          if (!linkedBc.linkedDaId?.includes(item.id)) return item;
           return {
             ...item,
             status: missingQty > 0 ? "Transformée en BC" : "Clôturée",
@@ -17188,7 +17763,7 @@ function deleteAchatsRecord(subpageKey, recordId) {
     if (removed) {
       state.demandes = state.demandes.map((item) => {
         if (
-          removed.linkedDaIds?.includes(item.id) &&
+          removed.linkedDaId?.includes(item.id) &&
           item.status !== "Clôturée"
         ) {
           return { ...item, status: "Validée" };
@@ -17343,7 +17918,7 @@ function groupValidatedDaIntoBc() {
       (sum, da) => sum + (Number(da.quantity) || 0),
       0,
     );
-    const linkedDaIds = group.map((da) => da.id);
+    const linkedDaId = group.map((da) => da.id);
     const unitPrice = 1000;
     const tvaPercent = 19;
     const shippingCost = 0;
@@ -17381,11 +17956,11 @@ function groupValidatedDaIntoBc() {
       observations: "BC créé automatiquement via regroupement de DA validées.",
       attachments: "",
       status: "Brouillon",
-      linkedDaIds,
+      linkedDaId,
     });
 
     state.demandes = state.demandes.map((item) =>
-      linkedDaIds.includes(item.id)
+      linkedDaId.includes(item.id)
         ? { ...item, status: "Transformée en BC" }
         : item,
     );
@@ -20183,7 +20758,7 @@ function buildInterventionTransformOtModal(di) {
               <div class="org-detail-item"><span>Description</span><strong>${escapeHtml(di.description || "-")}</strong></div>
             </div>
           </div>
-          
+
           <div class="org-form-section" style="padding: 1.5rem; border-top: 1px solid var(--org-border);">
             <h4 class="org-form-section-title" style="margin-top: 0;">SECTION 2 — Champs à remplir pour l'OT</h4>
             <div class="org-form-grid">
@@ -20250,7 +20825,7 @@ function buildInterventionTransformOtModal(di) {
               </div>
             </div>
           </div>
-          
+
           <div class="org-modal-actions">
             <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
             <button class="btn btn-primary" type="submit">
@@ -20318,7 +20893,7 @@ function buildInterventionTransformBtModal(ot) {
               <div class="org-detail-item" style="grid-column: 1 / -1;"><span>Articles prévus</span><strong>${formattedArticles}</strong></div>
             </div>
           </div>
-          
+
           <div class="org-form-section" style="padding: 1.5rem; border-top: 1px solid var(--org-border);">
             <h4 class="org-form-section-title" style="margin-top: 0;">SECTION 2 — Champs à remplir pour le BT</h4>
             <div class="org-form-grid">
@@ -20389,7 +20964,7 @@ function buildInterventionTransformBtModal(ot) {
               </div>
             </div>
           </div>
-          
+
           <div class="org-modal-actions">
             <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
             <button class="btn btn-primary" type="submit">
