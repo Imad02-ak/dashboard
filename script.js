@@ -463,7 +463,20 @@ let administrationLogFilters = {
   to: "",
 };
 
-const planificationTechniciens = [];
+const planificationTechniciens = []; // garde pour compatibilité legacy
+
+function getPlanificationTechniciens() {
+  try {
+    const state = StorageManager.get(administrationStorageKey, administrationDefaults);
+    const users = Array.isArray(state?.users) ? state.users : [];
+    return users.filter(u =>
+      u.active !== false &&
+      ['Technicien de maintenance', 'Responsable de maintenance', 'Admin'].includes(u.role)
+    );
+  } catch (e) {
+    return [];
+  }
+}
 
 const planificationDefaults = {
   view: "mensuelle",
@@ -845,24 +858,26 @@ function buildArticleUnitMeasureOptions(selectedUnitMeasure = "") {
   ].join("");
 }
 
-function buildArticleSupplierOptions(selectedSupplier = "") {
-  const suppliers = Array.from(
-    new Set(
-      [
-        ...equipmentDefaults.equipments.map((equipment) => equipment.supplier),
-        ...organeDefaults.organes.map((organe) => organe.supplier),
-      ].filter(Boolean),
-    ),
-  ).sort((left, right) => left.localeCompare(right));
-
-  return [
-    '<option value="">Sélectionner le fournisseur principal</option>',
-    ...suppliers.map(
-      (supplier) => `
-        <option value="${supplier}"${supplier === selectedSupplier ? " selected" : ""}>${supplier}</option>
-      `,
-    ),
-  ].join("");
+function buildArticleSupplierOptions(selectedSupplier) {
+  const stored = (() => {
+    try {
+      const raw = window.localStorage.getItem('maintflow.fournisseurs');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed?.suppliers) ? parsed.suppliers : [];
+    } catch (e) {
+      return [];
+    }
+  })();
+  return `<option value="">Sélectionner le fournisseur principal</option>` +
+    stored
+      .filter(s => s.nomCommercial)
+      .sort((a, b) => a.nomCommercial.localeCompare(b.nomCommercial))
+      .map(s =>
+        `<option value="${escapeHtml(s.nomCommercial)}"${s.nomCommercial === selectedSupplier ? ' selected' : ''
+        }>${escapeHtml(s.number)} — ${escapeHtml(s.nomCommercial)}</option>`
+      )
+      .join('');
 }
 
 function buildArticleSubstituteOptions(
@@ -975,6 +990,12 @@ function buildArticleFormContent(record, mode) {
   const selectedSubstitutes = Array.isArray(record?.substituteIds)
     ? record.substituteIds
     : [];
+  const linkedOrganeIds = Array.isArray(record?.linkedOrganeIds)
+    ? record.linkedOrganeIds
+    : [];
+  const linkedEquipmentIds = Array.isArray(record?.linkedEquipmentIds)
+    ? record.linkedEquipmentIds
+    : [];
   const traceabilityDate = record?.createdAt || new Date().toISOString();
   const traceabilityUser = record?.createdBy || getCurrentArticleCreator().name;
 
@@ -988,10 +1009,6 @@ function buildArticleFormContent(record, mode) {
         <div class="field-group">
           <label>Nom</label>
           <input name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom de l'article" required />
-        </div>
-        <div class="field-group">
-          <label>Référence</label>
-          <input name="reference" type="text" value="${escapeHtml(record?.reference || "")}" placeholder="Référence fournisseur" />
         </div>
         <div class="field-group">
           <label>Unité de mesure *</label>
@@ -1012,10 +1029,6 @@ function buildArticleFormContent(record, mode) {
         <div class="field-group">
           <label>Prix</label>
           <input name="price" type="number" step="0.01" value="${escapeHtml(record?.price || "")}" placeholder="Prix" />
-        </div>
-        <div class="field-group">
-          <label>Quantité</label>
-          <input name="quantity" type="number" step="1" value="${escapeHtml(record?.quantity || "")}" placeholder="Quantité en stock" />
         </div>
         <div class="field-group field-group-wide">
           <label>Fournisseur principal</label>
@@ -1045,6 +1058,20 @@ function buildArticleFormContent(record, mode) {
             ${buildArticleSubstituteOptions(selectedSubstitutes, record?.id || "")}
           </select>
           <div class="org-field-hint">Sélectionnez un ou plusieurs articles de remplacement en cas de rupture.</div>
+        </div>
+        <div class="field-group field-group-wide">
+          <label>Organes liés</label>
+          <select name="linkedOrganeIds" multiple size="5">
+            ${buildOrganeMultiOptions(linkedOrganeIds)}
+          </select>
+          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.</div>
+        </div>
+        <div class="field-group field-group-wide">
+          <label>Équipements liés</label>
+          <select name="linkedEquipmentIds" multiple size="5">
+            ${buildAssociatedEquipmentOptions(linkedEquipmentIds)}
+          </select>
+          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.</div>
         </div>
         <div class="field-group field-group-wide">
           <label>Traçabilité</label>
@@ -1094,6 +1121,16 @@ function buildArticleDetailsContent(record) {
     getArticleRecords("articles"),
     record.substituteIds || [],
   );
+  const linkedOrganeLabels = joinRecordLabels(
+    getOrganeRecords("organes"),
+    record.linkedOrganeIds || [],
+    (organe) => `${organe.code} — ${organe.name}`,
+  );
+  const linkedEquipmentLabels = joinRecordLabels(
+    getEquipmentRecords("equipments"),
+    record.linkedEquipmentIds || [],
+    (equipment) => `${equipment.code} — ${equipment.name}`,
+  );
 
   return `
     <div class="equipment-detail-layout">
@@ -1106,18 +1143,14 @@ function buildArticleDetailsContent(record) {
         <div class="equipment-detail-list">
           <div class="equipment-detail-row"><span>Code</span><strong>${record.code}</strong></div>
           <div class="equipment-detail-row"><span>Nom</span><strong>${record.name}</strong></div>
-          <div class="equipment-detail-row"><span>Référence</span><strong>${record.reference || "-"}</strong></div>
           <div class="equipment-detail-row"><span>Unité de mesure</span><strong>${record.unitMeasure || "-"}</strong></div>
           <div class="equipment-detail-row"><span>Type d'article</span><strong>${record.articleType || "-"}</strong></div>
           <div class="equipment-detail-row"><span>Marque</span><strong>${record.brand || "-"}</strong></div>
           <div class="equipment-detail-row"><span>Fournisseur principal</span><strong>${record.supplier || "-"}</strong></div>
           <div class="equipment-detail-row"><span>Prix</span><strong>${record.price || "-"}</strong></div>
-          <div class="equipment-detail-row"><span>Quantité</span><strong>${record.quantity || "-"}</strong></div>
-          <div class="equipment-detail-row"><span>Groupe</span><strong>${getArticleRecord("groups", record.groupId) ? `${getArticleRecord("groups", record.groupId).code} — ${getArticleRecord("groups", record.groupId).name}` : "-"}</strong></div>
-          <div class="equipment-detail-row"><span>Famille</span><strong>${getArticleRecord("families", record.familyId) ? `${getArticleRecord("families", record.familyId).code} — ${getArticleRecord("families", record.familyId).name}` : "-"}</strong></div>
           <div class="equipment-detail-row"><span>Articles substituts</span><strong>${substituteNames}</strong></div>
-          <div class="equipment-detail-row"><span>Date création</span><strong>${formatArticleTraceabilityDate(record.createdAt)}</strong></div>
-          <div class="equipment-detail-row"><span>Créé par</span><strong>${record.createdBy || "-"}</strong></div>
+          <div class="equipment-detail-row"><span>Organes liés</span><strong>${linkedOrganeLabels}</strong></div>
+          <div class="equipment-detail-row"><span>Équipements liés</span><strong>${linkedEquipmentLabels}</strong></div>
         </div>
       </div>
     </div>
@@ -1731,6 +1764,12 @@ function attachArticlePageHandlers(pageKey) {
     const substituteIds = getSelectedValues(
       form.querySelector("select[name='substituteIds']"),
     );
+    const linkedOrganeIds = getSelectedValues(
+      form.querySelector("select[name='linkedOrganeIds']"),
+    );
+    const linkedEquipmentIds = getSelectedValues(
+      form.querySelector("select[name='linkedEquipmentIds']"),
+    );
 
     const next = {
       id: existing?.id || `article-${Date.now()}`,
@@ -1743,9 +1782,6 @@ function attachArticlePageHandlers(pageKey) {
       articleType: String(
         form.querySelector("select[name='articleType']")?.value || "",
       ),
-      reference: String(
-        form.querySelector("input[name='reference']")?.value || "",
-      ).trim(),
       supplier: String(
         form.querySelector("select[name='supplier']")?.value || "",
       ).trim(),
@@ -1755,15 +1791,14 @@ function attachArticlePageHandlers(pageKey) {
       price: String(
         form.querySelector("input[name='price']")?.value || "",
       ).trim(),
-      quantity: String(
-        form.querySelector("input[name='quantity']")?.value || "",
-      ).trim(),
       groupId,
       familyId,
       designations: String(
         form.querySelector("textarea[name='designations']")?.value || "",
       ).trim(),
       substituteIds,
+      linkedOrganeIds,
+      linkedEquipmentIds,
       createdAt: existing?.createdAt || new Date().toISOString(),
       createdById: existing?.createdById || currentCreator.id,
       createdBy: existing?.createdBy || currentCreator.name,
@@ -1777,6 +1812,7 @@ function attachArticlePageHandlers(pageKey) {
     updated.push(next);
     directory.articles = updated.sort((l, r) => l.code.localeCompare(r.code));
     saveArticleDirectory(directory);
+    syncArticleBusinessLinks(next.id, linkedOrganeIds, linkedEquipmentIds);
     articleModalState = null;
     renderArticlePage(pageKey);
   });
@@ -2151,6 +2187,7 @@ function buildUnitOptions(selectedUnitIds = []) {
 }
 
 function getSelectedValues(selectEl) {
+  if (!selectEl) return [];
   return Array.from(selectEl.selectedOptions).map((option) => option.value);
 }
 
@@ -3473,6 +3510,93 @@ function joinRecordLabels(items, ids, labelBuilder = (item) => item.name) {
   return labels.length ? labels.join(", ") : "Aucune sélection";
 }
 
+function normalizeLinkedIds(ids) {
+  return Array.from(new Set((Array.isArray(ids) ? ids : []).filter(Boolean)));
+}
+
+function syncLinkedIdOnRecords(records, linkField, selectedRecordIds, linkedId) {
+  const selectedIds = new Set(normalizeLinkedIds(selectedRecordIds));
+
+  return records.map((record) => {
+    const currentIds = normalizeLinkedIds(record[linkField]);
+    const shouldLink = selectedIds.has(record.id);
+    const isLinked = currentIds.includes(linkedId);
+
+    if (shouldLink && !isLinked) {
+      return { ...record, [linkField]: [...currentIds, linkedId] };
+    }
+
+    if (!shouldLink && isLinked) {
+      return {
+        ...record,
+        [linkField]: currentIds.filter((id) => id !== linkedId),
+      };
+    }
+
+    return record;
+  });
+}
+
+function syncEquipmentBusinessLinks(equipmentId, linkedOrganeIds, linkedArticleIds) {
+  const organeDirectory = getOrganeDirectory();
+  organeDirectory.organes = syncLinkedIdOnRecords(
+    organeDirectory.organes,
+    "linkedEquipmentIds",
+    linkedOrganeIds,
+    equipmentId,
+  );
+  saveOrganeDirectory(organeDirectory);
+
+  const articleDirectory = getArticleDirectory();
+  articleDirectory.articles = syncLinkedIdOnRecords(
+    articleDirectory.articles,
+    "linkedEquipmentIds",
+    linkedArticleIds,
+    equipmentId,
+  );
+  saveArticleDirectory(articleDirectory);
+}
+
+function syncOrganeBusinessLinks(organeId, linkedEquipmentIds, linkedArticleIds) {
+  const equipmentDirectory = getEquipmentDirectory();
+  equipmentDirectory.equipments = syncLinkedIdOnRecords(
+    equipmentDirectory.equipments,
+    "linkedOrganeIds",
+    linkedEquipmentIds,
+    organeId,
+  );
+  saveEquipmentDirectory(equipmentDirectory);
+
+  const articleDirectory = getArticleDirectory();
+  articleDirectory.articles = syncLinkedIdOnRecords(
+    articleDirectory.articles,
+    "linkedOrganeIds",
+    linkedArticleIds,
+    organeId,
+  );
+  saveArticleDirectory(articleDirectory);
+}
+
+function syncArticleBusinessLinks(articleId, linkedOrganeIds, linkedEquipmentIds) {
+  const organeDirectory = getOrganeDirectory();
+  organeDirectory.organes = syncLinkedIdOnRecords(
+    organeDirectory.organes,
+    "linkedArticleIds",
+    linkedOrganeIds,
+    articleId,
+  );
+  saveOrganeDirectory(organeDirectory);
+
+  const equipmentDirectory = getEquipmentDirectory();
+  equipmentDirectory.equipments = syncLinkedIdOnRecords(
+    equipmentDirectory.equipments,
+    "linkedArticleIds",
+    linkedEquipmentIds,
+    articleId,
+  );
+  saveEquipmentDirectory(equipmentDirectory);
+}
+
 function buildDepartmentOptions(selectedDepartmentIds = []) {
   const departments = getOrganizationRecords("departmentServices");
   return departments
@@ -4187,11 +4311,51 @@ function renderFamilyEquipmentPage() {
   attachEquipmentPageHandlers("famille-equipment");
 }
 
+function buildArticleMultiOptions(selectedIds) {
+  const ids = Array.isArray(selectedIds) ? selectedIds : [];
+  return getArticleRecords("articles")
+    .map(article =>
+      `<option value="${article.id}"${ids.includes(article.id) ? " selected" : ""}>${escapeHtml(article.code)} — ${escapeHtml(article.name)}</option>`
+    ).join("\n");
+}
+
+function buildOrganeMultiOptions(selectedIds) {
+  const ids = Array.isArray(selectedIds) ? selectedIds : [];
+  return getOrganeRecords("organes")
+    .map(organe =>
+      `<option value="${organe.id}"${ids.includes(organe.id) ? " selected" : ""}>${escapeHtml(organe.code)} — ${escapeHtml(organe.name)}</option>`
+    ).join("\n");
+}
+
+function buildEquipmentSupplierOptions(selectedSupplier) {
+  const stored = (() => {
+    try {
+      const raw = window.localStorage.getItem('maintflow.fournisseurs');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed?.suppliers) ? parsed.suppliers : [];
+    } catch (e) {
+      return [];
+    }
+  })();
+  return `<option value="">Sélectionner un fournisseur</option>` +
+    stored
+      .filter(s => s.nomCommercial)
+      .sort((a, b) => a.nomCommercial.localeCompare(b.nomCommercial))
+      .map(s =>
+        `<option value="${escapeHtml(s.nomCommercial)}"${s.nomCommercial === selectedSupplier ? ' selected' : ''
+        }>${escapeHtml(s.number)} — ${escapeHtml(s.nomCommercial)}</option>`
+      )
+      .join('');
+}
+
 function buildEquipmentFormContent(record, mode) {
   const codePreview =
     record?.code ||
     generateOrganizationCode("EQP", getEquipmentRecords("equipments"));
   const selectedGroupId = record?.groupId || "";
+  const linkedOrganeIds = Array.isArray(record?.linkedOrganeIds) ? record.linkedOrganeIds : [];
+  const linkedArticleIds = Array.isArray(record?.linkedArticleIds) ? record.linkedArticleIds : [];
 
   return `
     <form class="org-form equipment-form" data-eq-form="equipment">
@@ -4239,7 +4403,31 @@ function buildEquipmentFormContent(record, mode) {
             </div>
           </div>
         </section>
-
+                 <section class="equipment-section-card">
+          <div class="equipment-section-head">
+            <div>
+              <div class="equipment-section-kicker">Liaisons métier</div>
+              <h4>Organes et articles associés</h4>
+              <p>Associez les organes et articles déjà créés à cet équipement.</p>
+            </div>
+          </div>
+          <div class="org-form-grid">
+            <div class="field-group field-group-wide">
+              <label for="equipmentLinkedOrganes">Organes liés</label>
+              <select id="equipmentLinkedOrganes" name="linkedOrganeIds" multiple size="5">
+                ${buildOrganeMultiOptions(linkedOrganeIds)}
+              </select>
+              <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.</div>
+            </div>
+            <div class="field-group field-group-wide">
+              <label for="equipmentLinkedArticles">Articles liés</label>
+              <select id="equipmentLinkedArticles" name="linkedArticleIds" multiple size="5">
+                ${buildArticleMultiOptions(linkedArticleIds)}
+              </select>
+              <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.</div>
+            </div>
+          </div>
+        </section>
         <section class="equipment-section-card">
           <div class="equipment-section-head">
             <div>
@@ -4254,9 +4442,11 @@ function buildEquipmentFormContent(record, mode) {
               <input id="equipmentBrand" name="brand" type="text" value="${escapeHtml(record?.brand || "")}" placeholder="Marque" />
             </div>
             <div class="field-group">
-              <label for="equipmentSupplier">Fournisseur</label>
-              <input id="equipmentSupplier" name="supplier" type="text" value="${escapeHtml(record?.supplier || "")}" placeholder="Fournisseur" />
-            </div>
+  <label for="equipmentSupplier">Fournisseur</label>
+  <select id="equipmentSupplier" name="supplier">
+    ${buildEquipmentSupplierOptions(record?.supplier)}
+  </select>
+</div>
             <div class="field-group">
               <label for="equipmentSerialNumber">N° série</label>
               <input id="equipmentSerialNumber" name="serialNumber" type="text" value="${escapeHtml(record?.serialNumber || "")}" placeholder="Numéro de série" />
@@ -4315,6 +4505,16 @@ function buildEquipmentDetailsContent(record) {
   const primaryPhoto = Array.isArray(record.photos) ? record.photos[0] : null;
   const primaryPhotoSrc = primaryPhoto?.dataUrl || primaryPhoto || "";
   const primaryPhotoLabel = primaryPhoto?.name || record.name || "Équipement";
+  const linkedOrganeLabels = joinRecordLabels(
+    getOrganeRecords("organes"),
+    record.linkedOrganeIds || [],
+    (organe) => `${organe.code} — ${organe.name}`,
+  );
+  const linkedArticleLabels = joinRecordLabels(
+    getArticleRecords("articles"),
+    record.linkedArticleIds || [],
+    (article) => `${article.code} — ${article.name}`,
+  );
 
   return `
     <div class="equipment-detail-layout">
@@ -4357,6 +4557,14 @@ function buildEquipmentDetailsContent(record) {
           <div class="equipment-detail-row">
             <span>Famille</span>
             <strong>${family ? `${family.code} — ${family.name}` : "Aucune sélection"}</strong>
+          </div>
+          <div class="equipment-detail-row">
+            <span>Organes liés</span>
+            <strong>${linkedOrganeLabels}</strong>
+          </div>
+          <div class="equipment-detail-row">
+            <span>Articles liés</span>
+            <strong>${linkedArticleLabels}</strong>
           </div>
         </div>
       </div>
@@ -4728,6 +4936,9 @@ function attachEquipmentPageHandlers(pageKey) {
       form.querySelector("input[name='documents']")?.files,
     );
 
+    const linkedOrganeIds = getSelectedValues(form.querySelector("select[name='linkedOrganeIds']"));
+    const linkedArticleIds = getSelectedValues(form.querySelector("select[name='linkedArticleIds']"));
+
     const nextEquipment = {
       id: existingRecord?.id || `equipment-${Date.now()}`,
       code:
@@ -4740,7 +4951,7 @@ function attachEquipmentPageHandlers(pageKey) {
         form.querySelector("input[name='brand']")?.value || "",
       ).trim(),
       supplier: String(
-        form.querySelector("input[name='supplier']")?.value || "",
+        form.querySelector("select[name='supplier']")?.value || "",
       ).trim(),
       serialNumber: String(
         form.querySelector("input[name='serialNumber']")?.value || "",
@@ -4761,6 +4972,8 @@ function attachEquipmentPageHandlers(pageKey) {
         form.querySelector("input[name='warrantyDuration']")?.value || "",
       ).trim(),
       status: String(form.querySelector("select[name='status']")?.value || ""),
+      linkedOrganeIds,
+      linkedArticleIds,
       photos: [
         ...filterStoredAttachments(existingRecord?.photos, removedPhotos),
         ...photos,
@@ -4779,6 +4992,11 @@ function attachEquipmentPageHandlers(pageKey) {
       left.code.localeCompare(right.code),
     );
     saveEquipmentDirectory(directory);
+    syncEquipmentBusinessLinks(
+      nextEquipment.id,
+      nextEquipment.linkedOrganeIds,
+      nextEquipment.linkedArticleIds,
+    );
     closeEquipmentModal(pageKey);
   });
 
@@ -5372,6 +5590,8 @@ function buildOrganeFormContent(record, mode) {
     record?.code ||
     generateOrganizationCode("ORG", getOrganeRecords("organes"));
   const selectedGroupId = record?.groupId || "";
+  const linkedArticleIds = Array.isArray(record?.linkedArticleIds) ? record.linkedArticleIds : [];
+  const linkedEquipmentIds = Array.isArray(record?.linkedEquipmentIds) ? record.linkedEquipmentIds : [];
 
   return `
     <form class="org-form" data-og-form="organe">
@@ -5419,7 +5639,31 @@ function buildOrganeFormContent(record, mode) {
             </div>
           </div>
         </section>
-
+                <section class="equipment-section-card">
+          <div class="equipment-section-head">
+            <div>
+              <div class="equipment-section-kicker">Liaisons métier</div>
+              <h4>Équipements et articles associés</h4>
+              <p>Associez les équipements et les articles de stock utilisés par cet organe.</p>
+            </div>
+          </div>
+          <div class="org-form-grid">
+            <div class="field-group field-group-wide">
+              <label for="organeLinkedEquipments">Équipements liés</label>
+              <select id="organeLinkedEquipments" name="linkedEquipmentIds" multiple size="5">
+                ${buildAssociatedEquipmentOptions(linkedEquipmentIds)}
+              </select>
+              <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.</div>
+            </div>
+            <div class="field-group field-group-wide">
+              <label for="organeLinkedArticles">Articles liés</label>
+              <select id="organeLinkedArticles" name="linkedArticleIds" multiple size="5">
+                ${buildArticleMultiOptions(linkedArticleIds)}
+              </select>
+              <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.</div>
+            </div>
+          </div>
+        </section>
         <section class="equipment-section-card">
           <div class="equipment-section-head">
             <div>
@@ -5433,10 +5677,12 @@ function buildOrganeFormContent(record, mode) {
               <label for="organeBrand">Marque</label>
               <input id="organeBrand" name="brand" type="text" value="${escapeHtml(record?.brand || "")}" placeholder="Marque" />
             </div>
-            <div class="field-group">
-              <label for="organeSupplier">Fournisseur</label>
-              <input id="organeSupplier" name="supplier" type="text" value="${escapeHtml(record?.supplier || "")}" placeholder="Fournisseur" />
-            </div>
+           <div class="field-group">
+  <label for="organeSupplier">Fournisseur</label>
+  <select id="organeSupplier" name="supplier">
+    ${buildEquipmentSupplierOptions(record?.supplier)}
+  </select>
+</div>
             <div class="field-group">
               <label for="organeSerialNumber">N° série</label>
               <input id="organeSerialNumber" name="serialNumber" type="text" value="${escapeHtml(record?.serialNumber || "")}" placeholder="Numéro de série" />
@@ -5493,6 +5739,16 @@ function buildOrganeDetailsContent(record) {
   const primaryPhoto = Array.isArray(record.photos) ? record.photos[0] : null;
   const primaryPhotoSrc = primaryPhoto?.dataUrl || primaryPhoto || "";
   const primaryPhotoLabel = primaryPhoto?.name || record.name || "Organe";
+  const linkedEquipmentLabels = joinRecordLabels(
+    getEquipmentRecords("equipments"),
+    record.linkedEquipmentIds || [],
+    (equipment) => `${equipment.code} — ${equipment.name}`,
+  );
+  const linkedArticleLabels = joinRecordLabels(
+    getArticleRecords("articles"),
+    record.linkedArticleIds || [],
+    (article) => `${article.code} — ${article.name}`,
+  );
 
   return `
     <div class="equipment-detail-layout">
@@ -5535,6 +5791,14 @@ function buildOrganeDetailsContent(record) {
           <div class="equipment-detail-row">
             <span>Famille</span>
             <strong>${family ? `${family.code} — ${family.name}` : "Aucune sélection"}</strong>
+          </div>
+          <div class="equipment-detail-row">
+            <span>Équipements liés</span>
+            <strong>${linkedEquipmentLabels}</strong>
+          </div>
+          <div class="equipment-detail-row">
+            <span>Articles liés</span>
+            <strong>${linkedArticleLabels}</strong>
           </div>
         </div>
         <div class="equipment-detail-media-note">
@@ -5915,9 +6179,7 @@ function attachOrganePageHandlers(pageKey) {
       brand: String(
         form.querySelector("input[name='brand']")?.value || "",
       ).trim(),
-      supplier: String(
-        form.querySelector("input[name='supplier']")?.value || "",
-      ).trim(),
+      supplier: String(form.querySelector("select[name='supplier']")?.value || "").trim(),
       serialNumber: String(
         form.querySelector("input[name='serialNumber']")?.value || "",
       ).trim(),
@@ -5934,6 +6196,12 @@ function attachOrganePageHandlers(pageKey) {
         form.querySelector("input[name='warrantyDuration']")?.value || "",
       ).trim(),
       status: String(form.querySelector("select[name='status']")?.value || ""),
+      linkedEquipmentIds: getSelectedValues(
+        form.querySelector("select[name='linkedEquipmentIds']"),
+      ),
+      linkedArticleIds: getSelectedValues(
+        form.querySelector("select[name='linkedArticleIds']"),
+      ),
       photos: [
         ...filterStoredAttachments(existingRecord?.photos, removedPhotos),
         ...photos,
@@ -5952,6 +6220,11 @@ function attachOrganePageHandlers(pageKey) {
       left.code.localeCompare(right.code),
     );
     saveOrganeDirectory(directory);
+    syncOrganeBusinessLinks(
+      nextOrgane.id,
+      nextOrgane.linkedEquipmentIds,
+      nextOrgane.linkedArticleIds,
+    );
     closeOrganeModal(pageKey);
   });
 
@@ -5960,14 +6233,14 @@ function attachOrganePageHandlers(pageKey) {
   }
 }
 
-function buildArboNode(id, label, icon, children = [], note = "") {
-  return { id, label, icon, children, note };
+function buildArboNode(domId, label, icon, children = [], note = "", dataId = null) {
+  return { id: domId, label, icon, children, note, dataId: dataId || domId };
 }
 
 function renderArboNode(node) {
   const hasChildren = Array.isArray(node.children) && node.children.length > 0;
   const leafMessage = node.note || "Créer le niveau suivant pour continuer.";
-  const isArticleNode = String(node.id || "").startsWith("arbo-article-");
+  const isArticleNode = String(node.id || "").includes("-article-");
   const showLeafNote = !hasChildren && !isArticleNode && leafMessage;
 
   return `
@@ -5975,7 +6248,7 @@ function renderArboNode(node) {
       <button
         class="arbo-node-toggle ${hasChildren ? "" : "is-leaf"}"
         type="button"
-        data-arbo-id="${node.id}"
+        data-arbo-id="${node.dataId || node.id}"
         ${hasChildren ? `data-arbo-toggle="${node.id}" aria-expanded="false"` : "disabled"}
       >
         <span class="arbo-chevron" aria-hidden="true">></span>
@@ -5988,116 +6261,166 @@ function renderArboNode(node) {
   `;
 }
 
-function getArboDivisionChildren(division, datasets) {
+function isOrganeLinkedToEquipment(organe, equipment) {
+  return (
+    normalizeLinkedIds(organe?.linkedEquipmentIds).includes(equipment?.id) ||
+    normalizeLinkedIds(equipment?.linkedOrganeIds).includes(organe?.id)
+  );
+}
+
+function isArticleLinkedToOrgane(article, organe) {
+  return (
+    normalizeLinkedIds(article?.linkedOrganeIds).includes(organe?.id) ||
+    normalizeLinkedIds(organe?.linkedArticleIds).includes(article?.id)
+  );
+}
+
+function buildArboArticleNodesForOrgane(datasets, organe, pathPrefix = "") {
+  const linkedArticles = datasets.articles.filter((article) =>
+    isArticleLinkedToOrgane(article, organe),
+  );
+  const prefix = pathPrefix ? `${pathPrefix}-` : "";
+
+  return datasets.articleGroups
+    .map((articleGroup) => {
+      const articleFamilyNodes = datasets.articleFamilies
+        .filter((articleFamily) => articleFamily.groupId === articleGroup.id)
+        .map((articleFamily) => {
+          const articleNodes = linkedArticles
+            .filter(
+              (article) =>
+                article.groupId === articleGroup.id &&
+                article.familyId === articleFamily.id,
+            )
+            .map((article) =>
+              buildArboNode(
+                `${prefix}arbo-article-${article.id}`,
+                `${article.code} - ${article.name}`,
+                "fa-barcode",
+                [],
+                "",
+                `arbo-article-${article.id}`,
+              ),
+            );
+
+          return buildArboNode(
+            `${prefix}arbo-article-family-${articleFamily.id}`,
+            `${articleFamily.code} - ${articleFamily.name}`,
+            "fa-layer-group",
+            articleNodes,
+            "",
+            `arbo-article-family-${articleFamily.id}`,
+          );
+        })
+        .filter((articleFamilyNode) => articleFamilyNode.children.length > 0);
+
+      return buildArboNode(
+        `${prefix}arbo-article-group-${articleGroup.id}`,
+        `${articleGroup.code} - ${articleGroup.name}`,
+        "fa-boxes-stacked",
+        articleFamilyNodes,
+        "",
+        `arbo-article-group-${articleGroup.id}`,
+      );
+    })
+    .filter((articleGroupNode) => articleGroupNode.children.length > 0);
+}
+
+function buildArboOrganeNodesForEquipment(datasets, equipment, pathPrefix = "") {
+  const linkedOrganes = datasets.organes.filter((organe) =>
+    isOrganeLinkedToEquipment(organe, equipment),
+  );
+  const prefix = pathPrefix ? `${pathPrefix}-` : "";
+
+  return datasets.organeGroups
+    .map((orgGroup) => {
+      const organeFamilyNodes = datasets.organeFamilies
+        .filter((orgFamily) => orgFamily.groupId === orgGroup.id)
+        .map((orgFamily) => {
+          const organeNodes = linkedOrganes
+            .filter(
+              (organe) =>
+                organe.groupId === orgGroup.id &&
+                organe.familyId === orgFamily.id,
+            )
+            .map((organe) => {
+              const organePath = `${prefix}arbo-organe-${organe.id}`;
+              return buildArboNode(
+                organePath,
+                `${organe.code} - ${organe.name}`,
+                "fa-circle-nodes",
+                buildArboArticleNodesForOrgane(datasets, organe, organePath),
+                "",
+                `arbo-organe-${organe.id}`,
+              );
+            });
+
+          return buildArboNode(
+            `${prefix}arbo-organe-family-${orgFamily.id}`,
+            `${orgFamily.code} - ${orgFamily.name}`,
+            "fa-puzzle-piece",
+            organeNodes,
+            "",
+            `arbo-organe-family-${orgFamily.id}`,
+          );
+        })
+        .filter((organeFamilyNode) => organeFamilyNode.children.length > 0);
+
+      return buildArboNode(
+        `${prefix}arbo-organe-group-${orgGroup.id}`,
+        `${orgGroup.code} - ${orgGroup.name}`,
+        "fa-diagram-project",
+        organeFamilyNodes,
+        "",
+        `arbo-organe-group-${orgGroup.id}`,
+      );
+    })
+    .filter((organeGroupNode) => organeGroupNode.children.length > 0);
+}
+
+function getArboDivisionChildren(division, datasets, pathPrefix = "") {
   const groups = datasets.equipmentGroups.filter((group) =>
     (group.divisionIds || []).includes(division.id),
   );
+  const prefix = pathPrefix ? `${pathPrefix}-` : "";
 
   const buildEquipmentBranch = (group) => {
+    const groupPath = `${prefix}arbo-equipment-group-${group.id}`;
     const familyNodes = datasets.equipmentFamilies
       .filter((family) => family.groupId === group.id)
       .map((family) => {
+        const familyPath = `${groupPath}-arbo-equipment-family-${family.id}`;
         const equipmentNodes = datasets.equipments
           .filter((equipment) => equipment.familyId === family.id)
           .map((equipment) => {
-            const organeGroupNodes = datasets.organeGroups
-              .filter((orgGroup) =>
-                (orgGroup.associatedEquipmentIds || []).includes(equipment.id),
-              )
-              .map((orgGroup) => {
-                const organeFamilyNodes = datasets.organeFamilies
-                  .filter((orgFamily) => orgFamily.groupId === orgGroup.id)
-                  .map((orgFamily) => {
-                    const organeNodes = datasets.organes
-                      .filter((organe) => organe.familyId === orgFamily.id)
-                      .map((organe) => {
-                        const articleGroupNodes = datasets.articleGroups
-                          .filter((articleGroup) =>
-                            (articleGroup.associatedOrganeIds || []).includes(
-                              organe.id,
-                            ),
-                          )
-                          .map((articleGroup) => {
-                            const articleFamilyNodes = datasets.articleFamilies
-                              .filter(
-                                (articleFamily) =>
-                                  articleFamily.groupId === articleGroup.id,
-                              )
-                              .map((articleFamily) => {
-                                const articleNodes = datasets.articles
-                                  .filter(
-                                    (article) =>
-                                      article.familyId === articleFamily.id,
-                                  )
-                                  .map((article) =>
-                                    buildArboNode(
-                                      `arbo-article-${article.id}`,
-                                      `${article.code} - ${article.name}`,
-                                      "fa-barcode",
-                                    ),
-                                  );
-
-                                return buildArboNode(
-                                  `arbo-article-family-${articleFamily.id}`,
-                                  `${articleFamily.code} - ${articleFamily.name}`,
-                                  "fa-layer-group",
-                                  articleNodes,
-                                );
-                              });
-
-                            return buildArboNode(
-                              `arbo-article-group-${articleGroup.id}`,
-                              `${articleGroup.code} - ${articleGroup.name}`,
-                              "fa-boxes-stacked",
-                              articleFamilyNodes,
-                            );
-                          });
-
-                        return buildArboNode(
-                          `arbo-organe-${organe.id}`,
-                          `${organe.code} - ${organe.name}`,
-                          "fa-circle-nodes",
-                          articleGroupNodes,
-                        );
-                      });
-
-                    return buildArboNode(
-                      `arbo-organe-family-${orgFamily.id}`,
-                      `${orgFamily.code} - ${orgFamily.name}`,
-                      "fa-puzzle-piece",
-                      organeNodes,
-                    );
-                  });
-
-                return buildArboNode(
-                  `arbo-organe-group-${orgGroup.id}`,
-                  `${orgGroup.code} - ${orgGroup.name}`,
-                  "fa-diagram-project",
-                  organeFamilyNodes,
-                );
-              });
-
+            const equipPath = `${familyPath}-arbo-equipment-${equipment.id}`;
             return buildArboNode(
-              `arbo-equipment-${equipment.id}`,
+              equipPath,
               `${equipment.code} - ${equipment.name}`,
               "fa-gear",
-              organeGroupNodes,
+              buildArboOrganeNodesForEquipment(datasets, equipment, equipPath),
+              "",
+              `arbo-equipment-${equipment.id}`,
             );
           });
 
         return buildArboNode(
-          `arbo-equipment-family-${family.id}`,
+          familyPath,
           `${family.code} - ${family.name}`,
           "fa-folder-tree",
           equipmentNodes,
+          "",
+          `arbo-equipment-family-${family.id}`,
         );
       });
 
     return buildArboNode(
-      `arbo-equipment-group-${group.id}`,
+      groupPath,
       `${group.code} - ${group.name}`,
       "fa-screwdriver-wrench",
       familyNodes,
+      "",
+      `arbo-equipment-group-${group.id}`,
     );
   };
 
@@ -6105,14 +6428,17 @@ function getArboDivisionChildren(division, datasets) {
     .filter((department) =>
       (department.divisionIds || []).includes(division.id),
     )
-    .map((department) =>
-      buildArboNode(
-        `arbo-department-${department.id}`,
+    .map((department) => {
+      const deptPath = `${prefix}arbo-department-${department.id}`;
+      return buildArboNode(
+        deptPath,
         `${department.code} - ${department.name}`,
         "fa-folder-open",
         groups.map((group) => buildEquipmentBranch(group)),
-      ),
-    );
+        "",
+        `arbo-department-${department.id}`,
+      );
+    });
 
   return departmentNodes.length > 0
     ? departmentNodes
@@ -6138,141 +6464,78 @@ function buildArborescenceTree() {
     articles: article.articles,
   };
 
-  const buildEquipmentBranchForUnit = () => {
+  const buildEquipmentBranchForUnit = (pathPrefix = "") => {
     return datasets.equipmentGroups.map((group) => {
+      const groupPath = pathPrefix
+        ? `${pathPrefix}-arbo-equipment-group-${group.id}`
+        : `arbo-equipment-group-${group.id}`;
       const familyNodes = datasets.equipmentFamilies
         .filter((family) => family.groupId === group.id)
         .map((family) => {
+          const familyPath = `${groupPath}-arbo-equipment-family-${family.id}`;
           const equipmentNodes = datasets.equipments
             .filter((equipment) => equipment.familyId === family.id)
             .map((equipment) => {
-              const organeGroupNodes = datasets.organeGroups
-                .filter((orgGroup) =>
-                  (orgGroup.associatedEquipmentIds || []).includes(
-                    equipment.id,
-                  ),
-                )
-                .map((orgGroup) => {
-                  const organeFamilyNodes = datasets.organeFamilies
-                    .filter((orgFamily) => orgFamily.groupId === orgGroup.id)
-                    .map((orgFamily) => {
-                      const organeNodes = datasets.organes
-                        .filter((organe) => organe.familyId === orgFamily.id)
-                        .map((organe) => {
-                          const articleGroupNodes = datasets.articleGroups
-                            .filter((articleGroup) =>
-                              (articleGroup.associatedOrganeIds || []).includes(
-                                organe.id,
-                              ),
-                            )
-                            .map((articleGroup) => {
-                              const articleFamilyNodes =
-                                datasets.articleFamilies
-                                  .filter(
-                                    (articleFamily) =>
-                                      articleFamily.groupId === articleGroup.id,
-                                  )
-                                  .map((articleFamily) => {
-                                    const articleNodes = datasets.articles
-                                      .filter(
-                                        (article) =>
-                                          article.familyId === articleFamily.id,
-                                      )
-                                      .map((article) =>
-                                        buildArboNode(
-                                          `arbo-article-${article.id}`,
-                                          `${article.code} - ${article.name}`,
-                                          "fa-barcode",
-                                        ),
-                                      );
-
-                                    return buildArboNode(
-                                      `arbo-article-family-${articleFamily.id}`,
-                                      `${articleFamily.code} - ${articleFamily.name}`,
-                                      "fa-layer-group",
-                                      articleNodes,
-                                    );
-                                  });
-
-                              return buildArboNode(
-                                `arbo-article-group-${articleGroup.id}`,
-                                `${articleGroup.code} - ${articleGroup.name}`,
-                                "fa-boxes-stacked",
-                                articleFamilyNodes,
-                              );
-                            });
-
-                          return buildArboNode(
-                            `arbo-organe-${organe.id}`,
-                            `${organe.code} - ${organe.name}`,
-                            "fa-circle-nodes",
-                            articleGroupNodes,
-                          );
-                        });
-
-                      return buildArboNode(
-                        `arbo-organe-family-${orgFamily.id}`,
-                        `${orgFamily.code} - ${orgFamily.name}`,
-                        "fa-puzzle-piece",
-                        organeNodes,
-                      );
-                    });
-
-                  return buildArboNode(
-                    `arbo-organe-group-${orgGroup.id}`,
-                    `${orgGroup.code} - ${orgGroup.name}`,
-                    "fa-diagram-project",
-                    organeFamilyNodes,
-                  );
-                });
-
+              const equipPath = `${familyPath}-arbo-equipment-${equipment.id}`;
               return buildArboNode(
-                `arbo-equipment-${equipment.id}`,
+                equipPath,
                 `${equipment.code} - ${equipment.name}`,
                 "fa-gear",
-                organeGroupNodes,
+                buildArboOrganeNodesForEquipment(datasets, equipment, equipPath),
+                "",
+                `arbo-equipment-${equipment.id}`,
               );
             });
 
           return buildArboNode(
-            `arbo-equipment-family-${family.id}`,
+            familyPath,
             `${family.code} - ${family.name}`,
             "fa-folder-tree",
             equipmentNodes,
+            "",
+            `arbo-equipment-family-${family.id}`,
           );
         });
 
       return buildArboNode(
-        `arbo-equipment-group-${group.id}`,
+        groupPath,
         `${group.code} - ${group.name}`,
         "fa-screwdriver-wrench",
         familyNodes,
+        "",
+        `arbo-equipment-group-${group.id}`,
       );
     });
   };
 
   const unitNodes = organization.unites.map((unit) => {
+    const unitPath = `arbo-unit-${unit.id}`;
     const departmentNodes = (organization.departmentServices || [])
       .filter((department) => (department.unitIds || []).includes(unit.id))
       .map((department) => {
+        const deptPath = `${unitPath}-arbo-department-${department.id}`;
         return buildArboNode(
-          `arbo-department-${department.id}`,
+          deptPath,
           `${department.code} - ${department.name}`,
           "fa-folder-open",
-          buildEquipmentBranchForUnit(),
+          buildEquipmentBranchForUnit(deptPath),
+          "",
+          `arbo-department-${department.id}`,
         );
       });
 
     const hasDepartments = departmentNodes.length > 0;
     const childrenNodes = hasDepartments
       ? departmentNodes
-      : buildEquipmentBranchForUnit();
+      : buildEquipmentBranchForUnit(unitPath);
 
     return buildArboNode(
-      `arbo-unit-${unit.id}`,
+      unitPath,
       `${unit.code} - ${unit.name}`,
       "fa-industry",
       childrenNodes,
+      "",
+      `arbo-unit-${unit.id}`,
     );
   });
 
@@ -6285,6 +6548,8 @@ function buildArborescenceTree() {
     enterpriseLabel,
     "fa-building",
     unitNodes,
+    "",
+    "arbo-enterprise-root",
   );
 }
 
@@ -6323,7 +6588,7 @@ function renderArborescencePage() {
   if (!pageContentEl) return;
 
   const tree = buildArborescenceTree();
-
+   console.dir(tree, { depth: null });
   pageContentEl.className = "organization-page arborescence-page";
   pageContentEl.innerHTML = `
     <div class="arbo-card">
@@ -7634,18 +7899,18 @@ const englishInterfacePhraseTranslations = new Map(
     "Confirmer et cr\u00e9er OT": "Confirm and create work order",
     "Confirmer et cr\u00e9er BT": "Confirm and create work report",
     "Cette page centralise les plans qui organisent les interventions de maintenance.":
-    "This page centralizes the plans that organize maintenance interventions.",
-    "Référentiel de base, contacts, légaux et conditions commerciales." :
-    "Basic repository, contacts, legal and commercial terms.",
+      "This page centralizes the plans that organize maintenance interventions.",
+    "Référentiel de base, contacts, légaux et conditions commerciales.":
+      "Basic repository, contacts, legal and commercial terms.",
     "Demande d'intervention":
-    "Work Request ",
+      "Work Request ",
     "Ordre de travail":
-    "Work order",
+      "Work order",
     "Bon de travail":
       "Work ticket",
     "Demandes d'intervention (DI)":
-    "Work Request (WR)"
-    
+      "Work Request (WR)"
+
   }),
 );
 
@@ -10004,120 +10269,6 @@ function renderSectionSubpages(pageKey, subpageKey) {
   });
 }
 
-function getDashboardKpis() {
-  const interventionDirectory = loadInterventionsState();
-  const equipmentDirectory = getEquipmentDirectory();
-  const articleDirectory = getArticleDirectory();
-  const stockAlerts = getStockAlerts();
-
-  const openInterventions =
-    interventionDirectory.dis.filter(
-      (item) => !["Validée", "Rejetée", "Annulée"].includes(item.status),
-    ).length +
-    interventionDirectory.ots.filter(
-      (item) => !["Terminé", "Clôturé", "Validé"].includes(item.status),
-    ).length +
-    interventionDirectory.bts.filter(
-      (item) => !["Validé", "Clôturé"].includes(item.status),
-    ).length;
-
-  return [
-    {
-      label: "Interventions ouvertes",
-      value: String(openInterventions),
-      footer: "DI, OT et BT actifs",
-      icon: "fa-screwdriver-wrench",
-      iconClass: "blue",
-      trendClass: "flat",
-      trendIcon: "fa-minus",
-      trendValue: "Suivi",
-    },
-    {
-      label: "Équipements",
-      value: String(equipmentDirectory.equipments.length),
-      footer: `${equipmentDirectory.groups.length} groupes`,
-      icon: "fa-gears",
-      iconClass: "orange",
-      trendClass: "flat",
-      trendIcon: "fa-minus",
-      trendValue: "Catalogue",
-    },
-    {
-      label: "Articles",
-      value: String(articleDirectory.articles.length),
-      footer: "Référentiel matières",
-      icon: "fa-box-open",
-      iconClass: "green",
-      trendClass: "flat",
-      trendIcon: "fa-minus",
-      trendValue: "Stock",
-    },
-    {
-      label: "Alertes en attente",
-      value: String(
-        stockAlerts.length + notifications.filter((item) => !item.read).length,
-      ),
-      footer: "Notifications et stock",
-      icon: "fa-bell",
-      iconClass: "red",
-      trendClass: "flat",
-      trendIcon: "fa-minus",
-      trendValue: "Actif",
-    },
-  ];
-}
-
-function getDashboardRecentInterventions() {
-  const directory = loadInterventionsState();
-
-  return [
-    ...directory.dis.map((item) => ({
-      type: "DI",
-      ref: item.ref,
-      equipment: item.equipmentLabel || item.title || "-",
-      equipmentLabel: item.equipmentLabel || item.title || "-",
-      priorityLabel: item.urgency || "-",
-      priorityClass: getInterventionBadgeClass(item.urgency),
-      statusLabel: item.status || "-",
-      statusClass: getInterventionStatusBadgeClass(item.status),
-      technician: item.requesterLabel || "-",
-      sortDate: item.createdAt,
-    })),
-    ...directory.ots.map((item) => ({
-      type: "OT",
-      ref: item.ref,
-      equipment: item.equipmentLabel || item.diRef || "-",
-      equipmentLabel: item.equipmentLabel || item.diRef || "-",
-      priorityLabel: item.priority || "-",
-      priorityClass: getInterventionBadgeClass(item.priority),
-      statusLabel: item.status || "-",
-      statusClass: getInterventionStatusBadgeClass(item.status),
-      technician: item.technicianLabel || "-",
-      sortDate: item.createdAt || item.plannedDate,
-    })),
-    ...directory.bts.map((item) => {
-      const linkedOt = directory.ots.find((ot) => ot.id === item.otId);
-      return {
-        type: "BT",
-        ref: item.ref,
-        equipment:
-          item.equipmentLabel || linkedOt?.equipmentLabel || item.otRef || "-",
-        equipmentLabel:
-          item.equipmentLabel || linkedOt?.equipmentLabel || item.otRef || "-",
-        priorityLabel: linkedOt?.priority || item.status || "-",
-        priorityClass: getInterventionBadgeClass(linkedOt?.priority),
-        statusLabel: item.status || "-",
-        statusClass: getInterventionStatusBadgeClass(item.status),
-        technician:
-          item.technicianSignature?.name || item.managerSignature?.name || "-",
-        sortDate: item.endDate || item.startDate || item.otRef,
-      };
-    }),
-  ]
-    .sort((a, b) => new Date(b.sortDate || 0) - new Date(a.sortDate || 0))
-    .slice(0, 5);
-}
-
 function getDashboardInterventionStats(type) {
   const directory = loadInterventionsState();
   let total = 0;
@@ -10149,19 +10300,433 @@ function getDashboardInterventionStats(type) {
   } else if (type === "BT") {
     const items = directory.bts || [];
     total = items.length;
-    planifie = items.filter((item) => item.status === "En cours").length;
-    encours = items.filter((item) => item.status === "En cours").length;
+    planifie = items.filter(
+      (item) =>
+        item.status === "Créé" ||
+        item.status === "Assigné" ||
+        item.status === "En attente",
+    ).length;  // ✅ BTs pas encore démarrés
+    encours = items.filter((item) => item.status === "En cours").length;  // ✅ BTs en exécution
     termine = items.filter(
       (item) =>
         item.status === "Validé" ||
         item.status === "Clôturé" ||
         item.status === "Terminé",
-    ).length;
+    ).length;  // ✅ inchangé
   }
 
   const pctTermine = total > 0 ? Math.round((termine / total) * 100) : 0;
 
   return { total, planifie, encours, termine, pctTermine };
+}
+
+function dashboardDateValue(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function dashboardFormatDate(value) {
+  const date = dashboardDateValue(value);
+  return date ? date.toLocaleDateString(getAdministrationLocale()) : "-";
+}
+
+function dashboardFormatNumber(value) {
+  return new Intl.NumberFormat(getAdministrationLocale(), {
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+}
+
+function dashboardFormatMoney(value) {
+  return new Intl.NumberFormat(getAdministrationLocale(), {
+    style: "currency",
+    currency: "DZD",
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+}
+
+function dashboardPercent(part, total) {
+  return total > 0 ? Math.round((part / total) * 100) : 0;
+}
+
+function dashboardIsClosedStatus(status) {
+  const normalized = String(status || "").toLowerCase();
+  return (
+    normalized.includes("valid") ||
+    normalized.includes("termin") ||
+    normalized.includes("clôt") ||
+    normalized.includes("clÃ´t") ||
+    normalized.includes("reçu complet") ||
+    normalized.includes("reÃ§u complet") ||
+    normalized.includes("transform")
+  );
+}
+
+function dashboardIsLate(dateValue, status) {
+  const date = dashboardDateValue(dateValue);
+  if (!date || dashboardIsClosedStatus(status)) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+  return date < today;
+}
+
+function dashboardGetSupplierState() {
+  try {
+    const raw = window.localStorage.getItem("maintflow.fournisseurs");
+    const parsed = raw ? JSON.parse(raw) : { suppliers: [] };
+    return { suppliers: Array.isArray(parsed.suppliers) ? parsed.suppliers : [] };
+  } catch (error) {
+    return { suppliers: [] };
+  }
+}
+
+function dashboardGetInterventionRows(directory = loadInterventionsState()) {
+  return [
+    ...(directory.dis || []).map((item) => ({
+      source: "DI",
+      ref: item.ref || "-",
+      equipment: item.equipmentLabel || item.title || "-",
+      type: item.requestType || "Corrective",
+      priority: item.urgency || "-",
+      priorityClass: getInterventionBadgeClass(item.urgency),
+      status: item.status || "-",
+      statusClass: getInterventionStatusBadgeClass(item.status),
+      technician: item.requesterLabel || "-",
+      date: item.createdAt,
+      dueDate: item.createdAt,
+      cost: 0,
+      articles: [],
+    })),
+    ...(directory.ots || []).map((item) => ({
+      source: "OT",
+      ref: item.ref || "-",
+      equipment: item.equipmentLabel || item.diRef || "-",
+      type: item.maintenanceType || item.requestType || "Corrective",
+      priority: item.priority || "-",
+      priorityClass: getInterventionBadgeClass(item.priority),
+      status: item.status || "-",
+      statusClass: getInterventionStatusBadgeClass(item.status),
+      technician: item.technicianLabel || "-",
+      date: item.plannedDate || item.createdAt,
+      dueDate: item.plannedDate || item.createdAt,
+      cost: 0,
+      articles: item.articles || [],
+    })),
+    ...(directory.bts || []).map((item) => {
+      const linkedOt = (directory.ots || []).find((ot) => ot.id === item.otId);
+      return {
+        source: "BT",
+        ref: item.ref || "-",
+        equipment: item.equipmentLabel || linkedOt?.equipmentLabel || item.otRef || "-",
+        type: item.maintenanceType || linkedOt?.maintenanceType || "Corrective",
+        priority: linkedOt?.priority || "-",
+        priorityClass: getInterventionBadgeClass(linkedOt?.priority),
+        status: item.status || "-",
+        statusClass: getInterventionStatusBadgeClass(item.status),
+        technician: item.technicianSignature?.name || item.managerSignature?.name || linkedOt?.technicianLabel || "-",
+        date: item.endDate || item.startDate || linkedOt?.plannedDate || linkedOt?.createdAt,
+        dueDate: item.endDate || item.startDate || linkedOt?.plannedDate,
+        cost: dashboardGetArticleLinesCost(item.articles || []),
+        articles: item.articles || [],
+      };
+    }),
+  ];
+}
+
+function dashboardGetArticleLinesCost(lines = []) {
+  return (lines || []).reduce((sum, line) => {
+    const article = getArticleRecord("articles", line.articleId);
+    const unitPrice = Number(line.unitPrice ?? line.price ?? article?.price ?? 0) || 0;
+    const qty = Number(line.qty ?? line.quantity ?? 0) || 0;
+    return sum + unitPrice * qty;
+  }, 0);
+}
+
+function dashboardMonthKeys(count = 6) {
+  const formatter = new Intl.DateTimeFormat(getAdministrationLocale(), {
+    month: "short",
+  });
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date();
+    date.setDate(1);
+    date.setMonth(date.getMonth() - (count - 1 - index));
+    return {
+      key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`,
+      label: formatter.format(date),
+    };
+  });
+}
+
+function dashboardBuildMonthlyInterventionChart(rows) {
+  const months = dashboardMonthKeys(6);
+  const typeKeys = ["Corrective", "Préventive", "Réglementaire"];
+  const aliases = {
+    preventive: "Préventive",
+    "prÃ©ventive": "Préventive",
+    "préventive": "Préventive",
+    réglementaire: "Réglementaire",
+    "rÃ©glementaire": "Réglementaire",
+  };
+  const data = months.map((month) => {
+    const item = { ...month, Corrective: 0, Préventive: 0, Réglementaire: 0 };
+    rows.forEach((row) => {
+      const date = dashboardDateValue(row.date);
+      if (!date) return;
+      const rowKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      if (rowKey !== month.key) return;
+      const rawType = String(row.type || "Corrective").toLowerCase();
+      const normalized = aliases[rawType] || (rawType.includes("préd") || rawType.includes("prÃ©d") ? "Préventive" : row.type || "Corrective");
+      const target = typeKeys.includes(normalized) ? normalized : "Corrective";
+      item[target] += 1;
+    });
+    item.total = typeKeys.reduce((sum, key) => sum + item[key], 0);
+    return item;
+  });
+  const max = Math.max(1, ...data.map((item) => item.total));
+  return { data, max, typeKeys };
+}
+
+function dashboardBuildAvailabilityByZone(equipmentDirectory) {
+  const equipments = equipmentDirectory.equipments || [];
+  const zones = (equipmentDirectory.groups || []).map((group) => {
+    const zoneEquipments = equipments.filter((equipment) => equipment.groupId === group.id);
+    const total = zoneEquipments.length;
+    const operational = zoneEquipments.filter((equipment) => equipment.status === "En service").length;
+    return {
+      label: group.name || group.code || "Zone",
+      total,
+      percent: dashboardPercent(operational, total),
+    };
+  });
+
+  if (!zones.length && equipments.length) {
+    const operational = equipments.filter((equipment) => equipment.status === "En service").length;
+    zones.push({ label: "Parc équipements", total: equipments.length, percent: dashboardPercent(operational, equipments.length) });
+  }
+
+  return zones.filter(zone => zone.total > 0).sort((a, b) => a.percent - b.percent).slice(0, 4);
+}
+
+function dashboardBuildPieSegments(items, colors) {
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  let cursor = 0;
+  const gradients = items.map((item, index) => {
+    const size = total > 0 ? (item.value / total) * 100 : 0;
+    const start = cursor;
+    cursor += size;
+    return `${colors[index % colors.length]} ${start}% ${cursor}%`;
+  });
+  return {
+    total,
+    style: total > 0 ? `background: conic-gradient(${gradients.join(", ")});` : "",
+    items: items.map((item, index) => ({
+      ...item,
+      color: colors[index % colors.length],
+      percent: dashboardPercent(item.value, total),
+    })),
+  };
+}
+
+function dashboardBuildMaintenanceTypePie(rows) {
+  const labels = ["Corrective", "Préventive", "Prédictive", "Réglementaire"];
+  const counts = Object.fromEntries(labels.map((label) => [label, 0]));
+  rows.forEach((row) => {
+    const type = String(row.type || "Corrective").toLowerCase();
+    if (type.includes("préd") || type.includes("prÃ©d")) counts["Prédictive"] += 1;
+    else if (type.includes("prév") || type.includes("prÃ©v")) counts["Préventive"] += 1;
+    else if (type.includes("rég") || type.includes("rÃ©g")) counts["Réglementaire"] += 1;
+    else counts.Corrective += 1;
+  });
+  return dashboardBuildPieSegments(
+    labels.map((label) => ({ label, value: counts[label] })),
+    ["#dc2626", "#16a34a", "#0d6e8a", "#94a3b8"],
+  );
+}
+
+function dashboardBuildStockFamilyPie() {
+  const directory = getArticleDirectory();
+  const familyValues = new Map();
+  (directory.articles || []).forEach((article) => {
+    const family = (directory.families || []).find((item) => item.id === article.familyId);
+    const totals = getStockTotalsForArticle(article.id);
+    const value = totals.totalValue || (Number(article.quantity) || 0) * (Number(article.price) || 0);
+    const key = family?.name || "Sans famille";
+    familyValues.set(key, (familyValues.get(key) || 0) + value);
+  });
+  const items = Array.from(familyValues.entries())
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 4);
+  return dashboardBuildPieSegments(items, ["#0d6e8a", "#16a34a", "#d97706", "#94a3b8"]);
+}
+
+function dashboardBuildOtStatusPie(stats) {
+  return dashboardBuildPieSegments(
+    [
+      { label: "Terminés", value: stats.termine },
+      { label: "En cours", value: stats.encours },
+      { label: "Planifiés", value: stats.planifie },
+      { label: "Bloqués", value: Math.max(0, stats.total - stats.termine - stats.encours - stats.planifie) },
+    ],
+    ["#16a34a", "#d97706", "#0d6e8a", "#dc2626"],
+  );
+}
+
+function dashboardBuildWeekPlanning(directory) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const day = start.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  start.setDate(start.getDate() + diff);
+  const days = Array.from({ length: 5 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    const key = date.toISOString().slice(0, 10);
+    const items = (directory.ots || []).filter((ot) => String(ot.plannedDate || "").slice(0, 10) === key);
+    return {
+      key,
+      label: date.toLocaleDateString(getAdministrationLocale(), { weekday: "short" }),
+      count: items.length,
+    };
+  });
+  const max = Math.max(1, ...days.map((item) => item.count));
+  return { days, max };
+}
+
+function dashboardBuildActivity(rows, achatsState, stockDirectory, interventionDirectory) {
+  const interventionHistory = (interventionDirectory.history || []).map((entry) => ({
+    title: entry.action || "Intervention",
+    meta: `${entry.recordRef || entry.recordType || "Intervention"} · ${dashboardFormatDate(entry.createdAt)}`,
+    icon: "fa-screwdriver-wrench",
+    date: entry.createdAt,
+    tone: "brand",
+  }));
+  const stockActivity = (stockDirectory.movements || []).map((entry) => ({
+    title: entry.type === "exit" ? "Mouvement stock" : "Entrée stock",
+    meta: `${entry.articleLabel || entry.linkedDocument || "Stock"} · ${dashboardFormatDate(entry.createdAt)}`,
+    icon: "fa-boxes-stacked",
+    date: entry.createdAt,
+    tone: "warning",
+  }));
+  const achatsActivity = [
+    ...(achatsState.demandes || []).map((entry) => ({
+      title: "DA créée",
+      meta: `${entry.number || "DA"} · ${dashboardFormatDate(entry.createdAt || entry.date)}`,
+      icon: "fa-file-circle-plus",
+      date: entry.createdAt || entry.date,
+      tone: "info",
+    })),
+    ...(achatsState.bons || []).map((entry) => ({
+      title: "BC envoyé",
+      meta: `${entry.number || "BC"} · ${dashboardFormatDate(entry.createdAt || entry.date)}`,
+      icon: "fa-paper-plane",
+      date: entry.createdAt || entry.date,
+      tone: "success",
+    })),
+    ...(achatsState.receptions || []).map((entry) => ({
+      title: "Réception validée",
+      meta: `${entry.number || "Réception"} · ${dashboardFormatDate(entry.createdAt || entry.date)}`,
+      icon: "fa-clipboard-check",
+      date: entry.createdAt || entry.date,
+      tone: "success",
+    })),
+  ];
+  const recentRows = rows.slice(0, 4).map((row) => ({
+    title: row.source === "DI" ? "Panne déclarée" : row.status.includes("Term") ? "Intervention terminée" : "Intervention mise à jour",
+    meta: `${row.ref} · ${row.equipment}`,
+    icon: "fa-clock-rotate-left",
+    date: row.date,
+    tone: row.priorityClass === "badge-danger" ? "danger" : "brand",
+  }));
+
+  return [...interventionHistory, ...stockActivity, ...achatsActivity, ...recentRows]
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+    .slice(0, 6);
+}
+
+function dashboardBuildBusinessKpis(rows, stockRecords) {
+  const failures = rows.filter((row) => String(row.type || "").toLowerCase().includes("correct"));
+  const closedBts = rows.filter((row) => row.source === "BT" && dashboardIsClosedStatus(row.status));
+  const repairHours = closedBts
+    .map((row) => {
+      const bt = (loadInterventionsState().bts || []).find((item) => item.ref === row.ref);
+      const start = dashboardDateValue(bt?.startDate);
+      const end = dashboardDateValue(bt?.endDate);
+      return start && end ? Math.max(0, end - start) / 36e5 : null;
+    })
+    .filter((value) => value !== null);
+  const preventiveRows = rows.filter((row) => {
+    const type = String(row.type || "").toLowerCase();
+    return type.includes("prév") || type.includes("prÃ©v");
+  });
+  const preventiveDone = preventiveRows.filter((row) => dashboardIsClosedStatus(row.status)).length;
+  const availableStock = stockRecords.filter((record) => Number(record.currentQuantity) > Number(record.minStock || 0)).length;
+
+  return [
+    {
+      label: "MTBF",
+      value: failures.length > 1 ? `${Math.round(30 / failures.length)} jours` : "-",
+      sub: "moy pannes",
+    },
+    {
+      label: "MTTR",
+      value: repairHours.length ? `${(repairHours.reduce((sum, item) => sum + item, 0) / repairHours.length).toFixed(1)} h` : "-",
+      sub: "moy répar.",
+    },
+    {
+      label: "Taux PM réalisées",
+      value: `${dashboardPercent(preventiveDone, preventiveRows.length)}%`,
+      sub: "dans délais",
+    },
+    {
+      label: "Taux service stock",
+      value: `${dashboardPercent(availableStock, stockRecords.length)}%`,
+      sub: "dispo immé.",
+    },
+  ];
+}
+
+function dashboardBuildPurchaseBudgetChart(achatsState) {
+  const months = dashboardMonthKeys(6).map((month) => ({ ...month, allocated: 0, engaged: 0 }));
+  (achatsState.bons || []).forEach((bc) => {
+    const date = dashboardDateValue(bc.createdAt || bc.date || bc.orderDate);
+    if (!date) return;
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const month = months.find((item) => item.key === key);
+    if (!month) return;
+    const total = Number(bc.totalTtc ?? bc.total ?? bc.amount ?? 0) || 0;
+    month.engaged += total;
+    month.allocated += Number(bc.budget ?? 0) || total;
+  });
+  const max = Math.max(1, ...months.flatMap((item) => [item.allocated, item.engaged]));
+  return { months, max };
+}
+
+function dashboardBuildTopSuppliers(supplierState, achatsState) {
+  const bons = achatsState.bons || [];
+  return (supplierState.suppliers || [])
+    .map((supplier) => {
+      const name = supplier.raisonSociale || supplier.nomCommercial || supplier.name || "-";
+      const supplierOrders = bons.filter((bc) => String(bc.supplierId || bc.supplierName || "").includes(supplier.id) || String(bc.supplierName || "") === name);
+      const evaluations = supplier.evaluations || [];
+      const score = evaluations.length
+        ? evaluations.reduce((sum, item) => sum + (Number(item.global) || 0), 0) / evaluations.length
+        : Number(supplier.score || 0) || 0;
+      return {
+        name,
+        orders: supplierOrders.length,
+        delay: supplier.averageDelay || supplier.delaiMoyen || "-",
+        compliance: supplier.complianceRate || supplier.tauxConformite || "-",
+        score: score ? score.toFixed(1) : "-",
+      };
+    })
+    .sort((a, b) => Number(b.score === "-" ? 0 : b.score) - Number(a.score === "-" ? 0 : a.score))
+    .slice(0, 5);
+}
+
+function dashboardEmptyRow(colspan, message) {
+  return `<tr><td colspan="${colspan}"><div class="dashboard-empty">${message}</div></td></tr>`;
 }
 
 function renderDashboardPage() {
@@ -10173,89 +10738,58 @@ function renderDashboardPage() {
 
   const interventionDirectory = loadInterventionsState();
   const equipmentDirectory = getEquipmentDirectory();
+  const stockDirectory = getStockDirectory();
+  const achatsState = loadAchatsState();
+  const supplierState = dashboardGetSupplierState();
+  const selectedType = localStorage.getItem("dashboardType") || "OT";
+  const stats = getDashboardInterventionStats(selectedType);
+  const interventionRows = dashboardGetInterventionRows(interventionDirectory)
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
   const dashboardAlertItems = getCombinedNotifications();
   const alertCount = dashboardAlertItems.length;
-  const dashboardKpis = getDashboardKpis();
-  const recentInterventions = getDashboardRecentInterventions();
-  const criticalEquipment = (equipmentDirectory.equipments || [])
-    .slice(0, 4)
-    .map((equipment, index) => ({
-      name: `${equipment.code} — ${equipment.name}`,
-      location:
-        equipment.location ||
-        equipment.locationLabel ||
-        "Localisation non précisée",
-      statusLabel: equipment.status || "En service",
-      statusClass: getStatusBadgeClass(equipment.status || "En service"),
-      icon: ["fa-gear", "fa-industry", "fa-screwdriver-wrench", "fa-plug"][
-        index % 4
-      ],
-      fillClass:
-        index === 0
-          ? "fill-danger"
-          : index === 1
-            ? "fill-warning"
-            : "fill-success",
-      fillWidth: `${Math.max(35, 100 - index * 18)}%`,
-    }));
-  const availabilityByZone = (equipmentDirectory.groups || [])
-    .slice(0, 4)
-    .map((group, index) => ({
-      label: `${group.code} — ${group.name}`,
-      value: `${(equipmentDirectory.equipments || []).filter(
-        (equipment) => equipment.groupId === group.id,
-      ).length
-        } équipements`,
-      width: `${Math.max(25, 100 - index * 18)}%`,
-      fillClass:
-        index === 0
-          ? "fill-danger"
-          : index === 1
-            ? "fill-warning"
-            : "fill-success",
-    }));
-  const recentActivity = [
-    ...dashboardAlertItems.slice(0, 3).map((alert) => ({
-      title: alert.title,
-      meta: `${alert.subtitle} · ${alert.time}`,
-      icon: alert.icon,
-      dotStyle:
-        alert.type === "crit"
-          ? "background:var(--danger)"
-          : alert.type === "warn"
-            ? "background:var(--warning)"
-            : "background:var(--info)",
-    })),
-    ...recentInterventions.slice(0, 2).map((item) => ({
-      title: `${item.ref} · ${item.type}`,
-      meta: `${item.equipmentLabel} · ${item.statusLabel}`,
-      icon: "fa-screwdriver-wrench",
-      dotStyle:
-        item.priorityClass === "badge-danger"
-          ? "background:var(--danger)"
-          : item.priorityClass === "badge-warning"
-            ? "background:var(--warning)"
-            : "background:var(--brand)",
-    })),
-  ].slice(0, 5);
-  const weeklyPlanning = Array.from({ length: 5 }, (_, index) => {
-    const date = new Date();
-    date.setDate(date.getDate() + index);
-    const dateKey = date.toISOString().slice(0, 10);
-    const count = interventionDirectory.ots.filter(
-      (item) => String(item.plannedDate || "").slice(0, 10) === dateKey,
-    ).length;
-
-    return {
-      day: date.toLocaleDateString(getAdministrationLocale(), {
-        weekday: "short",
-      }),
-      value: String(count),
-      active: index === 0,
-      height: `${Math.max(18, count * 18 + 18)}px`,
-    };
-  });
-  const upcomingWork = [...interventionDirectory.ots]
+  const recentInterventions = interventionRows.slice(0, 5);
+  const workOrderStatus = dashboardBuildOtStatusPie(stats);
+  const monthlyInterventions = dashboardBuildMonthlyInterventionChart(interventionRows);
+  const availabilityByZone = dashboardBuildAvailabilityByZone(equipmentDirectory);
+  const maintenanceTypePie = dashboardBuildMaintenanceTypePie(interventionRows);
+  const stockFamilyPie = dashboardBuildStockFamilyPie();
+  const weeklyPlanning = dashboardBuildWeekPlanning(interventionDirectory);
+  const recentActivity = dashboardBuildActivity(
+    interventionRows,
+    achatsState,
+    stockDirectory,
+    interventionDirectory,
+  );
+  const businessKpis = dashboardBuildBusinessKpis(
+    interventionRows,
+    stockDirectory.records || [],
+  );
+  const purchaseBudget = dashboardBuildPurchaseBudgetChart(achatsState);
+  const topSuppliers = dashboardBuildTopSuppliers(supplierState, achatsState);
+  const totalEquipments = (equipmentDirectory.equipments || []).length;
+  const operationalEquipments = (equipmentDirectory.equipments || []).filter(
+    (equipment) => equipment.status === "En service",
+  ).length;
+  const equipmentAvailability = dashboardPercent(operationalEquipments, totalEquipments);
+  const lateOts = (interventionDirectory.ots || []).filter((ot) =>
+    dashboardIsLate(ot.plannedDate || ot.createdAt, ot.status),
+  ).length;
+  const activeInterventions = interventionRows.filter(
+    (row) => !dashboardIsClosedStatus(row.status),
+  ).length;
+  const pendingDa = (achatsState.demandes || []).filter(
+    (da) => !dashboardIsClosedStatus(da.status),
+  );
+  const criticalStock = getStockAlerts().filter((alert) => alert.type === "crit");
+  const currentMonthKey = new Date().toISOString().slice(0, 7);
+  const monthMaintenanceCost = interventionRows
+    .filter((row) => String(row.date || "").slice(0, 7) === currentMonthKey)
+    .reduce((sum, row) => sum + (Number(row.cost) || 0), 0);
+  const budgetMonth = (achatsState.bons || [])
+    .filter((bc) => String(bc.createdAt || bc.date || bc.orderDate || "").slice(0, 7) === currentMonthKey)
+    .reduce((sum, bc) => sum + (Number(bc.budget ?? bc.totalTtc ?? bc.total ?? bc.amount ?? 0) || 0), 0);
+  const upcomingWork = [...(interventionDirectory.ots || [])]
+    .filter((item) => !dashboardIsClosedStatus(item.status))
     .sort(
       (a, b) =>
         new Date(a.plannedDate || a.createdAt || 0) -
@@ -10263,8 +10797,8 @@ function renderDashboardPage() {
     )
     .slice(0, 3)
     .map((item) => ({
-      title: `${item.ref} · ${item.equipmentLabel || item.diRef || "Ordre"}`,
-      meta: item.plannedDate || item.createdAt || "Date à planifier",
+      title: `${item.ref || "OT"} · ${item.equipmentLabel || item.diRef || "Ordre"}`,
+      meta: `${dashboardFormatDate(item.plannedDate || item.createdAt)} · ${item.technicianLabel || "-"}`,
       accent:
         item.priority === "Critique"
           ? "var(--danger)"
@@ -10274,93 +10808,207 @@ function renderDashboardPage() {
       priorityClass: getInterventionBadgeClass(item.priority),
       priorityLabel: item.priority || "Standard",
     }));
-
-  pageContentEl.className = "dashboard-page";
-  const selectedType = localStorage.getItem("dashboardType") || "OT";
-
-  const stats = getDashboardInterventionStats(selectedType);
-
-  let kpi1Label = "";
-  let kpi2Label = "";
-  let kpi3Label = "";
-
-  let kpi1Value = "";
-  let kpi2Value = "";
-  let kpi3Value = "";
-
-  if (selectedType === "DI") {
-    kpi1Label = "Total DI";
-    kpi2Label = "En attente";
-    kpi3Label = "Taux validation";
-
-    kpi1Value = stats.total;
-    kpi2Value = stats.planifie;
-    kpi3Value = stats.pctTermine + "%";
-  }
-
-  if (selectedType === "OT") {
-    kpi1Label = "Total OT";
-    kpi2Label = "En cours";
-    kpi3Label = "Taux clôture";
-
-    kpi1Value = stats.total;
-    kpi2Value = stats.encours;
-    kpi3Value = stats.pctTermine + "%";
-  }
-
-  if (selectedType === "BT") {
-    kpi1Label = "Total BT";
-    kpi2Label = "Actifs";
-    kpi3Label = "Taux clôture";
-
-    kpi1Value = stats.total;
-    kpi2Value = stats.encours;
-    kpi3Value = stats.pctTermine + "%";
-  }
-
-  const workOrderStatus = [
+  const dashboardKpis = [
     {
-      label: "Planifié",
-      count: stats.planifie,
-      color: "#0e7490",
+      label: "Interventions actives",
+      value: dashboardFormatNumber(activeInterventions),
+      footer: "DI, OT et BT ouverts",
+      icon: "fa-screwdriver-wrench",
+      tone: "info",
     },
     {
-      label: "En cours",
-      count: stats.encours,
-      color: "#d97706",
+      label: "Équipements opérationnels",
+      value: `${dashboardFormatNumber(operationalEquipments)} / ${equipmentAvailability}%`,
+      footer: `${dashboardFormatNumber(totalEquipments)} équipements`,
+      icon: "fa-gears",
+      tone: "success",
     },
     {
-      label: "Terminé",
-      count: stats.termine,
-      color: "#16a34a",
+      label: "OT en retard",
+      value: dashboardFormatNumber(lateOts),
+      footer: "échéance dépassée",
+      icon: "fa-clock",
+      tone: lateOts ? "danger" : "success",
+    },
+    {
+      label: "DA en attente",
+      value: dashboardFormatNumber(pendingDa.length),
+      footer: `${pendingDa.filter((da) => String(da.priority || da.urgency || "").toLowerCase().includes("urgent")).length} urgentes`,
+      icon: "fa-file-circle-exclamation",
+      tone: "warning",
+    },
+    {
+      label: "Stock critique",
+      value: `${dashboardFormatNumber(criticalStock.length)} articles`,
+      footer: "sous seuil min",
+      icon: "fa-box-open",
+      tone: criticalStock.length ? "danger" : "success",
+    },
+    {
+      label: "Coût maintenance ce mois",
+      value: dashboardFormatMoney(monthMaintenanceCost),
+      footer: `budget ${dashboardFormatMoney(budgetMonth)}`,
+      icon: "fa-coins",
+      tone: "info",
     },
   ];
+
+  pageContentEl.className = "dashboard-page";
   pageContentEl.innerHTML = `
-    <div class="kpi-grid">
+    <section class="dashboard-kpi-grid">
       ${dashboardKpis
       .map(
         (kpi) => `
-            <div class="kpi-card">
+            <div class="kpi-card dashboard-kpi-card ${kpi.tone}">
               <div class="kpi-header">
                 <div class="kpi-label">${kpi.label}</div>
-                <div class="kpi-icon ${kpi.iconClass}"><i class="fa-solid ${kpi.icon}"></i></div>
+                <div class="kpi-icon ${kpi.tone}"><i class="fa-solid ${kpi.icon}"></i></div>
               </div>
-              <div class="kpi-value">${kpi.label === "Alertes en attente" ? alertCount : kpi.value}</div>
-              <div class="kpi-footer">
-                <span class="kpi-trend ${kpi.trendClass}"><i class="fa-solid ${kpi.trendIcon}"></i> ${kpi.trendValue}</span>
-                <span>${kpi.footer}</span>
-              </div>
+              <div class="kpi-value">${kpi.value}</div>
+              <div class="kpi-footer">${kpi.footer}</div>
             </div>
           `,
       )
       .join("")}
-    </div>
+    </section>
 
-    <div class="grid-3-1">
+    <section class="dashboard-grid dashboard-grid-2">
+      <div class="card dashboard-chart-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-chart-column"></i> Interventions par mois</div>
+          <span class="status-badge badge-info">6 derniers mois</span>
+        </div>
+        <div class="dashboard-stacked-chart">
+          ${monthlyInterventions.data
+      .map(
+        (month) => `
+                <div class="stacked-month">
+                  <div class="stacked-bar" style="height:${Math.max(6, (month.total / monthlyInterventions.max) * 150)}px">
+                    <span class="stacked-segment corrective" style="height:${month.total ? (month.Corrective / month.total) * 100 : 0}%"></span>
+                    <span class="stacked-segment preventive" style="height:${month.total ? (month.Préventive / month.total) * 100 : 0}%"></span>
+                    <span class="stacked-segment regulatory" style="height:${month.total ? (month.Réglementaire / month.total) * 100 : 0}%"></span>
+                  </div>
+                  <strong>${month.total}</strong>
+                  <span>${month.label}</span>
+                </div>
+              `,
+      )
+      .join("")}
+        </div>
+        <div class="dashboard-chart-legend">
+          <span><i class="legend-dot danger"></i>Corrective</span>
+          <span><i class="legend-dot success"></i>Préventive</span>
+          <span><i class="legend-dot info"></i>Réglementaire</span>
+        </div>
+      </div>
+
+      <div class="card dashboard-chart-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-chart-simple"></i> Disponibilité équipements par zone</div>
+        </div>
+        <div class="card-body dashboard-zone-list">
+          ${availabilityByZone.length
+      ? availabilityByZone
+        .map(
+          (zone) => `
+                <div class="dashboard-zone-row">
+                  <div class="progress-label"><span>${escapeHtml(zone.label)}</span><span>${zone.percent}%</span></div>
+                  <div class="progress-bar"><div class="progress-fill ${zone.percent < 75 ? "fill-danger" : zone.percent < 90 ? "fill-warning" : "fill-success"}" style="width:${zone.percent}%"></div></div>
+                  <small>${dashboardFormatNumber(zone.total)} équipements</small>
+                </div>
+              `,
+        )
+        .join("")
+      : `<div class="dashboard-empty">Aucune zone disponible.</div>`}
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid dashboard-grid-3">
+      <div class="card dashboard-pie-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-chart-pie"></i> Statut des interventions</div>
+          <select id="dashboardInterventionType" class="dashboard-select">
+            <option value="DI">DI</option>
+            <option value="OT">OT</option>
+            <option value="BT">BT</option>
+          </select>
+        </div>
+        <div class="donut-wrap dashboard-pie-wrap">
+          <div class="donut" style="${workOrderStatus.style}">
+            <div class="donut-center">
+              <div class="donut-pct">${stats.pctTermine}%</div>
+              <div class="donut-lbl">Terminés</div>
+            </div>
+          </div>
+          <div class="legend">
+            ${workOrderStatus.items
+      .map(
+        (item) => `
+                <div class="legend-item">
+                  <div class="legend-dot" style="background:${item.color}"></div>
+                  <span class="muted">${item.label}</span>
+                  <span class="legend-count">${item.percent}%</span>
+                </div>
+              `,
+      )
+      .join("")}
+          </div>
+        </div>
+      </div>
+
+      <div class="card dashboard-pie-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-screwdriver-wrench"></i> Types de maintenance</div>
+        </div>
+        <div class="donut-wrap dashboard-pie-wrap">
+          <div class="dashboard-pie" style="${maintenanceTypePie.style}"></div>
+          <div class="legend">
+            ${maintenanceTypePie.items
+      .map(
+        (item) => `
+                <div class="legend-item">
+                  <div class="legend-dot" style="background:${item.color}"></div>
+                  <span class="muted">${item.label}</span>
+                  <span class="legend-count">${item.percent}%</span>
+                </div>
+              `,
+      )
+      .join("")}
+          </div>
+        </div>
+      </div>
+
+      <div class="card dashboard-pie-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Valeur stock par famille</div>
+        </div>
+        <div class="donut-wrap dashboard-pie-wrap">
+          <div class="dashboard-pie" style="${stockFamilyPie.style}"></div>
+          <div class="legend">
+            ${stockFamilyPie.items.length
+      ? stockFamilyPie.items
+        .map(
+          (item) => `
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background:${item.color}"></div>
+                    <span class="muted">${escapeHtml(item.label)}</span>
+                    <span class="legend-count">${item.percent}%</span>
+                  </div>
+                `,
+        )
+        .join("")
+      : `<div class="dashboard-empty">Aucune valeur stock.</div>`}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid dashboard-grid-2">
       <div class="card">
         <div class="card-head">
           <div class="card-title"><i class="fa-solid fa-list-check"></i> Interventions récentes</div>
-          <a href="#interventions" class="link-all" data-dashboard-route="interventions">Voir toutes <i class="fa-solid fa-arrow-right"></i></a>
+          <a href="#interventions" class="link-all" data-dashboard-route="interventions">Voir module <i class="fa-solid fa-arrow-right"></i></a>
         </div>
         <div class="table-wrap">
           <table>
@@ -10375,20 +11023,22 @@ function renderDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              ${recentInterventions
-      .map(
-        (intervention) => `
+              ${recentInterventions.length
+      ? recentInterventions
+        .map(
+          (intervention) => `
                     <tr>
-                      <td><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted)">${intervention.ref}</span></td>
-                      <td><strong>${intervention.equipment}</strong></td>
-                      <td class="muted">${intervention.type}</td>
-                      <td><span class="priority-tag ${intervention.priorityClass}">${intervention.priorityLabel}</span></td>
-                      <td><span class="status-badge ${intervention.statusClass}">${intervention.statusLabel}</span></td>
-                      <td class="muted">${intervention.technician}</td>
+                      <td><span class="mono-ref">${escapeHtml(intervention.ref)}</span></td>
+                      <td><strong>${escapeHtml(intervention.equipment)}</strong></td>
+                      <td class="muted">${escapeHtml(intervention.type)}</td>
+                      <td><span class="priority-tag ${intervention.priorityClass}">${escapeHtml(intervention.priority)}</span></td>
+                      <td><span class="status-badge ${intervention.statusClass}">${escapeHtml(intervention.status)}</span></td>
+                      <td class="muted">${escapeHtml(intervention.technician)}</td>
                     </tr>
                   `,
-      )
-      .join("")}
+        )
+        .join("")
+      : dashboardEmptyRow(6, "Aucune intervention enregistrée.")}
             </tbody>
           </table>
         </div>
@@ -10396,127 +11046,74 @@ function renderDashboardPage() {
 
       <div class="card">
         <div class="card-head">
-          <div class="card-title"><i class="fa-solid fa-bell"></i> Alertes</div>
-          <span class="status-badge badge-danger" style="font-size:11px">${alertCount} actives</span>
+          <div class="card-title"><i class="fa-solid fa-bell"></i> Alertes actives</div>
+          <span class="status-badge badge-danger">${alertCount} actives</span>
         </div>
-        <div class="alert-list">
-          ${dashboardAlertItems
-      .map(
-        (alert) => `
-                <div class="alert-item ${alert.type}">
-                  <i class="fa-solid ${alert.icon} alert-icon"></i>
-                  <div>
-                    <div class="alert-text">${alert.title}</div>
-                    <div class="alert-sub">${alert.subtitle}</div>
-                  </div>
-                  <div class="alert-time">${alert.time}</div>
-                </div>
-              `,
-      )
-      .join("")}
-        </div>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title"><i class="fa-solid fa-gear"></i> Équipements critiques</div>
-          <a href="#equipements" class="link-all" data-dashboard-route="equipements">Tous les équipements <i class="fa-solid fa-arrow-right"></i></a>
-        </div>
-        <div class="eq-grid">
-          ${criticalEquipment
-      .map(
-        (equipment) => `
-                <div class="eq-card">
-                  <div class="eq-icon"><i class="fa-solid ${equipment.icon}"></i></div>
-                  <div class="eq-name">${equipment.name}</div>
-                  <div class="eq-loc"><i class="fa-solid fa-location-dot" style="font-size:10px"></i> ${equipment.location}</div>
-                  <div class="eq-status"><span class="status-badge ${equipment.statusClass}" style="font-size:11px">${equipment.statusLabel}</span></div>
-                  <div class="health-bar"><div class="health-fill ${equipment.fillClass}" style="width:${equipment.fillWidth};${equipment.fillStyle || ""}"></div></div>
-                </div>
-              `,
-      )
-      .join("")}
-        </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:16px">
-        <div class="card">
-          <div class="card-head">
-  <div class="card-title">
-    <i class="fa-solid fa-chart-pie"></i>
-    Statut des interventions
-  </div>
-
-  <select id="dashboardInterventionType" class="dashboard-select">
-      <option value="DI">DI</option>
-      <option value="OT" selected>OT</option>
-      <option value="BT">BT</option>
-  </select>
-</div>
-          <div class="donut-wrap">
-            <div class="donut">
-              <div class="donut-center">
-                <div class="donut-pct">${stats.pctTermine}%</div>
-                <div class="donut-lbl">Terminé</div>
-              </div>
-            </div>
-            <div class="legend">
-              ${workOrderStatus
-      .map(
-        (item) => `
-                    <div class="legend-item">
-                      <div class="legend-dot" style="background:${item.color}"></div>
-                      <span class="muted">${item.label}</span>
-                      <span class="legend-count">${item.count}</span>
+        <div class="alert-list dashboard-alert-list">
+          ${dashboardAlertItems.length
+      ? dashboardAlertItems
+        .map(
+          (alert) => `
+                  <div class="alert-item ${alert.type}">
+                    <i class="fa-solid ${alert.icon} alert-icon"></i>
+                    <div>
+                      <div class="alert-text">${escapeHtml(alert.title)}</div>
+                      <div class="alert-sub">${escapeHtml(alert.subtitle)}</div>
                     </div>
-                  `,
-      )
-      .join("")}
-            </div>
-          </div>
-          <div class="stats-row">
-
-  <div class="stat-cell">
-      <div class="stat-num">${kpi1Value}</div>
-      <div class="stat-lbl">${kpi1Label}</div>
-  </div>
-
-  <div class="stat-cell">
-      <div class="stat-num">${kpi2Value}</div>
-      <div class="stat-lbl">${kpi2Label}</div>
-  </div>
-
-  <div class="stat-cell">
-      <div class="stat-num">${kpi3Value}</div>
-      <div class="stat-lbl">${kpi3Label}</div>
-  </div>
-
-</div>
-        </div>
-
-        <div class="card">
-          <div class="card-head">
-            <div class="card-title"><i class="fa-solid fa-chart-simple"></i> Disponibilité par zone</div>
-          </div>
-          <div class="card-body">
-            ${availabilityByZone
-      .map(
-        (zone, index) => `
-                  <div class="progress-row"${index === availabilityByZone.length - 1 ? ' style="margin-bottom:0"' : ""}>
-                    <div class="progress-label"><span>${zone.label}</span><span>${zone.value}</span></div>
-                    <div class="progress-bar"><div class="progress-fill ${zone.fillClass}" style="width:${zone.width}"></div></div>
+                    <div class="alert-time">${escapeHtml(alert.time)}</div>
                   </div>
                 `,
+        )
+        .join("")
+      : `<div class="dashboard-empty">Aucune alerte active.</div>`}
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid dashboard-grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-calendar-week"></i> Planning semaine</div>
+          <a href="#planification" class="link-all" data-dashboard-route="planification">Planification <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="card-body">
+          <div class="dashboard-week-bars">
+            ${weeklyPlanning.days
+      .map(
+        (day) => `
+                <div class="dashboard-week-day">
+                  <div class="dashboard-week-track">
+                    <span style="height:${Math.max(8, (day.count / weeklyPlanning.max) * 88)}px"></span>
+                  </div>
+                  <strong>${dashboardFormatNumber(day.count)}</strong>
+                  <small>${escapeHtml(day.label)}</small>
+                </div>
+              `,
       )
       .join("")}
           </div>
+          <div class="dashboard-next-list">
+            <div class="card-mini-title">Prochaines interventions</div>
+            ${upcomingWork.length
+      ? upcomingWork
+        .map(
+          (item) => `
+                  <div class="dashboard-next-item">
+                    <i style="background:${item.accent}"></i>
+                    <div>
+                      <strong>${escapeHtml(item.title)}</strong>
+                      <span>${escapeHtml(item.meta)}</span>
+                    </div>
+                    <span class="priority-tag ${item.priorityClass}">${escapeHtml(item.priorityLabel)}</span>
+                  </div>
+                `,
+        )
+        .join("")
+      : `<div class="dashboard-empty">Aucune intervention planifiée.</div>`}
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="grid-2">
       <div class="card">
         <div class="card-head">
           <div class="card-title"><i class="fa-solid fa-timeline"></i> Activité récente</div>
@@ -10524,75 +11121,112 @@ function renderDashboardPage() {
         </div>
         <div class="card-body">
           <ul class="timeline">
-            ${recentActivity
-      .map(
-        (item, index) => `
-                  <li class="tl-item"${index === recentActivity.length - 1 ? ' style="padding-bottom:0"' : ""}>
-                    <div class="tl-dot" style="${item.dotStyle}"><i class="fa-solid ${item.icon}" style="font-size:12px"></i></div>
+            ${recentActivity.length
+      ? recentActivity
+        .map(
+          (item) => `
+                  <li class="tl-item">
+                    <div class="tl-dot ${item.tone}"><i class="fa-solid ${item.icon}"></i></div>
                     <div class="tl-content">
-                      <div class="tl-title">${item.title}</div>
-                      <div class="tl-meta">${item.meta}</div>
+                      <div class="tl-title">${escapeHtml(item.title)}</div>
+                      <div class="tl-meta">${escapeHtml(item.meta)}</div>
                     </div>
                   </li>
                 `,
+        )
+        .join("")
+      : `<li class="dashboard-empty">Aucune activité récente.</li>`}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-business-grid">
+      ${businessKpis
+      .map(
+        (kpi) => `
+            <div class="planning-kpi-card dashboard-business-card">
+              <strong>${escapeHtml(kpi.value)}</strong>
+              <span>${escapeHtml(kpi.label)}</span>
+              <small>${escapeHtml(kpi.sub)}</small>
+            </div>
+          `,
       )
       .join("")}
-          </ul>
+    </section>
+
+    <section class="dashboard-grid dashboard-grid-2">
+      <div class="card dashboard-chart-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-chart-line"></i> Budget achats par mois</div>
+        </div>
+        <div class="dashboard-budget-chart">
+          ${purchaseBudget.months
+      .map(
+        (month) => `
+              <div class="budget-month">
+                <div class="budget-bars">
+                  <span class="allocated" style="height:${Math.max(4, (month.allocated / purchaseBudget.max) * 110)}px"></span>
+                  <span class="engaged" style="height:${Math.max(4, (month.engaged / purchaseBudget.max) * 110)}px"></span>
+                </div>
+                <strong>${dashboardFormatMoney(month.engaged)}</strong>
+                <small>${month.label}</small>
+              </div>
+            `,
+      )
+      .join("")}
+        </div>
+        <div class="dashboard-chart-legend">
+          <span><i class="legend-dot info"></i>Alloué</span>
+          <span><i class="legend-dot success"></i>Engagé</span>
         </div>
       </div>
 
       <div class="card">
         <div class="card-head">
-          <div class="card-title"><i class="fa-solid fa-calendar-week"></i> Planning de la semaine</div>
-          <a href="#planification" class="link-all" data-dashboard-route="planification">Planification <i class="fa-solid fa-arrow-right"></i></a>
+          <div class="card-title"><i class="fa-solid fa-truck"></i> Top fournisseurs</div>
+          <a href="#fournisseurs" class="link-all" data-dashboard-route="fournisseurs">Fournisseurs <i class="fa-solid fa-arrow-right"></i></a>
         </div>
-        <div class="card-body" style="padding:14px 20px">
-          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;text-align:center">
-            ${weeklyPlanning
-      .map(
-        (day) => `
-                  <div>
-                    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;height:70px;justify-content:flex-end">
-                      <div style="width:100%;background:${day.active ? "var(--brand)" : "var(--brand-light)"};border-radius:4px 4px 0 0;height:${day.height}"></div>
-                    </div>
-                    <div style="font-size:10px;color:${day.active ? "var(--brand)" : "var(--text-muted)"};font-weight:${day.active ? 600 : 400};margin-top:4px">${day.day}</div>
-                    <div style="font-size:12px;font-weight:600;color:${day.active ? "var(--brand)" : "var(--text-primary)"}">${day.value}</div>
-                  </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fournisseur</th>
+                <th>BC en cours</th>
+                <th>Délai moyen</th>
+                <th>Taux conformité</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${topSuppliers.length
+      ? topSuppliers
+        .map(
+          (supplier) => `
+                  <tr>
+                    <td><strong>${escapeHtml(supplier.name)}</strong></td>
+                    <td>${dashboardFormatNumber(supplier.orders)}</td>
+                    <td>${escapeHtml(String(supplier.delay))}</td>
+                    <td>${escapeHtml(String(supplier.compliance))}</td>
+                    <td><span class="status-badge badge-info">${escapeHtml(String(supplier.score))}</span></td>
+                  </tr>
                 `,
-      )
-      .join("")}
-          </div>
-
-          <div style="border-top:1px solid var(--border-light);padding-top:14px;display:flex;flex-direction:column;gap:10px">
-            <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Prochaines interventions</div>
-
-            ${upcomingWork
-      .map(
-        (item) => `
-                  <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--body-bg);border-radius:var(--radius-md)">
-                    <div style="width:4px;height:36px;background:${item.accent};border-radius:4px;flex-shrink:0"></div>
-                    <div style="flex:1">
-                      <div style="font-size:13px;font-weight:500">${item.title}</div>
-                      <div style="font-size:11.5px;color:var(--text-muted)"><i class="fa-regular fa-clock"></i> ${item.meta}</div>
-                    </div>
-                    <span class="priority-tag ${item.priorityClass}">${item.priorityLabel}</span>
-                  </div>
-                `,
-      )
-      .join("")}
-          </div>
+        )
+        .join("")
+      : dashboardEmptyRow(5, "Aucun fournisseur enregistré.")}
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+    </section>
   `;
+
   const typeSelect = document.getElementById("dashboardInterventionType");
 
   if (typeSelect) {
     typeSelect.value = selectedType;
-
     typeSelect.addEventListener("change", function () {
       localStorage.setItem("dashboardType", this.value);
-
       renderDashboardPage();
     });
   }
@@ -13893,31 +14527,36 @@ function attachPlanificationTabHandlers() {
 
 function renderPlanificationActionButtons(activeSubpageKey) {
   if (!pageActionsEl) return;
-  const label =
-    activeSubpageKey === "calendrier"
-      ? "Créer un OT"
-      : activeSubpageKey === "compteurs"
-        ? "Saisir un relevé"
-        : "Nouveau plan";
-  pageActionsEl.innerHTML = `
-    <button class="btn btn-primary" type="button" data-plan-primary-action>
-      <i class="fa-solid fa-plus"></i>
-      <span>${label}</span>
-    </button>
-  `;
 
-  const button = pageActionsEl.querySelector("[data-plan-primary-action]");
-  if (!button) return;
-  button.addEventListener("click", function () {
-    const target =
-      activeSubpageKey === "compteurs"
-        ? pageContentEl?.querySelector("[data-plan-reading-form]")
-        : pageContentEl?.querySelector(".planning-architecture-card") ||
-        pageContentEl;
-    if (target && typeof target.scrollIntoView === "function") {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  });
+  if (activeSubpageKey === 'compteurs') {
+    pageActionsEl.innerHTML = `
+      <button class="btn btn-outline" type="button" data-plan-primary-action>
+        <i class="fa-solid fa-gauge-high"></i><span>Saisir un relevé</span>
+      </button>
+      <button class="btn btn-primary" type="button" data-counter-new>
+        <i class="fa-solid fa-plus"></i><span>Nouveau compteur</span>
+      </button>`;
+  } else {
+    const label = activeSubpageKey === 'calendrier' ? 'Créer un OT' : 'Nouveau plan';
+    pageActionsEl.innerHTML = `
+      <button class="btn btn-primary" type="button" data-plan-primary-action>
+        <i class="fa-solid fa-plus"></i><span>${label}</span>
+      </button>`;
+  }
+
+  const primaryBtn = pageActionsEl.querySelector('[data-plan-primary-action]');
+  if (primaryBtn) {
+    primaryBtn.addEventListener('click', function () {
+      const target = activeSubpageKey === 'compteurs'
+        ? pageContentEl?.querySelector('[data-plan-reading-form]')
+        : pageContentEl?.querySelector('.planning-architecture-card') || pageContentEl;
+      if (target && typeof target.scrollIntoView === 'function')
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  pageActionsEl.querySelector('[data-counter-new]')
+    ?.addEventListener('click', () => openPlanificationCounterModal('create'));
 }
 
 function buildPlanificationPlanCard(plan, state) {
@@ -13935,8 +14574,20 @@ function buildPlanificationPlanCard(plan, state) {
       <div class="org-detail-list">
         <div class="org-detail-item"><span>Type de plan</span><strong>${escapeHtml(plan.planType)}</strong></div>
         <div class="org-detail-item"><span>Type maintenance</span><strong>${escapeHtml(plan.maintenanceType)}</strong></div>
-        <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(plan.equipment)}</strong></div>
-        <div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(plan.organ || "-")}</strong></div>
+        <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(
+    (() => {
+      const eDir = getEquipmentDirectory();
+      const e = eDir.equipments.find(e => e.id === ctr.equipmentId);
+      return e ? e.code + ' ' + e.name : ctr.equipment || '-';
+    })()
+  )}</strong></div>
+<div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(
+    (() => {
+      const oDir = getOrganeDirectory();
+      const o = oDir.organes.find(o => o.id === ctr.organId);
+      return o ? o.code + ' ' + o.name : ctr.organ || '-';
+    })()
+  )}</strong></div>
         <div class="org-detail-item"><span>Déclenchement</span><strong>${escapeHtml(plan.triggerLabel)}</strong></div>
         <div class="org-detail-item"><span>Technicien</span><strong>${escapeHtml(technician)}</strong></div>
         <div class="org-detail-item"><span>Durée estimée</span><strong>${escapeHtml(plan.durationHours)} h</strong></div>
@@ -14134,6 +14785,195 @@ function renderPlanificationCalendarPage(state, activeSubpageKey) {
   });
 }
 
+function openPlanificationCounterModal(mode, counterId = null) {
+  const state = loadPlanificationState();
+  const counter = counterId ? state.counters.find(c => c.id === counterId) : null;
+  const isDetails = mode === "details";
+  const isEdit = mode === "edit";
+  const initialRef = counter?.ref || buildPlanificationCode("CPT", state.counters);
+
+  // Options équipements
+  const equipmentOptions = `<option value="">-- Aucun --</option>` +
+    getEquipmentRecords('equipments')
+      .sort((a, b) => a.code.localeCompare(b.code))
+      .map(e => `<option value="${escapeHtml(e.id)}"${counter?.equipmentId === e.id ? ' selected' : ''}>
+        ${escapeHtml(e.code + ' — ' + e.name)}
+      </option>`).join('');
+
+  // Options organes
+  const organeOptions = `<option value="">-- Aucun --</option>` +
+    getOrganeRecords('organes')
+      .sort((a, b) => a.code.localeCompare(b.code))
+      .map(o => `<option value="${escapeHtml(o.id)}"${counter?.organId === o.id ? ' selected' : ''}>
+        ${escapeHtml(o.code + ' — ' + o.name)}
+      </option>`).join('');
+
+  // Options plans liés
+  const planOptions = `<option value="">-- Aucun --</option>` +
+    state.plans
+      .sort((a, b) => a.ref.localeCompare(b.ref))
+      .map(p => `<option value="${escapeHtml(p.id)}"${counter?.planId === p.id ? ' selected' : ''}>
+        ${escapeHtml(p.ref + ' · ' + p.title)}
+      </option>`).join('');
+
+  const bodyHtml = isDetails ? `
+    <div class="org-detail-list">
+      <div class="org-detail-item"><span>Référence</span><strong>${escapeHtml(initialRef)}</strong></div>
+      <div class="org-detail-item"><span>Nom</span><strong>${escapeHtml(counter?.name || '-')}</strong></div>
+      <div class="org-detail-item"><span>Type</span><strong>${escapeHtml(counter?.type || '-')}</strong></div>
+      <div class="org-detail-item"><span>Unité</span><strong>${escapeHtml(counter?.unit || '-')}</strong></div>
+      <div class="org-detail-item"><span>Valeur actuelle</span><strong>${escapeHtml(String(counter?.currentValue ?? 0))} ${escapeHtml(counter?.unit || '')}</strong></div>
+      <div class="org-detail-item"><span>Valeur initiale</span><strong>${escapeHtml(String(counter?.initialValue ?? 0))}</strong></div>
+      <div class="org-detail-item"><span>Seuil alerte</span><strong>${escapeHtml(String(counter?.alertThreshold || '-'))}</strong></div>
+      <div class="org-detail-item"><span>Seuil action</span><strong>${escapeHtml(String(counter?.actionThreshold || '-'))}</strong></div>
+      <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(
+    (() => { const e = getEquipmentRecords('equipments').find(e => e.id === counter?.equipmentId); return e ? e.code + ' — ' + e.name : '-'; })()
+  )}</strong></div>
+      <div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(
+    (() => { const o = getOrganeRecords('organes').find(o => o.id === counter?.organId); return o ? o.code + ' — ' + o.name : '-'; })()
+  )}</strong></div>
+      <div class="org-detail-item"><span>Plan lié</span><strong>${escapeHtml(
+    (() => { const p = state.plans.find(p => p.id === counter?.planId); return p ? p.ref + ' · ' + p.title : '-'; })()
+  )}</strong></div>
+      <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(counter?.status || '-')}</strong></div>
+    </div>
+    <div class="org-modal-actions">
+      <button class="btn btn-outline" type="button" data-plan-modal-close>Fermer</button>
+      <button class="btn btn-primary" type="button" data-counter-edit-from-details>Modifier</button>
+    </div>
+  ` : `
+    <form class="org-form-grid planning-modal-form" data-counter-form>
+      <div class="field-group">
+        <label>Référence</label>
+        <input type="text" value="${escapeHtml(initialRef)}" disabled />
+      </div>
+      <div class="field-group">
+        <label for="counterName">Nom du compteur</label>
+        <input id="counterName" name="name" type="text"
+          value="${escapeHtml(counter?.name || '')}"
+          placeholder="Ex: Heures moteur pompe P1" required />
+      </div>
+      <div class="field-group">
+        <label for="counterType">Type</label>
+        <select id="counterType" name="type">
+          ${['Horaire', 'Kilométrique', 'Cyclique', 'Pression', 'Température', 'Vibration', 'Autre']
+    .map(t => `<option${counter?.type === t ? ' selected' : ''}>${t}</option>`)
+    .join('')}
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="counterUnit">Unité</label>
+        <select id="counterUnit" name="unit">
+          ${['h', 'km', 'cycles', 'bar', '°C', 'mm/s', 'tours', 'L', 'm³', 'Autre']
+    .map(u => `<option${counter?.unit === u ? ' selected' : ''}>${u}</option>`)
+    .join('')}
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="counterInitial">Valeur initiale</label>
+        <input id="counterInitial" name="initialValue" type="number" min="0" step="0.01"
+          value="${escapeHtml(String(counter?.initialValue ?? 0))}" />
+      </div>
+      <div class="field-group">
+        <label for="counterCurrent">Valeur actuelle</label>
+        <input id="counterCurrent" name="currentValue" type="number" min="0" step="0.01"
+          value="${escapeHtml(String(counter?.currentValue ?? 0))}" />
+      </div>
+      <div class="field-group">
+        <label for="counterAlert">Seuil alerte</label>
+        <input id="counterAlert" name="alertThreshold" type="number" min="0" step="1"
+          value="${escapeHtml(String(counter?.alertThreshold || ''))}"
+          placeholder="Ex: 450" />
+      </div>
+      <div class="field-group">
+        <label for="counterAction">Seuil action (génère OT)</label>
+        <input id="counterAction" name="actionThreshold" type="number" min="0" step="1"
+          value="${escapeHtml(String(counter?.actionThreshold || ''))}"
+          placeholder="Ex: 500" />
+      </div>
+      <div class="field-group">
+        <label for="counterEquipment">Équipement lié</label>
+        <select id="counterEquipment" name="equipmentId">${equipmentOptions}</select>
+      </div>
+      <div class="field-group">
+        <label for="counterOrgane">Organe lié</label>
+        <select id="counterOrgane" name="organId">${organeOptions}</select>
+      </div>
+      <div class="field-group field-group-wide">
+        <label for="counterPlan">Plan de maintenance lié</label>
+        <select id="counterPlan" name="planId">${planOptions}</select>
+      </div>
+      <div class="field-group">
+        <label for="counterStatus">Statut</label>
+        <select id="counterStatus" name="status">
+          <option${(counter?.status || 'Actif') === 'Actif' ? ' selected' : ''}>Actif</option>
+          <option${counter?.status === 'Inactif' ? ' selected' : ''}>Inactif</option>
+          <option${counter?.status === 'En panne' ? ' selected' : ''}>En panne</option>
+        </select>
+      </div>
+      <div class="org-modal-actions">
+        <button class="btn btn-outline" type="button" data-plan-modal-close>Annuler</button>
+        <button class="btn btn-primary" type="submit">${isEdit ? 'Enregistrer' : 'Créer'}</button>
+      </div>
+    </form>
+  `;
+
+  renderPlanificationModal(
+    isDetails ? `Détails ${initialRef}` : isEdit ? `Modifier ${initialRef}` : `Nouveau compteur ${initialRef}`,
+    isDetails ? "Fiche complète du compteur et ses seuils." : "Création et mise à jour d'un compteur de maintenance.",
+    bodyHtml
+  );
+
+  if (isDetails) {
+    overlayRootEl?.querySelector('[data-counter-edit-from-details]')
+      ?.addEventListener('click', () => openPlanificationCounterModal('edit', counterId));
+    return;
+  }
+
+  const form = overlayRootEl?.querySelector('[data-counter-form]');
+  if (!form) return;
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const formData = new FormData(form);
+    const nextState = loadPlanificationState();
+    const counterIndex = counter
+      ? nextState.counters.findIndex(c => c.id === counter.id)
+      : -1;
+
+    const nextRecord = {
+      ...(counter || {}),
+      id: counter?.id || `counter-${Date.now()}`,
+      ref: counter?.ref || buildPlanificationCode("CPT", nextState.counters),
+      name: String(formData.get('name') || '').trim(),
+      type: String(formData.get('type') || 'Horaire'),
+      unit: String(formData.get('unit') || 'h'),
+      initialValue: Number(formData.get('initialValue') || 0),
+      currentValue: Number(formData.get('currentValue') || 0),
+      alertThreshold: Number(formData.get('alertThreshold') || 0),
+      actionThreshold: Number(formData.get('actionThreshold') || 0),
+      equipmentId: String(formData.get('equipmentId') || '').trim(),
+      organId: String(formData.get('organId') || '').trim(),
+      planId: String(formData.get('planId') || '').trim(),
+      status: String(formData.get('status') || 'Actif'),
+      createdAt: counter?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (counterIndex >= 0) {
+      nextState.counters[counterIndex] = nextRecord;
+    } else {
+      nextState.counters.unshift(nextRecord);
+    }
+
+    savePlanificationState(nextState);
+    closePlanificationModal();
+    renderPlanificationPageClean("compteurs");
+  });
+}
+
+
+
 function renderPlanificationCountersPage(state, activeSubpageKey) {
   const counters = state.counters || [];
   const readings = [...(state.readings || [])].sort(
@@ -14165,27 +15005,32 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
       <div class="card">
         <div class="card-head"><div class="card-title"><i class="fa-solid fa-gauge-high"></i> Fiches compteur</div><span class="status-badge badge-info">CPT-XXX automatique</span></div>
         <div class="card-body">
-          ${counters
-      .map(
-        (counter) => `
-            <div class="org-list-item planning-counter-card">
-              <div class="card-head" style="margin-bottom:10px">
-                <div class="card-title"><i class="fa-solid fa-scale-balanced"></i> ${counter.ref} · ${escapeHtml(counter.name)}</div>
-                <span class="status-badge ${counter.currentValue >= counter.actionThreshold ? "badge-danger" : counter.currentValue >= counter.alertThreshold ? "badge-warning" : "badge-success"}">${escapeHtml(counter.unit)}</span>
+         ${counters.length === 0
+      ? `<p>Aucun compteur.</p>`
+      : `
+    <div class="field-group" style="margin-bottom:var(--space-4)">
+      <label for="counterSelector">Sélectionner un compteur</label>
+      <select id="counterSelector" data-counter-selector>
+                 ${counters.length === 0
+        ? `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-gauge-high"></i></div><h3>Aucun compteur</h3><p>Créez votre premier compteur.</p></div>`
+        : `
+              <div class="field-group" style="margin-bottom:16px">
+                <label for="counterSelectorA">Sélectionner un compteur</label>
+                <select id="counterSelectorA" data-counter-selector-a>
+                  ${counters.map(c => {
+          const icon = Number(c.currentValue) >= Number(c.actionThreshold || 0) ? "🔴"
+            : Number(c.currentValue) >= Number(c.alertThreshold || 0) ? "🟡" : "🟢";
+          return `<option value="${c.id}">${icon} ${escapeHtml(c.ref)} — ${escapeHtml(c.name)} (${escapeHtml(String(c.currentValue ?? 0))} ${escapeHtml(c.unit)})</option>`;
+        }).join("")}
+                </select>
               </div>
-              <div class="org-detail-list">
-                <div class="org-detail-item"><span>Équipement lié</span><strong>${escapeHtml(counter.equipment)}</strong></div>
-                <div class="org-detail-item"><span>Organe lié</span><strong>${escapeHtml(counter.organ || "-")}</strong></div>
-                <div class="org-detail-item"><span>Type compteur</span><strong>${escapeHtml(counter.type)}</strong></div>
-                <div class="org-detail-item"><span>Valeur actuelle</span><strong>${escapeHtml(counter.currentValue)} ${escapeHtml(counter.unit)}</strong></div>
-                <div class="org-detail-item"><span>Seuil alerte</span><strong>${escapeHtml(counter.alertThreshold)} ${escapeHtml(counter.unit)}</strong></div>
-                <div class="org-detail-item"><span>Seuil action</span><strong>${escapeHtml(counter.actionThreshold)} ${escapeHtml(counter.unit)}</strong></div>
-                <div class="org-detail-item"><span>Plan lié</span><strong>${escapeHtml(counter.planId || "-")}</strong></div>
-                <div class="org-detail-item"><span>Mise à jour</span><strong>${formatPlanificationDate(counter.lastUpdate)}</strong></div>
-              </div>
-            </div>`,
-      )
-      .join("")}
+              <div data-counter-detail-a>${buildCounterDetailHtml(counters[0], state)}</div>`
+      }
+      </select>
+    </div>
+    <div data-counter-detail></div>
+  `
+    }
         </div>
       </div>
       <div class="planning-side-column">
@@ -14228,6 +15073,18 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
     </div>
   `;
 
+  // Afficher le 1er compteur par défaut
+  const detailEl = pageContentEl.querySelector("[data-counter-detail]");
+  if (detailEl && counters.length > 0) {
+    detailEl.innerHTML = buildCounterDetailHtml(counters[0], state);
+  }
+
+  // Changement de sélection
+  pageContentEl.querySelector("[data-counter-selector]")?.addEventListener("change", function () {
+    const ctr = counters.find(c => c.id === this.value);
+    const el = pageContentEl.querySelector("[data-counter-detail]");
+    if (el) el.innerHTML = buildCounterDetailHtml(ctr, state);
+  });
   const form = pageContentEl.querySelector("[data-plan-reading-form]");
   if (form) {
     form.addEventListener("submit", function (event) {
@@ -14293,6 +15150,37 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
       savePlanificationState(stateToSave);
       renderPage("planification", activeSubpageKey);
       window.location.hash = `planification/${activeSubpageKey}`;
+    });
+  }
+  if (pageContentEl && !pageContentEl.dataset.counterHandlersBound) {
+    // APRÈS (correct)
+    pageContentEl.addEventListener('click', function (event) {
+      const btn = event.target.closest('[data-counter-action]');
+      if (!btn || !pageContentEl.contains(btn)) return;
+      const action = btn.dataset.counterAction;
+      const counterId = btn.dataset.counterId;
+
+      if (action === 'details') {
+        openPlanificationCounterModal('details', counterId);
+      } else if (action === 'edit') {
+        openPlanificationCounterModal('edit', counterId);
+      } else if (action === 'reset') {
+        if (!window.confirm('Remettre la valeur du compteur à zéro ?')) return;
+        const s = loadPlanificationState();
+        const c = s.counters.find(c => c.id === counterId);
+        if (c) {
+          c.currentValue = 0;
+          c.updatedAt = new Date().toISOString();
+          savePlanificationState(s);
+          renderPlanificationCountersPage(s, 'compteurs');
+        }
+      } else if (action === 'delete') {
+        if (!window.confirm('Supprimer ce compteur définitivement ?')) return;
+        const s = loadPlanificationState();
+        s.counters = s.counters.filter(c => c.id !== counterId);
+        savePlanificationState(s);
+        renderPlanificationCountersPage(s, 'compteurs');
+      }
     });
   }
 }
@@ -15118,6 +16006,44 @@ function closePlanificationModal() {
   if (overlayRootEl) overlayRootEl.innerHTML = "";
 }
 
+function computeNextDueDate(fromDate, frequency) {
+  const base = fromDate ? new Date(fromDate) : new Date();
+  if (isNaN(base.getTime())) return "";
+  const d = new Date(base);
+  switch (frequency) {
+    case "Quotidienne": d.setDate(d.getDate() + 1); break;
+    case "Hebdomadaire": d.setDate(d.getDate() + 7); break;
+    case "Mensuelle": d.setMonth(d.getMonth() + 1); break;
+    case "Trimestrielle": d.setMonth(d.getMonth() + 3); break;
+    case "Semestrielle": d.setMonth(d.getMonth() + 6); break;
+    case "Annuelle": d.setFullYear(d.getFullYear() + 1); break;
+    default: d.setMonth(d.getMonth() + 1);
+  }
+  return d.toISOString().slice(0, 16);
+}
+
+function getPlanificationTriggerOptions(planType) {
+  const map = {
+    "Systématique": [
+      "Par calendrier",
+      "Par durée de fonctionnement",
+      "Par date fixe",
+    ],
+    "Conditionnel": [
+      "Par événement",
+      "Par état détecté",
+      "Sur demande d'intervention",
+    ],
+    "Prédictif": [
+      "Par compteur",
+      "Par relevé vibratoire",
+      "Par analyse thermique",
+      "Par analyse huile",
+    ],
+  };
+  return map[planType] || map["Systématique"];
+}
+
 function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
   const state = loadPlanificationData();
   const plan = planId ? state.plans.find((item) => item.id === planId) : null;
@@ -15128,24 +16054,14 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
   const selectedTechnicianId =
     plan?.technicianId ||
     preset.technicianId ||
-    planificationTechniciens[0]?.id ||
     "";
   const currentEquipmentLabel = plan?.equipment || preset.equipment || "";
   const currentOrganeLabel = plan?.organ || preset.organ || "";
   const selectedFrequency = plan?.frequency || preset.frequency || "Mensuelle";
 
-  let equipmentOptions = getEquipmentRecords("equipments")
-    .map((equipment) => {
-      const label = `${equipment.code} — ${equipment.name}`;
-      return (
-        "<option" +
-        (label === currentEquipmentLabel ? " selected" : "") +
-        ">" +
-        escapeHtml(label) +
-        "</option>"
-      );
-    })
-    .join("");
+  let equipmentOptions = getEquipmentRecords('equipments')
+    .map(e => `<option value="${escapeHtml(e.id)}"${(plan?.equipmentId || preset?.equipmentId) === e.id ? ' selected' : ''}>${escapeHtml(e.code + ' — ' + e.name)}</option>`)
+    .join('');
   if (
     currentEquipmentLabel &&
     !equipmentOptions.includes(">" + currentEquipmentLabel + "</option>")
@@ -15157,18 +16073,9 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
       equipmentOptions;
   }
 
-  let organeOptions = getOrganeRecords("organes")
-    .map((organe) => {
-      const label = `${organe.code} — ${organe.name}`;
-      return (
-        "<option" +
-        (label === currentOrganeLabel ? " selected" : "") +
-        ">" +
-        escapeHtml(label) +
-        "</option>"
-      );
-    })
-    .join("");
+  let organeOptions = getOrganeRecords('organes')
+    .map(o => `<option value="${escapeHtml(o.id)}"${(plan?.organId || preset?.organId) === o.id ? ' selected' : ''}>${escapeHtml(o.code + ' — ' + o.name)}</option>`)
+    .join('');
   if (
     currentOrganeLabel &&
     !organeOptions.includes(">" + currentOrganeLabel + "</option>")
@@ -15205,16 +16112,52 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
         <div class="org-detail-item"><span>Titre</span><strong>${escapeHtml(plan?.title || "-")}</strong></div>
         <div class="org-detail-item"><span>Type de plan</span><strong>${escapeHtml(plan?.planType || "-")}</strong></div>
         <div class="org-detail-item"><span>Type maintenance</span><strong>${escapeHtml(plan?.maintenanceType || "-")}</strong></div>
-        <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(plan?.equipment || "-")}</strong></div>
-        <div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(plan?.organ || "-")}</strong></div>
+        <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(
+      (() => { const e = getEquipmentRecords('equipments').find(e => e.id === plan?.equipmentId); return e ? e.code + ' — ' + e.name : plan?.equipment || '-'; })()
+    )}</strong></div>
+<div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(
+      (() => { const o = getOrganeRecords('organes').find(o => o.id === plan?.organId); return o ? o.code + ' — ' + o.name : plan?.organ || '-'; })()
+    )}</strong></div>
         <div class="org-detail-item"><span>Technicien</span><strong>${escapeHtml(getPlanificationTechnicianName(plan?.technicianId))}</strong></div>
         <div class="org-detail-item"><span>Fréquence</span><strong>${escapeHtml(plan?.frequency || "-")}</strong></div>
-        <div class="org-detail-item"><span>Déclenchement</span><strong>${escapeHtml(plan?.triggerLabel || "-")}</strong></div>
+        <div class="org-detail-item">
+  <span>Type de plan</span>
+  <strong>${escapeHtml(plan?.planType || "-")}</strong>
+</div>
+<div class="org-detail-item">
+  <span>Déclenchement</span>
+  <strong>${escapeHtml(plan?.triggerLabel || "-")}</strong>
+</div>
         <div class="org-detail-item"><span>Prochaine échéance</span><strong>${formatPlanificationDate(plan?.nextDueDate)}</strong></div>
       </div>
       <div class="planning-modal-stack">
         <div><strong>Gamme opératoire</strong><p>${escapeHtml((plan?.tasks || []).join("\n"))}</p></div>
-        <div><strong>Articles nécessaires</strong><p>${escapeHtml((plan?.articles || []).join(", ") || "-")}</p></div>
+        <div class="field-group field-group-wide">
+      <div><strong>Articles nécessaires</strong>
+  <p>${(() => {
+      if (Array.isArray(plan?.articleIds) && plan.articleIds.length) {
+        return plan.articleIds.map(id => {
+          const a = getArticleRecord('articles', id);
+          return a ? escapeHtml(a.code + ' — ' + a.name) : escapeHtml(id);
+        }).join(', ');
+      }
+      return escapeHtml((plan?.articles || []).join(', ') || '-');
+    })()}</p>
+</div>
+  <select id="planArticles" name="articleIds" multiple size="5">
+    ${(() => {
+      const selected = Array.isArray(plan?.articleIds) ? plan.articleIds
+        : Array.isArray(preset?.articleIds) ? preset.articleIds : [];
+      return getArticleRecords('articles')
+        .sort((a, b) => a.code.localeCompare(b.code))
+        .map(a => `<option value="${escapeHtml(a.id)}"${selected.includes(a.id) ? ' selected' : ''}>
+          ${escapeHtml(a.code)} — ${escapeHtml(a.name)}
+          ${a.unitMeasure ? ' (' + escapeHtml(a.unitMeasure) + ')' : ''}
+        </option>`)
+        .join('') || '<option disabled>Aucun article dans le catalogue</option>';
+    })()}
+  </select>
+</div>
         <div><strong>Sécurité</strong><p>${escapeHtml((plan?.safety || []).join(", ") || "-")}</p></div>
         <div><strong>Documents</strong><p>${escapeHtml((plan?.documents || []).join(", ") || "-")}</p></div>
       </div>
@@ -15228,13 +16171,38 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
         <div class="field-group"><label for="planRef">Numéro</label><input id="planRef" type="text" value="${escapeHtml(initialRef)}" disabled /></div>
         <div class="field-group"><label for="planTitle">Titre</label><input id="planTitle" name="title" type="text" value="${escapeHtml(plan?.title || preset.title || "")}" required /></div>
         <div class="field-group"><label for="planMaintenanceType">Type maintenance</label><select id="planMaintenanceType" name="maintenanceType"><option${(plan?.maintenanceType || preset.maintenanceType) === "Préventive" ? " selected" : ""}>Préventive</option><option${(plan?.maintenanceType || preset.maintenanceType) === "Prédictive" ? " selected" : ""}>Prédictive</option><option${(plan?.maintenanceType || preset.maintenanceType) === "Réglementaire" ? " selected" : ""}>Réglementaire</option></select></div>
-        <div class="field-group"><label for="planEquipment">Équipement</label><select id="planEquipment" name="equipment" required>${equipmentOptions}</select></div>
-        <div class="field-group"><label for="planOrgan">Organe</label><select id="planOrgan" name="organ"><option value="">-- Aucun --</option>${organeOptions}</select></div>
-        <div class="field-group"><label for="planTechnician">Technicien par défaut</label><select id="planTechnician" name="technicianId">${planificationTechniciens.map((technician) => `<option value="${technician.id}"${technician.id === selectedTechnicianId ? " selected" : ""}>${escapeHtml(technician.name)} · ${escapeHtml(technician.role)}</option>`).join("")}</select></div>
+        <div class="field-group"><label for="planEquipment">Équipement</label><select id="planEquipment" name="equipmentId" required>${equipmentOptions}</select></div>
+        <div class="field-group"><label for="planOrgan">Organe</label><select id="planOrgan" name="organId"><option value="">-- Aucun --</option>${organeOptions}</select></div>
+        <div class="field-group"><label for="planTechnician">Technicien par défaut</label><select id="planTechnician" name="technicianId">
+  <option value="">— Non assigné —</option>
+  ${getPlanificationTechniciens().map(t =>
+      `<option value="${escapeHtml(t.id)}"${t.id === selectedTechnicianId ? " selected" : ""}>
+      ${escapeHtml((t.firstName ? t.firstName + ' ' : '') + t.name)} · ${escapeHtml(t.role)}
+    </option>`
+    ).join("") || '<option disabled>Aucun technicien — créez des utilisateurs dans Administration</option>'}
+</select></div>
         <div class="field-group"><label for="planFrequency">Fréquence</label><select id="planFrequency" name="frequency">${frequencyOptions}</select></div>
         <div class="field-group"><label for="planDuration">Durée estimée (h)</label><input id="planDuration" name="durationHours" type="number" min="0" step="0.5" value="${escapeHtml(plan?.durationHours || preset.durationHours || 1)}" /></div>
-        <div class="field-group"><label for="planTrigger">Déclenchement</label><input id="planTrigger" name="triggerLabel" type="text" value="${escapeHtml(plan?.triggerLabel || preset.triggerLabel || "")}" /></div>
-        <div class="field-group"><label for="planNextDue">Prochaine échéance</label><input id="planNextDue" name="nextDueDate" type="datetime-local" value="${plan?.nextDueDate ? new Date(plan.nextDueDate).toISOString().slice(0, 16) : preset.nextDueDate ? new Date(preset.nextDueDate).toISOString().slice(0, 16) : ""}" /></div>
+        <div class="field-group">
+  <label for="planTrigger">Déclenchement</label>
+  <select id="planTrigger" name="triggerLabel">
+    ${getPlanificationTriggerOptions(plan?.planType || preset.planType || "Systématique")
+      .map(t => `<option${(plan?.triggerLabel || preset.triggerLabel) === t ? " selected" : ""}>${escapeHtml(t)}</option>`)
+      .join("")}
+  </select>
+</div>
+        <div class="field-group">
+  <label for="planStartDate">Date de début</label>
+  <input id="planStartDate" name="startDate" type="date"
+    value="${plan?.startDate || preset.startDate || new Date().toISOString().slice(0, 10)}" />
+</div>
+<div class="field-group">
+  <label for="planNextDue">Prochaine échéance <span style="color:var(--color-text-muted);font-size:0.8em">(calculée auto)</span></label>
+  <input id="planNextDue" name="nextDueDate" type="datetime-local"
+    value="${plan?.nextDueDate ? new Date(plan.nextDueDate).toISOString().slice(0, 16)
+      : computeNextDueDate(plan?.startDate || preset.startDate || new Date().toISOString(), plan?.frequency || preset.frequency || 'Mensuelle')}" 
+    readonly style="background:var(--color-surface-offset);cursor:not-allowed" />
+</div>
         <div class="field-group"><label for="planAlert">Seuil alerte</label><input id="planAlert" name="alertThreshold" type="text" value="${escapeHtml(plan?.alertThreshold || preset.alertThreshold || "")}" /></div>
         <div class="field-group"><label for="planAction">Seuil action</label><input id="planAction" name="actionThreshold" type="text" value="${escapeHtml(plan?.actionThreshold || preset.actionThreshold || "")}" /></div>
         <div class="field-group field-group-wide"><label for="planTasks">Gamme opératoire</label><textarea id="planTasks" name="tasks" rows="5">${escapeHtml((plan?.tasks || preset.tasks || []).join("\n"))}</textarea></div>
@@ -15275,6 +16243,35 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
 
   form.addEventListener("submit", function (event) {
     event.preventDefault();
+    // Recalcul automatique nextDueDate
+    const freqSelect = form.querySelector('#planFrequency');
+    const startInput = form.querySelector('[name="startDate"]');
+    const nextDueInput = form.querySelector('#planNextDue');
+
+    function refreshNextDueDate() {
+      const freq = freqSelect?.value || 'Mensuelle';
+      const start = startInput?.value || new Date().toISOString();
+      if (nextDueInput) nextDueInput.value = computeNextDueDate(start, freq);
+    }
+
+    // Mise à jour dynamique des options déclenchement selon planType
+    const planTypeSelect = form.querySelector('#planPlanType');
+    const triggerSelect = form.querySelector('#planTrigger');
+
+    function refreshTriggerOptions() {
+      const planType = planTypeSelect?.value || 'Systématique';
+      const options = getPlanificationTriggerOptions(planType);
+      if (triggerSelect) {
+        triggerSelect.innerHTML = options
+          .map(t => `<option>${escapeHtml(t)}</option>`)
+          .join('');
+      }
+    }
+
+    planTypeSelect?.addEventListener('change', refreshTriggerOptions);
+
+    freqSelect?.addEventListener('change', refreshNextDueDate);
+    startInput?.addEventListener('change', refreshNextDueDate);
     const formData = new FormData(form);
     const nextState = loadPlanificationData();
     const planIndex = plan
@@ -15284,10 +16281,7 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean);
-    const articles = String(formData.get("articles") || "")
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
+    const articleIds = formData.getAll("articleIds").filter(Boolean);
     const safety = String(formData.get("safety") || "")
       .split(/\r?\n/)
       .map((line) => line.trim())
@@ -15303,17 +16297,23 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
       title: String(formData.get("title") || "").trim(),
       planType: String(formData.get("planType") || "Systématique"),
       maintenanceType: String(formData.get("maintenanceType") || "Préventive"),
-      equipment: String(formData.get("equipment") || "").trim(),
-      organ: String(formData.get("organ") || "").trim(),
+      equipmentId: String(formData.get("equipmentId") || "").trim(),
+      organId: String(formData.get("organId") || "").trim(),
       technicianId: String(formData.get("technicianId") || ""),
       frequency: String(formData.get("frequency") || "").trim(),
       durationHours: Number(formData.get("durationHours") || 0),
       triggerLabel: String(formData.get("triggerLabel") || "").trim(),
+      startDate: String(formData.get("startDate") || new Date().toISOString().slice(0, 10)),
       nextDueDate: String(formData.get("nextDueDate") || ""),
       alertThreshold: String(formData.get("alertThreshold") || "").trim(),
       actionThreshold: String(formData.get("actionThreshold") || "").trim(),
       tasks,
-      articles,
+      articleIds: articleIds,
+      // fallback texte pour compatibilité anciens plans
+      articles: articleIds.map(id => {
+        const a = getArticleRecord('articles', id);
+        return a ? a.code + ' — ' + a.name : id;
+      }),
       safety,
       documents,
       status: String(formData.get("status") || "Actif"),
@@ -15421,8 +16421,22 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
         ? `<button class="btn btn-primary" type="button" data-plan-create><i class="fa-solid fa-plus"></i><span>Nouveau plan</span></button>`
         : activeSubpageKey === "calendrier"
           ? `<button class="btn btn-primary" type="button" data-plan-add-task><i class="fa-solid fa-plus"></i><span>Ajouter une tâche</span></button>`
-          : `<button class="btn btn-primary" type="button" data-plan-add-reading><i class="fa-solid fa-gauge-high"></i><span>Ajouter un relevé</span></button>`;
+          : `
+          <button class="btn btn-outline" type="button" data-plan-add-reading>
+            <i class="fa-solid fa-gauge-high"></i><span>Saisir un relevé</span>
+          </button>
+          <button class="btn btn-primary" type="button" data-counter-new>
+            <i class="fa-solid fa-plus"></i><span>Nouveau compteur</span>
+          </button>
+        `;
   }
+
+  // APRÈS (cible le bon attribut)
+  pageActionsEl.querySelector('[data-counter-new]')
+    ?.addEventListener('click', () => openPlanificationCounterModal('create'));
+
+  pageActionsEl.querySelector('[data-counter-action="new-reading"]')
+    ?.addEventListener('click', () => openPlanificationReadingModal());
 
   if (!pageContentEl) return;
   pageContentEl.className = "organization-page planning-page";
@@ -15620,39 +16634,51 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
         </div>
       </div>
       <div class="planning-counter-layout">
-        <div class="planning-counter-list">
-          ${counters
-        .map((counter) => {
-          const thresholdState =
-            Number(counter.currentValue) >=
-              Number(counter.actionThreshold || 0)
-              ? "badge-danger"
-              : Number(counter.currentValue) >=
-                Number(counter.alertThreshold || 0)
-                ? "badge-warning"
-                : "badge-success";
-          return `
-              <div class="card planning-counter-card">
-                <div class="card-head">
-                  <div class="card-title"><i class="fa-solid fa-gauge-high"></i> ${counter.ref} · ${escapeHtml(counter.name)}</div>
-                  <span class="status-badge ${thresholdState}">${escapeHtml(counter.unit)}</span>
-                </div>
-                <div class="card-body">
-                  <div class="org-detail-list">
-                    <div class="org-detail-item"><span>Équipement lié</span><strong>${escapeHtml(counter.equipment)}</strong></div>
-                    <div class="org-detail-item"><span>Organe lié</span><strong>${escapeHtml(counter.organ || "-")}</strong></div>
-                    <div class="org-detail-item"><span>Valeur actuelle</span><strong>${escapeHtml(counter.currentValue)} ${escapeHtml(counter.unit)}</strong></div>
-                    <div class="org-detail-item"><span>Seuil alerte</span><strong>${escapeHtml(counter.alertThreshold)} ${escapeHtml(counter.unit)}</strong></div>
-                    <div class="org-detail-item"><span>Seuil action</span><strong>${escapeHtml(counter.actionThreshold)} ${escapeHtml(counter.unit)}</strong></div>
-                    <div class="org-detail-item"><span>Plan lié</span><strong>${escapeHtml(counter.planId || "-")}</strong></div>
-                    <div class="org-detail-item"><span>Mise à jour</span><strong>${formatPlanificationDate(counter.lastUpdate)}</strong></div>
-                  </div>
-                </div>
+                  <div class="card">
+            <div class="card-head" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div class="card-title"><i class="fa-solid fa-gauge-high"></i> Fiche compteur</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <select data-counter-selector-main style="font-size:0.8rem;padding:4px 8px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-text);max-width:220px">
+                  ${counters.length === 0
+        ? '<option value="">Aucun compteur</option>'
+        : counters.map(c => {
+          const icon = Number(c.currentValue) >= Number(c.actionThreshold || 0) ? "🔴"
+            : Number(c.currentValue) >= Number(c.alertThreshold || 0) ? "🟡" : "🟢";
+          return `<option value="${c.id}">${icon} ${escapeHtml(c.ref)} — ${escapeHtml(c.name)}</option>`;
+        }).join("")}
+                </select>
+                <button class="org-icon-btn" type="button" data-counter-id="${counters[0]?.id}" data-counter-action="edit" data-counter-btn-edit title="Modifier"><i class="fa-regular fa-pen-to-square"></i></button>
+                <button class="org-icon-btn danger" type="button" data-counter-id="${counters[0]?.id}" data-counter-action="reset" data-counter-btn-reset title="Remettre à zéro"><i class="fa-solid fa-rotate-left"></i></button>
+                <button class="org-icon-btn danger" type="button" data-counter-id="${counters[0]?.id}" data-counter-action="delete" data-counter-btn-delete title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
               </div>
-            `;
-        })
-        .join("")}
-        </div>
+            </div>
+            <div class="card-body" data-counter-detail-main>
+              ${counters.length > 0 ? (() => {
+        const counter = counters[0];
+        const ts = Number(counter.currentValue) >= Number(counter.actionThreshold || 0) ? "badge-danger"
+          : Number(counter.currentValue) >= Number(counter.alertThreshold || 0) ? "badge-warning" : "badge-success";
+        return `
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+                    <span class="status-badge badge-gray">${escapeHtml(counter.ref)}</span>
+                    <strong style="font-size:1rem">${escapeHtml(counter.name)}</strong>
+                    <span class="status-badge ${ts}">${escapeHtml(String(counter.currentValue ?? 0))} ${escapeHtml(counter.unit)}</span>
+                    <span class="status-badge ${counter.status === 'Actif' ? 'badge-success' : 'badge-gray'}">${escapeHtml(counter.status || 'Actif')}</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px;font-size:0.92rem">
+                    <div style="display:flex;gap:8px"><span style="color:var(--color-text-muted);min-width:140px">Équipement lié</span><span>${escapeHtml(counter.equipment || "-")}</span></div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--color-text-muted);min-width:140px">Organe lié</span><span>${escapeHtml(counter.organ || "-")}</span></div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--color-text-muted);min-width:140px">Type</span><span>${escapeHtml(counter.type || "-")}</span></div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--color-text-muted);min-width:140px">Valeur initiale</span><span>${escapeHtml(String(counter.initialValue ?? 0))} ${escapeHtml(counter.unit)}</span></div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--color-text-muted);min-width:140px">Valeur actuelle</span><span><strong>${escapeHtml(String(counter.currentValue ?? 0))} ${escapeHtml(counter.unit)}</strong></span></div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--color-text-muted);min-width:140px">Seuil alerte</span><span>${escapeHtml(String(counter.alertThreshold || "-"))} ${escapeHtml(counter.unit)}</span></div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--color-text-muted);min-width:140px">Seuil action (→ OT)</span><span>${escapeHtml(String(counter.actionThreshold || "-"))} ${escapeHtml(counter.unit)}</span></div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--color-text-muted);min-width:140px">Plan lié</span><span>${escapeHtml(counter.planId || "-")}</span></div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--color-text-muted);min-width:140px">Mise à jour</span><span>${formatPlanificationDate(counter.lastUpdate)}</span></div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--color-text-muted);min-width:140px">Créé le</span><span>${formatPlanificationDate(counter.createdAt)}</span></div>
+                  </div>`;
+      })() : '<p style="color:var(--color-text-muted)">Aucun compteur enregistré.</p>'}
+            </div>
+          </div>
         <div class="planning-side-column">
           <div class="card">
             <div class="card-head"><div class="card-title"><i class="fa-solid fa-pen-ruler"></i> Saisie de relevé</div></div>
@@ -15687,6 +16713,152 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
         </div>
       </div>
     `;
+
+    pageContentEl.querySelector("[data-counter-selector-main]")?.addEventListener("change", function () {
+      const ctr = counters.find(c => c.id === this.value);
+      if (!ctr) return;
+      // 1. Mettre à jour les data-counter-id des 3 boutons
+      pageContentEl.querySelector('[data-counter-btn-edit]')
+        ?.setAttribute('data-counter-id', ctr.id);
+      pageContentEl.querySelector('[data-counter-btn-reset]')
+        ?.setAttribute('data-counter-id', ctr.id);
+      pageContentEl.querySelector('[data-counter-btn-delete]')
+        ?.setAttribute('data-counter-id', ctr.id);
+
+      // 2. Mettre à jour aussi les attributs data-counter-action
+      //    (au cas où ils sont aussi utilisés pour la délégation)
+      pageContentEl.querySelector('[data-counter-btn-edit]')
+        ?.setAttribute('data-counter-action', 'edit');
+      pageContentEl.querySelector('[data-counter-btn-reset]')
+        ?.setAttribute('data-counter-action', 'reset');
+      pageContentEl.querySelector('[data-counter-btn-delete]')
+        ?.setAttribute('data-counter-action', 'delete');
+
+      const eqDir = getEquipmentDirectory();
+      const eqMatch = eqDir.equipments.find(e => e.id === ctr.equipmentId);
+
+      const oDir = getOrganeDirectory();
+      const oMatch = oDir.organes.find(o => o.id === ctr.organId);
+      const ts = Number(ctr.currentValue) >= Number(ctr.actionThreshold || 0) ? "badge-danger"
+        : Number(ctr.currentValue) >= Number(ctr.alertThreshold || 0) ? "badge-warning" : "badge-success";
+      const detailEl = pageContentEl.querySelector("[data-counter-detail-main]");
+      if (detailEl) {
+        detailEl.innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+      <span class="status-badge badge-gray">${escapeHtml(ctr.ref)}</span>
+      <strong style="font-size:1rem">${escapeHtml(ctr.name)}</strong>
+      <span class="status-badge ${ts}">
+        ${escapeHtml(String(ctr.currentValue ?? 0))} ${escapeHtml(ctr.unit)}
+      </span>
+      <span class="status-badge ${ctr.status === "Actif" ? "badge-success" : "badge-gray"
+          }">
+        ${escapeHtml(ctr.status || "Actif")}
+      </span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;font-size:0.92rem">
+
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--color-text-muted);min-width:140px">
+          Équipement lié
+        </span>
+        <span>
+          ${escapeHtml(
+            eqMatch
+              ? `${eqMatch.code} ${eqMatch.name}`
+              : (ctr.equipment || "-")
+          )}
+        </span>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--color-text-muted);min-width:140px">
+          Organe lié
+        </span>
+        <span>
+          ${escapeHtml(
+            oMatch
+              ? `${oMatch.code} ${oMatch.name}`
+              : (ctr.organ || "-")
+          )}
+        </span>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--color-text-muted);min-width:140px">
+          Type
+        </span>
+        <span>${escapeHtml(ctr.type || "-")}</span>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--color-text-muted);min-width:140px">
+          Valeur initiale
+        </span>
+        <span>
+          ${escapeHtml(String(ctr.initialValue ?? 0))} ${escapeHtml(ctr.unit)}
+        </span>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--color-text-muted);min-width:140px">
+          Valeur actuelle
+        </span>
+        <span>
+          <strong>
+            ${escapeHtml(String(ctr.currentValue ?? 0))} ${escapeHtml(ctr.unit)}
+          </strong>
+        </span>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--color-text-muted);min-width:140px">
+          Seuil alerte
+        </span>
+        <span>
+          ${escapeHtml(String(ctr.alertThreshold || "-"))} ${escapeHtml(ctr.unit)}
+        </span>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--color-text-muted);min-width:140px">
+          Seuil action (→ OT)
+        </span>
+        <span>
+          ${escapeHtml(String(ctr.actionThreshold || "-"))} ${escapeHtml(ctr.unit)}
+        </span>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--color-text-muted);min-width:140px">
+          Plan lié
+        </span>
+        <span>${escapeHtml(ctr.planId || "-")}</span>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--color-text-muted);min-width:140px">
+          Mise à jour
+        </span>
+        <span>${formatPlanificationDate(ctr.lastUpdate)}</span>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <span style="color:var(--color-text-muted);min-width:140px">
+          Créé le
+        </span>
+        <span>${formatPlanificationDate(ctr.createdAt)}</span>
+      </div>
+
+    </div>
+  `;
+      }
+
+      const readingSel = pageContentEl.querySelector("[data-plan-reading-form] select[name='counterId']");
+      if (readingSel) readingSel.value = this.value;
+    });
+
+
 
     pageContentEl
       .querySelector("[data-plan-reading-form]")
@@ -21042,7 +22214,15 @@ function closeBt(btId) {
     recordRef: bt.ref,
     message: `${bt.ref} clôturé`,
   });
-
+  // Recalcul nextDueDate du plan lié après clôture BT
+  if (bt.planId) {
+    const planState = loadPlanificationData();
+    const linkedPlan = planState.plans.find(p => p.id === bt.planId);
+    if (linkedPlan) {
+      linkedPlan.nextDueDate = computeNextDueDate(new Date().toISOString(), linkedPlan.frequency);
+      savePlanificationData(planState);
+    }
+  }
   saveInterventionsState(directory);
   renderInterventionsPage(getCurrentInterventionsTab("bt"));
 }

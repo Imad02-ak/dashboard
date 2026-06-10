@@ -24,37 +24,39 @@
         <div class="auth-blur-shape auth-blur-shape-two"></div>
         <div class="auth-blur-shape auth-blur-shape-three"></div>
 
-        <div class="auth-brand-content">
-          <a class="auth-logo" href="index.html" aria-label="MaintFlow accueil">
-            <img src="white.png" alt="Logo MaintFlow" />
-          </a>
-
-          <div class="auth-brand-copy">
-            <h1>Maint<span>Flow</span></h1>
-            <p>Plateforme intelligente de gestion de maintenance</p>
-          </div>
+        <div class="auth-brand-header">
+    <a class="auth-logo" href="index.html" aria-label="MaintFlow accueil">
+        <img src="white.png" alt="Logo MaintFlow" />
+    </a>
+    <div class="auth-brand-copy">
+        <h1>Maint<span>Flow</span></h1>
+        <p>Plateforme intelligente de gestion de maintenance</p>
+    </div>
+</div>
 
           <div class="auth-feature-grid" aria-label="Fonctionnalités MaintFlow">
             <div class="auth-feature-card">
               <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Gestion des équipements</span>
+              <span>Gérez tous vos actifs en un seul endroit</span>
             </div>
             <div class="auth-feature-card">
               <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Maintenance préventive</span>
+              <span>Planifiez, suivez et optimisez vos opérations</span>
             </div>
             <div class="auth-feature-card">
               <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Gestion des stocks</span>
+              <span>Optimisez vos ressources et vos coûts</span>
             </div>
             <div class="auth-feature-card">
               <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Analyse des performances</span>
+              <span>Suivez vos performances en temps réel</span>
             </div>
           </div>
         </div>
 
-        <p class="auth-brand-footer">Optimisez votre maintenance avec MaintFlow.</p>
+        <p class="auth-brand-footer">
+          Optimisez votre maintenance avec MaintFlow.
+        </p>
       </aside>
 
       <section class="auth-form-panel auth-form-panel-wide">
@@ -204,7 +206,11 @@
               <p class="auth-error" aria-live="polite"></p>
             </div>
 
-            <section class="auth-company-card is-hidden" id="companyInfoCard" aria-labelledby="companyInfoTitle">
+            <section
+              class="auth-company-card is-hidden"
+              id="companyInfoCard"
+              aria-labelledby="companyInfoTitle"
+            >
               <div class="auth-section-head">
                 <div>
                   <div class="card-mini-title">Entreprise</div>
@@ -222,11 +228,19 @@
                     <img id="companyLogoPreview" alt="" hidden />
                     <i class="fa-solid fa-building" aria-hidden="true"></i>
                   </label>
-                  <label class="btn btn-outline auth-upload-btn" for="companyLogo">
+                  <label
+                    class="btn btn-outline auth-upload-btn"
+                    for="companyLogo"
+                  >
                     <i class="fa-solid fa-upload" aria-hidden="true"></i>
                     <span>Logo entreprise</span>
                   </label>
-                  <input id="companyLogo" name="companyLogo" type="file" accept="image/*" />
+                  <input
+                    id="companyLogo"
+                    name="companyLogo"
+                    type="file"
+                    accept="image/*"
+                  />
                   <p class="auth-field-hint">PNG, JPG ou WEBP.</p>
                 </div>
 
@@ -235,7 +249,12 @@
                     <label for="companyName">Nom entreprise</label>
                     <div class="auth-input-wrap">
                       <i class="fa-solid fa-building" aria-hidden="true"></i>
-                      <input id="companyName" name="companyName" type="text" placeholder="MaintFlow Industrie" />
+                      <input
+                        id="companyName"
+                        name="companyName"
+                        type="text"
+                        placeholder="MaintFlow Industrie"
+                      />
                     </div>
                     <p class="auth-error" aria-live="polite"></p>
                   </div>
@@ -243,8 +262,16 @@
                   <div class="auth-field" data-field>
                     <label for="wilaya">Wilaya</label>
                     <div class="auth-input-wrap">
-                      <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                      <input id="wilaya" name="wilaya" type="text" placeholder="Alger" />
+                      <i
+                        class="fa-solid fa-location-dot"
+                        aria-hidden="true"
+                      ></i>
+                      <input
+                        id="wilaya"
+                        name="wilaya"
+                        type="text"
+                        placeholder="Alger"
+                      />
                     </div>
                     <p class="auth-error" aria-live="polite"></p>
                   </div>
@@ -253,7 +280,12 @@
                     <label for="daira">Daira</label>
                     <div class="auth-input-wrap">
                       <i class="fa-solid fa-map" aria-hidden="true"></i>
-                      <input id="daira" name="daira" type="text" placeholder="Daira" />
+                      <input
+                        id="daira"
+                        name="daira"
+                        type="text"
+                        placeholder="Daira"
+                      />
                     </div>
                     <p class="auth-error" aria-live="polite"></p>
                   </div>
@@ -261,8 +293,16 @@
                   <div class="auth-field" data-field>
                     <label for="commune">Commune</label>
                     <div class="auth-input-wrap">
-                      <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
-                      <input id="commune" name="commune" type="text" placeholder="Commune" />
+                      <i
+                        class="fa-solid fa-map-location-dot"
+                        aria-hidden="true"
+                      ></i>
+                      <input
+                        id="commune"
+                        name="commune"
+                        type="text"
+                        placeholder="Commune"
+                      />
                     </div>
                     <p class="auth-error" aria-live="polite"></p>
                   </div>
@@ -270,8 +310,15 @@
                   <div class="auth-field" data-field>
                     <label for="companyCreatedAt">Date de création</label>
                     <div class="auth-input-wrap">
-                      <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
-                      <input id="companyCreatedAt" name="companyCreatedAt" type="date" />
+                      <i
+                        class="fa-regular fa-calendar-check"
+                        aria-hidden="true"
+                      ></i>
+                      <input
+                        id="companyCreatedAt"
+                        name="companyCreatedAt"
+                        type="date"
+                      />
                     </div>
                     <p class="auth-error" aria-live="polite"></p>
                   </div>
@@ -280,7 +327,13 @@
                     <label for="companyPhone">Téléphone</label>
                     <div class="auth-input-wrap">
                       <i class="fa-solid fa-phone" aria-hidden="true"></i>
-                      <input id="companyPhone" name="companyPhone" type="tel" placeholder="+213 000 00 00 00" autocomplete="tel" />
+                      <input
+                        id="companyPhone"
+                        name="companyPhone"
+                        type="tel"
+                        placeholder="+213 000 00 00 00"
+                        autocomplete="tel"
+                      />
                     </div>
                     <p class="auth-error" aria-live="polite"></p>
                   </div>
@@ -288,8 +341,16 @@
                   <div class="auth-field auth-field-wide" data-field>
                     <label for="companyAddress">Adresse</label>
                     <div class="auth-input-wrap auth-textarea-wrap">
-                      <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
-                      <textarea id="companyAddress" name="companyAddress" rows="3" placeholder="Adresse complète"></textarea>
+                      <i
+                        class="fa-solid fa-location-crosshairs"
+                        aria-hidden="true"
+                      ></i>
+                      <textarea
+                        id="companyAddress"
+                        name="companyAddress"
+                        rows="3"
+                        placeholder="Adresse complète"
+                      ></textarea>
                     </div>
                     <p class="auth-error" aria-live="polite"></p>
                   </div>
@@ -298,7 +359,13 @@
                     <label for="companyWebsite">Site web</label>
                     <div class="auth-input-wrap">
                       <i class="fa-solid fa-globe" aria-hidden="true"></i>
-                      <input id="companyWebsite" name="companyWebsite" type="url" placeholder="https://entreprise.com" autocomplete="url" />
+                      <input
+                        id="companyWebsite"
+                        name="companyWebsite"
+                        type="url"
+                        placeholder="https://entreprise.com"
+                        autocomplete="url"
+                      />
                     </div>
                     <p class="auth-error" aria-live="polite"></p>
                   </div>

@@ -18,38 +18,45 @@
     <link rel="stylesheet" href="auth.css" />
   </head>
   <body class="auth-page">
+    <div class="auth-language-row lang-switcher-fixed" aria-label="Language selector">
+            <i class="fa-solid fa-globe" aria-hidden="true"></i>
+            <select id="authLanguageSelect" aria-label="Choisir la langue">
+              <option value="fr">Fr</option>
+              <option value="en">Eng</option>
+            </select>
+          </div>
     <main class="auth-layout" aria-label="Authentification MaintFlow">
       <aside class="auth-brand-panel" aria-label="Présentation MaintFlow">
         <div class="auth-blur-shape auth-blur-shape-one"></div>
         <div class="auth-blur-shape auth-blur-shape-two"></div>
         <div class="auth-blur-shape auth-blur-shape-three"></div>
 
-        <div class="auth-brand-content">
-          <a class="auth-logo" href="index.html" aria-label="MaintFlow accueil">
-            <img src="white.png" alt="Logo MaintFlow" />
-          </a>
-
-          <div class="auth-brand-copy">
-            <h1>Maint<span>Flow</span></h1>
-            <p>Plateforme intelligente de gestion de maintenance</p>
-          </div>
+       <div class="auth-brand-header">
+    <a class="auth-logo" href="index.html" aria-label="MaintFlow accueil">
+        <img src="white.png" alt="Logo MaintFlow" />
+    </a>
+    <div class="auth-brand-copy">
+        <h1>Maint<span>Flow</span></h1>
+        <p>Plateforme intelligente de gestion de maintenance</p>
+    </div>
+</div>
 
           <div class="auth-feature-grid" aria-label="Fonctionnalités MaintFlow">
             <div class="auth-feature-card">
               <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Gestion des équipements</span>
+              <span>Gérez tous vos actifs en un seul endroit</span>
             </div>
             <div class="auth-feature-card">
               <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Maintenance préventive</span>
+              <span>Planifiez, suivez et optimisez vos opérations</span>
             </div>
             <div class="auth-feature-card">
               <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Gestion des stocks</span>
+              <span>Optimisez vos ressources et vos coûts</span>
             </div>
             <div class="auth-feature-card">
               <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Analyse des performances</span>
+              <span>Suivez vos performances en temps réel</span>
             </div>
           </div>
         </div>
@@ -59,6 +66,7 @@
 
       <section class="auth-form-panel">
         <div class="auth-card" data-auth-card>
+
           <div class="auth-card-head">
             <div class="auth-kicker">Espace utilisateur</div>
             <h2>Connexion</h2>
