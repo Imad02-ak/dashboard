@@ -6588,7 +6588,7 @@ function renderArborescencePage() {
   if (!pageContentEl) return;
 
   const tree = buildArborescenceTree();
-   console.dir(tree, { depth: null });
+  console.dir(tree, { depth: null });
   pageContentEl.className = "organization-page arborescence-page";
   pageContentEl.innerHTML = `
     <div class="arbo-card">
@@ -12285,22 +12285,6 @@ function buildStockResponsibleOptions(selectedName = "") {
   ].join("");
 }
 
-function buildStockLocationOptions(selectedValue = "") {
-  const locations = [
-    "Magasin central",
-    "Magasin atelier",
-    "Zone production",
-    "Réserve sécurité",
-  ];
-
-  return [
-    '<option value="">Sélectionner un magasin</option>',
-    ...locations.map(
-      (location) =>
-        `<option value="${location}"${location === selectedValue ? " selected" : ""}>${location}</option>`,
-    ),
-  ].join("");
-}
 
 function buildStockTabs(activeSubpageKey) {
   return `
@@ -12537,7 +12521,7 @@ function buildInventoryRowMarkup(row) {
 >
   ${buildInventoryLocationOptions(row.location)}
 </select></td>
-      <td><input type="number" value="${row.theoretical}" class="stock-inline-input" data-stock-inventory-theoretical /></td>
+      <td><input type="number" value="${row.theoretical}" class="stock-inline-input" data-stock-inventory-theoretical readonly /></td>
       <td><input type="number" value="${row.counted}" class="stock-inline-input" data-stock-inventory-counted /></td>
       <td class="${discrepancy === 0 ? "muted" : discrepancy > 0 ? "stock-discrepancy-positive" : "stock-discrepancy-negative"}" data-stock-inventory-discrepancy>${discrepancyLabel}</td>
       <td><span class="status-badge ${badgeClass}" data-stock-inventory-status>${badgeLabel}</span></td>
@@ -12662,6 +12646,23 @@ function openStockInventoryModal(inventoryId = "") {
 
   refreshInventorySummary(inventoryForm);
 
+  inventoryForm.addEventListener("change", function (event) {
+    const target = event.target;
+    if (!target || !target.matches("[data-stock-inventory-article]")) return;
+    const row = target.closest("[data-stock-inventory-row]");
+    if (!row) return;
+    const articleId = String(target.value || "").trim();
+    const theoreticalInput = row.querySelector("[data-stock-inventory-theoretical]");
+    if (!theoreticalInput) return;
+    if (articleId) {
+      const totals = getStockTotalsForArticle(articleId);
+      theoreticalInput.value = Number(totals.currentQuantity) || 0;
+    } else {
+      theoreticalInput.value = 0;
+    }
+    refreshInventorySummary(inventoryForm);
+  });
+
   inventoryForm.addEventListener("input", function (event) {
     const target = event.target;
     if (!target || !target.closest("[data-stock-inventory-row]")) return;
@@ -12702,15 +12703,11 @@ function openStockInventoryModal(inventoryId = "") {
     } else if (action === "edit") {
       row.querySelector("[data-stock-inventory-counted]")?.focus();
     } else if (action === "delete") {
-      const theoretical = Number(row.dataset.theoretical || 0) || 0;
-      const countedInput = row.querySelector("[data-stock-inventory-counted]");
-      const observationsInput = row.querySelector(
-        "[data-stock-inventory-observations]",
-      );
-      if (countedInput) countedInput.value = String(theoretical);
-      if (observationsInput) observationsInput.value = "";
+      const confirmed = window.confirm("Supprimer cette ligne ?");
+      if (!confirmed) return;
+      row.remove();
       refreshInventorySummary(inventoryForm);
-      showStockToast("Ligne inventaire réinitialisée.");
+      showStockToast("Ligne supprimée.");
     }
   });
 
@@ -13668,9 +13665,8 @@ function renderStockMovementCreateModal() {
           String(formData.get("source") || "").trim() ||
           buildStockLocationLabel(stockDefaultLocation);
         const unitPrice = Number(formData.get("unitPrice") || 0);
-        const destination =
-          String(formData.get("destination") || "").trim() ||
-          buildStockLocationLabel(stockDefaultLocation);
+        const destinationRaw =
+          String(formData.get("destination") || "").trim();
         const aggregate = getStockTotalsForArticle(articleId);
         const nextPmp = calculateStockPmp(
           aggregate.currentQuantity,
@@ -13679,13 +13675,24 @@ function renderStockMovementCreateModal() {
           unitPrice,
         );
 
+        const allRecordsForArticle = getStockRecordsForArticle(articleId);
+        const existingRecord =
+          (destinationRaw
+            ? allRecordsForArticle.find(
+              (record) => record.locationLabel === destinationRaw,
+            )
+            : null) ||
+          allRecordsForArticle[0] ||
+          null;
+
+        const destination = existingRecord
+          ? existingRecord.locationLabel
+          : destinationRaw || buildStockLocationLabel(stockDefaultLocation);
+
+        const previousQuantity = Number(existingRecord?.currentQuantity ?? 0);
+
         upsertStockRecord(articleId, stockDefaultLocation, {
-          currentQuantity:
-            (Number(
-              getStockRecordsForArticle(articleId).find(
-                (record) => record.locationLabel === destination,
-              )?.currentQuantity,
-            ) || 0) + quantity,
+          currentQuantity: previousQuantity + quantity,
           pmp: nextPmp,
           locationLabel: destination,
           locationKey: destination,
@@ -13702,7 +13709,9 @@ function renderStockMovementCreateModal() {
         movement.resultingQuantity = aggregate.currentQuantity + quantity;
         movement.resultingValue =
           (aggregate.currentQuantity + quantity) * nextPmp;
-      } else if (type === "exit") {
+      }
+
+      else if (type === "exit") {
         const destination =
           String(formData.get("destination") || "").trim() ||
           buildStockLocationLabel(stockDefaultLocation);
@@ -13759,7 +13768,12 @@ function renderStockMovementCreateModal() {
           !sourceRecord ||
           quantity > (Number(sourceRecord.currentQuantity) || 0)
         )
-          return;
+          window.alert(
+            "Impossible d'effectuer le transfert : la quantité demandée dépasse le stock disponible.",
+            "error"
+          );
+        return;
+        return;
         const nextQuantity =
           (Number(sourceRecord.currentQuantity) || 0) - quantity;
         if (nextQuantity <= 0) {
@@ -15368,6 +15382,14 @@ function applyStockMovement(type, form) {
   const recordsForArticle = directory.records.filter(
     (record) => record.articleId === articleId,
   );
+
+  if (recordsForArticle.length === 0) {
+    window.alert(
+      "Impossible d\u2019effectuer le mouvement : aucune fiche de stock n\u2019existe pour cet article.",
+    );
+    return;
+  }
+
   const aggregate = getStockTotalsForArticle(articleId);
 
   if (type === "entry") {
