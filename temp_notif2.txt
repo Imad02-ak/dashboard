@@ -1,0 +1,130 @@
+﻿      </div>
+      <div class="planning-kpi-grid">
+        <div class="planning-kpi-card"><strong>${plans.length}</strong><span>Plans enregistrÃ©s</span></div>
+        <div class="planning-kpi-card"><strong>${activePlans.length}</strong><span>Plans actifs</span></div>
+        <div class="planning-kpi-card"><strong>${dueSoonCount}</strong><span>Ã‰chÃ©ances proches</span></div>
+        <div class="planning-kpi-card"><strong>${calendarEvents}</strong><span>Ã‰vÃ©nements planifiÃ©s</span></div>
+      </div>
+      <div class="planning-list-shell card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-list"></i> Liste des plans</div>
+          <span class="status-badge badge-info">CrÃ©er, modifier, supprimer, consulter</span>
+        </div>
+        <div class="card-body planning-plan-list">
+          ${plans
+        .map(
+          (plan) => `
+            <div class="planning-plan-row">
+              <div class="planning-plan-main">
+                <div class="planning-plan-title"><strong>${escapeHtml(plan.ref)}</strong> Â· ${escapeHtml(plan.title)}</div>
+                <div class="planning-plan-meta">
+                  <span>${escapeHtml(plan.planType)}</span>
+                  <span>${escapeHtml(plan.maintenanceType)}</span>
+                  <span>${escapeHtml(plan.equipment)}</span>
+                  <span>${escapeHtml(getPlanificationTechnicianName(plan.technicianId))}</span>
+                </div>
+              </div>
+              <div class="planning-plan-side">
+                <span class="status-badge ${getPlanificationPlanBadgeClass(plan.status)}">${escapeHtml(plan.status)}</span>
+                <div class="org-row-actions">
+                  <button class="org-icon-btn" type="button" data-plan-action="details" data-plan-id="${plan.id}" title="Voir les dÃ©tails"><i class="fa-regular fa-eye"></i></button>
+                  <button class="org-icon-btn" type="button" data-plan-action="edit" data-plan-id="${plan.id}" title="Modifier"><i class="fa-regular fa-pen-to-square"></i></button>
+                  <button class="org-icon-btn danger" type="button" data-plan-action="delete" data-plan-id="${plan.id}" title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
+                </div>
+              </div>
+            </div>
+          `,
+        )
+        .join("") ||
+      `<div class="org-empty-card org-empty-card--list"><div class="org-empty-icon"><i class="fa-solid fa-folder-open"></i></div><h3>Aucun plan</h3><p>CrÃ©ez un premier plan de maintenance pour alimenter la liste et le calendrier.</p><small>La crÃ©ation se fait via la fenÃªtre modale du bouton Nouveau plan.</small></div>`
+      }
+        </div>
+      </div>
+    `;
+
+    pageContentEl.querySelectorAll("[data-plan-action]").forEach((button) => {
+      button.addEventListener("click", function () {
+        const planId = String(this.dataset.planId || "");
+        const action = String(this.dataset.planAction || "details");
+        if (action === "delete") {
+          const nextState = loadPlanificationData();
+          const plan = nextState.plans.find((item) => item.id === planId);
+          if (!plan) return;
+          if (window.confirm(`Supprimer ${plan.ref} ?`)) {
+            nextState.plans = nextState.plans.filter(
+              (item) => item.id !== planId,
+            );
+            savePlanificationData(nextState);
+            renderPlanificationPageClean(activeSubpageKey);
+          }
+          return;
+        }
+        openPlanificationPlanModal(action, planId);
+      });
+    });
+  }
+
+  pageContentEl.querySelectorAll("[data-plan-subpage]").forEach((button) => {
+    button.addEventListener("click", function () {
+      const nextSubpage = this.dataset.planSubpage || "plans-maintenance";
+      renderPlanificationPageClean(nextSubpage);
+      window.location.hash = `planification/${nextSubpage}`;
+    });
+  });
+
+  pageActionsEl
+    ?.querySelector("[data-plan-create]")
+    ?.addEventListener("click", function () {
+      openPlanificationPlanModal("create");
+    });
+  pageActionsEl
+    ?.querySelector("[data-plan-add-task]")
+    ?.addEventListener("click", function () {
+      openPlanificationTaskModal(
+        state.selectedDate || new Date().toISOString().slice(0, 10),
+      );
+    });
+  pageActionsEl
+    ?.querySelector("[data-plan-add-reading]")
+    ?.addEventListener("click", function () {
+      pageContentEl
+        .querySelector("[data-plan-reading-form]")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+}
+
+function markNotificationAsRead(index) {
+  const notification = renderedNotifications[index];
+  if (!notification || notification.read) return;
+
+  if (notification.source === "stock") {
+    const keys = getStockAlertReadKeys();
+    keys.add(notification.id);
+    saveStockAlertReadKeys(keys);
+  } else if (notification.sourceIndex >= 0) {
+    notifications[notification.sourceIndex].read = true;
+  }
+
+  renderNotifications();
+}
+
+function cloneAchatsState(state) {
+  return JSON.parse(JSON.stringify(state));
+}
+
+function loadAchatsState() {
+  const seed = buildAchatsSeedState();
+
+  try {
+    const raw = window.localStorage.getItem(achatsStorageKey);
+    if (!raw) return cloneAchatsState(seed);
+    const parsed = JSON.parse(raw);
+
+    return {
+      demandes: Array.isArray(parsed?.demandes)
+        ? parsed.demandes
+        : cloneAchatsState(seed).demandes,
+      bons: Array.isArray(parsed?.bons)
+        ? parsed.bons
+        : cloneAchatsState(seed).bons,
+      receptions: Array.isArray(parsed?.receptions)

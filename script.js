@@ -20027,7 +20027,7 @@ function bindInterventionsModalHandlers() {
         status: "Planifié",
       };
 
-      directory.dis.splice(diIndex, 1);
+      di.status = "Transformée en OT";
       directory.ots.unshift(ot);
       appendInterventionHistory(directory, {
         action: "DI transformée en OT",
@@ -20213,7 +20213,7 @@ function bindInterventionsModalHandlers() {
         syncStockArticleQuantityFromRecords(articleLine.articleId);
       });
 
-      directory.ots.splice(otIndex, 1);
+      ot.status = "Transformé en BT";
       directory.bts.unshift(bt);
       appendInterventionHistory(directory, {
         action: "OT transformé en BT",
@@ -21265,7 +21265,7 @@ function renderOtSection(directory) {
 }
 
 function renderBtSection(directory) {
-  const visibleBts = directory.bts.filter((item) => item.status !== "Clôturé");
+  const visibleBts = directory.bts;
   const rows = visibleBts.length
     ? visibleBts
       .map((bt) => {
@@ -21559,6 +21559,19 @@ function buildInterventionEmptyState(icon, title, subtitle, note) {
 }
 
 function buildInterventionDiActions(di) {
+  if (di.status === "Transformée en OT") {
+    return `
+      <div class="org-row-actions">
+        <button class="org-icon-btn" type="button" data-int-action="details-di" data-int-id="${di.id}" title="Voir les détails">
+          <i class="fa-regular fa-eye"></i>
+        </button>
+        <button class="org-icon-btn danger" type="button" data-int-action="delete-di" data-int-id="${di.id}" title="Supprimer">
+          <i class="fa-regular fa-trash-can"></i>
+        </button>
+      </div>
+    `;
+  }
+
   const transformButton =
     di.status === "Validée"
       ? `
@@ -21585,6 +21598,19 @@ function buildInterventionDiActions(di) {
 }
 
 function buildInterventionOtActions(ot) {
+  if (ot.status === "Transformé en BT" || ot.status === "Terminé") {
+    return `
+      <div class="org-row-actions">
+        <button class="org-icon-btn" type="button" data-int-action="details-ot" data-int-id="${ot.id}" title="Voir les détails">
+          <i class="fa-regular fa-eye"></i>
+        </button>
+        <button class="org-icon-btn danger" type="button" data-int-action="delete-ot" data-int-id="${ot.id}" title="Supprimer">
+          <i class="fa-regular fa-trash-can"></i>
+        </button>
+      </div>
+    `;
+  }
+
   return `
     <div class="org-row-actions">
       <button class="org-icon-btn" type="button" data-int-action="details-ot" data-int-id="${ot.id}" title="Voir les détails">
@@ -21601,6 +21627,19 @@ function buildInterventionOtActions(ot) {
 }
 
 function buildInterventionBtActions(bt) {
+  if (bt.status === "Clôturé") {
+    return `
+      <div class="org-row-actions">
+        <button class="org-icon-btn" type="button" data-int-action="details-bt" data-int-id="${bt.id}" title="Voir les détails">
+          <i class="fa-regular fa-eye"></i>
+        </button>
+        <button class="org-icon-btn danger" type="button" data-int-action="delete-bt" data-int-id="${bt.id}" title="Supprimer">
+          <i class="fa-regular fa-trash-can"></i>
+        </button>
+      </div>
+    `;
+  }
+
   return `
     <div class="org-row-actions">
       <button class="org-icon-btn" type="button" data-int-action="details-bt" data-int-id="${bt.id}" title="Voir les détails">
@@ -21641,6 +21680,7 @@ function getInterventionStatusBadgeClass(value) {
   const normalized = String(value || "").toLowerCase();
   if (normalized.includes("valid")) return "badge-success";
   if (normalized.includes("term")) return "badge-success";
+  if (normalized.includes("transform")) return "badge-info";
   if (normalized.includes("plan")) return "badge-info";
   if (normalized.includes("cours")) return "badge-warning";
   if (normalized.includes("rejet")) return "badge-danger";
@@ -22515,12 +22555,6 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       subtitle:
         "Référentiel de base, contacts, légaux et conditions commerciales.",
     },
-    contrats: {
-      label: "Contrats & Garanties",
-      title: "Contrats & Garanties",
-      subtitle:
-        "Suivi des engagements contractuels et garanties liées aux équipements.",
-    },
     evaluation: {
       label: "Évaluation",
       title: "Évaluation fournisseur",
@@ -22528,6 +22562,9 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     },
   };
 
+  /* ---------------------------------------------------------------
+     ROOT REFERENCES
+  --------------------------------------------------------------- */
   const root = {
     title: () => document.getElementById("pageTitle"),
     subtitle: () => document.getElementById("pageSubtitle"),
@@ -22538,36 +22575,30 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
 
   let activeTab = "fiche";
 
-  function qs(sel, ctx = document) {
-    return ctx.querySelector(sel);
+  function qs(sel, ctx) {
+    return (ctx || document).querySelector(sel);
+  }
+  function qsa(sel, ctx) {
+    return Array.from((ctx || document).querySelectorAll(sel));
   }
 
-  function qsa(sel, ctx = document) {
-    return Array.from(ctx.querySelectorAll(sel));
-  }
-
+  /* ---------------------------------------------------------------
+     STORAGE
+  --------------------------------------------------------------- */
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : { suppliers: [] };
-    } catch (_error) {
+    } catch (_e) {
       return { suppliers: [] };
     }
   }
-
   function saveState(state) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
-
   function seededState() {
-    return {
-      suppliers: [],
-      contracts: [],
-      warranties: [],
-      evaluations: [],
-    };
+    return { suppliers: [], evaluations: [] };
   }
-
   function ensureSeedData() {
     const state = loadState();
     if (!state.suppliers || state.suppliers.length === 0) {
@@ -22578,16 +22609,21 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     return state;
   }
 
-  function nextRef(prefix, items, field = "number") {
+  function nextRef(prefix, items, field) {
+    field = field || "number";
     const values = (items || [])
-      .map((item) => item[field])
+      .map(function (item) { return item[field]; })
       .filter(Boolean)
-      .map((value) => {
-        const match = String(value).match(/(\d+)$/);
-        return match ? Number(match[1]) : 0;
-      });
-    const next = (values.length ? Math.max(...values) : 0) + 1;
-    return `${prefix}${String(next).padStart(3, "0")}`;
+      .map(function (v) { var m = String(v).match(/(\d+)$/); return m ? Number(m[1]) : 0; });
+    var n = (values.length ? Math.max.apply(null, values) : 0) + 1;
+    return prefix + String(n).padStart(3, "0");
+  }
+
+  function getAdministrationLocale() {
+    try {
+      var state = JSON.parse(localStorage.getItem("maintflow.administrationState"));
+      return state && state.settings && state.settings.defaultLanguage === "en" ? "en-US" : "fr-FR";
+    } catch (_e) { return "fr-FR"; }
   }
 
   function formatCurrency(value) {
@@ -22597,168 +22633,218 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
 
   function formatDate(value) {
     if (!value) return "—";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleDateString(getAdministrationLocale());
+    var d = new Date(value);
+    return isNaN(d.getTime()) ? value : d.toLocaleDateString(getAdministrationLocale());
   }
 
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&")
+      .replace(/</g, "<")
+      .replace(/>/g, ">")
+      .replace(/"/g, '\u0022')
+      .replace(/'/g, "&#039;");
+  }
+
+  function escapeTextarea(str) {
+    if (!str) return "";
+    return String(str).replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
+  }
+
+  /* ---------------------------------------------------------------
+     DATA HELPERS
+  --------------------------------------------------------------- */
   function getData(tab, state) {
     if (tab === "fiche") {
-      return state.suppliers.map((supplier) => ({
-        id: supplier.id,
-        number: supplier.number,
-        raisonSociale: supplier.raisonSociale,
-        nomCommercial: supplier.nomCommercial,
-        type: supplier.type,
-        domaine: supplier.domaine,
-        status: supplier.status,
-        supplier,
-      }));
+      return state.suppliers.map(function (s) {
+        return { id: s.id, number: s.number, raisonSociale: s.raisonSociale, nomCommercial: s.nomCommercial, type: s.type, domaine: s.domaine, status: s.status, supplier: s };
+      });
     }
-    if (tab === "contrats") {
-      return {
-        contracts: state.suppliers.flatMap((supplier) =>
-          (supplier.contracts || []).map((item) => ({
-            ...item,
-            supplierNumber: supplier.number,
-            supplierName: supplier.raisonSociale,
-            supplier,
-            recordType: "contract",
-          })),
-        ),
-        warranties: state.suppliers.flatMap((supplier) =>
-          (supplier.warranties || []).map((item) => ({
-            ...item,
-            supplierNumber: supplier.number,
-            supplierName: supplier.raisonSociale,
-            supplier,
-            recordType: "warranty",
-          })),
-        ),
-      };
-    }
-    return state.suppliers.flatMap((supplier) =>
-      (supplier.evaluations || []).map((item) => ({
-        ...item,
-        supplierNumber: supplier.number,
-        supplierName: supplier.raisonSociale,
-        supplier,
-      })),
-    );
+    return state.suppliers.reduce(function (acc, supplier) {
+      (supplier.evaluations || []).forEach(function (item) {
+        acc.push(Object.assign({}, item, { supplierNumber: supplier.number, supplierName: supplier.raisonSociale, supplier: supplier }));
+      });
+      return acc;
+    }, []);
   }
 
+  /* --- Get equipment list from equipment module --- */
+  function getEquipmentList() {
+    try {
+      var raw = localStorage.getItem("maintflow.equipmentState");
+      if (!raw) return [];
+      var parsed = JSON.parse(raw);
+      return (parsed.equipments || parsed.equipment || []).map(function (e) {
+        return { id: e.id, code: e.code, name: e.name, label: (e.code || "") + " — " + (e.name || "") };
+      });
+    } catch (_e) { return []; }
+  }
+  function getEquipmentByCodeOrId(val) {
+    var list = getEquipmentList();
+    return list.find(function (e) { return e.id === val || e.code === val; }) || null;
+  }
+
+  function getEquipmentOptionsHtml(selected) {
+    selected = selected || "";
+    var opts = ['<option value="">SÃ©lectionner un Ã©quipement</option>'];
+    getEquipmentList().forEach(function (e) {
+      opts.push('<option value="' + escapeHtml(e.id) + '"' + (e.id === selected ? " selected" : "") + ">" + escapeHtml(e.label) + "</option>");
+    });
+    return opts.join("");
+  }
+  function getEquipmentMultiOptionsHtml(selectedIds) {
+    selectedIds = selectedIds || [];
+    if (!Array.isArray(selectedIds)) selectedIds = [selectedIds];
+    var opts = [];
+    getEquipmentList().forEach(function (e) {
+      opts.push('<option value="' + escapeHtml(e.id) + '"' + (selectedIds.indexOf(e.id) !== -1 ? " selected" : "") + ">" + escapeHtml(e.label) + "</option>");
+    });
+    return opts.join("");
+  }
+
+  /* --- Get users from administration --- */
+  function getUsers() {
+    try {
+      var raw = localStorage.getItem("maintflow.administrationState");
+      if (!raw) return [];
+      var parsed = JSON.parse(raw);
+      return (parsed.users || []).filter(function (u) { return u.active !== false; });
+    } catch (_e) { return []; }
+  }
+  function getUserOptionsHtml(selected) {
+    selected = selected || "";
+    var opts = ['<option value="">SÃ©lectionner un responsable</option>'];
+    getUsers().forEach(function (u) {
+      var val = u.id || u.name || "";
+      opts.push('<option value="' + escapeHtml(val) + '"' + (val === selected ? " selected" : "") + ">" + escapeHtml(u.name || u.email || val) + "</option>");
+    });
+    return opts.join("");
+  }
+
+
+
+  /* ---------------------------------------------------------------
+     UPDATE HEADER
+  --------------------------------------------------------------- */
   function updateHeader() {
-    const tab = TAB_CONFIG[activeTab];
-    const titleEl = root.title();
-    const subtitleEl = root.subtitle();
+    var tab = TAB_CONFIG[activeTab];
+    var titleEl = root.title();
+    var subtitleEl = root.subtitle();
     if (titleEl) titleEl.textContent = tab.title;
     if (subtitleEl) subtitleEl.textContent = tab.subtitle;
   }
 
+  /* ---------------------------------------------------------------
+     MODAL
+  --------------------------------------------------------------- */
   function openModal(title, description, contentHtml, footerHtml) {
-    const overlay = root.overlay();
+    var overlay = root.overlay();
     if (!overlay) return;
-    overlay.innerHTML = `
-      <div class="supplier-modal-overlay" data-close="backdrop">
-        <div class="supplier-modal" role="dialog" aria-modal="true" aria-label="${title}">
-          <div class="supplier-modal-head">
-            <div>
-              <h3>${title}</h3>
-              <p>${description || ""}</p>
-            </div>
-            <button class="supplier-modal-close" type="button" data-close="button">×</button>
-          </div>
-          ${contentHtml}
-          ${footerHtml || ""}
-        </div>
-      </div>
-    `;
-    const close = () => {
-      overlay.innerHTML = "";
-    };
-    qsa("[data-close], [data-modal-cancel]", overlay).forEach((btn) => {
-      btn.addEventListener("click", (event) => {
-        if (event.target === btn || btn.dataset.close) close();
+    overlay.innerHTML =
+      '<div class="supplier-modal-overlay" data-close="backdrop">' +
+      '<div class="supplier-modal" role="dialog" aria-modal="true" aria-label="' + escapeHtml(title) + '">' +
+      '<div class="supplier-modal-head">' +
+      '<div><h3>' + title + '</h3><p>' + (description || "") + '</p></div>' +
+      '<button class="supplier-modal-close" type="button" data-close="button">×</button>' +
+      '</div>' +
+      contentHtml +
+      (footerHtml || "") +
+      '</div>' +
+      '</div>';
+
+    var closeFn = function () { overlay.innerHTML = ""; };
+
+    // ✅ CORRECTION : seulement les boutons avec data-close OU data-modal-cancel
+    // mais PAS les boutons de sauvegarde (#contractSaveBtn, #warrantySaveBtn...)
+    qsa("[data-close], [data-modal-cancel]", overlay).forEach(function (btn) {
+      btn.addEventListener("click", function (event) {
+        if (event.target === btn || btn.dataset.close) closeFn();
       });
     });
-    const modal = qs(".supplier-modal", overlay);
+
+    // ✅ CORRECTION : stopPropagation sur le modal pour éviter la fermeture via backdrop
+    var modal = qs(".supplier-modal", overlay);
     if (modal) {
-      modal.addEventListener("click", (event) => event.stopPropagation());
+      modal.addEventListener("click", function (e) { e.stopPropagation(); });
+    }
+
+    // ✅ CORRECTION : fermeture via backdrop (clic sur l'overlay sombre)
+    var backdrop = qs(".supplier-modal-overlay", overlay);
+    if (backdrop) {
+      backdrop.addEventListener("click", function (e) {
+        if (e.target === backdrop) closeFn();
+      });
     }
   }
 
-  function buildActionButtons(type, record, mode = "row") {
-    return `
-      <div class="supplier-actions">
-        <button class="org-icon-btn" type="button" data-action="view" data-type="${type}" data-id="${record.id}" title="Voir">
-          <i class="fa-regular fa-eye"></i>
-        </button>
-        <button class="org-icon-btn" type="button" data-action="edit" data-type="${type}" data-id="${record.id}" title="Modifier">
-          <i class="fa-regular fa-pen-to-square"></i>
-        </button>
-        <button class="org-icon-btn danger" type="button" data-action="delete" data-type="${type}" data-id="${record.id}" title="Supprimer">
-          <i class="fa-regular fa-trash-can"></i>
-        </button>
-      </div>
-    `;
+  function closeModal() {
+    var overlay = root.overlay();
+    if (overlay) overlay.innerHTML = "";
   }
 
+  /* ---------------------------------------------------------------
+     ACTION BUTTONS (ROW)
+  --------------------------------------------------------------- */
+  function buildActionButtons(type, record) {
+    return '<div class="supplier-actions">' +
+      '<button class="org-icon-btn" type="button" data-action="view" data-type="' + type + '" data-id="' + record.id + '" title="Voir"><i class="fa-regular fa-eye"></i></button>' +
+      '<button class="org-icon-btn" type="button" data-action="edit" data-type="' + type + '" data-id="' + record.id + '" title="Modifier"><i class="fa-regular fa-pen-to-square"></i></button>' +
+      '<button class="org-icon-btn danger" type="button" data-action="delete" data-type="' + type + '" data-id="' + record.id + '" title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>' +
+      '</div>';
+  }
+
+  /* ---------------------------------------------------------------
+     TABS
+  --------------------------------------------------------------- */
   function renderTabs() {
-    const tabs = Object.entries(TAB_CONFIG)
-      .map(
-        ([key, config]) =>
-          `<button class="supplier-tab ${key === activeTab ? "active" : ""}" type="button" data-tab="${key}">${config.label}</button>`,
-      )
-      .join("");
-    return `<div class="supplier-tabs">${tabs}</div>`;
+    return '<div class="supplier-tabs">' +
+      Object.keys(TAB_CONFIG).map(function (key) {
+        return '<button class="supplier-tab' + (key === activeTab ? " active" : "") + '" type="button" data-tab="' + key + '">' + TAB_CONFIG[key].label + '</button>';
+      }).join("") +
+      '</div>';
   }
 
+  /* ---------------------------------------------------------------
+     MAIN PAGE RENDER
+  --------------------------------------------------------------- */
   function renderPage() {
-    const state = ensureSeedData();
-    const tab = TAB_CONFIG[activeTab] ? activeTab : "fiche";
-    if (tab !== activeTab) {
-      activeTab = tab;
-    }
+    var state = ensureSeedData();
+    var tab = TAB_CONFIG[activeTab] ? activeTab : "fiche";
+    if (tab !== activeTab) activeTab = tab;
     updateHeader();
-    const actionsEl = root.actions();
-    const contentEl = root.content();
+
+    var actionsEl = root.actions();
+    var contentEl = root.content();
     if (!contentEl) return;
 
     if (actionsEl) {
-      actionsEl.innerHTML = `
-        <button class="btn btn-primary supplier-create-btn" type="button" data-kind="${tab}">
-          <i class="fa-solid fa-plus"></i>
-          <span>Créer</span>
-        </button>
-      `;
+      actionsEl.innerHTML =
+        '<button class="btn btn-primary supplier-create-btn" type="button" data-kind="' + tab + '">' +
+        '<i class="fa-solid fa-plus"></i><span>Créer</span>' +
+        '</button>';
     }
 
-    const pageStats = buildStats(tab, state);
-    contentEl.innerHTML = `
-      <div class="supplier-module">
-        <div class="supplier-module-hero">
-          <div>
-            <h2>${TAB_CONFIG[tab].title}</h2>
-            <p>${TAB_CONFIG[tab].subtitle}</p>
-          </div>
-          <div class="supplier-pill">${state.suppliers.length} fournisseurs actifs</div>
-        </div>
-        ${renderTabs()}
-        <div class="supplier-kpi-grid">
-          <div class="supplier-kpi-card"><small>Enregistrements</small><strong>${pageStats.count}</strong></div>
-          <div class="supplier-kpi-card"><small>En cours / actifs</small><strong>${pageStats.active}</strong></div>
-          <div class="supplier-kpi-card"><small>Note moyenne</small><strong>${pageStats.score}</strong></div>
-        </div>
-        <div id="supplierTabContent"></div>
-      </div>
-    `;
+    var pageStats = buildStats(tab, state);
+    contentEl.innerHTML =
+      '<div class="supplier-module">' +
+      '<div class="supplier-module-hero">' +
+      '<div><h2>' + TAB_CONFIG[tab].title + '</h2><p>' + TAB_CONFIG[tab].subtitle + '</p></div>' +
+      '<div class="supplier-pill">' + state.suppliers.length + ' fournisseurs actifs</div>' +
+      '</div>' +
+      renderTabs() +
+      '<div class="supplier-kpi-grid">' +
+      '<div class="supplier-kpi-card"><small>Enregistrements</small><strong>' + pageStats.count + '</strong></div>' +
+      '<div class="supplier-kpi-card"><small>En cours / actifs</small><strong>' + pageStats.active + '</strong></div>' +
+      '<div class="supplier-kpi-card"><small>Note moyenne</small><strong>' + pageStats.score + '</strong></div>' +
+      '</div>' +
+      '<div id="supplierTabContent"></div>' +
+      '</div>';
 
-    const tabContent = qs("#supplierTabContent", contentEl);
+    var tabContent = qs("#supplierTabContent", contentEl);
     if (tabContent) {
       if (tab === "fiche") tabContent.innerHTML = renderFicheTab(state);
-      if (tab === "contrats") tabContent.innerHTML = renderContractsTab(state);
-      if (tab === "evaluation")
-        tabContent.innerHTML = renderEvaluationTab(state);
+      if (tab === "evaluation") tabContent.innerHTML = renderEvaluationTab(state);
     }
 
     bindTabEvents();
@@ -22766,386 +22852,146 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     bindCreateEvent(state);
   }
 
+  /* ---------------------------------------------------------------
+     STATS
+  --------------------------------------------------------------- */
   function buildStats(tab, state) {
     if (tab === "fiche") {
       return {
         count: state.suppliers.length,
-        active: state.suppliers.filter(
-          (supplier) => supplier.status === "Actif",
-        ).length,
+        active: state.suppliers.filter(function (s) { return s.status === "Actif"; }).length,
         score: averageScore(state).toFixed(2),
       };
     }
-    if (tab === "contrats") {
-      const items = getData("contrats", state);
-      return {
-        count: items.contracts.length + items.warranties.length,
-        active:
-          items.contracts.filter((item) => item.status === "En cours").length +
-          items.warranties.filter((item) => item.status === "En garantie")
-            .length,
-        score: averageScore(state).toFixed(2),
-      };
-    }
-    const items = getData("evaluation", state);
+
+    var items = getData("evaluation", state);
     return {
       count: items.length,
-      active: items.filter(
-        (item) => item.recommendation === "Fournisseur recommandé",
-      ).length,
-      score: items.length
-        ? (
-          items.reduce((sum, item) => sum + Number(item.global || 0), 0) /
-          items.length
-        ).toFixed(2)
-        : "0",
+      active: items.filter(function (i) { return i.recommendation === "Fournisseur recommandÃ©"; }).length,
+      score: items.length ? (items.reduce(function (s, i) { return s + Number(i.global || 0); }, 0) / items.length).toFixed(2) : "0",
     };
   }
 
   function averageScore(state) {
-    const evaluations = state.suppliers.flatMap(
-      (supplier) => supplier.evaluations || [],
-    );
-    if (!evaluations.length) return 0;
-    return (
-      evaluations.reduce(
-        (sum, evaluation) => sum + Number(evaluation.global || 0),
-        0,
-      ) / evaluations.length
-    );
+    var evals = state.suppliers.reduce(function (acc, s) { return acc.concat(s.evaluations || []); }, []);
+    return evals.length ? evals.reduce(function (s, e) { return s + Number(e.global || 0); }, 0) / evals.length : 0;
   }
 
+  /* ---------------------------------------------------------------
+     TAB RENDERERS
+  --------------------------------------------------------------- */
   function renderFicheTab(state) {
-    const rows = state.suppliers
-      .map(
-        (supplier) => `
-          <tr>
-            <td>
-              <div class="supplier-row-title">${supplier.number}</div>
-              <div class="supplier-row-sub">${supplier.domaine || ""}</div>
-            </td>
-            <td>
-              <div class="supplier-row-title">${supplier.raisonSociale || ""}</div>
-              <div class="supplier-row-sub">${supplier.nomCommercial || ""}</div>
-            </td>
-            <td>${supplier.type || "—"}</td>
-            <td><span class="supplier-pill">${supplier.status || "Actif"}</span></td>
-            <td>${supplier.tel1 || "—"}</td>
-            <td>${supplier.email || "—"}</td>
-            <td>${buildActionButtons("fiche", supplier)}</td>
-          </tr>
-        `,
-      )
-      .join("");
-    return `
-      <div class="supplier-section">
-        <div class="supplier-section-head">
-          <div>
-            <h3>Liste fournisseurs</h3>
-            <p>Chaque ligne dispose des actions voir, modifier et supprimer.</p>
-          </div>
-        </div>
-        <div class="supplier-table-wrap">
-          <table class="supplier-table">
-            <thead>
-              <tr>
-                <th>Numéro</th>
-                <th>Raison sociale</th>
-                <th>Type</th>
-                <th>Statut</th>
-                <th>Téléphone</th>
-                <th>Email</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows || `<tr><td colspan="7"><div class="supplier-empty-state">Aucun fournisseur disponible.</div></td></tr>`}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
+    var rows = state.suppliers.map(function (s) {
+      return '<tr>' +
+        '<td><div class="supplier-row-title">' + escapeHtml(s.number) + '</div><div class="supplier-row-sub">' + escapeHtml(s.domaine || "") + '</div></td>' +
+        '<td><div class="supplier-row-title">' + escapeHtml(s.raisonSociale || "") + '</div><div class="supplier-row-sub">' + escapeHtml(s.nomCommercial || "") + '</div></td>' +
+        '<td>' + escapeHtml(s.type || "—") + '</td>' +
+        '<td><span class="supplier-pill">' + escapeHtml(s.status || "Actif") + '</span></td>' +
+        '<td>' + escapeHtml(s.tel1 || "—") + '</td>' +
+        '<td>' + escapeHtml(s.email || "—") + '</td>' +
+        '<td>' + buildActionButtons("fiche", s) + '</td>' +
+        '</tr>';
+    }).join("");
+    return '<div class="supplier-section"><div class="supplier-section-head"><div><h3>Liste fournisseurs</h3><p>Chaque ligne dispose des actions voir, modifier et supprimer.</p></div></div>' +
+      '<div class="supplier-table-wrap"><table class="supplier-table"><thead><tr>' +
+      '<th>Numéro</th><th>Raison sociale</th><th>Type</th><th>Statut</th><th>Téléphone</th><th>Email</th><th>Actions</th>' +
+      '</tr></thead><tbody>' + (rows || '<tr><td colspan="7"><div class="supplier-empty-state">Aucun fournisseur disponible.</div></td></tr>') + '</tbody></table></div></div>';
   }
 
-  function renderCatalogueTab(state) {
-    const items = getData("catalogue", state);
-    const rows = items
-      .map(
-        (item) => `
-          <tr>
-            <td>
-              <div class="supplier-row-title">${item.supplierName}</div>
-              <div class="supplier-row-sub">${item.supplierNumber}</div>
-            </td>
-            <td>
-              <div class="supplier-row-title">${item.article || ""}</div>
-              <div class="supplier-row-sub">${item.designation || ""}</div>
-            </td>
-            <td>${item.refFourn || "—"}</td>
-            <td>${item.unit || "—"}</td>
-            <td>${formatCurrency(item.price)} DZD</td>
-            <td>${item.moq || "—"}</td>
-            <td>${formatDate(item.updatedAt)}</td>
-            <td>${buildActionButtons("catalogue", item)}</td>
-          </tr>
-        `,
-      )
-      .join("");
-    return `
-      <div class="supplier-section">
-        <div class="supplier-section-head">
-          <div>
-            <h3>Catalogue fournisseur</h3>
-            <p>Liste des lignes catalogue avec références fournisseurs et tarifs négociés.</p>
-          </div>
-        </div>
-        <div class="supplier-table-wrap">
-          <table class="supplier-table">
-            <thead>
-              <tr>
-                <th>Fournisseur</th>
-                <th>Article</th>
-                <th>Référence fournisseur</th>
-                <th>Unité</th>
-                <th>Prix HT</th>
-                <th>MOQ</th>
-                <th>Mise à jour prix</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows || `<tr><td colspan="8"><div class="supplier-empty-state">Aucune ligne catalogue.</div></td></tr>`}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  }
 
-  function renderContractsTab(state) {
-    const data = getData("contrats", state);
-    const contractRows = data.contracts
-      .map(
-        (item) => `
-          <tr>
-            <td>
-              <div class="supplier-row-title">${item.number}</div>
-              <div class="supplier-row-sub">${item.type}</div>
-            </td>
-            <td>
-              <div class="supplier-row-title">${item.supplierName}</div>
-              <div class="supplier-row-sub">${item.supplierNumber}</div>
-            </td>
-            <td>${item.objet || "—"}</td>
-            <td>${formatDate(item.debut)} → ${formatDate(item.fin)}</td>
-            <td>${formatCurrency(item.valeur)} DZD</td>
-            <td>${item.status || "—"}</td>
-            <td>${buildActionButtons("contract", item)}</td>
-          </tr>
-        `,
-      )
-      .join("");
-    const warrantyRows = data.warranties
-      .map(
-        (item) => `
-          <tr>
-            <td>
-              <div class="supplier-row-title">${item.equipment}</div>
-              <div class="supplier-row-sub">${item.supplierName}</div>
-            </td>
-            <td>${formatDate(item.debut)}</td>
-            <td>${item.durationMonths || "—"} mois</td>
-            <td>${formatDate(item.endDate)}</td>
-            <td>${item.status || "—"}</td>
-            <td>${buildActionButtons("warranty", item)}</td>
-          </tr>
-        `,
-      )
-      .join("");
-    return `
-      <div class="supplier-section" style="margin-bottom:16px;">
-        <div class="supplier-section-head">
-          <div>
-            <h3>Contrats</h3>
-            <p>Contrats cadres, maintenance et partenariats.</p>
-          </div>
-        </div>
-        <div class="supplier-table-wrap">
-          <table class="supplier-table">
-            <thead>
-              <tr>
-                <th>Numéro</th>
-                <th>Fournisseur</th>
-                <th>Objet</th>
-                <th>Période</th>
-                <th>Valeur</th>
-                <th>Statut</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${contractRows || `<tr><td colspan="7"><div class="supplier-empty-state">Aucun contrat.</div></td></tr>`}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="supplier-section">
-        <div class="supplier-section-head">
-          <div>
-            <h3>Garanties</h3>
-            <p>Garanties liées aux équipements et documents associés.</p>
-          </div>
-        </div>
-        <div class="supplier-table-wrap">
-          <table class="supplier-table">
-            <thead>
-              <tr>
-                <th>Équipement</th>
-                <th>Date début</th>
-                <th>Durée</th>
-                <th>Date fin</th>
-                <th>Statut</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${warrantyRows || `<tr><td colspan="6"><div class="supplier-empty-state">Aucune garantie.</div></td></tr>`}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  }
 
+  /* ---------------------------------------------------------------
+     EVALUATION TAB
+  --------------------------------------------------------------- */
   function renderEvaluationTab(state) {
-    const items = getData("evaluation", state);
-    const rows = items
-      .map(
-        (item) => `
-          <tr>
-            <td>
-              <div class="supplier-row-title">${item.number}</div>
-              <div class="supplier-row-sub">${item.periode}</div>
-            </td>
-            <td>
-              <div class="supplier-row-title">${item.supplierName}</div>
-              <div class="supplier-row-sub">${item.supplierNumber}</div>
-            </td>
-            <td>${item.evaluator || "—"}</td>
-            <td><span class="supplier-pill">${Number(item.global || 0).toFixed(2)}</span></td>
-            <td>${item.recommendation || "—"}</td>
-            <td>${buildActionButtons("evaluation", item)}</td>
-          </tr>
-        `,
-      )
-      .join("");
-    return `
-      <div class="supplier-section">
-        <div class="supplier-section-head">
-          <div>
-            <h3>Évaluation fournisseur</h3>
-            <p>Historique des évaluations et note globale automatique.</p>
-          </div>
-        </div>
-        <div class="supplier-table-wrap">
-          <table class="supplier-table">
-            <thead>
-              <tr>
-                <th>Numéro</th>
-                <th>Fournisseur</th>
-                <th>Évaluateur</th>
-                <th>Note globale</th>
-                <th>Recommandation</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows || `<tr><td colspan="6"><div class="supplier-empty-state">Aucune évaluation.</div></td></tr>`}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
+    var items = getData("evaluation", state);
+    var rows = items.map(function (item) {
+      return '<tr>' +
+        '<td><div class="supplier-row-title">' + escapeHtml(item.number || "") + '</div><div class="supplier-row-sub">' + escapeHtml(item.periode || "") + '</div></td>' +
+        '<td><div class="supplier-row-title">' + escapeHtml(item.supplierName || "") + '</div><div class="supplier-row-sub">' + escapeHtml(item.supplierNumber || "") + '</div></td>' +
+        '<td>' + escapeHtml(item.evaluator || "—") + '</td>' +
+        '<td><span class="supplier-pill">' + Number(item.global || 0).toFixed(2) + '</span></td>' +
+        '<td>' + escapeHtml(item.recommendation || "—") + '</td>' +
+        '<td>' + buildActionButtons("evaluation", item) + '</td>' +
+        '</tr>';
+    }).join("");
+    return '<div class="supplier-section">' +
+      '<div class="supplier-section-head"><div><h3>Ã‰valuation fournisseur</h3><p>Historique des Ã©valuations et note globale automatique.</p></div></div>' +
+      '<div class="supplier-table-wrap"><table class="supplier-table"><thead><tr>' +
+      '<th>NumÃ©ro</th><th>Fournisseur</th><th>Ã‰valuateur</th><th>Note globale</th><th>Recommandation</th><th>Actions</th>' +
+      '</tr></thead><tbody>' + (rows || '<tr><td colspan="6"><div class="supplier-empty-state">Aucune Ã©valuation.</div></td></tr>') + '</tbody></table></div></div>';
   }
 
+  /* ---------------------------------------------------------------
+     BINDING EVENTS
+  --------------------------------------------------------------- */
   function bindTabEvents() {
-    qsa(".supplier-tab").forEach((button) => {
-      button.addEventListener("click", () => {
-        activeTab = button.dataset.tab;
+    qsa(".supplier-tab").forEach(function (button) {
+      button.addEventListener("click", function () {
+        activeTab = String(this.dataset.tab);
         renderPage();
       });
     });
   }
 
   function bindCreateEvent(state) {
-    qsa(".supplier-create-btn").forEach((button) => {
-      button.addEventListener("click", () => {
-        const kind = button.dataset.kind || activeTab;
+    qsa(".supplier-create-btn").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var kind = button.dataset.kind || activeTab;
         if (kind === "fiche") openSupplierModal();
-        if (kind === "contract") openContractModal(state);
-        if (kind === "warranty") openWarrantyModal(state);
         if (kind === "evaluation") openEvaluationModal();
       });
     });
   }
 
   function bindActionEvents(state) {
-    qsa("[data-action]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const type = button.dataset.type;
-        const id = button.dataset.id;
-        const action = button.dataset.action;
-        handleRowAction(state, type, id, action);
+    qsa("[data-action]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        handleRowAction(state, this.dataset.type, this.dataset.id, this.dataset.action);
       });
     });
   }
 
+  /* ---------------------------------------------------------------
+     RECORD LOOKUP
+  --------------------------------------------------------------- */
   function getRecordByType(state, type, id) {
-    if (type === "fiche") return state.suppliers.find((item) => item.id === id);
+    if (type === "fiche") return state.suppliers.find(function (s) { return s.id === id; });
     if (type === "catalogue") {
-      for (const supplier of state.suppliers) {
-        const item = (supplier.catalogue || []).find(
-          (entry) => entry.id === id,
-        );
-        if (item) return { item, supplier };
+      for (var i = 0; i < state.suppliers.length; i++) {
+        var item = (state.suppliers[i].catalogue || []).find(function (e) { return e.id === id; });
+        if (item) return { item: item, supplier: state.suppliers[i] };
       }
     }
     if (type === "contract") {
-      for (const supplier of state.suppliers) {
-        const item = (supplier.contracts || []).find(
-          (entry) => entry.id === id,
-        );
-        if (item) return { item, supplier };
+      var contract = (state.contracts || []).find(function (c) { return c.id === id; });
+      if (contract) {
+        var sup = state.suppliers.find(function (s) { return s.id === contract.supplierId; }) || {};
+        return { item: contract, supplier: sup };
       }
     }
     if (type === "warranty") {
-      for (const supplier of state.suppliers) {
-        const item = (supplier.warranties || []).find(
-          (entry) => entry.id === id,
-        );
-        if (item) return { item, supplier };
+      var warranty = (state.warranties || []).find(function (w) { return w.id === id; });
+      if (warranty) {
+        var sup2 = state.suppliers.find(function (s) { return s.id === warranty.supplierId; }) || {};
+        return { item: warranty, supplier: sup2 };
       }
     }
     if (type === "evaluation") {
-      for (const supplier of state.suppliers) {
-        const item = (supplier.evaluations || []).find(
-          (entry) => entry.id === id,
-        );
-        if (item) return { item, supplier };
+      for (var j = 0; j < state.suppliers.length; j++) {
+        var ev = (state.suppliers[j].evaluations || []).find(function (e) { return e.id === id; });
+        if (ev) return { item: ev, supplier: state.suppliers[j] };
       }
     }
     return null;
   }
 
   function handleRowAction(state, type, id, action) {
-    const result = getRecordByType(state, type, id);
+    var result = getRecordByType(state, type, id);
     if (!result) return;
-    const entry = result.item || result;
-    const supplier = result.supplier || result;
-    if (action === "view") {
-      openViewModal(type, entry, supplier);
-      return;
-    }
+    var entry = result.item || result;
+    var supplier = result.supplier || result;
+    if (action === "view") { openViewModal(type, entry, supplier); return; }
     if (action === "edit") {
       if (type === "fiche") openSupplierModal(entry);
       if (type === "catalogue") openCatalogueModal(entry, supplier);
@@ -23155,67 +23001,40 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       return;
     }
     if (action === "delete") {
-      const label =
-        entry.raisonSociale ||
-        entry.number ||
-        entry.article ||
-        entry.objet ||
-        entry.equipment ||
-        "cet élément";
-      if (!window.confirm(`Supprimer ${label} ?`)) return;
+      var label = entry.raisonSociale || entry.number || entry.article || entry.objet || entry.equipment || "cet Ã©lÃ©ment";
+      if (!window.confirm("Supprimer " + label + " ?")) return;
       removeRecord(type, id);
       renderPage();
     }
   }
 
   function removeRecord(type, id) {
-    const state = loadState();
-    if (type === "fiche") {
-      state.suppliers = state.suppliers.filter(
-        (supplier) => supplier.id !== id,
-      );
-    }
+    var state = loadState();
+    if (type === "fiche") state.suppliers = state.suppliers.filter(function (s) { return s.id !== id; });
     if (type === "catalogue") {
-      state.suppliers.forEach((supplier) => {
-        supplier.catalogue = (supplier.catalogue || []).filter(
-          (item) => item.id !== id,
-        );
-      });
+      state.suppliers.forEach(function (s) { s.catalogue = (s.catalogue || []).filter(function (i) { return i.id !== id; }); });
     }
-    if (type === "contract") {
-      state.suppliers.forEach((supplier) => {
-        supplier.contracts = (supplier.contracts || []).filter(
-          (item) => item.id !== id,
-        );
-      });
-    }
-    if (type === "warranty") {
-      state.suppliers.forEach((supplier) => {
-        supplier.warranties = (supplier.warranties || []).filter(
-          (item) => item.id !== id,
-        );
-      });
-    }
+    if (type === "contract") state.contracts = (state.contracts || []).filter(function (i) { return i.id !== id; });
+    if (type === "warranty") state.warranties = (state.warranties || []).filter(function (i) { return i.id !== id; });
     if (type === "evaluation") {
-      state.suppliers.forEach((supplier) => {
-        supplier.evaluations = (supplier.evaluations || []).filter(
-          (item) => item.id !== id,
-        );
-      });
+      state.suppliers.forEach(function (s) { s.evaluations = (s.evaluations || []).filter(function (i) { return i.id !== id; }); });
     }
     saveState(state);
   }
 
+  /* ---------------------------------------------------------------
+     VIEW MODAL
+  --------------------------------------------------------------- */
   function openViewModal(type, entry, supplier) {
-    let fields = [];
+    var fields = [];
     if (type === "fiche") {
       fields = [
-        ["Numéro", entry.number],
+        ["NumÃ©ro", entry.number],
         ["Raison sociale", entry.raisonSociale],
         ["Nom commercial", entry.nomCommercial],
         ["Type", entry.type],
         ["Domaine", entry.domaine],
-        ["Téléphone", entry.tel1],
+        ["TÃ©lÃ©phone", entry.tel1],
         ["Email", entry.email],
         ["Statut", entry.status],
       ];
@@ -23224,44 +23043,50 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       fields = [
         ["Fournisseur", entry.supplierName],
         ["Article", entry.article],
-        ["Référence fournisseur", entry.refFourn],
-        ["Désignation", entry.designation],
-        ["Prix HT", `${formatCurrency(entry.price)} DZD`],
-        ["Unité", entry.unit],
+        ["RÃ©fÃ©rence fournisseur", entry.refFourn],
+        ["DÃ©signation", entry.designation],
+        ["Prix HT", formatCurrency(entry.price) + " DZD"],
+        ["UnitÃ©", entry.unit],
         ["MOQ", entry.moq],
-        ["Disponibilité", entry.availability],
+        ["DisponibilitÃ©", entry.availability],
         ["Observations", entry.observations],
       ];
     }
     if (type === "contract") {
       fields = [
-        ["Numéro contrat", entry.number],
+        ["NumÃ©ro contrat", entry.number],
         ["Fournisseur", entry.supplierName],
         ["Type contrat", entry.type],
         ["Objet", entry.objet],
-        ["Début", formatDate(entry.debut)],
+        ["DÃ©but", formatDate(entry.debut)],
         ["Fin", formatDate(entry.fin)],
-        ["Valeur", `${formatCurrency(entry.valeur)} DZD`],
+        ["Valeur", formatCurrency(entry.valeur) + " DZD"],
+        ["Conditions", entry.conditions || "—"],
+        ["Ã‰quipements couverts", Array.isArray(entry.equipmentRefs) ? entry.equipmentRefs.join(", ") : entry.equipmentRefs || "—"],
+        ["Responsable suivi", entry.responsible || "—"],
+        ["Alerte expiration", entry.alertDays ? entry.alertDays + " jours" : "—"],
+        ["Documents joints", entry.documents || "—"],
         ["Statut", entry.status],
       ];
     }
     if (type === "warranty") {
       fields = [
-        ["Équipement", entry.equipment],
+        ["Ã‰quipement", entry.equipmentCode || entry.equipment || "—"],
         ["Fournisseur", entry.supplierName],
-        ["Début", formatDate(entry.debut)],
-        ["Durée", `${entry.durationMonths || "—"} mois`],
+        ["DÃ©but", formatDate(entry.debut)],
+        ["DurÃ©e", (entry.durationMonths || "—") + " mois"],
         ["Fin", formatDate(entry.endDate)],
+        ["Conditions", entry.conditions || "—"],
+        ["Documents", entry.documents || "—"],
         ["Statut", entry.status],
-        ["Conditions", entry.conditions],
       ];
     }
     if (type === "evaluation") {
       fields = [
-        ["Numéro", entry.number],
+        ["NumÃ©ro", entry.number],
         ["Fournisseur", entry.supplierName],
-        ["Période", entry.periode],
-        ["Évaluateur", entry.evaluator],
+        ["PÃ©riode", entry.periode],
+        ["Ã‰valuateur", entry.evaluator],
         ["Note globale", Number(entry.global || 0).toFixed(2)],
         ["Recommandation", entry.recommendation],
         ["Commentaires", entry.comments],
@@ -23269,129 +23094,82 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       ];
     }
     openModal(
-      `Voir ${TAB_CONFIG[activeTab].label}`,
-      `Détail du dossier ${supplier.raisonSociale || supplier.supplierName || ""}`,
-      `<div class="supplier-section"><div class="supplier-form-grid">${fields
-        .map(
-          ([label, value]) =>
-            `<div class="full"><label>${label}</label><div style="padding:11px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;">${value || "—"}</div></div>`,
-        )
-        .join("")}</div></div>`,
+      "Voir " + TAB_CONFIG[activeTab].label,
+      "DÃ©tail du dossier " + (supplier.raisonSociale || supplier.supplierName || ""),
+      '<div class="supplier-section"><div class="supplier-form-grid">' +
+      fields.map(function (pair) {
+        return '<div class="full"><label>' + pair[0] + '</label><div style="padding:11px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;">' + (pair[1] || "—") + '</div></div>';
+      }).join("") +
+      '</div></div>'
     );
   }
 
-  function supplierOptions(selectedId = "") {
-    const state = loadState();
-    return state.suppliers
-      .map(
-        (supplier) =>
-          `<option value="${supplier.id}" ${supplier.id === selectedId ? "selected" : ""}>${supplier.number} - ${supplier.raisonSociale}</option>`,
-      )
-      .join("");
+  /* ---------------------------------------------------------------
+     SUPPLIER OPTIONS
+  --------------------------------------------------------------- */
+  function supplierOptions(selectedId) {
+    selectedId = selectedId || "";
+    var state = loadState();
+    return state.suppliers.map(function (s) {
+      return '<option value="' + escapeHtml(s.id) + '"' + (s.id === selectedId ? " selected" : "") + '>' + escapeHtml(s.number + " - " + (s.raisonSociale || "")) + '</option>';
+    }).join("");
   }
 
-  function openSupplierModal(entry = null) {
-    const isEdit = Boolean(entry);
-    const state = loadState();
-    const current = isEdit ? entry : {};
-    const nextNumber = isEdit
-      ? current.number
-      : nextRef("FRN-", state.suppliers, "number");
+  /* ---------------------------------------------------------------
+     SUPPLIER MODAL
+  --------------------------------------------------------------- */
+  function openSupplierModal(entry) {
+    entry = entry || null;
+    var isEdit = !!entry;
+    var state = loadState();
+    var current = isEdit ? entry : {};
+    var nextNumber = isEdit ? current.number : nextRef("FRN-", state.suppliers, "number");
+    var domaineOptions = ["Mécanique", "Électrique", "Hydraulique", "Lubrifiants", "EPI / Sécurité", "Autre"];
+    var typeOptions = ["Fabricant", "Distributeur", "Prestataire de service", "Sous-traitant"];
+    var statusOptions = ["Actif", "Suspendu", "Blacklisté"];
+    var paymentOptions = ["Comptant", "30 jours", "60 jours", "Autre"];
+
     openModal(
       isEdit ? "Modifier fournisseur" : "Créer fournisseur",
       "Formulaire de création et de modification de la fiche fournisseur.",
-      `
-        <form class="supplier-form-grid" id="supplierForm">
-          <div><label>Code fournisseur</label><input name="number" value="${nextNumber}" readonly /></div>
-          <div><label>Domaine d'activité</label>
-            <select name="domaine">
-              ${[
-        "Mécanique",
-        "Électrique",
-        "Hydraulique",
-        "Lubrifiants",
-        "EPI / Sécurité",
-        "Autre",
-      ]
-        .map(
-          (option) =>
-            `<option ${current.domaine === option ? "selected" : ""}>${option}</option>`,
-        )
-        .join("")}
-            </select>
-          </div>
-          <div><label>Nom commercial</label><input name="nomCommercial" value="${current.nomCommercial || ""}" /></div>
-          <div><label>Type fournisseur</label>
-            <select name="type">
-              ${[
-        "Fabricant",
-        "Distributeur",
-        "Prestataire de service",
-        "Sous-traitant",
-      ]
-        .map(
-          (option) =>
-            `<option ${current.type === option ? "selected" : ""}>${option}</option>`,
-        )
-        .join("")}
-            </select>
-          </div>
-          <div class="full"><label>Adresse complète</label><input name="adresse" value="${current.adresse || ""}" /></div>
-          <div><label>Téléphone principal</label><input name="tel1" value="${current.tel1 || ""}" /></div>
-          <div><label>Téléphone secondaire</label><input name="tel2" value="${current.tel2 || ""}" /></div>
-          <div><label>Email</label><input name="email" value="${current.email || ""}" /></div>
-          <div><label>Site web</label><input name="website" value="${current.website || ""}" /></div>
-          <div><label>Poste / Fonction</label><input name="contactRole" value="${current.contact?.role || ""}" /></div>
-          <div><label>Email direct</label><input name="contactEmail" value="${current.contact?.email || ""}" /></div>
-          <div><label>Numéro RC</label><input name="rc" value="${current.legal?.rc || ""}" /></div>
-          <div><label>NIF</label><input name="nif" value="${current.legal?.nif || ""}" /></div>
-          <div><label>NIS</label><input name="nis" value="${current.legal?.nis || ""}" /></div>
-          <div><label>Article d'imposition</label><input name="articleImposition" value="${current.legal?.articleImposition || ""}" /></div>
-          <div class="full"><label>RIB / Coordonnées bancaires</label><input name="rib" value="${current.legal?.rib || ""}" /></div>
-          <div><label>Délai de livraison moyen (jours)</label><input name="deliveryDays" type="number" value="${current.deliveryDays || ""}" /></div>
-          <div><label>Conditions de paiement</label>
-            <select name="paymentTerm">
-              ${["Comptant", "30 jours", "60 jours", "Autre"]
-        .map(
-          (option) =>
-            `<option ${current.paymentTerm === option ? "selected" : ""}>${option}</option>`,
-        )
-        .join("")}
-            </select>
-          </div>
-          <div><label>Devise</label><input name="currency" value="${current.currency || "DZD"}" /></div>
-          <div><label>Remise habituelle %</label><input name="discount" type="number" step="0.01" value="${current.discount || 0}" /></div>
-          <div class="full"><label>Statut</label>
-            <select name="status">
-              ${["Actif", "Suspendu", "Blacklisté"]
-        .map(
-          (option) =>
-            `<option ${current.status === option ? "selected" : ""}>${option}</option>`,
-        )
-        .join("")}
-            </select>
-          </div>
-          <div class="full"><label>Observations</label><textarea name="observations">${current.observations || ""}</textarea></div>
-        </form>
-      `,
-      `
-        <div class="supplier-form-footer">
-          <button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button>
-          <button type="button" class="btn btn-primary" id="supplierSaveBtn">Enregistrer</button>
-        </div>
-      `,
+      '<form class="supplier-form-grid" id="supplierForm">' +
+      '<div><label>Code fournisseur</label><input name="number" value="' + escapeHtml(nextNumber) + '" readonly /></div>' +
+      '<div><label>Domaine d\'activité</label><select name="domaine">' + domaineOptions.map(function (o) { return '<option' + (current.domaine === o ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
+      '<div><label>Raison sociale</label><input name="raisonSociale" value="' + escapeHtml(current.raisonSociale || "") + '" /></div>' +
+      '<div><label>Nom commercial</label><input name="nomCommercial" value="' + escapeHtml(current.nomCommercial || "") + '" /></div>' +
+      '<div><label>Type fournisseur</label><select name="type">' + typeOptions.map(function (o) { return '<option' + (current.type === o ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
+      '<div class="full"><label>Adresse compléte</label><input name="adresse" value="' + escapeHtml(current.adresse || "") + '" /></div>' +
+      '<div><label>Téléphone principal</label><input name="tel1" value="' + escapeHtml(current.tel1 || "") + '" /></div>' +
+      '<div><label>Téléphone secondaire</label><input name="tel2" value="' + escapeHtml(current.tel2 || "") + '" /></div>' +
+      '<div><label>Email</label><input name="email" value="' + escapeHtml(current.email || "") + '" /></div>' +
+      '<div><label>Site web</label><input name="website" value="' + escapeHtml(current.website || "") + '" /></div>' +
+      '<div><label>Poste / Fonction</label><input name="contactRole" value="' + escapeHtml(current.contact && current.contact.role || "") + '" /></div>' +
+      '<div><label>Email direct</label><input name="contactEmail" value="' + escapeHtml(current.contact && current.contact.email || "") + '" /></div>' +
+      '<div><label>Numéro RC</label><input name="rc" value="' + escapeHtml(current.legal && current.legal.rc || "") + '" /></div>' +
+      '<div><label>NIF</label><input name="nif" value="' + escapeHtml(current.legal && current.legal.nif || "") + '" /></div>' +
+      '<div><label>NIS</label><input name="nis" value="' + escapeHtml(current.legal && current.legal.nis || "") + '" /></div>' +
+      '<div><label>Article d\'imposition</label><input name="articleImposition" value="' + escapeHtml(current.legal && current.legal.articleImposition || "") + '" /></div>' +
+      '<div class="full"><label>RIB / CoordonnÃ©es bancaires</label><input name="rib" value="' + escapeHtml(current.legal && current.legal.rib || "") + '" /></div>' +
+      '<div><label>Délai de livraison moyen (jours)</label><input name="deliveryDays" type="number" value="' + (current.deliveryDays || "") + '" /></div>' +
+      '<div><label>Conditions de paiement</label><select name="paymentTerm">' + paymentOptions.map(function (o) { return '<option' + (current.paymentTerm === o ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
+      '<div><label>Devise</label><input name="currency" value="' + escapeHtml(current.currency || "DZD") + '" /></div>' +
+      '<div><label>Remise habituelle %</label><input name="discount" type="number" step="0.01" value="' + (current.discount || 0) + '" /></div>' +
+      '<div class="full"><label>Statut</label><select name="status">' + statusOptions.map(function (o) { return '<option' + (current.status === o ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
+      '<div class="full"><label>Observations</label><textarea name="observations">' + escapeTextarea(current.observations || "") + '</textarea></div>' +
+      '</form>',
+      '<div class="supplier-form-footer"><button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button><button type="button" class="btn btn-primary" id="supplierSaveBtn">Enregistrer</button></div>'
     );
 
-    const saveBtn = qs("#supplierSaveBtn", root.overlay());
+    var saveBtn = document.getElementById("supplierSaveBtn");
     if (saveBtn) {
-      saveBtn.addEventListener("click", () => {
-        const form = qs("#supplierForm", root.overlay());
+      saveBtn.addEventListener("click", function () {
+        var form = document.getElementById("supplierForm");
         if (!form) return;
-        const fd = new FormData(form);
-        const payload = {
-          id: isEdit ? current.id : `sup-${Date.now()}`,
+        var fd = new FormData(form);
+        var payload = {
+          id: isEdit ? current.id : "sup-" + Date.now(),
           number: fd.get("number"),
-          raisonSociale: current.raisonSociale || "",
+          raisonSociale: fd.get("raisonSociale") || "",
           nomCommercial: fd.get("nomCommercial"),
           type: fd.get("type"),
           domaine: fd.get("domaine"),
@@ -23400,17 +23178,8 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           tel2: fd.get("tel2"),
           email: fd.get("email"),
           website: fd.get("website"),
-          contact: {
-            role: fd.get("contactRole"),
-            email: fd.get("contactEmail"),
-          },
-          legal: {
-            rc: fd.get("rc"),
-            nif: fd.get("nif"),
-            nis: fd.get("nis"),
-            articleImposition: fd.get("articleImposition"),
-            rib: fd.get("rib"),
-          },
+          contact: { role: fd.get("contactRole"), email: fd.get("contactEmail") },
+          legal: { rc: fd.get("rc"), nif: fd.get("nif"), nis: fd.get("nis"), articleImposition: fd.get("articleImposition"), rib: fd.get("rib") },
           deliveryDays: Number(fd.get("deliveryDays") || 0),
           paymentTerm: fd.get("paymentTerm"),
           currency: fd.get("currency"),
@@ -23423,15 +23192,11 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
           conformityRate: current.conformityRate || 0,
           disputes: current.disputes || 0,
           catalogue: current.catalogue || [],
-          contracts: current.contracts || [],
-          warranties: current.warranties || [],
           evaluations: current.evaluations || [],
         };
-        const state = loadState();
+        var state = loadState();
         if (isEdit) {
-          state.suppliers = state.suppliers.map((supplier) =>
-            supplier.id === current.id ? payload : supplier,
-          );
+          state.suppliers = state.suppliers.map(function (s) { return s.id === current.id ? payload : s; });
         } else {
           state.suppliers.unshift(payload);
         }
@@ -23442,59 +23207,48 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     }
   }
 
-  function openCatalogueModal(entry = null, supplierRef = null) {
-    const isEdit = Boolean(entry);
-    const state = loadState();
-    const currentSupplierId =
-      supplierRef?.id || entry?.supplier?.id || state.suppliers[0]?.id || "";
-    const current = entry || {};
+  /* ---------------------------------------------------------------
+     CATALOGUE MODAL
+  --------------------------------------------------------------- */
+  function openCatalogueModal(entry, supplierRef) {
+    entry = entry || null;
+    supplierRef = supplierRef || null;
+    var isEdit = !!entry;
+    var state = loadState();
+    var currentSupplierId = supplierRef ? supplierRef.id : (entry && entry.supplier ? entry.supplier.id : (state.suppliers[0] ? state.suppliers[0].id : ""));
+    var current = entry || {};
+    var availOptions = ["En stock fournisseur", "Sur commande", "Délai spécial"];
+
     openModal(
       isEdit ? "Modifier ligne catalogue" : "Créer ligne catalogue",
       "Formulaire de ligne catalogue fournisseur.",
-      `
-        <form class="supplier-form-grid" id="catalogueForm">
-          <div><label>Fournisseur</label><select name="supplierId">${supplierOptions(currentSupplierId)}</select></div>
-          <div><label>Article</label><input name="article" value="${current.article || ""}" /></div>
-          <div><label>Référence fournisseur</label><input name="refFourn" value="${current.refFourn || ""}" /></div>
-          <div><label>Désignation fournisseur</label><input name="designation" value="${current.designation || ""}" /></div>
-          <div><label>Prix unitaire HT</label><input name="price" type="number" step="0.01" value="${current.price || ""}" /></div>
-          <div><label>Unité de mesure</label><input name="unit" value="${current.unit || ""}" /></div>
-          <div><label>MOQ</label><input name="moq" type="number" value="${current.moq || ""}" /></div>
-          <div><label>Délai livraison spécifique</label><input name="leadTime" type="number" value="${current.leadTime || ""}" /></div>
-          <div><label>Remise %</label><input name="discount" type="number" step="0.01" value="${current.discount || 0}" /></div>
-          <div><label>Disponibilité</label>
-            <select name="availability">
-              ${["En stock fournisseur", "Sur commande", "Délai spécial"]
-        .map(
-          (option) =>
-            `<option ${current.availability === option ? "selected" : ""}>${option}</option>`,
-        )
-        .join("")}
-            </select>
-          </div>
-          <div class="full"><label>Observations</label><textarea name="observations">${current.observations || ""}</textarea></div>
-        </form>
-      `,
-      `
-        <div class="supplier-form-footer">
-          <button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button>
-          <button type="button" class="btn btn-primary" id="catalogueSaveBtn">Enregistrer</button>
-        </div>
-      `,
+      '<form class="supplier-form-grid" id="catalogueForm">' +
+      '<div><label>Fournisseur</label><select name="supplierId">' + supplierOptions(currentSupplierId) + '</select></div>' +
+      '<div><label>Article</label><input name="article" value="' + escapeHtml(current.article || "") + '" /></div>' +
+      '<div><label>Référence fournisseur</label><input name="refFourn" value="' + escapeHtml(current.refFourn || "") + '" /></div>' +
+      '<div><label>Désignation fournisseur</label><input name="designation" value="' + escapeHtml(current.designation || "") + '" /></div>' +
+      '<div><label>Prix unitaire HT</label><input name="price" type="number" step="0.01" value="' + (current.price || "") + '" /></div>' +
+      '<div><label>Unité de mesure</label><input name="unit" value="' + escapeHtml(current.unit || "") + '" /></div>' +
+      '<div><label>MOQ</label><input name="moq" type="number" value="' + (current.moq || "") + '" /></div>' +
+      '<div><label>Délai livraison spécifique</label><input name="leadTime" type="number" value="' + (current.leadTime || "") + '" /></div>' +
+      '<div><label>Remise %</label><input name="discount" type="number" step="0.01" value="' + (current.discount || 0) + '" /></div>' +
+      '<div><label>Disponibilité</label><select name="availability">' + availOptions.map(function (o) { return '<option' + (current.availability === o ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
+      '<div class="full"><label>Observations</label><textarea name="observations">' + escapeTextarea(current.observations || "") + '</textarea></div>' +
+      '</form>',
+      '<div class="supplier-form-footer"><button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button><button type="button" class="btn btn-primary" id="catalogueSaveBtn">Enregistrer</button></div>'
     );
-    const saveBtn = qs("#catalogueSaveBtn", root.overlay());
+
+    var saveBtn = document.getElementById("catalogueSaveBtn");
     if (saveBtn) {
-      saveBtn.addEventListener("click", () => {
-        const form = qs("#catalogueForm", root.overlay());
+      saveBtn.addEventListener("click", function () {
+        var form = document.getElementById("catalogueForm");
         if (!form) return;
-        const fd = new FormData(form);
-        const state = loadState();
-        const supplier = state.suppliers.find(
-          (item) => item.id === fd.get("supplierId"),
-        );
+        var fd = new FormData(form);
+        var state = loadState();
+        var supplier = state.suppliers.find(function (s) { return s.id === fd.get("supplierId"); });
         if (!supplier) return;
-        const payload = {
-          id: isEdit ? current.id : `cat-${Date.now()}`,
+        var payload = {
+          id: isEdit ? current.id : "cat-" + Date.now(),
           supplierNumber: supplier.number,
           article: fd.get("article"),
           refFourn: fd.get("refFourn"),
@@ -23510,9 +23264,7 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
         };
         if (!supplier.catalogue) supplier.catalogue = [];
         if (isEdit) {
-          supplier.catalogue = supplier.catalogue.map((item) =>
-            item.id === current.id ? payload : item,
-          );
+          supplier.catalogue = supplier.catalogue.map(function (i) { return i.id === current.id ? payload : i; });
         } else {
           supplier.catalogue.unshift(payload);
         }
@@ -23523,114 +23275,98 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     }
   }
 
-  function openContractModal(
-    stateOverride = null,
-    entry = null,
-    supplierRef = null,
-  ) {
-    const state = stateOverride || loadState();
-    const isEdit = Boolean(entry);
-    const currentSupplierId =
-      supplierRef?.id || entry?.supplier?.id || state.suppliers[0]?.id || "";
-    const current = entry || {};
+  /* =============================================================
+     CONTRACT MODAL
+  ============================================================= */
+  function openContractModal(stateOverride, entry, supplierRef) {
+    stateOverride = stateOverride || null;
+    entry = entry || null;
+    supplierRef = supplierRef || null;
+    var state = stateOverride || loadState();
+    var isEdit = !!entry;
+    var currentSupplierId = supplierRef ? supplierRef.id : (entry && entry.supplier ? entry.supplier.id : (state.suppliers[0] ? state.suppliers[0].id : ""));
+    var current = entry || {};
+    var typeOptions = ["Contrat cadre", "Contrat de maintenance", "Accord de partenariat"];
+    var statusOptions = ["En cours", "Expiré", "Résilié", "En renouvellement"];
+    var alertDays = current.alertDays || 30;
+    var selectedEquipmentRefs = isEdit && Array.isArray(current.equipmentRefs) ? current.equipmentRefs : (isEdit && current.equipmentRefs ? String(current.equipmentRefs).split(",").map(function (s) { return s.trim(); }).filter(Boolean) : []);
+
     openModal(
       isEdit ? "Modifier contrat" : "Créer contrat",
-      "Fiche contrat avec alertes et responsables de suivi.",
-      `
-        <form class="supplier-form-grid" id="contractForm">
-          <div><label>Fournisseur</label><select name="supplierId">${supplierOptions(currentSupplierId)}</select></div>
-          <div><label>Type contrat</label>
-            <select name="type">
-              ${[
-        "Contrat cadre",
-        "Contrat de maintenance",
-        "Garantie équipement",
-        "Accord de partenariat",
-      ]
-        .map(
-          (option) =>
-            `<option ${current.type === option ? "selected" : ""}>${option}</option>`,
-        )
-        .join("")}
-            </select>
-          </div>
-          <div><label>Objet du contrat</label><input name="objet" value="${current.objet || ""}" /></div>
-          <div><label>Valeur contrat</label><input name="valeur" type="number" step="0.01" value="${current.valeur || ""}" /></div>
-          <div><label>Date début</label><input name="debut" type="date" value="${current.debut || ""}" /></div>
-          <div><label>Date fin</label><input name="fin" type="date" value="${current.fin || ""}" /></div>
-          <div class="full"><label>Conditions</label><textarea name="conditions">${current.conditions || ""}</textarea></div>
-          <div><label>Équipements couverts</label><input name="equipmentRefs" value="${Array.isArray(current.equipmentRefs) ? current.equipmentRefs.join(", ") : current.equipmentRefs || ""}" /></div>
-          <div><label>Articles couverts</label><input name="articleRefs" value="${Array.isArray(current.articleRefs) ? current.articleRefs.join(", ") : current.articleRefs || ""}" /></div>
-          <div><label>Alerte expiration (jours)</label><input name="alertDays" type="number" value="${current.alertDays || 30}" /></div>
-          <div><label>Renouvellement auto</label>
-            <select name="autoRenew"><option value="yes" ${current.autoRenew ? "selected" : ""}>Oui</option><option value="no" ${current.autoRenew === false ? "selected" : ""}>Non</option></select>
-          </div>
-          <div><label>Responsable suivi</label><input name="responsible" value="${current.responsible || ""}" /></div>
-          <div><label>Documents joints</label><input name="documents" value="${current.documents || ""}" /></div>
-          <div class="full"><label>Statut</label>
-            <select name="status">
-              ${["En cours", "Expiré", "Résilié", "En renouvellement"]
-        .map(
-          (option) =>
-            `<option ${current.status === option ? "selected" : ""}>${option}</option>`,
-        )
-        .join("")}
-            </select>
-          </div>
-        </form>
-      `,
-      `
-        <div class="supplier-form-footer">
-          <button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button>
-          <button type="button" class="btn btn-primary" id="contractSaveBtn">Enregistrer</button>
-        </div>
-      `,
+      "Fiche contrat avec alertes expiration et responsable de suivi.",
+      '<form class="supplier-form-grid" id="contractForm" novalidate>' +
+      '<div><label>Fournisseur *</label><select name="supplierId" required>' + supplierOptions(currentSupplierId) + '</select></div>' +
+      '<div><label>Type contrat</label><select name="type">' + typeOptions.map(function (o, idx) { return '<option value="' + escapeHtml(o) + '"' + (current.type === o || (!current.type && idx === 0) ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
+      '<div class="full"><label>Objet du contrat *</label><input name="objet" value="' + escapeHtml(current.objet || "") + '" required /></div>' +
+      '<div><label>Date début *</label><input name="debut" type="date" value="' + (current.debut || "") + '" required /></div>' +
+      '<div><label>Date fin *</label><input name="fin" type="date" value="' + (current.fin || "") + '" required /></div>' +
+      '<div><label>Valeur du contrat</label><input name="valeur" type="number" step="0.01" value="' + (current.valeur || "") + '" /></div>' +
+      '<div class="full"><label>Conditions</label><textarea name="conditions" rows="3">' + escapeTextarea(current.conditions || "") + '</textarea></div>' +
+      '<div class="full"><label>Équipements couverts</label><select name="equipmentRefs" multiple size="4">' + getEquipmentMultiOptionsHtml(selectedEquipmentRefs) + '</select><div class="org-field-hint" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Maintenez Ctrl/Cmd pour sÃ©lectionner plusieurs Ã©quipements.</div></div>' +
+      '<div><label>Responsable du suivi</label><select name="responsible">' + getUserOptionsHtml(current.responsible || "") + '</select></div>' +
+      '<div><label>Alerte expiration (jours)</label><input name="alertDays" type="number" value="' + alertDays + '" /></div>' +
+      '<div class="full"><label>Documents joints</label><input name="documents" value="' + escapeHtml(current.documents || "") + '" placeholder="Noms des fichiers sÃ©parÃ©s par des virgules" /></div>' +
+      '</form>',
+      '<div class="supplier-form-footer"><button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button><button type="button" class="btn btn-primary" id="contractSaveBtn">Enregistrer</button></div>'
     );
-    const saveBtn = qs("#contractSaveBtn", root.overlay());
+
+    var saveBtn = document.getElementById("contractSaveBtn");
     if (saveBtn) {
-      saveBtn.addEventListener("click", () => {
-        const form = qs("#contractForm", root.overlay());
+      saveBtn.addEventListener("click", function () {
+        var form = document.getElementById("contractForm");
         if (!form) return;
-        const fd = new FormData(form);
-        const state = loadState();
-        const supplier = state.suppliers.find(
-          (item) => item.id === fd.get("supplierId"),
-        );
+        var fd = new FormData(form);
+
+        // Validations
+        var errors = [];
+        if (!fd.get("supplierId")) errors.push("Fournisseur obligatoire.");
+        if (!fd.get("objet")) errors.push("Objet du contrat obligatoire.");
+        if (!fd.get("debut")) errors.push("Date début obligatoire.");
+        if (!fd.get("fin")) errors.push("Date fin obligatoire.");
+        if (fd.get("fin") && fd.get("debut") && fd.get("fin") < fd.get("debut")) errors.push("La date fin ne peut pas étre antérieure Ã  la date début.");
+        if (Number(fd.get("valeur")) < 0) errors.push("La valeur ne peut pas étre négative.");
+
+        if (errors.length) {
+          alert("Erreurs de validation :\n- " + errors.join("\n- "));
+          return;
+        }
+
+        var state = loadState();
+        var supplier = state.suppliers.find(function (s) { return s.id === fd.get("supplierId"); });
         if (!supplier) return;
-        const payload = {
-          id: isEdit ? current.id : `ctr-${Date.now()}`,
-          number: isEdit
-            ? current.number ||
-            nextRef("CTR-", supplier.contracts || [], "number")
-            : nextRef("CTR-", supplier.contracts || [], "number"),
+
+        // Get selected equipment IDs from multi-select
+        var equipSelect = form.querySelector('[name="equipmentRefs"]');
+        var selectedEquipments = equipSelect ? Array.from(equipSelect.selectedOptions).map(function (opt) { return opt.value; }).filter(Boolean) : [];
+
+        var debut = fd.get("debut");
+        var fin = fd.get("fin");
+        var status = computeContractStatus({ fin: fin, status: "" });
+
+        var payload = {
+          id: isEdit ? current.id : "ctr-" + Date.now(),
+          number: nextRef("CTR-", state.contracts || [], "number"),
+          supplierId: fd.get("supplierId"),
           supplierNumber: supplier.number,
           type: fd.get("type"),
           objet: fd.get("objet"),
-          debut: fd.get("debut"),
-          fin: fd.get("fin"),
+          debut: debut,
+          fin: fin,
           valeur: Number(fd.get("valeur") || 0),
-          conditions: fd.get("conditions"),
-          equipmentRefs: String(fd.get("equipmentRefs") || "")
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          articleRefs: String(fd.get("articleRefs") || "")
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          alertDays: Number(fd.get("alertDays") || 0),
-          autoRenew: fd.get("autoRenew") === "yes",
-          documents: fd.get("documents"),
-          responsible: fd.get("responsible"),
-          status: fd.get("status"),
+          conditions: fd.get("conditions") || "",
+          equipmentRefs: selectedEquipments,
+          responsible: fd.get("responsible") || "",
+          alertDays: Number(fd.get("alertDays") || 30),
+          documents: fd.get("documents") || "",
+          status: status,
+          createdAt: current.createdAt || new Date().toISOString(),
         };
-        if (!supplier.contracts) supplier.contracts = [];
+
+        if (!state.contracts) state.contracts = [];
         if (isEdit) {
-          supplier.contracts = supplier.contracts.map((item) =>
-            item.id === current.id ? payload : item,
-          );
+          state.contracts = state.contracts.map(function (c) { return c.id === current.id ? payload : c; });
         } else {
-          supplier.contracts.unshift(payload);
+          state.contracts.unshift(payload);
         }
         saveState(state);
         closeModal();
@@ -23639,78 +23375,108 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     }
   }
 
-  function openWarrantyModal(
-    stateOverride = null,
-    entry = null,
-    supplierRef = null,
-  ) {
-    const state = stateOverride || loadState();
-    const isEdit = Boolean(entry);
-    const currentSupplierId =
-      supplierRef?.id || entry?.supplier?.id || state.suppliers[0]?.id || "";
-    const current = entry || {};
+  /* =============================================================
+     WARRANTY MODAL
+  ============================================================= */
+  function openWarrantyModal(stateOverride, entry, supplierRef) {
+    stateOverride = stateOverride || null;
+    entry = entry || null;
+    supplierRef = supplierRef || null;
+    var state = stateOverride || loadState();
+    var isEdit = !!entry;
+    var currentSupplierId = supplierRef ? supplierRef.id : (entry && entry.supplier ? entry.supplier.id : (state.suppliers[0] ? state.suppliers[0].id : ""));
+    var current = entry || {};
+
     openModal(
-      isEdit ? "Modifier garantie" : "Créer garantie",
-      "Fiche garantie liée à un équipement.",
-      `
-        <form class="supplier-form-grid" id="warrantyForm">
-          <div><label>Équipement</label><input name="equipment" value="${current.equipment || ""}" /></div>
-          <div><label>Fournisseur</label><select name="supplierId">${supplierOptions(currentSupplierId)}</select></div>
-          <div><label>Date début garantie</label><input name="debut" type="date" value="${current.debut || ""}" /></div>
-          <div><label>Durée garantie (mois)</label><input name="durationMonths" type="number" value="${current.durationMonths || ""}" /></div>
-          <div><label>Date fin garantie</label><input name="endDate" type="date" value="${current.endDate || ""}" /></div>
-          <div class="full"><label>Conditions de garantie</label><textarea name="conditions">${current.conditions || ""}</textarea></div>
-          <div><label>Documents</label><input name="documents" value="${current.documents || ""}" /></div>
-          <div><label>Statut</label>
-            <select name="status">
-              ${["En garantie", "Garantie expirée"]
-        .map(
-          (option) =>
-            `<option ${current.status === option ? "selected" : ""}>${option}</option>`,
-        )
-        .join("")}
-            </select>
-          </div>
-        </form>
-      `,
-      `
-        <div class="supplier-form-footer">
-          <button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button>
-          <button type="button" class="btn btn-primary" id="warrantySaveBtn">Enregistrer</button>
-        </div>
-      `,
+      isEdit ? "Modifier garantie" : "CrÃ©er garantie",
+      "Garantie liÃ©e Ã  un Ã©quipement avec calcul automatique de la date de fin.",
+      '<form class="supplier-form-grid" id="warrantyForm" novalidate>' +
+      '<div><label>Ã‰quipement *</label><select name="equipmentId" required>' + getEquipmentOptionsHtml(isEdit ? (current.equipmentId || "") : "") + '</select></div>' +
+      '<div><label>Fournisseur *</label><select name="supplierId" required>' + supplierOptions(currentSupplierId) + '</select></div>' +
+      '<div><label>Date dÃ©but *</label><input name="debut" type="date" value="' + (current.debut || "") + '" required /></div>' +
+      '<div><label>DurÃ©e (mois) *</label><input name="durationMonths" type="number" value="' + (current.durationMonths || "") + '" required min="1" /></div>' +
+      '<div><label>Date fin (calculÃ©e auto)</label><input name="endDate" type="date" value="' + (current.endDate || "") + '" readonly style="background:#f5f5f5;" /></div>' +
+      '<div class="full"><label>Conditions</label><textarea name="conditions" rows="3">' + escapeTextarea(current.conditions || "") + '</textarea></div>' +
+      '<div><label>Facture / Bon de garantie</label><input name="documents" value="' + escapeHtml(current.documents || "") + '" placeholder="Noms des fichiers" /></div>' +
+      '</form>',
+      '<div class="supplier-form-footer"><button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button><button type="button" class="btn btn-primary" id="warrantySaveBtn">Enregistrer</button></div>'
     );
-    const saveBtn = qs("#warrantySaveBtn", root.overlay());
+
+    // Auto-calculate end date when debut or duration changes
+    var overlay = root.overlay();
+    if (overlay) {
+      var debutInput = overlay.querySelector('[name="debut"]');
+      var durationInput = overlay.querySelector('[name="durationMonths"]');
+      var endDateInput = overlay.querySelector('[name="endDate"]');
+      if (debutInput && durationInput && endDateInput) {
+        var recalc = function () {
+          if (debutInput.value && durationInput.value && Number(durationInput.value) > 0) {
+            endDateInput.value = calcEndDate(debutInput.value, Number(durationInput.value));
+          }
+        };
+        debutInput.addEventListener("change", recalc);
+        durationInput.addEventListener("input", recalc);
+        durationInput.addEventListener("change", recalc);
+        if (current.debut && current.durationMonths && !current.endDate) {
+          endDateInput.value = calcEndDate(current.debut, Number(current.durationMonths));
+        }
+      }
+    }
+
+    var saveBtn = document.getElementById("warrantySaveBtn");
     if (saveBtn) {
-      saveBtn.addEventListener("click", () => {
-        const form = qs("#warrantyForm", root.overlay());
+      saveBtn.addEventListener("click", function () {
+        var form = document.getElementById("warrantyForm");
         if (!form) return;
-        const fd = new FormData(form);
-        const state = loadState();
-        const supplier = state.suppliers.find(
-          (item) => item.id === fd.get("supplierId"),
-        );
+        var fd = new FormData(form);
+
+        // Validations
+        var errors = [];
+        if (!fd.get("equipmentId")) errors.push("Ã‰quipement obligatoire.");
+        if (!fd.get("supplierId")) errors.push("Fournisseur obligatoire.");
+        if (!fd.get("debut")) errors.push("Date dÃ©but obligatoire.");
+        if (!fd.get("durationMonths") || Number(fd.get("durationMonths")) <= 0) errors.push("La durÃ©e doit Ãªtre positive.");
+
+        if (errors.length) {
+          alert("Erreurs de validation :\n- " + errors.join("\n- "));
+          return;
+        }
+
+        var state = loadState();
+        var supplier = state.suppliers.find(function (s) { return s.id === fd.get("supplierId"); });
         if (!supplier) return;
-        const durationMonths = Number(fd.get("durationMonths") || 0);
-        const start = fd.get("debut");
-        const payload = {
-          id: isEdit ? current.id : `war-${Date.now()}`,
+
+        var debut = fd.get("debut");
+        var durationMonths = Number(fd.get("durationMonths") || 0);
+        var endDate = fd.get("endDate") || calcEndDate(debut, durationMonths);
+        var status = computeWarrantyStatus({ endDate: endDate, status: "" });
+
+        // Get equipment info
+        var equipId = fd.get("equipmentId");
+        var equipInfo = getEquipmentByCodeOrId(equipId);
+        var equipLabel = equipInfo ? equipInfo.label : equipId;
+
+        var payload = {
+          id: isEdit ? current.id : "war-" + Date.now(),
+          supplierId: fd.get("supplierId"),
           supplierNumber: supplier.number,
-          equipment: fd.get("equipment"),
-          debut: start,
-          durationMonths,
-          endDate: fd.get("endDate") || calcEndDate(start, durationMonths),
-          conditions: fd.get("conditions"),
-          documents: fd.get("documents"),
-          status: fd.get("status"),
+          equipmentId: equipId,
+          equipment: equipLabel,
+          equipmentCode: equipInfo ? equipInfo.code : equipId,
+          debut: debut,
+          durationMonths: durationMonths,
+          endDate: endDate,
+          conditions: fd.get("conditions") || "",
+          documents: fd.get("documents") || "",
+          status: status,
+          createdAt: current.createdAt || new Date().toISOString(),
         };
-        if (!supplier.warranties) supplier.warranties = [];
+
+        if (!state.warranties) state.warranties = [];
         if (isEdit) {
-          supplier.warranties = supplier.warranties.map((item) =>
-            item.id === current.id ? payload : item,
-          );
+          state.warranties = state.warranties.map(function (w) { return w.id === current.id ? payload : w; });
         } else {
-          supplier.warranties.unshift(payload);
+          state.warranties.unshift(payload);
         }
         saveState(state);
         closeModal();
@@ -23719,100 +23485,38 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     }
   }
 
-  function calcEndDate(startDate, durationMonths) {
-    if (!startDate) return "";
-    const date = new Date(startDate);
-    if (Number.isNaN(date.getTime())) return "";
-    date.setMonth(date.getMonth() + Number(durationMonths || 0));
-    return date.toISOString().slice(0, 10);
-  }
+  /* ---------------------------------------------------------------
+     EVALUATION MODAL
+  --------------------------------------------------------------- */
+  function openEvaluationModal(entry, supplierRef) {
+    entry = entry || null;
+    supplierRef = supplierRef || null;
+    var isEdit = !!entry;
+    var state = loadState();
+    var currentSupplierId = supplierRef ? supplierRef.id : (entry && entry.supplier ? entry.supplier.id : (state.suppliers[0] ? state.suppliers[0].id : ""));
+    var current = entry || {};
+    var scoreNames = [["quality", "QualitÃ©"], ["delay", "DÃ©lais"], ["conformity", "ConformitÃ©"], ["sav", "SAV"], ["price", "Prix"], ["communication", "Communication"]];
+    var recoOptions = ["Fournisseur recommandÃ©", "Ã€ surveiller", "Ã€ remplacer"];
 
-  function openEvaluationModal(entry = null, supplierRef = null) {
-    const isEdit = Boolean(entry);
-    const state = loadState();
-    const currentSupplierId =
-      supplierRef?.id || entry?.supplier?.id || state.suppliers[0]?.id || "";
-    const current = entry || {};
-    const scoreNames = [
-      ["quality", "Qualité des produits"],
-      ["delay", "Respect des délais"],
-      ["conformity", "Conformité des livraisons"],
-      ["sav", "Réactivité / SAV"],
-      ["price", "Rapport qualité/prix"],
-      ["communication", "Communication"],
-    ];
-    openModal(
-      isEdit ? "Modifier évaluation" : "Créer évaluation",
-      "Fiche d'évaluation fournisseur avec note globale calculée.",
-      `
-        <form class="supplier-form-grid" id="evaluationForm">
-          <div><label>Fournisseur</label><select name="supplierId">${supplierOptions(currentSupplierId)}</select></div>
-          <div><label>Numéro</label><input name="number" value="${current.number ||
-      nextRef(
-        "EVL-",
-        state.suppliers.flatMap((supplier) => supplier.evaluations || []),
-        "number",
-      )
-      }" readonly /></div>
-          <div><label>Période évaluée</label><input name="periode" value="${current.periode || ""}" /></div>
-          <div><label>Évaluateur</label><input name="evaluator" value="${current.evaluator || ""}" /></div>
-          ${scoreNames
-        .map(
-          ([field, label]) =>
-            `<div><label>${label} (1 à 5)</label><input name="${field}" type="number" min="1" max="5" value="${current.scores?.[field] || ""}" /></div>`,
-        )
-        .join("")}
-          <div class="full"><label>Commentaires</label><textarea name="comments">${current.comments || ""}</textarea></div>
-          <div class="full"><label>Actions correctives</label><textarea name="correctiveActions">${current.correctiveActions || ""}</textarea></div>
-          <div><label>Recommandation</label>
-            <select name="recommendation">
-              ${["Fournisseur recommandé", "À surveiller", "À remplacer"]
-        .map(
-          (option) =>
-            `<option ${current.recommendation === option ? "selected" : ""}>${option}</option>`,
-        )
-        .join("")}
-            </select>
-          </div>
-        </form>
-      `,
-      `
-        <div class="supplier-form-footer">
-          <button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button>
-          <button type="button" class="btn btn-primary" id="evaluationSaveBtn">Enregistrer</button>
-        </div>
-      `,
-    );
-    const saveBtn = qs("#evaluationSaveBtn", root.overlay());
+    var saveBtn = document.getElementById("evaluationSaveBtn");
     if (saveBtn) {
-      saveBtn.addEventListener("click", () => {
-        const form = qs("#evaluationForm", root.overlay());
+      saveBtn.addEventListener("click", function () {
+        var form = document.getElementById("evaluationForm");
         if (!form) return;
-        const fd = new FormData(form);
-        const state = loadState();
-        const supplier = state.suppliers.find(
-          (item) => item.id === fd.get("supplierId"),
-        );
+        var fd = new FormData(form);
+        var state = loadState();
+        var supplier = state.suppliers.find(function (s) { return s.id === fd.get("supplierId"); });
         if (!supplier) return;
-        const scores = {
-          quality: Number(fd.get("quality") || 0),
-          delay: Number(fd.get("delay") || 0),
-          conformity: Number(fd.get("conformity") || 0),
-          sav: Number(fd.get("sav") || 0),
-          price: Number(fd.get("price") || 0),
-          communication: Number(fd.get("communication") || 0),
-        };
-        const values = Object.values(scores).filter((value) => value > 0);
-        const global = values.length
-          ? values.reduce((sum, value) => sum + value, 0) / values.length
-          : 0;
-        const payload = {
-          id: isEdit ? current.id : `evl-${Date.now()}`,
+        var scores = { quality: Number(fd.get("quality") || 0), delay: Number(fd.get("delay") || 0), conformity: Number(fd.get("conformity") || 0), sav: Number(fd.get("sav") || 0), price: Number(fd.get("price") || 0), communication: Number(fd.get("communication") || 0) };
+        var values = Object.keys(scores).map(function (k) { return scores[k]; }).filter(function (v) { return v > 0; });
+        var global = values.length ? values.reduce(function (s, v) { return s + v; }, 0) / values.length : 0;
+        var payload = {
+          id: isEdit ? current.id : "evl-" + Date.now(),
           number: fd.get("number"),
           supplierNumber: supplier.number,
           periode: fd.get("periode"),
           evaluator: fd.get("evaluator"),
-          scores,
+          scores: scores,
           global: Number(global.toFixed(2)),
           comments: fd.get("comments"),
           correctiveActions: fd.get("correctiveActions"),
@@ -23820,9 +23524,7 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
         };
         if (!supplier.evaluations) supplier.evaluations = [];
         if (isEdit) {
-          supplier.evaluations = supplier.evaluations.map((item) =>
-            item.id === current.id ? payload : item,
-          );
+          supplier.evaluations = supplier.evaluations.map(function (e) { return e.id === current.id ? payload : e; });
         } else {
           supplier.evaluations.unshift(payload);
         }
@@ -23833,27 +23535,21 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     }
   }
 
-  function closeModal() {
-    const overlay = root.overlay();
-    if (overlay) overlay.innerHTML = "";
-  }
-
+  /* ---------------------------------------------------------------
+     NAVIGATION
+  --------------------------------------------------------------- */
   function attachNavigation() {
-    const navItem = document.querySelector('[data-page="fournisseurs"]');
+    var navItem = document.querySelector('[data-page="fournisseurs"]');
     if (navItem) {
-      navItem.addEventListener("click", (event) => {
+      navItem.addEventListener("click", function (event) {
         event.preventDefault();
-        document
-          .querySelectorAll(".nav-item")
-          .forEach((item) => item.classList.remove("active"));
+        document.querySelectorAll(".nav-item").forEach(function (item) { item.classList.remove("active"); });
         navItem.classList.add("active");
         activeTab = "fiche";
-        renderPage();
       });
     }
     if (location.hash === "#fournisseurs") {
       activeTab = "fiche";
-      renderPage();
     }
   }
 
@@ -23863,35 +23559,38 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     attachNavigation();
   }
 
-  window._fournisseurs = { loadState, saveState, seededState, renderPage };
+
+  function resetApplicationData() {
+    const keys = [
+      "maintflow.organizationDirectory",
+      "maintflow.articleCatalog",
+      "maintflow.purchaseFlow",
+      "maintflow.planificationState",
+      "maintflow.administrationState",
+      "maintflow.stockInventoryState",
+      "maintflow.stockInventories",
+      "maintflow.stockSelectedInventory",
+      "maintflow.stockAlertReads",
+      "maintflow.connectedUserId",
+      "maintflow.equipmentCatalog",
+      "maintflow.organeCatalog",
+      "maintflow.demoDataVersion",
+      "maintflow.enterpriseProfile",
+      "maintflow.stockLedger",
+      "maintflow.interventions",
+      "maintflow.fournisseurs",
+    ];
+
+    keys.forEach((key) => localStorage.removeItem(key));
+
+    location.reload();
+  }
+
+  window._fournisseurs = { renderPage };
 })();
-/*
-function resetApplicationData() {
-  const keys = [
-    "maintflow.organizationDirectory",
-    "maintflow.articleCatalog",
-    "maintflow.purchaseFlow",
-    "maintflow.planificationState",
-    "maintflow.administrationState",
-    "maintflow.stockInventoryState",
-    "maintflow.stockInventories",
-    "maintflow.stockSelectedInventory",
-    "maintflow.stockAlertReads",
-    "maintflow.connectedUserId",
-    "maintflow.equipmentCatalog",
-    "maintflow.organeCatalog",
-    "maintflow.demoDataVersion",
-    "maintflow.enterpriseProfile",
-    "maintflow.stockLedger",
-    "maintflow.interventions",
-    "maintflow.fournisseurs",
-  ];
-
-  keys.forEach((key) => localStorage.removeItem(key));
-
-  location.reload();
-}*/
 resetDemoDataIfNeeded();
 startInterfaceTranslationObserver();
 bootstrapRoute();
 renderNotifications();
+
+
