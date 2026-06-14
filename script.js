@@ -979,121 +979,266 @@ function buildArticleFamilyFormContent(record, mode) {
 }
 
 function buildArticleFormContent(record, mode) {
-  const codePreview =
-    record?.code ||
-    generateOrganizationCode("ART", getArticleRecords("articles"));
-  const selectedGroup = record?.groupId || "";
-  const selectedFamily = record?.familyId || "";
-  const selectedType = record?.articleType || "";
-  const selectedUnitMeasure = record?.unitMeasure || "";
-  const selectedSupplier = record?.supplier || "";
-  const selectedSubstitutes = Array.isArray(record?.substituteIds)
-    ? record.substituteIds
-    : [];
-  const linkedOrganeIds = Array.isArray(record?.linkedOrganeIds)
-    ? record.linkedOrganeIds
-    : [];
-  const linkedEquipmentIds = Array.isArray(record?.linkedEquipmentIds)
-    ? record.linkedEquipmentIds
-    : [];
-  const traceabilityDate = record?.createdAt || new Date().toISOString();
-  const traceabilityUser = record?.createdBy || getCurrentArticleCreator().name;
+  const codePreview = record?.code || generateOrganizationCode('ART', getArticleRecords('articles'));
+  const selectedGroup = record?.groupId;
+  const selectedFamily = record?.familyId;
+  const selectedType = record?.articleType;
+  const selectedUnitMeasure = record?.unitMeasure;
+  const selectedSupplier = record?.supplier;
+  const selectedSubstitutes = Array.isArray(record?.substituteIds) ? record.substituteIds : [];
+  const linkedOrganeIds = Array.isArray(record?.linkedOrganeIds) ? record.linkedOrganeIds : [];
+  const linkedEquipmentIds = Array.isArray(record?.linkedEquipmentIds) ? record.linkedEquipmentIds : [];
 
   return `
-    <form class="org-form" data-art-form="article">
-      <div class="org-form-grid">
-        <div class="field-group">
-          <label>Code article</label>
-          <input type="text" value="${escapeHtml(codePreview)}" disabled />
+    <form class="org-form equipment-form equipment-form-wizard" data-art-form="article">
+
+      <!-- Indicateur de progression -->
+      <div class="eq-wizard-progress" data-wizard-progress>
+        <div class="eq-wizard-steps">
+          ${['Identification', 'Liaisons métier', 'Caractéristiques techniques', 'Pièces jointes']
+      .map((label, i) => `
+              <div class="eq-wizard-step ${i === 0 ? 'active' : ''}" data-wizard-step-dot="${i}">
+                <div class="eq-wizard-step-bubble">${i + 1}</div>
+                <span class="eq-wizard-step-label">${label}</span>
+              </div>
+              ${i < 3 ? '<div class="eq-wizard-step-line"></div>' : ''}
+            `).join('')}
         </div>
-        <div class="field-group">
-          <label>Nom</label>
-          <input name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom de l'article" required />
-        </div>
-        <div class="field-group">
-          <label>Unité de mesure *</label>
-          <select name="unitMeasure" required>
-            ${buildArticleUnitMeasureOptions(selectedUnitMeasure)}
-          </select>
-        </div>
-        <div class="field-group">
-          <label>Type d'article</label>
-          <select name="articleType">
-            ${buildArticleTypeOptions(selectedType)}
-          </select>
-        </div>
-        <div class="field-group">
-          <label>Marque</label>
-          <input name="brand" type="text" value="${escapeHtml(record?.brand || "")}" placeholder="Marque" />
-        </div>
-        <div class="field-group">
-          <label>Prix</label>
-          <input name="price" type="number" step="0.01" value="${escapeHtml(record?.price || "")}" placeholder="Prix" />
-        </div>
-        <div class="field-group field-group-wide">
-          <label>Fournisseur principal</label>
-          <select name="supplier">
-            ${buildArticleSupplierOptions(selectedSupplier)}
-          </select>
-        </div>
-        <div class="field-group">
-          <label>Groupe</label>
-          <select name="groupId">
-            ${buildArticleGroupOptions(selectedGroup)}
-          </select>
-        </div>
-        <div class="field-group">
-          <label>Famille</label>
-          <select name="familyId">
-            ${buildArticleFamilyOptions(selectedFamily, selectedGroup)}
-          </select>
-        </div>
-        <div class="field-group field-group-wide">
-          <label>Désignations</label>
-          <textarea name="designations" rows="3" placeholder="Désignation / description">${escapeTextarea(record?.designations || "")}</textarea>
-        </div>
-        <div class="field-group field-group-wide">
-          <label>Articles substituts</label>
-          <select name="substituteIds" multiple size="4">
-            ${buildArticleSubstituteOptions(selectedSubstitutes, record?.id || "")}
-          </select>
-          <div class="org-field-hint">Sélectionnez un ou plusieurs articles de remplacement en cas de rupture.</div>
-        </div>
-        <div class="field-group field-group-wide">
-          <label>Organes liés</label>
-          <select name="linkedOrganeIds" multiple size="5">
-            ${buildOrganeMultiOptions(linkedOrganeIds)}
-          </select>
-          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.</div>
-        </div>
-        <div class="field-group field-group-wide">
-          <label>Équipements liés</label>
-          <select name="linkedEquipmentIds" multiple size="5">
-            ${buildAssociatedEquipmentOptions(linkedEquipmentIds)}
-          </select>
-          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.</div>
-        </div>
-        <div class="field-group field-group-wide">
-          <label>Traçabilité</label>
-          <div class="org-form-grid org-form-grid--two">
-            <div class="field-group">
-              <label>Date création</label>
-              <input type="text" value="${escapeHtml(formatArticleTraceabilityDate(traceabilityDate))}" readonly />
-            </div>
-            <div class="field-group">
-              <label>Créé par</label>
-              <input type="text" value="${escapeHtml(traceabilityUser)}" readonly />
-            </div>
-          </div>
-        </div>
-        <div class="field-group">
-          <label>Photo</label>
-          <input name="photos" type="file" accept="image/*" />
-        </div>
-        ${record && Array.isArray(record.photos) && record.photos.length ? `<div class="field-group field-group-wide">${buildArticleAttachmentsPreview(record, mode === "edit")}</div>` : ""}
+        <div class="eq-wizard-step-title" data-wizard-step-title>Étape 1 / 4 — Identification</div>
       </div>
 
-      ${buildOrganizationFormFooter("article", mode, record?.id || "")}
+      <div class="eq-wizard-panels">
+
+        <!-- PANEL 1 — Identification -->
+        <div class="eq-wizard-panel active" data-wizard-panel="0">
+          <section class="equipment-section-card">
+            <div class="equipment-section-head">
+              <div>
+                <div class="equipment-section-kicker">Identification</div>
+                <h4>Informations de base de l'article</h4>
+                <p>Code, nom, type, unité de mesure, marque, prix et classification.</p>
+              </div>
+            </div>
+            <div class="org-form-grid">
+              <div class="field-group">
+                <label for="articleCode">Code article</label>
+                <input id="articleCode" type="text" value="${escapeHtml(codePreview)}" disabled />
+              </div>
+              <div class="field-group">
+                <label for="articleName">Nom</label>
+                <input id="articleName" name="name" type="text" value="${escapeHtml(record?.name || '')}" placeholder="Nom de l'article" required />
+              </div>
+              <div class="field-group">
+                <label for="articleUnitMeasure">Unité de mesure</label>
+                <select id="articleUnitMeasure" name="unitMeasure" required>
+                  ${buildArticleUnitMeasureOptions(selectedUnitMeasure)}
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="articleType">Type d'article</label>
+                <select id="articleType" name="articleType">
+                  ${buildArticleTypeOptions(selectedType)}
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="articleBrand">Marque</label>
+                <input id="articleBrand" name="brand" type="text" value="${escapeHtml(record?.brand || '')}" placeholder="Marque" />
+              </div>
+              <div class="field-group">
+                <label for="articlePrice">Prix</label>
+                <input id="articlePrice" name="price" type="number" step="0.01" value="${escapeHtml(record?.price || '')}" placeholder="Prix" />
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="articleSupplier">Fournisseur principal</label>
+                <select id="articleSupplier" name="supplier">
+                  ${buildArticleSupplierOptions(selectedSupplier)}
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="articleGroup">Groupe</label>
+                <select id="articleGroup" name="groupId">
+                  ${buildArticleGroupOptions(selectedGroup)}
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="articleFamily">Famille</label>
+                <select id="articleFamily" name="familyId">
+                  ${buildArticleFamilyOptions(selectedFamily, selectedGroup)}
+                </select>
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="articleDesignations">Désignation</label>
+                <textarea id="articleDesignations" name="designations" rows="3" placeholder="Désignation / description">${escapeTextarea(record?.designations)}</textarea>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- PANEL 2 — Liaisons métier -->
+        <div class="eq-wizard-panel" data-wizard-panel="1">
+          <section class="equipment-section-card">
+            <div class="equipment-section-head">
+              <div>
+                <div class="equipment-section-kicker">Liaisons métier</div>
+                <h4>Substituts, organes et équipements associés</h4>
+                <p>Associez les articles de remplacement, les organes et équipements liés à cet article.</p>
+              </div>
+            </div>
+            <div class="org-form-grid">
+              <div class="field-group field-group-wide">
+                <label for="articleSubstitutes">Articles substituts</label>
+                <select id="articleSubstitutes" name="substituteIds" multiple size="4">
+                  ${buildArticleSubstituteOptions(selectedSubstitutes, record?.id)}
+                </select>
+                <div class="org-field-hint">Sélectionnez un ou plusieurs articles de remplacement en cas de rupture.</div>
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="articleLinkedOrganes">Organes liés</label>
+                <select id="articleLinkedOrganes" name="linkedOrganeIds" multiple size="5">
+                  ${buildOrganeMultiOptions(linkedOrganeIds)}
+                </select>
+                <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.</div>
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="articleLinkedEquipments">Équipements liés</label>
+                <select id="articleLinkedEquipments" name="linkedEquipmentIds" multiple size="5">
+                  ${buildAssociatedEquipmentOptions(linkedEquipmentIds)}
+                </select>
+                <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.</div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- PANEL 3 — Caractéristiques techniques -->
+        <div class="eq-wizard-panel" data-wizard-panel="2">
+          <section class="equipment-section-card">
+            <div class="equipment-section-head">
+              <div>
+                <div class="equipment-section-kicker">Caractéristiques techniques</div>
+                <h4>Dimensions, stockage et conditions particulières</h4>
+                <p>Renseignez les dimensions physiques, les conditions de conservation et de manipulation.</p>
+              </div>
+            </div>
+            <div class="org-form-grid">
+              <div class="field-group">
+                <label for="articleInnerDiameter">Diamètre intérieur (mm)</label>
+                <input id="articleInnerDiameter" name="innerDiameter" type="text" placeholder="Ex : 25" value="${escapeHtml(record?.innerDiameter ?? '')}" />
+              </div>
+              <div class="field-group">
+                <label for="articleOuterDiameter">Diamètre extérieur (mm)</label>
+                <input id="articleOuterDiameter" name="outerDiameter" type="text" placeholder="Ex : 52" value="${escapeHtml(record?.outerDiameter ?? '')}" />
+              </div>
+              <div class="field-group">
+                <label for="articleLength">Longueur (mm / m)</label>
+                <input id="articleLength" name="articleLength" type="text" placeholder="Ex : 200 mm" value="${escapeHtml(record?.articleLength ?? '')}" />
+              </div>
+              <div class="field-group">
+                <label for="articleWidth">Largeur (mm)</label>
+                <input id="articleWidth" name="articleWidth" type="text" placeholder="Ex : 50 mm" value="${escapeHtml(record?.articleWidth ?? '')}" />
+              </div>
+              <div class="field-group">
+                <label for="articleThickness">Épaisseur / Hauteur (mm)</label>
+                <input id="articleThickness" name="articleThickness" type="text" placeholder="Ex : 15 mm" value="${escapeHtml(record?.articleThickness ?? '')}" />
+              </div>
+              <div class="field-group">
+                <label for="articleUnitWeight">Poids unitaire (g / kg)</label>
+                <input id="articleUnitWeight" name="unitWeight" type="text" placeholder="Ex : 1.2 kg" value="${escapeHtml(record?.unitWeight ?? '')}" />
+              </div>
+              <div class="field-group">
+                <label for="articleVolume">Volume / Capacité (L, mL, m³)</label>
+                <input id="articleVolume" name="articleVolume" type="text" placeholder="Ex : 5 L" value="${escapeHtml(record?.articleVolume ?? '')}" />
+              </div>
+              <div class="field-group">
+                <label for="articleShelfLife">Durée de conservation (mois / années)</label>
+                <input id="articleShelfLife" name="shelfLife" type="text" placeholder="Ex : 24 mois" value="${escapeHtml(record?.shelfLife ?? '')}" />
+              </div>
+              <div class="field-group">
+                <label for="articleExpiryDate">Date de péremption</label>
+                <input id="articleExpiryDate" name="expiryDate" type="date" value="${escapeHtml(record?.expiryDate ?? '')}" />
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="articleStorageConditions">Conditions de stockage</label>
+                <textarea id="articleStorageConditions" name="storageConditions" rows="2" placeholder="Ex : Température 5–25°C, humidité < 60%, à l'abri de la lumière">${escapeTextarea(record?.storageConditions)}</textarea>
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="articleSpecialConditions">Conditions particulières</label>
+                <textarea id="articleSpecialConditions" name="specialConditions" rows="2" placeholder="Ex : À l'abri de la lumière, ventilé, hors gel...">${escapeTextarea(record?.specialConditions)}</textarea>
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="articleHandlingConditions">Conditions de manipulation</label>
+                <textarea id="articleHandlingConditions" name="handlingConditions" rows="2" placeholder="Ex : Port EPI obligatoire, ventilation requise...">${escapeTextarea(record?.handlingConditions)}</textarea>
+              </div>
+            </div>
+
+            <!-- Champs personnalisés dynamiques -->
+            <div style="margin-top:16px">
+              <div class="equipment-custom-fields" data-custom-fields-container>
+                ${Array.isArray(record?.customFields) && record.customFields.length > 0
+      ? record.customFields.map((cf, i) => `
+                    <div class="equipment-custom-field-row" data-custom-field-row>
+                      <div class="field-group">
+                        <label>Libellé</label>
+                        <input type="text" name="customFieldLabel" value="${escapeHtml(cf.label ?? '')}" placeholder="Ex : Indice IP, Classe isolation..." />
+                      </div>
+                      <div class="field-group">
+                        <label>Valeur</label>
+                        <input type="text" name="customFieldValue" value="${escapeHtml(cf.value ?? '')}" placeholder="Ex : IP54, Classe F..." />
+                      </div>
+                      <button type="button" class="equipment-custom-field-remove org-icon-btn danger" data-remove-custom-field title="Supprimer ce champ">
+                        <i class="fa-regular fa-trash-can"></i>
+                      </button>
+                    </div>`).join('')
+      : ''}
+              </div>
+              <div class="equipment-custom-fields-footer">
+                <button type="button" class="btn btn-ghost equipment-add-custom-field" data-add-custom-field>
+                  <i class="fa-solid fa-plus"></i> Ajouter une caractéristique
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- PANEL 4 — Pièces jointes -->
+        <div class="eq-wizard-panel" data-wizard-panel="3">
+          <section class="equipment-section-card">
+            <div class="equipment-section-head">
+              <div>
+                <div class="equipment-section-kicker">Pièces jointes</div>
+                <h4>Photos associées</h4>
+                <p>Vous pouvez ajouter plusieurs photos pour enrichir la fiche article.</p>
+              </div>
+            </div>
+            <div class="equipment-upload-grid">
+              <div class="field-group field-group-wide">
+                <label for="articlePhotos">Photos</label>
+                <input id="articlePhotos" name="photos" type="file" accept="image/*" multiple />
+                <div class="org-field-hint">Plusieurs images peuvent être ajoutées à la fiche.</div>
+              </div>
+            </div>
+            ${record ? `<div class="field-group field-group-wide">${buildArticleAttachmentsPreview(record, 'edit')}</div>` : ''}
+          </section>
+        </div>
+
+      </div><!-- fin eq-wizard-panels -->
+
+      <!-- Navigation wizard -->
+      <div class="eq-wizard-nav" data-wizard-nav>
+        <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
+          <i class="fa-solid fa-arrow-left"></i> Précédent
+        </button>
+        <div class="eq-wizard-nav-right">
+          <button type="button" class="btn btn-primary eq-wizard-next" data-wizard-next>
+            Suivant <i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <button type="submit" class="btn btn-primary eq-wizard-submit" data-wizard-submit style="display:none">
+            <i class="fa-solid fa-check"></i> ${mode === 'edit' ? 'Enregistrer' : 'Créer l\'article'}
+          </button>
+        </div>
+      </div>
+
+      <input type="hidden" name="recordId" value="${escapeHtml(record?.id ?? '')}" />
     </form>
   `;
 }
@@ -1116,43 +1261,111 @@ function buildArticleListActions(pageKey, recordId) {
 
 function buildArticleDetailsContent(record) {
   const primaryPhoto = Array.isArray(record.photos) ? record.photos[0] : null;
-  const primaryPhotoSrc = primaryPhoto?.dataUrl || primaryPhoto || "";
-  const substituteNames = joinNames(
-    getArticleRecords("articles"),
-    record.substituteIds || [],
+  const primaryPhotoSrc = primaryPhoto?.dataUrl || primaryPhoto;
+  const primaryPhotoLabel = primaryPhoto?.name || record.name || 'Article';
+
+  // ✅ Toutes les clés avec quotes simples :
+  const substituteLabels = joinRecordLabels(
+    getArticleRecords('articles'),
+    record.substituteIds,
+    a => `${a.code} ${a.name}`
   );
   const linkedOrganeLabels = joinRecordLabels(
-    getOrganeRecords("organes"),
-    record.linkedOrganeIds || [],
-    (organe) => `${organe.code} — ${organe.name}`,
+    getOrganeRecords('organes'),
+    record.linkedOrganeIds,
+    o => `${o.code} ${o.name}`
   );
   const linkedEquipmentLabels = joinRecordLabels(
-    getEquipmentRecords("equipments"),
-    record.linkedEquipmentIds || [],
-    (equipment) => `${equipment.code} — ${equipment.name}`,
+    getEquipmentRecords('equipments'),
+    record.linkedEquipmentIds,
+    e => `${e.code} ${e.name}`
   );
+  const group = getArticleRecord('groups', record.groupId);
+  const family = getArticleRecord('families', record.familyId);
+  const hasCustomFields = Array.isArray(record.customFields) && record.customFields.length > 0;
+  const hasPhotos = Array.isArray(record.photos) && record.photos.length > 1;
+  const hasTechSlide = hasCustomFields || hasPhotos;
 
   return `
-    <div class="equipment-detail-layout">
-      <div class="equipment-detail-media">
-        <div class="equipment-detail-image">
-          ${primaryPhotoSrc ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(record.name)}" />` : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`}
+    <div class="eq-detail-toggle-container" style="display:flex;justify-content:center;margin-bottom:32px;margin-top:10px">
+      <div style="width:100%;max-width:500px">
+        <div class="eq-detail-toggle-bar" style="height:14px;border:1.5px solid var(--border,#e2e8ef);border-radius:14px;position:relative;cursor:pointer;background:var(--card-bg,#ffffff);margin-bottom:10px;box-sizing:content-box">
+          <div class="eq-detail-toggle-thumb" style="position:absolute;top:-1.5px;left:-1.5px;height:calc(100% + 3px);width:calc(50% + 1.5px);background-color:var(--brand,#18a7bf);border-radius:14px;transition:transform 0.3s cubic-bezier(0.25,1,0.5,1)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <button type="button" class="eq-detail-tab active" data-tab="0" style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:var(--text-primary,#1a2533);cursor:pointer;transition:color 0.3s">Infos générales</button>
+          <button type="button" class="eq-detail-tab" data-tab="1" style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:var(--text-muted,#8fa0b0);cursor:pointer;transition:color 0.3s">Caractéristiques techniques</button>
         </div>
       </div>
-      <div class="equipment-detail-info">
-        <div class="equipment-detail-list">
-          <div class="equipment-detail-row"><span>Code</span><strong>${record.code}</strong></div>
-          <div class="equipment-detail-row"><span>Nom</span><strong>${record.name}</strong></div>
-          <div class="equipment-detail-row"><span>Unité de mesure</span><strong>${record.unitMeasure || "-"}</strong></div>
-          <div class="equipment-detail-row"><span>Type d'article</span><strong>${record.articleType || "-"}</strong></div>
-          <div class="equipment-detail-row"><span>Marque</span><strong>${record.brand || "-"}</strong></div>
-          <div class="equipment-detail-row"><span>Fournisseur principal</span><strong>${record.supplier || "-"}</strong></div>
-          <div class="equipment-detail-row"><span>Prix</span><strong>${record.price || "-"}</strong></div>
-          <div class="equipment-detail-row"><span>Articles substituts</span><strong>${substituteNames}</strong></div>
-          <div class="equipment-detail-row"><span>Organes liés</span><strong>${linkedOrganeLabels}</strong></div>
-          <div class="equipment-detail-row"><span>Équipements liés</span><strong>${linkedEquipmentLabels}</strong></div>
+    </div>
+
+    <div class="eq-detail-slider" data-active="0">
+
+      <!-- SLIDE 0 : Infos générales + Stock & Liaisons -->
+      <div class="eq-detail-slide" data-slide="0">
+        <div class="equipment-detail-layout">
+          <div class="equipment-detail-media">
+            <div class="equipment-detail-image">
+              ${primaryPhotoSrc
+      ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}">`
+      : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`
+    }
+            </div>
+          </div>
+          <div class="equipment-detail-info">
+            <div class="equipment-detail-list">
+              <div class="equipment-detail-row"><span>CODE</span><strong>${escapeHtml(record.code) || '-'}</strong></div>
+              <div class="equipment-detail-row"><span>NOM</span><strong>${escapeHtml(record.name) || '-'}</strong></div>
+              <div class="equipment-detail-row"><span>TYPE D'ARTICLE</span><strong>${escapeHtml(record.articleType) || '-'}</strong></div>
+              <div class="equipment-detail-row"><span>MARQUE</span><strong>${escapeHtml(record.brand) || '-'}</strong></div>
+              <div class="equipment-detail-row"><span>UNITÉ DE MESURE</span><strong>${escapeHtml(record.unitMeasure) || '-'}</strong></div>
+              <div class="equipment-detail-row"><span>PRIX</span><strong>${record.price ? String(record.price) : '-'}</strong></div>
+              <div class="equipment-detail-row"><span>FOURNISSEUR</span><strong>${escapeHtml(record.supplier) || '-'}</strong></div>
+              <div class="equipment-detail-row"><span>GROUPE</span><strong>${escapeHtml(group ? `${group.code} ${group.name}` : '-')}</strong></div>
+              <div class="equipment-detail-row"><span>FAMILLE</span><strong>${escapeHtml(family ? `${family.code} ${family.name}` : '-')}</strong></div>
+              ${record.designations ? `<div class="equipment-detail-row" style="grid-column:1/-1"><span>DÉSIGNATION</span><strong>${escapeHtml(record.designations)}</strong></div>` : ''}
+              <div class="equipment-detail-row"><span>ARTICLES SUBSTITUTS</span><strong>${escapeHtml(substituteLabels) || '-'}</strong></div>
+              <div class="equipment-detail-row"><span>ORGANES LIÉS</span><strong>${escapeHtml(linkedOrganeLabels) || '-'}</strong></div>
+              <div class="equipment-detail-row"><span>ÉQUIPEMENTS LIÉS</span><strong>${escapeHtml(linkedEquipmentLabels) || '-'}</strong></div>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- SLIDE 1 : Caractéristiques techniques + Photos -->
+      <div class="eq-detail-slide" data-slide="1">
+        ${hasTechSlide ? `
+          ${hasCustomFields ? `
+            <div class="equipment-section-card">
+              <div class="equipment-section-head">
+                <div>
+                  <div class="equipment-section-kicker">Caractéristiques spécifiques</div>
+                  <h4>Champs personnalisés</h4>
+                </div>
+              </div>
+              <div class="equipment-detail-list">
+                ${record.customFields.map(cf => `
+                  <div class="equipment-detail-row"><span>${escapeHtml(cf.label)}</span><strong>${escapeHtml(cf.value) || '-'}</strong></div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+          ${hasPhotos ? `
+            <div class="equipment-section-card" style="margin-top:16px">
+              <div class="equipment-section-head">
+                <div><div class="equipment-section-kicker">Photos associées</div></div>
+              </div>
+              ${buildStoredAttachmentsPreview(record, { editable: false, showDocuments: true })}
+            </div>
+          ` : ''}
+        ` : `
+          <div class="equipment-detail-placeholder" style="padding:40px;text-align:center;color:var(--color-text-muted)">
+            <i class="fa-solid fa-circle-info" style="font-size:24px;margin-bottom:12px;opacity:0.5"></i><br>
+            Aucune caractéristique technique renseignée.
+          </div>
+        `}
+      </div>
+
     </div>
   `;
 }
@@ -1602,7 +1815,7 @@ function attachArticlePageHandlers(pageKey) {
           recordId,
         );
         if (!record) return;
-        const confirmed = window.confirm(
+        const confirmed = uiConfirm(
           `Supprimer ${record.name} ? Cette action est irréversible.`,
         );
         if (!confirmed) return;
@@ -1650,12 +1863,52 @@ function attachArticlePageHandlers(pageKey) {
       renderArticlePage(pageKey);
     });
   });
-
+  initializeDetailSlider(modal);
   const form = modal.querySelector("[data-art-form]");
   if (!form) return;
 
   attachAttachmentRemovalHandlers(form);
+  // Activer la navigation wizard
+  initializeWizardForm(form, [
+    'Identification',
+    'Liaisons métier',
+    'Caractéristiques techniques',
+    'Pièces jointes'
+  ]);
+  // Champs personnalisés dynamiques
+  const customContainer = form.querySelector('[data-custom-fields-container]');
+  const addCustomFieldBtn = form.querySelector('[data-add-custom-field]');
 
+  if (addCustomFieldBtn && customContainer) {
+    // Activer les boutons supprimer déjà existants (mode édition)
+    customContainer.querySelectorAll('[data-remove-custom-field]').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('[data-custom-field-row]')?.remove());
+    });
+
+    // Activer le bouton "Ajouter"
+    addCustomFieldBtn.addEventListener('click', () => {
+      const row = document.createElement('div');
+      row.className = 'equipment-custom-field-row';
+      row.setAttribute('data-custom-field-row', '');
+      row.innerHTML = `
+      <div class="field-group">
+        <label>Libellé</label>
+        <input type="text" name="customFieldLabel" placeholder="Ex : Référence fabricant..." />
+      </div>
+      <div class="field-group">
+        <label>Valeur</label>
+        <input type="text" name="customFieldValue" placeholder="Ex : 6205-2RS..." />
+      </div>
+      <button type="button" class="equipment-custom-field-remove org-icon-btn danger"
+        data-remove-custom-field title="Supprimer ce champ">
+        <i class="fa-regular fa-trash-can"></i>
+      </button>`;
+      row.querySelector('[data-remove-custom-field]')
+        .addEventListener('click', () => row.remove());
+      customContainer.appendChild(row);
+      row.querySelector('input[name="customFieldLabel"]')?.focus();
+    });
+  }
   const groupSelect = form.querySelector("select[name='groupId']");
   if (groupSelect) {
     groupSelect.addEventListener("change", function () {
@@ -1770,6 +2023,13 @@ function attachArticlePageHandlers(pageKey) {
     const linkedEquipmentIds = getSelectedValues(
       form.querySelector("select[name='linkedEquipmentIds']"),
     );
+    // ✅ AJOUT — Récupérer les champs personnalisés
+    const customFields = [];
+    form.querySelectorAll('[data-custom-field-row]').forEach(row => {
+      const label = row.querySelector('input[name="customFieldLabel"]')?.value?.trim();
+      const value = row.querySelector('input[name="customFieldValue"]')?.value?.trim();
+      if (label) customFields.push({ label, value: value || '' });
+    });
 
     const next = {
       id: existing?.id || `article-${Date.now()}`,
@@ -1806,6 +2066,7 @@ function attachArticlePageHandlers(pageKey) {
         ...filterStoredAttachments(existing?.photos, removedPhotos),
         ...photos,
       ],
+      customFields,
     };
 
     const updated = directory.articles.filter((a) => a.id !== next.id);
@@ -2939,7 +3200,7 @@ function attachOrganizationPageHandlers(pageKey) {
         );
         if (!record) return;
 
-        const confirmed = window.confirm(
+        const confirmed = uiConfirm(
           `Supprimer ${record.name} ? Cette action est irréversible.`,
         );
         if (!confirmed) return;
@@ -2990,7 +3251,8 @@ function attachOrganizationPageHandlers(pageKey) {
       closeOrganizationModal(pageKey);
     });
   });
-
+  // ✅ AJOUT — Active le slider onglets comme dans Équipement
+  initializeDetailSlider(modal);
   const form = modal.querySelector("[data-org-form]");
   if (!form) return;
 
@@ -3685,6 +3947,44 @@ function buildStatusOptions(selectedStatus = "") {
   ].join("");
 }
 
+function buildOrganeMaterialOptions(selectedValue = "") {
+  const options = [
+    "Acier",
+    "Inox",
+    "Bronze",
+    "Fonte",
+    "Aluminium",
+    "Plastique",
+    "Caoutchouc",
+    "Composite",
+    "Autre",
+  ];
+  return [
+    '<option value="">Sélectionner un matériau</option>',
+    ...options.map(
+      (option) =>
+        `<option value="${option}"${selectedValue === option ? " selected" : ""}>${option}</option>`,
+    ),
+  ].join("");
+}
+
+function buildOrganeLubricationOptions(selectedValue = "") {
+  const options = [
+    "Graisse",
+    "Huile",
+    "Sans lubrification",
+    "Lubrification permanente",
+    "Autre",
+  ];
+  return [
+    '<option value="">Sélectionner un type</option>',
+    ...options.map(
+      (option) =>
+        `<option value="${option}"${selectedValue === option ? " selected" : ""}>${option}</option>`,
+    ),
+  ].join("");
+}
+
 function formatEquipmentDate(value) {
   if (!value) return "-";
   const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -3908,6 +4208,122 @@ function buildEquipmentAttachmentsPreview(record, editable = false) {
     editable,
     showDocuments: true,
   });
+}
+
+function initializeDetailSlider(modal) {
+  const detailTabs = modal.querySelectorAll('.eq-detail-tab');
+  const detailSlider = modal.querySelector('.eq-detail-slider');
+  const toggleBar = modal.querySelector('.eq-detail-toggle-bar');
+  const toggleThumb = modal.querySelector('.eq-detail-toggle-thumb');
+
+  if (!detailTabs.length || !detailSlider) return;
+
+  const setActiveTab = (index) => {
+    // ✅ FIX : forcer en Number
+    const idx = Number(index);
+    detailTabs.forEach(tab => {
+      tab.classList.remove('active');
+      tab.style.color = 'var(--text-muted, #8fa0b0)';
+    });
+    const activeTab = modal.querySelector(`.eq-detail-tab[data-tab="${idx}"]`);
+    if (activeTab) {
+      activeTab.classList.add('active');
+      activeTab.style.color = 'var(--text-primary, #1a2533)';
+    }
+    detailSlider.setAttribute('data-active', idx);
+    if (toggleThumb) {
+      toggleThumb.style.transform = idx === 1 ? 'translateX(100%)' : 'translateX(0)';
+    }
+  };
+
+  detailTabs.forEach(tab => {
+    tab.addEventListener('click', () => setActiveTab(tab.getAttribute('data-tab')));
+  });
+
+  if (toggleBar) {
+    toggleBar.addEventListener('click', (event) => {
+      const rect = toggleBar.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      setActiveTab(clickX > rect.width / 2 ? 1 : 0);
+    });
+  }
+}
+
+function initializeWizardForm(form, stepLabels) {
+  const panels = Array.from(form.querySelectorAll("[data-wizard-panel]"));
+  const stepDots = Array.from(form.querySelectorAll("[data-wizard-step-dot]"));
+  const stepTitle = form.querySelector("[data-wizard-step-title]");
+  const prevBtn = form.querySelector("[data-wizard-prev]");
+  const nextBtn = form.querySelector("[data-wizard-next]");
+  const submitBtn = form.querySelector("[data-wizard-submit]");
+
+  if (!panels.length) return;
+
+  let currentStep = 0;
+
+  function goToStep(index) {
+    const total = panels.length;
+    if (index < 0 || index >= total) return;
+
+    panels.forEach((panel, panelIndex) =>
+      panel.classList.toggle("active", panelIndex === index),
+    );
+
+    stepDots.forEach((dot, dotIndex) => {
+      dot.classList.remove("active", "done");
+      if (dotIndex < index) dot.classList.add("done");
+      if (dotIndex === index) dot.classList.add("active");
+
+      const bubble = dot.querySelector(".eq-wizard-step-bubble");
+      if (bubble) {
+        bubble.textContent = dotIndex < index ? "" : String(dotIndex + 1);
+      }
+    });
+
+    if (stepTitle) {
+      stepTitle.textContent = `Étape ${index + 1} / ${total} — ${stepLabels[index]}`;
+    }
+
+    if (prevBtn) prevBtn.style.display = index === 0 ? "none" : "";
+    if (nextBtn) nextBtn.style.display = index === total - 1 ? "none" : "";
+    if (submitBtn) submitBtn.style.display = index === total - 1 ? "" : "none";
+
+    currentStep = index;
+    form.closest(".org-modal-panel")?.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function validateCurrentPanel() {
+    const panel = panels[currentStep];
+    const requiredFields = panel.querySelectorAll("[required]");
+    let valid = true;
+
+    requiredFields.forEach((field) => {
+      if (!field.value || field.value === "") {
+        field.classList.add("input-error");
+        valid = false;
+      } else {
+        field.classList.remove("input-error");
+      }
+    });
+
+    return valid;
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      if (validateCurrentPanel()) {
+        goToStep(currentStep + 1);
+      }
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      goToStep(currentStep - 1);
+    });
+  }
+
+  goToStep(0);
 }
 
 function buildArticleAttachmentsPreview(record, editable = false) {
@@ -4358,17 +4774,43 @@ function buildEquipmentFormContent(record, mode) {
   const linkedArticleIds = Array.isArray(record?.linkedArticleIds) ? record.linkedArticleIds : [];
 
   return `
-    <form class="org-form equipment-form" data-eq-form="equipment">
-      <div class="equipment-form-sections">
-        <section class="equipment-section-card">
-          <div class="equipment-section-head">
-            <div>
-              <div class="equipment-section-kicker">Type général</div>
-              <h4>Identification et statut</h4>
-              <p>Les champs principaux définissent le rattachement et le statut de l’équipement.</p>
-            </div>
+<form class="org-form equipment-form equipment-form-wizard" data-eq-form="equipment">
+
+  <!-- Indicateur de progression -->
+  <div class="eq-wizard-progress" data-wizard-progress>
+    <div class="eq-wizard-steps">
+      ${[
+      'Type général',
+      'Liaisons métier',
+      'Type complémentaire',
+      'Caractéristiques techniques',
+      'Pièces jointes'
+    ].map((label, i) => `
+        <div class="eq-wizard-step ${i === 0 ? 'active' : ''}" data-wizard-step-dot="${i}">
+          <div class="eq-wizard-step-bubble">${i + 1}</div>
+          <span class="eq-wizard-step-label">${label}</span>
+        </div>
+      `).join('<div class="eq-wizard-step-line"></div>')}
+    </div>
+    <div class="eq-wizard-step-title" data-wizard-step-title>
+      Étape 1 / 5 — Type général
+    </div>
+  </div>
+
+  <!-- Les 5 sections — une seule visible à la fois -->
+  <div class="eq-wizard-panels">
+
+    <!-- PANEL 1 : Type général -->
+    <div class="eq-wizard-panel active" data-wizard-panel="0">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">Type général</div>
+            <h4>Identification et statut</h4>
+            <p>Les champs principaux définissent le rattachement et le statut de l'équipement.</p>
           </div>
-          <div class="org-form-grid">
+        </div>
+        <div class="org-form-grid">
             <div class="field-group">
               <label for="equipmentCode">Code équipement</label>
               <input id="equipmentCode" type="text" value="${escapeHtml(codePreview)}" disabled />
@@ -4401,17 +4843,21 @@ function buildEquipmentFormContent(record, mode) {
                 ${buildStatusOptions(record?.status || "")}
               </select>
             </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- PANEL 2 : Liaisons métier -->
+    <div class="eq-wizard-panel" data-wizard-panel="1">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">Liaisons métier</div>
+            <h4>Organes et articles associés</h4>
+            <p>Associez les organes et articles déjà créés à cet équipement.</p>
           </div>
-        </section>
-                 <section class="equipment-section-card">
-          <div class="equipment-section-head">
-            <div>
-              <div class="equipment-section-kicker">Liaisons métier</div>
-              <h4>Organes et articles associés</h4>
-              <p>Associez les organes et articles déjà créés à cet équipement.</p>
-            </div>
-          </div>
-          <div class="org-form-grid">
+        </div>
+        <div class="org-form-grid">
             <div class="field-group field-group-wide">
               <label for="equipmentLinkedOrganes">Organes liés</label>
               <select id="equipmentLinkedOrganes" name="linkedOrganeIds" multiple size="5">
@@ -4426,17 +4872,21 @@ function buildEquipmentFormContent(record, mode) {
               </select>
               <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.</div>
             </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- PANEL 3 : Type complémentaire -->
+    <div class="eq-wizard-panel" data-wizard-panel="2">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">Type complémentaire</div>
+            <h4>Informations techniques et achats</h4>
+            <p>Les champs complémentaires décrivent le suivi fournisseur, la traçabilité et l'historique d'achat.</p>
           </div>
-        </section>
-        <section class="equipment-section-card">
-          <div class="equipment-section-head">
-            <div>
-              <div class="equipment-section-kicker">Type complémentaire</div>
-              <h4>Informations techniques et achats</h4>
-              <p>Les champs complémentaires décrivent le suivi fournisseur, la traçabilité et l’historique d’achat.</p>
-            </div>
-          </div>
-          <div class="org-form-grid">
+        </div>
+        <div class="org-form-grid">
             <div class="field-group">
               <label for="equipmentBrand">Marque</label>
               <input id="equipmentBrand" name="brand" type="text" value="${escapeHtml(record?.brand || "")}" placeholder="Marque" />
@@ -4467,18 +4917,169 @@ function buildEquipmentFormContent(record, mode) {
               <label for="equipmentWarranty">Durée de garantie</label>
               <input id="equipmentWarranty" name="warrantyDuration" type="text" value="${escapeHtml(record?.warrantyDuration || "")}" placeholder="Durée de garantie" />
             </div>
-          </div>
-        </section>
+        </div>
+      </section>
+    </div>
 
-        <section class="equipment-section-card">
-          <div class="equipment-section-head">
-            <div>
-              <div class="equipment-section-kicker">Pièces jointes</div>
-              <h4>Photos et documents associés</h4>
-              <p>Vous pouvez ajouter plusieurs photos et documents pour enrichir la fiche.</p>
-            </div>
+    <!-- PANEL 4 : Caractéristiques techniques -->
+    <div class="eq-wizard-panel" data-wizard-panel="3">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">Caractéristiques techniques</div>
+            <h4>Données techniques de l'équipement</h4>
+            <p>Type d'énergie, puissance, dimensions et paramètres de fonctionnement.</p>
           </div>
-          <div class="equipment-upload-grid">
+        </div>
+        <div class="org-form-grid">
+            <!-- Type d'énergie -->
+            <div class="field-group">
+              <label for="equipmentEnergyType">Type d'énergie</label>
+              <select id="equipmentEnergyType" name="energyType" data-energy-type-select>
+                <option value="">Sélectionner le type d'énergie</option>
+                <option value="Électrique"${record?.energyType === 'Électrique' ? ' selected' : ''}>Électrique</option>
+                <option value="Pneumatique"${record?.energyType === 'Pneumatique' ? ' selected' : ''}>Pneumatique</option>
+                <option value="Hydraulique"${record?.energyType === 'Hydraulique' ? ' selected' : ''}>Hydraulique</option>
+                <option value="Thermique"${record?.energyType === 'Thermique' ? ' selected' : ''}>Thermique</option>
+                <option value="Manuel"${record?.energyType === 'Manuel' ? ' selected' : ''}>Manuel</option>
+              </select>
+            </div>
+
+            <!-- Puissance -->
+            <div class="field-group">
+              <label for="equipmentPower">Puissance (kW / CV)</label>
+              <input id="equipmentPower" name="power" type="text" placeholder="Ex: 7.5 kW ou 10 CV" value="${escapeHtml(record?.power ?? '')}">
+            </div>
+
+            <!-- Tension — affiché uniquement si Électrique (data-field-electric) -->
+            <div class="field-group" data-field-electric>
+              <label for="equipmentVoltage">Tension (V)</label>
+              <input id="equipmentVoltage" name="voltage" type="text" placeholder="Ex: 400V / 230V" value="${escapeHtml(record?.voltage ?? '')}">
+            </div>
+
+            <!-- Fréquence -->
+            <div class="field-group">
+              <label for="equipmentFrequency">Fréquence (Hz)</label>
+              <select id="equipmentFrequency" name="frequency">
+                <option value="">Sélectionner</option>
+                <option value="50 Hz"${record?.frequency === '50 Hz' ? ' selected' : ''}>50 Hz</option>
+                <option value="60 Hz"${record?.frequency === '60 Hz' ? ' selected' : ''}>60 Hz</option>
+              </select>
+            </div>
+
+            <!-- Pression — affiché si Hydraulique ou Pneumatique (data-field-hydraulic-pneumatic) -->
+            <div class="field-group" data-field-hydraulic-pneumatic>
+              <label for="equipmentPressure">Pression de service (bar)</label>
+              <input id="equipmentPressure" name="pressure" type="text" placeholder="Ex: 6 bar" value="${escapeHtml(record?.pressure ?? '')}">
+            </div>
+
+            <!-- Vitesse nominale -->
+            <div class="field-group">
+              <label for="equipmentSpeed">Vitesse nominale (tr/min)</label>
+              <input id="equipmentSpeed" name="speed" type="text" placeholder="Ex: 1450 tr/min" value="${escapeHtml(record?.speed ?? '')}">
+            </div>
+
+            <!-- Capacité / Débit -->
+            <div class="field-group">
+              <label for="equipmentCapacity">Capacité / Débit (m³/h, L/min, kg/h...)</label>
+              <input id="equipmentCapacity" name="capacity" type="text" placeholder="Ex: 250 L/min" value="${escapeHtml(record?.capacity ?? '')}">
+            </div>
+
+            <!-- Dimensions -->
+            <div class="field-group">
+              <label for="equipmentDimensions">Dimensions (L × l × h)</label>
+              <input id="equipmentDimensions" name="dimensions" type="text" placeholder="Ex: 1200 × 600 × 900 mm" value="${escapeHtml(record?.dimensions ?? '')}">
+            </div>
+
+            <!-- Poids -->
+            <div class="field-group">
+              <label for="equipmentWeight">Poids (kg)</label>
+              <input id="equipmentWeight" name="weight" type="number" placeholder="Ex: 85" value="${escapeHtml(record?.weight ?? '')}">
+            </div>
+
+            <!-- Température de fonctionnement -->
+            <div class="field-group field-group-wide">
+              <label>Température de fonctionnement (°C)</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input id="equipmentTempMin" name="tempMin" type="number" placeholder="Min ex: -10" style="flex:1" value="${escapeHtml(record?.tempMin ?? '')}">
+                <span style="font-size:13px;color:#888">°C &nbsp;à&nbsp;</span>
+                <input id="equipmentTempMax" name="tempMax" type="number" placeholder="Max ex: +80" style="flex:1" value="${escapeHtml(record?.tempMax ?? '')}">
+                <span style="font-size:13px;color:#888">°C</span>
+              </div>
+            </div>
+
+            <!-- Type de commande -->
+            <div class="field-group field-group-wide">
+              <label for="equipmentControlType">Type de commande</label>
+              <select id="equipmentControlType" name="controlType">
+                <option value="">Sélectionner</option>
+                <option value="Manuelle"${record?.controlType === 'Manuelle' ? ' selected' : ''}>Manuelle</option>
+                <option value="Automatique"${record?.controlType === 'Automatique' ? ' selected' : ''}>Automatique</option>
+                <option value="API / Automate"${record?.controlType === 'API / Automate' ? ' selected' : ''}>API / Automate</option>
+              </select>
+            </div>
+
+        </div>
+          <!-- Champs personnalisés dynamiques -->
+          <div class="equipment-custom-fields" data-custom-fields-container>
+            ${Array.isArray(record?.customFields) && record.customFields.length > 0
+      ? record.customFields.map((cf, i) => `
+                    <div class="equipment-custom-field-row" data-custom-field-row>
+                      <div class="field-group">
+                        <label>Libellé</label>
+                        <input 
+                          type="text" 
+                          name="customFieldLabel" 
+                          value="${escapeHtml(cf.label ?? '')}" 
+                          placeholder="Ex: Débit nominal, Indice IP, Classe isolation..."
+                        >
+                      </div>
+                      <div class="field-group">
+                        <label>Valeur</label>
+                        <input 
+                          type="text" 
+                          name="customFieldValue" 
+                          value="${escapeHtml(cf.value ?? '')}" 
+                          placeholder="Ex: 250 L/min, IP54, Classe F..."
+                        >
+                      </div>
+                      <button 
+                        type="button" 
+                        class="equipment-custom-field-remove org-icon-btn danger" 
+                        data-remove-custom-field 
+                        title="Supprimer ce champ"
+                      >
+                        <i class="fa-regular fa-trash-can"></i>
+                      </button>
+                    </div>
+                  `).join('')
+      : ''
+    }
+          </div>
+          <div class="equipment-custom-fields-footer">
+            <button 
+              type="button" 
+              class="btn btn-ghost equipment-add-custom-field" 
+              data-add-custom-field
+            >
+              <i class="fa-solid fa-plus"></i>
+              Ajouter une caractéristique
+            </button>
+          </div>
+      </section>
+    </div>
+
+    <!-- PANEL 5 : Pièces jointes -->
+    <div class="eq-wizard-panel" data-wizard-panel="4">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">Pièces jointes</div>
+            <h4>Photos et documents associés</h4>
+            <p>Vous pouvez ajouter plusieurs photos et documents pour enrichir la fiche.</p>
+          </div>
+        </div>
+        <div class="equipment-upload-grid">
             <div class="field-group field-group-wide">
               <label for="equipmentPhotos">Photos</label>
               <input id="equipmentPhotos" name="photos" type="file" accept="image/*" multiple />
@@ -4490,13 +5091,33 @@ function buildEquipmentFormContent(record, mode) {
               <div class="org-field-hint">PDF, images ou autres fichiers utiles au suivi de l’équipement.</div>
             </div>
             ${record ? `<div class="field-group field-group-wide">${buildEquipmentAttachmentsPreview(record, mode === "edit")}</div>` : ""}
-          </div>
-        </section>
-      </div>
+        </div>
+      </section>
+    </div>
+<!-- Navigation wizard -->
+  <div class="eq-wizard-nav" data-wizard-nav>
+    <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
+      <i class="fa-solid fa-arrow-left"></i> Précédent
+    </button>
+    <div class="eq-wizard-nav-right">
+      <button type="button" class="btn btn-primary eq-wizard-next" data-wizard-next>
+        Suivant <i class="fa-solid fa-arrow-right"></i>
+      </button>
+      <button type="submit" class="btn btn-primary eq-wizard-submit" data-wizard-submit style="display:none">
+        <i class="fa-solid fa-check"></i>
+        ${mode === 'edit' ? 'Enregistrer' : "Créer l'équipement"}
+      </button>
+    </div>
+  </div>
+  </div><!-- fin eq-wizard-panels -->
 
-      ${buildOrganizationFormFooter("equipment", mode, record?.id || "")}
-    </form>
-  `;
+  
+
+  <!-- Champ caché recordId pour l'édition -->
+  <input type="hidden" name="recordId" value="${escapeHtml(record?.id ?? '')}">
+
+</form>
+`;
 }
 
 function buildEquipmentDetailsContent(record) {
@@ -4517,59 +5138,87 @@ function buildEquipmentDetailsContent(record) {
   );
 
   return `
-    <div class="equipment-detail-layout">
-      <div class="equipment-detail-media">
-        <div class="equipment-detail-image">
-          ${primaryPhotoSrc ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}" />` : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`}
-        </div>
+  <div class="eq-detail-toggle-container" style="display: flex; justify-content: center; margin-bottom: 32px; margin-top: 10px;">
+    <div style="width: 100%; max-width: 500px;">
+      <!-- Barre visuelle -->
+      <div class="eq-detail-toggle-bar" style="height: 14px; border: 1.5px solid var(--border, #e2e8ef); border-radius: 14px; position: relative; cursor: pointer; background: var(--card-bg, #ffffff); margin-bottom: 10px; box-sizing: content-box;">
+        <div class="eq-detail-toggle-thumb" style="position: absolute; top: -1.5px; left: -1.5px; height: calc(100% + 3px); width: calc(50% + 1.5px); background-color: var(--brand, #18a7bf); border-radius: 14px; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);"></div>
       </div>
+      <!-- Boutons textes -->
+      <div style="display: flex; justify-content: space-between;">
+        <button type="button" class="eq-detail-tab active" data-tab="0" style="flex: 1; text-align: center; background: none; border: none; font-size: 15px; font-weight: 500; color: var(--text-primary, #1a2533); cursor: pointer; transition: color 0.3s;">Infos générales</button>
+        <button type="button" class="eq-detail-tab" data-tab="1" style="flex: 1; text-align: center; background: none; border: none; font-size: 15px; font-weight: 500; color: var(--text-muted, #8fa0b0); cursor: pointer; transition: color 0.3s;">Caractéristiques techniques</button>
+      </div>
+    </div>
+  </div>
 
-      <div class="equipment-detail-info">
-        <div class="equipment-detail-list">
-          <div class="equipment-detail-row">
-            <span>Code</span>
-            <strong>${record.code}</strong>
+  <div class="eq-detail-slider" data-active="0">
+    <div class="eq-detail-slide" data-slide="0">
+      <div class="equipment-detail-layout">
+        <div class="equipment-detail-media">
+          <div class="equipment-detail-image">
+            ${primaryPhotoSrc
+      ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}">`
+      : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`
+    }
           </div>
-          <div class="equipment-detail-row">
-            <span>N° de série</span>
-            <strong>${record.serialNumber || "-"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Nom</span>
-            <strong>${record.name}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Marque</span>
-            <strong>${record.brand || "-"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Criticité</span>
-            <strong>${record.criticality || "-"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>État</span>
-            <strong>${record.status || "-"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Groupe</span>
-            <strong>${group ? `${group.code} — ${group.name}` : "Aucune sélection"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Famille</span>
-            <strong>${family ? `${family.code} — ${family.name}` : "Aucune sélection"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Organes liés</span>
-            <strong>${linkedOrganeLabels}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Articles liés</span>
-            <strong>${linkedArticleLabels}</strong>
+        </div>
+        <div class="equipment-detail-info">
+          <div class="equipment-detail-list">
+            <div class="equipment-detail-row"><span>Code</span><strong>${record.code}</strong></div>
+            <div class="equipment-detail-row"><span>N° de série</span><strong>${record.serialNumber || '-'}</strong></div>
+            <div class="equipment-detail-row"><span>Nom</span><strong>${record.name}</strong></div>
+            <div class="equipment-detail-row"><span>Marque</span><strong>${record.brand || '-'}</strong></div>
+            <div class="equipment-detail-row"><span>Criticité</span><strong>${record.criticality || '-'}</strong></div>
+            <div class="equipment-detail-row"><span>État</span><strong>${record.status || '-'}</strong></div>
+            <div class="equipment-detail-row"><span>Groupe</span><strong>${group ? group.code + ' ' + group.name : 'Aucune sélection'}</strong></div>
+            <div class="equipment-detail-row"><span>Famille</span><strong>${family ? family.code + ' ' + family.name : 'Aucune sélection'}</strong></div>
+            <div class="equipment-detail-row"><span>Organes liés</span><strong>${linkedOrganeLabels}</strong></div>
+            <div class="equipment-detail-row"><span>Articles liés</span><strong>${linkedArticleLabels}</strong></div>
           </div>
         </div>
       </div>
     </div>
-  `;
+
+    <div class="eq-detail-slide" data-slide="1">
+      ${(record.energyType || record.power || record.voltage || record.frequency || record.pressure || record.speed || record.capacity || record.dimensions || record.weight || record.tempMin || record.tempMax || record.controlType || (Array.isArray(record.customFields) && record.customFields.length > 0)) ? `
+      <div class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">Caractéristiques techniques</div>
+            <h4>Données techniques de l'équipement</h4>
+            <p>Type d'énergie, puissance, dimensions et paramètres de fonctionnement.</p>
+          </div>
+        </div>
+        <div class="equipment-detail-list">
+          ${record.energyType ? `<div class="equipment-detail-row"><span>Type d'énergie</span><strong>${record.energyType}</strong></div>` : ''}
+          ${record.power ? `<div class="equipment-detail-row"><span>Puissance</span><strong>${record.power}</strong></div>` : ''}
+          ${record.voltage ? `<div class="equipment-detail-row"><span>Tension</span><strong>${record.voltage}</strong></div>` : ''}
+          ${record.frequency ? `<div class="equipment-detail-row"><span>Fréquence</span><strong>${record.frequency}</strong></div>` : ''}
+          ${record.pressure ? `<div class="equipment-detail-row"><span>Pression de service</span><strong>${record.pressure}</strong></div>` : ''}
+          ${record.speed ? `<div class="equipment-detail-row"><span>Vitesse nominale</span><strong>${record.speed}</strong></div>` : ''}
+          ${record.capacity ? `<div class="equipment-detail-row"><span>Capacité / Débit</span><strong>${record.capacity}</strong></div>` : ''}
+          ${record.dimensions ? `<div class="equipment-detail-row"><span>Dimensions</span><strong>${record.dimensions}</strong></div>` : ''}
+          ${record.weight ? `<div class="equipment-detail-row"><span>Poids</span><strong>${record.weight} kg</strong></div>` : ''}
+          ${(record.tempMin || record.tempMax) ? `<div class="equipment-detail-row"><span>Température fonct.</span><strong>${record.tempMin ?? '?'}°C → ${record.tempMax ?? '?'}°C</strong></div>` : ''}
+          ${record.controlType ? `<div class="equipment-detail-row"><span>Type de commande</span><strong>${record.controlType}</strong></div>` : ''}
+          ${Array.isArray(record.customFields) && record.customFields.length > 0 ? `
+            <div class="equipment-detail-row" style="grid-column:1/-1"><span style="font-weight:600">Caractéristiques spécifiques</span></div>
+            ${record.customFields.map(cf => `
+              <div class="equipment-detail-row"><span>${escapeHtml(cf.label)}</span><strong>${escapeHtml(cf.value) || '-'}</strong></div>
+            `).join('')}
+          ` : ''}
+        </div>
+      </div>
+      ` : `
+      <div class="equipment-detail-placeholder" style="padding: 40px; text-align: center; color: var(--color-text-muted);">
+        <i class="fa-solid fa-circle-info" style="font-size: 24px; margin-bottom: 12px; opacity: 0.5;"></i><br>
+        Aucune caractéristique technique renseignée.
+      </div>
+      `}
+    </div>
+  </div>
+`;
 }
 
 function renderEquipmentPage(subpageKey) {
@@ -4764,7 +5413,7 @@ function attachEquipmentPageHandlers(pageKey) {
         );
         if (!record) return;
 
-        const confirmed = window.confirm(
+        const confirmed = uiConfirm(
           `Supprimer ${record.name} ? Cette action est irréversible.`,
         );
         if (!confirmed) return;
@@ -4816,6 +5465,54 @@ function attachEquipmentPageHandlers(pageKey) {
     : null;
   if (!modal) return;
 
+  // ── Slider Détails Équipement ───────────────────────────────────
+  const detailTabs = modal.querySelectorAll('.eq-detail-tab');
+  const detailSlider = modal.querySelector('.eq-detail-slider');
+  const toggleBar = modal.querySelector('.eq-detail-toggle-bar');
+  const toggleThumb = modal.querySelector('.eq-detail-toggle-thumb');
+
+  if (detailTabs.length > 0 && detailSlider) {
+    const setActiveTab = (index) => {
+      // Mettre à jour les couleurs des boutons
+      detailTabs.forEach((t) => {
+        t.classList.remove('active');
+        t.style.color = 'var(--text-muted, #8fa0b0)';
+      });
+      const activeTab = modal.querySelector(`.eq-detail-tab[data-tab="${index}"]`);
+      if (activeTab) {
+        activeTab.classList.add('active');
+        activeTab.style.color = 'var(--text-primary, #1a2533)';
+      }
+
+      // Mettre à jour le slider
+      detailSlider.setAttribute('data-active', index);
+
+      // Mettre à jour la pilule
+      if (toggleThumb) {
+        toggleThumb.style.transform = index === "1" ? 'translateX(100%)' : 'translateX(0)';
+      }
+    };
+
+    // Clic sur les boutons
+    detailTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const index = tab.getAttribute('data-tab');
+        setActiveTab(index);
+      });
+    });
+
+    // Clic sur la barre visuelle
+    if (toggleBar) {
+      toggleBar.addEventListener('click', (e) => {
+        // Toggle entre 0 et 1 selon la position cliquée, ou juste basculer
+        const rect = toggleBar.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const index = clickX > rect.width / 2 ? "1" : "0";
+        setActiveTab(index);
+      });
+    }
+  }
+
   modal.querySelectorAll("[data-org-close]").forEach((button) => {
     button.addEventListener("click", function () {
       closeEquipmentModal(pageKey);
@@ -4826,10 +5523,177 @@ function attachEquipmentPageHandlers(pageKey) {
   if (!form) return;
   attachAttachmentRemovalHandlers(form);
 
+  // ── Wizard navigation ────────────────────────────────────────
+  const panels = Array.from(form.querySelectorAll('[data-wizard-panel]'));
+  const stepDots = Array.from(form.querySelectorAll('[data-wizard-step-dot]'));
+  const stepLines = Array.from(form.querySelectorAll('.eq-wizard-step-line'));
+  const stepTitle = form.querySelector('[data-wizard-step-title]');
+  const prevBtn = form.querySelector('[data-wizard-prev]');
+  const nextBtn = form.querySelector('[data-wizard-next]');
+  const submitBtn = form.querySelector('[data-wizard-submit]');
+
+  const stepLabels = [
+    'Type général',
+    'Liaisons métier',
+    'Type complémentaire',
+    'Caractéristiques techniques',
+    'Pièces jointes'
+  ];
+
+  let currentStep = 0;
+
+  function goToStep(index) {
+    const total = panels.length;
+    if (index < 0 || index >= total) return;
+
+    // Panels
+    panels.forEach((p, i) => p.classList.toggle('active', i === index));
+
+    // Dots
+    stepDots.forEach((dot, i) => {
+      dot.classList.remove('active', 'done');
+      if (i < index) dot.classList.add('done');
+      if (i === index) dot.classList.add('active');
+
+      // Gestion du contenu de la bulle : chiffre normal ou coche
+      const bubble = dot.querySelector('.eq-wizard-step-bubble');
+      if (bubble) {
+        if (i < index) {
+          bubble.textContent = ''; // le ✓ est injecté via CSS ::before
+        } else {
+          bubble.textContent = String(i + 1);
+        }
+      }
+    });
+
+    // Title
+    if (stepTitle) {
+      stepTitle.textContent = `Étape ${index + 1} / ${total} — ${stepLabels[index]}`;
+    }
+
+    // Boutons
+    if (prevBtn) prevBtn.style.display = index === 0 ? 'none' : '';
+    if (nextBtn) nextBtn.style.display = index === total - 1 ? 'none' : '';
+    if (submitBtn) submitBtn.style.display = index === total - 1 ? '' : 'none';
+
+    currentStep = index;
+
+    // Scroll en haut du modal
+    form.closest('.org-modal-panel')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Validation simple avant de passer à l'étape suivante
+  function validateCurrentPanel() {
+    const panel = panels[currentStep];
+    const requiredFields = panel.querySelectorAll('[required]');
+    let valid = true;
+    requiredFields.forEach(field => {
+      if (!field.value || field.value === '') {
+        field.classList.add('input-error');
+        valid = false;
+      } else {
+        field.classList.remove('input-error');
+      }
+    });
+    return valid;
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (validateCurrentPanel()) {
+        goToStep(currentStep + 1);
+      }
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      goToStep(currentStep - 1);
+    });
+  }
+
+  // Init
+  if (panels.length > 0) goToStep(0);
+
   const groupSelect = form.querySelector("[data-equipment-group-select]");
   if (groupSelect) {
     groupSelect.addEventListener("change", function () {
       syncEquipmentFamilySelect(form);
+    });
+  }
+
+  // Affichage conditionnel des champs techniques selon le type d'énergie
+  const energySelect = form.querySelector('[data-energy-type-select]');
+  if (energySelect) {
+    function updateTechFields() {
+      const val = energySelect.value;
+      form.querySelectorAll('[data-field-electric]')
+        .forEach(el => el.style.display = val === 'Électrique' ? '' : 'none');
+      form.querySelectorAll('[data-field-hydraulic-pneumatic]')
+        .forEach(el => el.style.display =
+          (val === 'Hydraulique' || val === 'Pneumatique') ? '' : 'none');
+    }
+    updateTechFields();
+    energySelect.addEventListener('change', updateTechFields);
+  }
+
+  // ── Champs personnalisés dynamiques ──────────────────────────
+  const customContainer = form.querySelector('[data-custom-fields-container]');
+  const addCustomFieldBtn = form.querySelector('[data-add-custom-field]');
+
+  function buildCustomFieldRow() {
+    const row = document.createElement('div');
+    row.className = 'equipment-custom-field-row';
+    row.setAttribute('data-custom-field-row', '');
+    row.innerHTML = `
+      <div class="field-group">
+        <label>Libellé</label>
+        <input 
+          type="text" 
+          name="customFieldLabel" 
+          placeholder="Ex: Débit nominal, Indice IP, Classe isolation..."
+        >
+      </div>
+      <div class="field-group">
+        <label>Valeur</label>
+        <input 
+          type="text" 
+          name="customFieldValue" 
+          placeholder="Ex: 250 L/min, IP54, Classe F..."
+        >
+      </div>
+      <button 
+        type="button" 
+        class="equipment-custom-field-remove org-icon-btn danger" 
+        data-remove-custom-field 
+        title="Supprimer ce champ"
+      >
+        <i class="fa-regular fa-trash-can"></i>
+      </button>
+    `;
+    // Brancher le bouton supprimer
+    row.querySelector('[data-remove-custom-field]').addEventListener('click', () => {
+      row.remove();
+    });
+    return row;
+  }
+
+  // Brancher les boutons "supprimer" sur les lignes déjà rendues (mode édition)
+  if (customContainer) {
+    customContainer.querySelectorAll('[data-remove-custom-field]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.closest('[data-custom-field-row]')?.remove();
+      });
+    });
+  }
+
+  // Brancher le bouton "Ajouter une caractéristique"
+  if (addCustomFieldBtn && customContainer) {
+    addCustomFieldBtn.addEventListener('click', () => {
+      const row = buildCustomFieldRow();
+      customContainer.appendChild(row);
+      // Focus automatique sur le label du nouveau champ
+      row.querySelector('input[name="customFieldLabel"]')?.focus();
     });
   }
 
@@ -4971,6 +5835,29 @@ function attachEquipmentPageHandlers(pageKey) {
       warrantyDuration: String(
         form.querySelector("input[name='warrantyDuration']")?.value || "",
       ).trim(),
+      energyType: String(form.querySelector(`select[name="energyType"]`)?.value ?? ''),
+      power: String(form.querySelector(`input[name="power"]`)?.value ?? '').trim(),
+      voltage: String(form.querySelector(`input[name="voltage"]`)?.value ?? '').trim(),
+      frequency: String(form.querySelector(`select[name="frequency"]`)?.value ?? ''),
+      pressure: String(form.querySelector(`input[name="pressure"]`)?.value ?? '').trim(),
+      speed: String(form.querySelector(`input[name="speed"]`)?.value ?? '').trim(),
+      capacity: String(form.querySelector(`input[name="capacity"]`)?.value ?? '').trim(),
+      dimensions: String(form.querySelector(`input[name="dimensions"]`)?.value ?? '').trim(),
+      weight: String(form.querySelector(`input[name="weight"]`)?.value ?? '').trim(),
+      tempMin: String(form.querySelector(`input[name="tempMin"]`)?.value ?? '').trim(),
+      tempMax: String(form.querySelector(`input[name="tempMax"]`)?.value ?? '').trim(),
+      controlType: String(form.querySelector(`select[name="controlType"]`)?.value ?? ''),
+      customFields: (() => {
+        const labels = Array.from(
+          form.querySelectorAll('input[name="customFieldLabel"]')
+        ).map(el => el.value.trim());
+        const values = Array.from(
+          form.querySelectorAll('input[name="customFieldValue"]')
+        ).map(el => el.value.trim());
+        return labels
+          .map((label, i) => ({ label, value: values[i] ?? '' }))
+          .filter(cf => cf.label !== ''); // ignorer les lignes sans libellé
+      })(),
       status: String(form.querySelector("select[name='status']")?.value || ""),
       linkedOrganeIds,
       linkedArticleIds,
@@ -5255,8 +6142,20 @@ function buildOrganeGroupFormContent(record, mode) {
           <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.</div>
         </div>
       </div>
-
-      ${buildOrganizationFormFooter("groupe-organe", mode, record?.id || "")}
+    <!-- Navigation wizard -->
+    <div class="eq-wizard-nav" data-wizard-nav>
+      <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
+        <i class="fa-solid fa-arrow-left"></i> Précédent
+      </button>
+      <div class="eq-wizard-nav-right">
+        <button type="button" class="btn btn-primary eq-wizard-next" data-wizard-next>
+          Suivant <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button type="submit" class="btn btn-primary eq-wizard-submit" data-wizard-submit style="display:none">
+          <i class="fa-solid fa-check"></i> ${mode === 'edit' ? 'Enregistrer' : "Créer l'organe"}
+        </button>
+      </div>
+    </div>
     </form>
   `;
 }
@@ -5594,9 +6493,33 @@ function buildOrganeFormContent(record, mode) {
   const linkedEquipmentIds = Array.isArray(record?.linkedEquipmentIds) ? record.linkedEquipmentIds : [];
 
   return `
-    <form class="org-form" data-og-form="organe">
-      <div class="equipment-form-sections">
-        <section class="equipment-section-card">
+    <form class="org-form equipment-form equipment-form-wizard" data-og-form="organe">
+      <div class="eq-wizard-progress" data-wizard-progress>
+        <div class="eq-wizard-steps">
+          ${[
+      "Type général",
+      "Liaisons métier",
+      "Type complémentaire",
+      "Caractéristiques techniques",
+      "Pièces jointes",
+    ]
+      .map(
+        (label, i) => `
+                <div class="eq-wizard-step ${i === 0 ? "active" : ""}" data-wizard-step-dot="${i}">
+                  <div class="eq-wizard-step-bubble">${i + 1}</div>
+                  <span class="eq-wizard-step-label">${label}</span>
+                </div>
+              `,
+      )
+      .join('<div class="eq-wizard-step-line"></div>')}
+        </div>
+        <div class="eq-wizard-step-title" data-wizard-step-title>
+          Étape 1 / 5 — Type général
+        </div>
+      </div>
+      <div class="eq-wizard-panels">
+        <div class="eq-wizard-panel active" data-wizard-panel="0">
+          <section class="equipment-section-card">
           <div class="equipment-section-head">
             <div>
               <div class="equipment-section-kicker">Type général</div>
@@ -5638,8 +6561,10 @@ function buildOrganeFormContent(record, mode) {
               </select>
             </div>
           </div>
-        </section>
-                <section class="equipment-section-card">
+          </section>
+        </div>
+        <div class="eq-wizard-panel" data-wizard-panel="1">
+          <section class="equipment-section-card">
           <div class="equipment-section-head">
             <div>
               <div class="equipment-section-kicker">Liaisons métier</div>
@@ -5663,8 +6588,10 @@ function buildOrganeFormContent(record, mode) {
               <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.</div>
             </div>
           </div>
-        </section>
-        <section class="equipment-section-card">
+          </section>
+        </div>
+        <div class="eq-wizard-panel" data-wizard-panel="2">
+          <section class="equipment-section-card">
           <div class="equipment-section-head">
             <div>
               <div class="equipment-section-kicker">Type complémentaire</div>
@@ -5704,9 +6631,115 @@ function buildOrganeFormContent(record, mode) {
               <input id="organeWarranty" name="warrantyDuration" type="text" value="${escapeHtml(record?.warrantyDuration || "")}" placeholder="Durée de garantie" />
             </div>
           </div>
-        </section>
+          </section>
+        </div>
+        <div class="eq-wizard-panel" data-wizard-panel="3">
+          <section class="equipment-section-card">
+            <div class="equipment-section-head">
+              <div>
+                <div class="equipment-section-kicker">Caractéristiques techniques</div>
+                <h4>Données techniques de l'organe</h4>
+                <p>Dimensions, matériau, charges admissibles et conditions de fonctionnement.</p>
+              </div>
+            </div>
+            <div class="org-form-grid">
+              <div class="field-group">
+                <label for="organeInnerDiameter">Diamètre intérieur (mm)</label>
+                <input id="organeInnerDiameter" name="innerDiameter" type="text" value="${escapeHtml(record?.innerDiameter || "")}" placeholder="Ex: 35" />
+              </div>
+              <div class="field-group">
+                <label for="organeOuterDiameter">Diamètre extérieur (mm)</label>
+                <input id="organeOuterDiameter" name="outerDiameter" type="text" value="${escapeHtml(record?.outerDiameter || "")}" placeholder="Ex: 72" />
+              </div>
+              <div class="field-group">
+                <label for="organeMainDimension">Largeur / Longueur (mm)</label>
+                <input id="organeMainDimension" name="mainDimension" type="text" value="${escapeHtml(record?.mainDimension || "")}" placeholder="Ex: 27 ou 1200" />
+              </div>
+              <div class="field-group">
+                <label for="organeMaterial">Matériau</label>
+                <select id="organeMaterial" name="material">
+                  ${buildOrganeMaterialOptions(record?.material || "")}
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="organeStaticLoad">Charge statique</label>
+                <input id="organeStaticLoad" name="staticLoad" type="text" value="${escapeHtml(record?.staticLoad || "")}" placeholder="Ex: 12 kN" />
+              </div>
+              <div class="field-group">
+                <label for="organeDynamicLoad">Charge dynamique</label>
+                <input id="organeDynamicLoad" name="dynamicLoad" type="text" value="${escapeHtml(record?.dynamicLoad || "")}" placeholder="Ex: 8.5 kN" />
+              </div>
+              <div class="field-group">
+                <label for="organeMaxSpeed">Vitesse maximale admissible (tr/min)</label>
+                <input id="organeMaxSpeed" name="maxSpeed" type="text" value="${escapeHtml(record?.maxSpeed || "")}" placeholder="Ex: 1450" />
+              </div>
+              <div class="field-group">
+                <label for="organeTempMin">Température minimum</label>
+                <input id="organeTempMin" name="tempMin" type="text" value="${escapeHtml(record?.tempMin || "")}" placeholder="Ex: -10°C" />
+              </div>
+              <div class="field-group">
+                <label for="organeTempMax">Température maximum</label>
+                <input id="organeTempMax" name="tempMax" type="text" value="${escapeHtml(record?.tempMax || "")}" placeholder="Ex: 120°C" />
+              </div>
+              <div class="field-group">
+                <label for="organeLubricationType">Type de lubrification</label>
+                <select id="organeLubricationType" name="lubricationType">
+                  ${buildOrganeLubricationOptions(record?.lubricationType || "")}
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="organePressureRating">Pression admissible (bar)</label>
+                <input id="organePressureRating" name="pressureRating" type="text" value="${escapeHtml(record?.pressureRating || "")}" placeholder="Ex: 10" />
+              </div>
+              <div class="field-group">
+                <label for="organeEstimatedLife">Durée de vie estimée</label>
+                <input id="organeEstimatedLife" name="estimatedLife" type="text" value="${escapeHtml(record?.estimatedLife || "")}" placeholder="Ex: 20000 h" />
+              </div>
+              <div class="field-group">
+                <label for="organePrecisionClass">Précision / Classe</label>
+                <input id="organePrecisionClass" name="precisionClass" type="text" value="${escapeHtml(record?.precisionClass || "")}" placeholder="Ex: ABEC 5, ISO P6, IT7" />
+              </div>
+              <div class="field-group">
+                <label for="organeNominalTorque">Couple nominal (Nm)</label>
+                <input id="organeNominalTorque" name="nominalTorque" type="text" value="${escapeHtml(record?.nominalTorque || "")}" placeholder="Ex: 65" />
+              </div>
+              <div class="field-group">
+                <label for="organeManufacturerStandard">Norme constructeur</label>
+                <input id="organeManufacturerStandard" name="manufacturerStandard" type="text" value="${escapeHtml(record?.manufacturerStandard || "")}" placeholder="Ex: ISO 281" />
+              </div>
+              <div class="field-group field-group-wide">
+                <label for="organeFluidCompatibility">Compatibilité fluide</label>
+                <input id="organeFluidCompatibility" name="fluidCompatibility" type="text" value="${escapeHtml(record?.fluidCompatibility || "")}" placeholder="Ex: Huile, eau, air, produits chimiques" />
+              </div>
+            </div>
+            <div class="equipment-custom-fields" data-custom-fields-container>
+              ${Array.isArray(record?.customFields) && record.customFields.length > 0
+      ? record.customFields.map((cf, i) => `
+                  <div class="equipment-custom-field-row" data-custom-field-row>
+                    <div class="field-group">
+                      <label>Libellé</label>
+                      <input type="text" name="customFieldLabel" value="${escapeHtml(cf.label ?? "")}" placeholder="Ex: Débit nominal, Indice IP..." />
+                    </div>
+                    <div class="field-group">
+                      <label>Valeur</label>
+                      <input type="text" name="customFieldValue" value="${escapeHtml(cf.value ?? "")}" placeholder="Ex: 250 L/min, IP54..." />
+                    </div>
+                    <button type="button" class="equipment-custom-field-remove org-icon-btn danger" data-remove-custom-field title="Supprimer ce champ">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>`).join("")
+      : ""}
+            </div>
+            <div class="equipment-custom-fields-footer">
+              <button type="button" class="btn btn-ghost equipment-add-custom-field" data-add-custom-field>
+                <i class="fa-solid fa-plus"></i> Ajouter une caractéristique
+              </button>
+            </div>
+          </section>
+        </div>
 
-        <section class="equipment-section-card">
+        <div class="eq-wizard-panel" data-wizard-panel="4">
+          <section class="equipment-section-card">
           <div class="equipment-section-head">
             <div>
               <div class="equipment-section-kicker">Pièces jointes</div>
@@ -5725,86 +6758,152 @@ function buildOrganeFormContent(record, mode) {
             </div>
             ${record ? `<div class="field-group field-group-wide">${buildEquipmentAttachmentsPreview(record, mode === "edit")}</div>` : ""}
           </div>
-        </section>
+          </section>
+        </div>
       </div>
 
-      ${buildOrganizationFormFooter("organe", mode, record?.id || "")}
+     <!-- Navigation wizard -->
+      <div class="eq-wizard-nav" data-wizard-nav>
+        <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
+          <i class="fa-solid fa-arrow-left"></i> Précédent
+        </button>
+        <div class="eq-wizard-nav-right">
+          <button type="button" class="btn btn-primary eq-wizard-next" data-wizard-next>
+            Suivant <i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <button type="submit" class="btn btn-primary eq-wizard-submit" data-wizard-submit style="display:none">
+            <i class="fa-solid fa-check"></i> ${mode === 'edit' ? 'Enregistrer' : "Créer l'organe"}
+          </button>
+        </div>
+      </div>
+
+      <input type="hidden" name="recordId" value="${escapeHtml(record?.id || '')}">
     </form>
   `;
 }
 
 function buildOrganeDetailsContent(record) {
-  const group = getOrganeRecord("groups", record.groupId);
-  const family = getOrganeRecord("families", record.familyId);
+  const group = getOrganeRecord('groups', record.groupId);
+  const family = getOrganeRecord('families', record.familyId);
   const primaryPhoto = Array.isArray(record.photos) ? record.photos[0] : null;
-  const primaryPhotoSrc = primaryPhoto?.dataUrl || primaryPhoto || "";
-  const primaryPhotoLabel = primaryPhoto?.name || record.name || "Organe";
+  const primaryPhotoSrc = primaryPhoto?.dataUrl || primaryPhoto;
+  const primaryPhotoLabel = primaryPhoto?.name || record.name || 'Organe';
+
   const linkedEquipmentLabels = joinRecordLabels(
-    getEquipmentRecords("equipments"),
+    getEquipmentRecords('equipments'),
     record.linkedEquipmentIds || [],
-    (equipment) => `${equipment.code} — ${equipment.name}`,
+    equipment => `${equipment.code} — ${equipment.name}`
   );
   const linkedArticleLabels = joinRecordLabels(
-    getArticleRecords("articles"),
+    getArticleRecords('articles'),
     record.linkedArticleIds || [],
-    (article) => `${article.code} — ${article.name}`,
+    article => `${article.code} — ${article.name}`
   );
 
+  // Détecter si des caractéristiques techniques existent
+  const hasTech = [
+    record.innerDiameter, record.outerDiameter, record.mainDimension,
+    record.material, record.staticLoad, record.dynamicLoad, record.maxSpeed,
+    record.tempMin, record.tempMax, record.lubricationType,
+    record.pressureRating, record.estimatedLife, record.precisionClass,
+    record.nominalTorque, record.manufacturerStandard, record.fluidCompatibility,
+  ].some(Boolean) || (Array.isArray(record.customFields) && record.customFields.length > 0);
+
   return `
-    <div class="equipment-detail-layout">
-      <div class="equipment-detail-media">
-        <div class="equipment-detail-image">
-          ${primaryPhotoSrc ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}" />` : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`}
+    <div class="eq-detail-toggle-container" style="display:flex;justify-content:center;margin-bottom:32px;margin-top:10px">
+      <div style="width:100%;max-width:500px">
+        <div class="eq-detail-toggle-bar" style="height:14px;border:1.5px solid var(--border,#e2e8ef);border-radius:14px;position:relative;cursor:pointer;background:var(--card-bg,#ffffff);margin-bottom:10px;box-sizing:content-box">
+          <div class="eq-detail-toggle-thumb" style="position:absolute;top:-1.5px;left:-1.5px;height:calc(100% + 3px);width:calc(50% + 1.5px);background-color:var(--brand,#18a7bf);border-radius:14px;transition:transform 0.3s cubic-bezier(0.25,1,0.5,1)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <button type="button" class="eq-detail-tab active" data-tab="0"
+            style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:var(--text-primary,#1a2533);cursor:pointer;transition:color 0.3s">
+            Infos générales
+          </button>
+          <button type="button" class="eq-detail-tab" data-tab="1"
+            style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:var(--text-muted,#8fa0b0);cursor:pointer;transition:color 0.3s">
+            Caractéristiques techniques
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="eq-detail-slider" data-active="0">
+
+      <!-- SLIDE 0 — Infos générales -->
+      <div class="eq-detail-slide" data-slide="0">
+        <div class="equipment-detail-layout">
+          <div class="equipment-detail-media">
+            <div class="equipment-detail-image">
+              ${primaryPhotoSrc
+      ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}" />`
+      : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`
+    }
+            </div>
+          </div>
+          <div class="equipment-detail-info">
+            <div class="equipment-detail-list">
+              <div class="equipment-detail-row"><span>CODE</span><strong>${escapeHtml(record.code || '-')}</strong></div>
+              <div class="equipment-detail-row"><span>NOM</span><strong>${escapeHtml(record.name || '-')}</strong></div>
+              <div class="equipment-detail-row"><span>MARQUE</span><strong>${escapeHtml(record.brand || '-')}</strong></div>
+              <div class="equipment-detail-row"><span>N° DE SÉRIE</span><strong>${escapeHtml(record.serialNumber || '-')}</strong></div>
+              <div class="equipment-detail-row"><span>CRITICITÉ</span><strong>${escapeHtml(record.criticality || '-')}</strong></div>
+              <div class="equipment-detail-row"><span>ÉTAT</span><strong>${escapeHtml(record.status || '-')}</strong></div>
+              <div class="equipment-detail-row"><span>GROUPE</span><strong>${escapeHtml(group ? `${group.code} ${group.name}` : '-')}</strong></div>
+              <div class="equipment-detail-row"><span>FAMILLE</span><strong>${escapeHtml(family ? `${family.code} ${family.name}` : '-')}</strong></div>
+              <div class="equipment-detail-row"><span>ÉQUIPEMENTS LIÉS</span><strong>${escapeHtml(linkedEquipmentLabels || '-')}</strong></div>
+              <div class="equipment-detail-row"><span>ARTICLES LIÉS</span><strong>${escapeHtml(linkedArticleLabels || '-')}</strong></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="equipment-detail-info">
-        <div class="equipment-detail-list">
-          <div class="equipment-detail-row">
-            <span>Code</span>
-            <strong>${record.code}</strong>
+      <!-- SLIDE 1 — Caractéristiques techniques -->
+      <div class="eq-detail-slide" data-slide="1">
+        ${hasTech ? `
+        <div class="equipment-section-card">
+          <div class="equipment-section-head">
+            <div>
+              <div class="equipment-section-kicker">Caractéristiques techniques</div>
+              <h4>Données techniques de l'organe</h4>
+              <p>Dimensions, matériau, charges admissibles et conditions de fonctionnement.</p>
+            </div>
           </div>
-          <div class="equipment-detail-row">
-            <span>N° de série</span>
-            <strong>${record.serialNumber || "-"}</strong>
+          <div class="equipment-detail-list">
+            ${record.innerDiameter ? `<div class="equipment-detail-row"><span>DIAMÈTRE INTÉRIEUR</span><strong>${escapeHtml(record.innerDiameter)} mm</strong></div>` : ''}
+            ${record.outerDiameter ? `<div class="equipment-detail-row"><span>DIAMÈTRE EXTÉRIEUR</span><strong>${escapeHtml(record.outerDiameter)} mm</strong></div>` : ''}
+            ${record.mainDimension ? `<div class="equipment-detail-row"><span>LARGEUR / LONGUEUR</span><strong>${escapeHtml(record.mainDimension)} mm</strong></div>` : ''}
+            ${record.material ? `<div class="equipment-detail-row"><span>MATÉRIAU</span><strong>${escapeHtml(record.material)}</strong></div>` : ''}
+            ${record.staticLoad ? `<div class="equipment-detail-row"><span>CHARGE STATIQUE</span><strong>${escapeHtml(record.staticLoad)}</strong></div>` : ''}
+            ${record.dynamicLoad ? `<div class="equipment-detail-row"><span>CHARGE DYNAMIQUE</span><strong>${escapeHtml(record.dynamicLoad)}</strong></div>` : ''}
+            ${record.maxSpeed ? `<div class="equipment-detail-row"><span>VITESSE MAXIMALE</span><strong>${escapeHtml(record.maxSpeed)} tr/min</strong></div>` : ''}
+            ${record.tempMin || record.tempMax ? `<div class="equipment-detail-row"><span>TEMPÉRATURE FONCT.</span><strong>${record.tempMin ?? '?'}°C → ${record.tempMax ?? '?'}°C</strong></div>` : ''}
+            ${record.lubricationType ? `<div class="equipment-detail-row"><span>LUBRIFICATION</span><strong>${escapeHtml(record.lubricationType)}</strong></div>` : ''}
+            ${record.pressureRating ? `<div class="equipment-detail-row"><span>PRESSION ADMISSIBLE</span><strong>${escapeHtml(record.pressureRating)} bar</strong></div>` : ''}
+            ${record.estimatedLife ? `<div class="equipment-detail-row"><span>DURÉE DE VIE ESTIMÉE</span><strong>${escapeHtml(record.estimatedLife)}</strong></div>` : ''}
+            ${record.precisionClass ? `<div class="equipment-detail-row"><span>PRÉCISION / CLASSE</span><strong>${escapeHtml(record.precisionClass)}</strong></div>` : ''}
+            ${record.nominalTorque ? `<div class="equipment-detail-row"><span>COUPLE NOMINAL</span><strong>${escapeHtml(record.nominalTorque)} Nm</strong></div>` : ''}
+            ${record.manufacturerStandard ? `<div class="equipment-detail-row"><span>NORME CONSTRUCTEUR</span><strong>${escapeHtml(record.manufacturerStandard)}</strong></div>` : ''}
+            ${record.fluidCompatibility ? `<div class="equipment-detail-row"><span>COMPATIBILITÉ FLUIDE</span><strong>${escapeHtml(record.fluidCompatibility)}</strong></div>` : ''}
+            ${Array.isArray(record.customFields) && record.customFields.length > 0 ? `
+              <div class="equipment-detail-row" style="grid-column:1/-1">
+                <span style="font-weight:600">CARACTÉRISTIQUES SPÉCIFIQUES</span>
+              </div>
+              ${record.customFields.map(cf => `
+                <div class="equipment-detail-row">
+                  <span>${escapeHtml(cf.label)}</span>
+                  <strong>${escapeHtml(cf.value || '-')}</strong>
+                </div>
+              `).join('')}
+            ` : ''}
           </div>
-          <div class="equipment-detail-row">
-            <span>Nom</span>
-            <strong>${record.name}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Marque</span>
-            <strong>${record.brand || "-"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Criticité</span>
-            <strong>${record.criticality || "-"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>État</span>
-            <strong>${record.status || "-"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Groupe</span>
-            <strong>${group ? `${group.code} — ${group.name}` : "Aucune sélection"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Famille</span>
-            <strong>${family ? `${family.code} — ${family.name}` : "Aucune sélection"}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Équipements liés</span>
-            <strong>${linkedEquipmentLabels}</strong>
-          </div>
-          <div class="equipment-detail-row">
-            <span>Articles liés</span>
-            <strong>${linkedArticleLabels}</strong>
-          </div>
-        </div>
-        <div class="equipment-detail-media-note">
-          ${primaryPhotoSrc ? `Photo principale de la fiche organe` : `Ajoutez des photos depuis le formulaire pour enrichir la fiche`}
-        </div>
+        </div>` : `
+        <div class="equipment-detail-placeholder" style="padding:40px;text-align:center;color:var(--color-text-muted)">
+          <i class="fa-solid fa-circle-info" style="font-size:24px;margin-bottom:12px;opacity:0.5"></i><br>
+          Aucune caractéristique technique renseignée.
+        </div>`}
       </div>
+
     </div>
   `;
 }
@@ -5994,7 +7093,7 @@ function attachOrganePageHandlers(pageKey) {
         );
         if (!record) return;
 
-        const confirmed = window.confirm(
+        const confirmed = uiConfirm(
           `Supprimer ${record.name} ? Cette action est irréversible.`,
         );
         if (!confirmed) return;
@@ -6044,6 +7143,8 @@ function attachOrganePageHandlers(pageKey) {
     : null;
   if (!modal) return;
 
+  initializeDetailSlider(modal);
+
   modal.querySelectorAll("[data-org-close]").forEach((button) => {
     button.addEventListener("click", function () {
       closeOrganeModal(pageKey);
@@ -6054,7 +7155,52 @@ function attachOrganePageHandlers(pageKey) {
   if (!form) return;
 
   attachAttachmentRemovalHandlers(form);
+  initializeWizardForm(form, [
+    "Type général",
+    "Liaisons métier",
+    "Type complémentaire",
+    "Caractéristiques techniques",
+    "Pièces jointes",
+  ]);
 
+  // Champs personnalisés dynamiques — organe
+  const customContainer = form.querySelector('[data-custom-fields-container]');
+  const addCustomFieldBtn = form.querySelector('[data-add-custom-field]');
+
+  function buildOrganeCustomFieldRow() {
+    const row = document.createElement('div');
+    row.className = 'equipment-custom-field-row';
+    row.setAttribute('data-custom-field-row', '');
+    row.innerHTML = `
+    <div class="field-group">
+      <label>Libellé</label>
+      <input type="text" name="customFieldLabel" placeholder="Ex: Débit nominal, Indice IP, Classe isolation..." />
+    </div>
+    <div class="field-group">
+      <label>Valeur</label>
+      <input type="text" name="customFieldValue" placeholder="Ex: 250 L/min, IP54, Classe F..." />
+    </div>
+    <button type="button" class="equipment-custom-field-remove org-icon-btn danger" data-remove-custom-field title="Supprimer ce champ">
+      <i class="fa-regular fa-trash-can"></i>
+    </button>
+  `;
+    row.querySelector('[data-remove-custom-field]').addEventListener('click', () => row.remove());
+    return row;
+  }
+
+  if (customContainer) {
+    customContainer.querySelectorAll('[data-remove-custom-field]').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('[data-custom-field-row]')?.remove());
+    });
+  }
+
+  if (addCustomFieldBtn && customContainer) {
+    addCustomFieldBtn.addEventListener('click', () => {
+      const row = buildOrganeCustomFieldRow();
+      customContainer.appendChild(row);
+      row.querySelector('input[name="customFieldLabel"]')?.focus();
+    });
+  }
   const groupSelect = form.querySelector("[data-organe-group-select]");
   if (groupSelect) {
     groupSelect.addEventListener("change", function () {
@@ -6165,6 +7311,12 @@ function attachOrganePageHandlers(pageKey) {
       form.querySelector("input[name='documents']")?.files,
     );
 
+    const customFields = (() => {
+      const labels = Array.from(form.querySelectorAll('input[name="customFieldLabel"]')).map(el => el.value.trim());
+      const values = Array.from(form.querySelectorAll('input[name="customFieldValue"]')).map(el => el.value.trim());
+      return labels.map((label, i) => ({ label, value: values[i] ?? '' })).filter(cf => cf.label !== '');
+    })();
+
     const nextOrgane = {
       id: existingRecord?.id || `organe-${Date.now()}`,
       code:
@@ -6195,6 +7347,54 @@ function attachOrganePageHandlers(pageKey) {
       warrantyDuration: String(
         form.querySelector("input[name='warrantyDuration']")?.value || "",
       ).trim(),
+      innerDiameter: String(
+        form.querySelector("input[name='innerDiameter']")?.value || "",
+      ).trim(),
+      outerDiameter: String(
+        form.querySelector("input[name='outerDiameter']")?.value || "",
+      ).trim(),
+      mainDimension: String(
+        form.querySelector("input[name='mainDimension']")?.value || "",
+      ).trim(),
+      material: String(
+        form.querySelector("select[name='material']")?.value || "",
+      ).trim(),
+      staticLoad: String(
+        form.querySelector("input[name='staticLoad']")?.value || "",
+      ).trim(),
+      dynamicLoad: String(
+        form.querySelector("input[name='dynamicLoad']")?.value || "",
+      ).trim(),
+      maxSpeed: String(
+        form.querySelector("input[name='maxSpeed']")?.value || "",
+      ).trim(),
+      tempMin: String(
+        form.querySelector("input[name='tempMin']")?.value || "",
+      ).trim(),
+      tempMax: String(
+        form.querySelector("input[name='tempMax']")?.value || "",
+      ).trim(),
+      lubricationType: String(
+        form.querySelector("select[name='lubricationType']")?.value || "",
+      ).trim(),
+      pressureRating: String(
+        form.querySelector("input[name='pressureRating']")?.value || "",
+      ).trim(),
+      estimatedLife: String(
+        form.querySelector("input[name='estimatedLife']")?.value || "",
+      ).trim(),
+      precisionClass: String(
+        form.querySelector("input[name='precisionClass']")?.value || "",
+      ).trim(),
+      nominalTorque: String(
+        form.querySelector("input[name='nominalTorque']")?.value || "",
+      ).trim(),
+      manufacturerStandard: String(
+        form.querySelector("input[name='manufacturerStandard']")?.value || "",
+      ).trim(),
+      fluidCompatibility: String(
+        form.querySelector("input[name='fluidCompatibility']")?.value || "",
+      ).trim(),
       status: String(form.querySelector("select[name='status']")?.value || ""),
       linkedEquipmentIds: getSelectedValues(
         form.querySelector("select[name='linkedEquipmentIds']"),
@@ -6210,6 +7410,7 @@ function attachOrganePageHandlers(pageKey) {
         ...filterStoredAttachments(existingRecord?.documents, removedDocuments),
         ...documents,
       ],
+      customFields,
     };
 
     const updatedOrganes = directory.organes.filter(
@@ -7343,7 +8544,7 @@ const englishInterfaceTranslations = new Map(
     Compteurs: "Counters",
     "Ordre de travail": "Work order",
     "Bon de travail": "Work ticket",
-    "Demande d'intervention": "work Request",
+    "Demande d'intervention": "Work Request",
     "Vue globale de la maintenance": "Global maintenance overview",
     Wilaya: "Province",
     Daira: "District",
@@ -7419,21 +8620,24 @@ const englishInterfacePatterns = [
   [/^Derni\u00e8re connexion (.+)$/i, "Last login $1"],
   [/^Ajouter (.+)$/i, "Add $1"],
   [/^Modifier (.+)$/i, "Edit $1"],
-  [/^Supprimer (.+)$/i, "Delete $1"],
+  [/^Supprimer (.+) \? Cette action est irréversible\.$/i, "Delete $1? This action is irreversible."],
+  [/^Supprimer (.+) \?$/i, "Delete $1?"],
+  [/^En retard \((\d+) j\)$/i, "Overdue ($1 d)"],
+  [/^Dans (\d+) j$/i, "In $1 d"],
+  [/^\+(\d+) Surstock$/i, "+$1 Overstock"],
+  [/^(-\d+) Manquant$/i, "$1 Missing"],
 ];
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.":
-      "Hold Ctrl ou Cmd for select multiple component ",
+      "Hold Ctrl or Cmd to select multiple components.",
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.":
-      "Hold Ctrl or Cmd for select multiple equipment.",
-
+      "Hold Ctrl or Cmd to select multiple equipment items.",
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs départements.":
-      "Hold Ctrl or Cmd for select multiple department.",
-
+      "Hold Ctrl or Cmd to select multiple departments.",
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs unités.":
-      "Hold Ctrl or Cmd for select multiple units.",
+      "Hold Ctrl or Cmd to select multiple units.",
     "Saisissez les informations du nouvel article.":
       "Enter the information of the new item.",
     "Saisissez les informations du nouvel organe.":
@@ -7909,8 +9113,362 @@ const englishInterfacePhraseTranslations = new Map(
     "Bon de travail":
       "Work ticket",
     "Demandes d'intervention (DI)":
-      "Work Request (WR)"
-
+      "Work Request (WR)",
+    "Substituts, organes et équipements associés":
+      "Substitutes, components and linked equipment",
+    "Associez les articles de remplacement, les organes et équipements liés à cet article.":
+      "Link replacement items, components and equipment to this item.",
+    "Organes et articles associés":
+      "Linked components and items",
+    "Associez les organes et articles déjà créés à cet équipement.":
+      "Link existing components and items to this equipment.",
+    "Organes associés": "Linked components",
+    "Organes liés": "Linked components",
+    "Organe / Composant": "Component",
+    "Système de gestion de maintenance": "Maintenance management system",
+    "Document généré automatiquement": "Automatically generated document",
+    "Imprimer / Enregistrer PDF": "Print / Save PDF",
+    "Imprimé le": "Printed on",
+    "Imprimé le :": "Printed on:",
+    "Impossible d'ouvrir la fenêtre d'impression. Autorisez les pop-ups.":
+      "Unable to open the print window. Please allow pop-ups.",
+    "Erreur lors de la génération du document DI.":
+      "Error while generating the work request document.",
+    "Erreur lors de la génération du document OT.":
+      "Error while generating the work order document.",
+    "Erreur lors de la génération du document Fiche de Stock.":
+      "Error while generating the stock sheet document.",
+    "Erreur lors de la génération du document Inventaire.":
+      "Error while generating the inventory document.",
+    "Erreur lors de la génération du document DA.":
+      "Error while generating the purchase request document.",
+    "Erreur lors de la génération du document BC.":
+      "Error while generating the purchase order document.",
+    "Erreur lors de la génération de la fiche fournisseur.":
+      "Error while generating the supplier record.",
+    "Erreur lors de la génération du document Bon de Réception.":
+      "Error while generating the goods receipt document.",
+    "DI introuvable.": "Work request not found.",
+    "OT introuvable.": "Work order not found.",
+    "BT introuvable.": "Work report not found.",
+    "La date planifiée est obligatoire.":
+      "Scheduled date is required.",
+    "Les travaux réalisés sont obligatoires.":
+      "Work performed is required.",
+    "Demande d'achat introuvable.": "Purchase request not found.",
+    "Bon de commande introuvable.": "Purchase order not found.",
+    "Bon de réception introuvable.": "Goods receipt not found.",
+    "Fiche stock introuvable.": "Stock record not found.",
+    "Inventaire introuvable.": "Inventory not found.",
+    "Fiche fournisseur introuvable.": "Supplier record not found.",
+    "Supprimer cette ligne ?": "Delete this line?",
+    "Remettre la valeur du compteur à zéro ?":
+      "Reset the meter value to zero?",
+    "Supprimer ce compteur définitivement ?":
+      "Permanently delete this meter?",
+    "L'export Excel / PDF sera branché sur le module Historique.":
+      "Excel / PDF export will be connected to the History module.",
+    "Erreurs de validation :": "Validation errors:",
+    "Cette action est irréversible.": "This action is irreversible.",
+    "Demande d'Intervention": "Work Request",
+    "DI — Formulaire de demande d'intervention":
+      "WR — Work request form",
+    "Identification de la demande": "Request identification",
+    "Titre de l'intervention": "Work request title",
+    "Référence DI": "WR reference",
+    "Équipement concerné": "Affected equipment",
+    "Classification de la demande": "Request classification",
+    "Type de demande": "Request type",
+    "Niveau d'urgence": "Urgency level",
+    "Description du problème": "Problem description",
+    "Description détaillée": "Detailed description",
+    "Aucune description fournie.": "No description provided.",
+    "Traçabilité — Ordre de travail lié": "Traceability — Linked work order",
+    "Référence OT généré": "Generated WO reference",
+    "Date de transformation": "Conversion date",
+    "Responsable maintenance": "Maintenance manager",
+    "Visa direction": "Management approval",
+    "ORDRE DE TRAVAIL": "WORK ORDER",
+    "OT — Planification et assignation de l'intervention":
+      "WO — Work order planning and assignment",
+    "Identification de l'ordre de travail": "Work order identification",
+    "Référence OT": "WO reference",
+    "DI liée": "Linked WR",
+    "Classification de l'intervention": "Work order classification",
+    "Technicien(s) assigné(s)": "Assigned technician(s)",
+    "Instructions de travail": "Work instructions",
+    "Instructions techniques": "Technical instructions",
+    "Aucune instruction fournie.": "No instructions provided.",
+    "⚠ Consignes de sécurité": "⚠ Safety instructions",
+    "Aucune consigne de sécurité renseignée.":
+      "No safety instructions provided.",
+    "Articles / Pièces prévus": "Items / Planned parts",
+    "Aucun article prévu": "No planned items",
+    "Qté prévue": "Planned qty.",
+    "PMP unitaire": "Unit WAC",
+    "Total estimé": "Estimated total",
+    "Total articles estimé": "Estimated items total",
+    "Aucun article prévu pour cet OT.":
+      "No items planned for this work order.",
+    "Technicien assigné": "Assigned technician",
+    "BON DE TRAVAIL": "WORK REPORT",
+    "BT — Rapport d'exécution et clôture de l'intervention":
+      "WRP — Execution report and work order closure",
+    "Identification du bon de travail": "Work report identification",
+    "Référence BT": "WRP reference",
+    "OT lié": "Linked WO",
+    "Temps d'intervention": "Work time",
+    "Durée estimée": "Estimated duration",
+    "Durée réelle": "Actual duration",
+    "Écart": "Variance",
+    "Cause de panne": "Failure cause",
+    "Travaux réalisés": "Work performed",
+    "Aucune description des travaux réalisés.":
+      "No description of work performed.",
+    "Articles / Pièces consommés": "Items / Consumed parts",
+    "Qté consommée": "Consumed qty.",
+    "Total réel": "Actual total",
+    "Coût total articles": "Total items cost",
+    "Aucun article consommé enregistré.":
+      "No consumed items recorded.",
+    "Technicien exécutant": "Executing technician",
+    "Visa client / Exploitant": "Client / Operator approval",
+    "PLAN DE MAINTENANCE": "MAINTENANCE PLAN",
+    "Gamme opératoire — Référentiel de déclenchement":
+      "Operating procedure — Trigger reference",
+    "Identification du plan": "Plan identification",
+    "Type de plan": "Plan type",
+    "Planification & déclenchement": "Planning & triggering",
+    "Fréquence": "Frequency",
+    "Déclencheur": "Trigger",
+    "Prochaine échéance": "Next due date",
+    "Seuil alerte": "Alert threshold",
+    "Gamme opératoire": "Operating procedure",
+    "Tâche / Opération": "Task / Operation",
+    "Fait ✓": "Done ✓",
+    "Aucune gamme opératoire définie.":
+      "No operating procedure defined.",
+    "Articles / Pièces nécessaires": "Items / Required parts",
+    "Qté utilisée": "Qty. used",
+    "Aucun article défini pour ce plan.":
+      "No items defined for this plan.",
+    "Consignes de sécurité": "Safety instructions",
+    "Aucune consigne définie.": "No instructions defined.",
+    "Aucun document associé.": "No related documents.",
+    "Visa HSE / Sécurité": "HSE / Safety approval",
+    "FICHE DE STOCK": "STOCK SHEET",
+    "Stock — Fiche article et localisation":
+      "Stock — Item record and location",
+    "Récapitulatif du stock": "Stock summary",
+    "Quantité en stock": "Quantity in stock",
+    "unité(s)": "unit(s)",
+    "Statut stock": "Stock status",
+    "Prix Moyen Pondéré (PMP)": "Weighted Average Cost (WAC)",
+    "Valeur totale (PMP)": "Total value (WAC)",
+    "Prix catalogue unitaire": "Catalog unit price",
+    "Valeur catalogue totale": "Total catalog value",
+    "Identification de l'article": "Item identification",
+    "Localisation & seuils": "Location & thresholds",
+    "Qté réapprovisionnement": "Replenishment qty.",
+    "Aucune observation enregistrée.": "No observations recorded.",
+    "Gestionnaire de stock": "Stock manager",
+    "Responsable magasin": "Warehouse manager",
+    "FEUILLE D'INVENTAIRE": "INVENTORY SHEET",
+    "Stock — Comptage physique et écarts":
+      "Stock — Physical count and discrepancies",
+    "Synthèse du comptage": "Count summary",
+    "Total lignes comptées": "Total counted lines",
+    "ligne(s)": "line(s)",
+    "Lignes conformes": "Compliant lines",
+    "Lignes manquantes": "Missing lines",
+    "Lignes en surstock": "Overstock lines",
+    "Taux de conformité": "Compliance rate",
+    "Informations générales": "General information",
+    "Théorique": "Theoretical",
+    "Compté": "Counted",
+    "Écart": "Variance",
+    "Aucune ligne de comptage enregistrée.":
+      "No count lines recorded.",
+    "Responsable inventaire": "Inventory manager",
+    "DEMANDE D'ACHAT": "PURCHASE REQUEST",
+    "DA — Flux achat interne": "PR — Internal purchasing flow",
+    "Référence DA": "PR reference",
+    "Article demandé": "Requested item",
+    "Désignation article": "Item description",
+    "Quantité demandée": "Requested quantity",
+    "Prix unitaire estimé": "Estimated unit price",
+    "Fournisseur suggéré": "Suggested supplier",
+    "Justification de la demande": "Request justification",
+    "Motif et contexte": "Reason and context",
+    "Aucune justification renseignée.": "No justification provided.",
+    "Décision": "Decision",
+    "☐ &nbsp;Validée": "☐ Approved",
+    "☐ &nbsp;Refusée — Motif :": "☐ Rejected — Reason:",
+    "Nom du demandeur": "Requester name",
+    "Responsable Achats": "Purchasing manager",
+    "BON DE COMMANDE": "PURCHASE ORDER",
+    "BC — Commande fournisseur": "PO — Supplier order",
+    "DA liée :": "Linked PR:",
+    "Identification du bon de commande": "Purchase order identification",
+    "Référence BC": "PO reference",
+    "Détail de la commande": "Order details",
+    "PU HT": "Unit price excl. tax",
+    "Remise": "Discount",
+    "Montant HT": "Amount excl. tax",
+    "Frais de livraison": "Delivery fees",
+    "Aucune observation.": "No observations.",
+    "Établi par — Achats": "Prepared by — Purchasing",
+    "Validé par — Responsable": "Approved by — Manager",
+    "Fournisseur — Accusé réception": "Supplier — Acknowledgement of receipt",
+    "Cachet et date": "Stamp and date",
+    "Cachet & Signature": "Stamp & Signature",
+    "FICHE FOURNISSEUR": "SUPPLIER RECORD",
+    "Fournisseur — Identification, contacts et historique achats":
+      "Supplier — Identification, contacts and purchasing history",
+    "Synthèse des activités": "Activity summary",
+    "commande(s)": "order(s)",
+    "article(s)": "item(s)",
+    "évaluation(s)": "evaluation(s)",
+    "Identification du fournisseur": "Supplier identification",
+    "Article d'imposition": "Tax article",
+    "Contacts & Localisation": "Contacts & location",
+    "Conditions Commerciales": "Commercial terms",
+    "Aucun article au catalogue.": "No catalog items.",
+    "Aucun bon de commande.": "No purchase orders.",
+    "BON DE RÉCEPTION": "GOODS RECEIPT",
+    "Réception — Contrôle qualité et mise à jour stock":
+      "Receipt — Quality control and stock update",
+    "Identification de la réception": "Receipt identification",
+    "Référence réception": "Receipt reference",
+    "BC lié": "Linked PO",
+    "Contrôle qualité": "Quality control",
+    "État réception": "Receipt status",
+    "Qté commandée": "Ordered qty.",
+    "Qté reçue": "Received qty.",
+    "Qté manquante": "Missing qty.",
+    "Emplacement stockage": "Storage location",
+    "Récapitulatif quantités": "Quantity summary",
+    "En retard": "Overdue",
+    "Dans": "In",
+    "Criticité équipement": "Equipment criticality",
+    "Tél:": "Tel:",
+    "Tél": "Tel",
+    "Imprimer le bon de réception": "Print goods receipt",
+    "Imprimer DA": "Print PR",
+    "Imprimer BC": "Print PO",
+    "Étape 1 / 4 — Identification": "Step 1 / 4 — Identification",
+    "Créer l'article": "Create item",
+    "Infos générales": "General information",
+    "Caractéristiques spécifiques": "Specific characteristics",
+    "Champs personnalisés": "Custom fields",
+    "Aucune caractéristique technique renseignée.":
+      "No technical characteristics provided.",
+    "Aucune désignation": "No description",
+    "Aucun groupe article": "No item group",
+    "Créez le premier groupe article.": "Create the first item group.",
+    "Aucune famille article": "No item family",
+    "Créez la première famille article.": "Create the first item family.",
+    "Aucun article": "No item",
+    "Créez le premier article.": "Create the first item.",
+    "Aucune unité enregistrée": "No units recorded",
+    "Aucune sélection": "No selection",
+    "Non défini": "Not defined",
+    "Système": "System",
+    "Voir les détails": "View details",
+    "Mettre à jour": "Update",
+    "Créer": "Create",
+    "Nouvelle unité": "New unit",
+    "Liste des unités": "Unit list",
+    "Pièce de rechange": "Spare part",
+    "Sélectionner le type d'article": "Select item type",
+    "Sélectionner l'unité de mesure": "Select unit of measure",
+    "Sélectionner le fournisseur principal": "Select main supplier",
+    "Sélectionner un article substitut": "Select substitute item",
+    "Sélectionnez un ou plusieurs articles de remplacement en cas de rupture.":
+      "Select one or more replacement items in case of stockout.",
+    "Diamètre intérieur (mm)": "Inner diameter (mm)",
+    "Diamètre extérieur (mm)": "Outer diameter (mm)",
+    "Épaisseur / Hauteur (mm)": "Thickness / Height (mm)",
+    "Volume / Capacité (L, mL, m³)": "Volume / Capacity (L, mL, m³)",
+    "Durée de conservation (mois / années)":
+      "Shelf life (months / years)",
+    "Date de péremption": "Expiry date",
+    "Ajouter une caractéristique": "Add characteristic",
+    "Plusieurs images peuvent être ajoutées à la fiche.":
+      "Multiple images can be added to the record.",
+    "Détails de": "Details of",
+    "Toutes les informations du groupe article sélectionné.":
+      "All information for the selected item group.",
+    "Toutes les informations de la famille article sélectionnée.":
+      "All information for the selected item family.",
+    "Toutes les informations de l'article sélectionné.":
+      "All information for the selected item.",
+    "Toutes les informations de l'unité sélectionnée.":
+      "All information for the selected unit.",
+    "Chaque groupe structure les familles et les articles rattachés.":
+      "Each group structures linked families and items.",
+    "Référentiel de premier niveau": "Top-level directory",
+    "Familles liées": "Linked families",
+    "Articles référencés": "Referenced items",
+    "Chaque famille est rattachée à un groupe article.":
+      "Each family is linked to an item group.",
+    "Référentiel intermédiaire": "Intermediate directory",
+    "Articles classés par famille": "Items grouped by family",
+    "Chaque fiche article reprend le classement, les achats et la traçabilité.":
+      "Each item record includes classification, purchasing and traceability.",
+    "Groupe et famille renseignés": "Group and family set",
+    "Le logo peut être ajouté après la création de l'entreprise.":
+      "The logo can be added after the company is created.",
+    "Numéro téléphone": "Phone number",
+    "Sélectionner un responsable": "Select a manager",
+    "Gestion des unités avec liste, détails, création, modification et suppression.":
+      "Manage units with list, details, create, edit and delete.",
+    "Créez la première unité pour commencer à structurer l'organisation.":
+      "Create the first unit to start structuring the organization.",
+    "Le bouton Nouvelle unité ouvre le formulaire de création.":
+      "The New unit button opens the creation form.",
+    "Chaque unité conserve son code, ses coordonnées et son responsable avec email synchronisé automatiquement.":
+      "Each unit keeps its code, contact details and manager with automatically synchronized email.",
+    "unités": "units",
+    "Unités actives": "Active units",
+    "Email chargé automatiquement": "Email loaded automatically",
+    "Référentiel organisation": "Organization directory",
+    "Sous-pages organes": "Component subpages",
+    "Référentiel des groupes, familles et organes.":
+      "Directory of groups, families and components.",
+    "familles ·": "families ·",
+    "organes": "components",
+    "Planifié": "Scheduled",
+    "En cours": "In progress",
+    "Clôturé": "Closed",
+    "Terminé": "Completed",
+    "Rejeté": "Rejected",
+    "Normal": "Normal",
+    "Alerte": "Alert",
+    "Surstock": "Overstock",
+    "Manquant": "Missing",
+    "Conforme": "Compliant",
+    "Refusée": "Rejected",
+    "Validée": "Approved",
+    "OT créé avec succès": "Work order created successfully",
+    "BT créé avec succès": "Work report created successfully",
+    "Modifier ligne catalogue": "Edit catalog line",
+    "Créer ligne catalogue": "Create catalog line",
+    "Formulaire de ligne catalogue fournisseur.":
+      "Supplier catalog line form.",
+    "En stock fournisseur": "In supplier stock",
+    "Sur commande": "On order",
+    "Délai spécial": "Special lead time",
+    "Modifier contrat": "Edit contract",
+    "Créer contrat": "Create contract",
+    "Fiche contrat avec alertes expiration et responsable de suivi.":
+      "Contract record with expiry alerts and follow-up manager.",
+    "Contrat cadre": "Framework contract",
+    "Contrat de maintenance": "Maintenance contract",
+    "Accord de partenariat": "Partnership agreement",
+    "Expiré": "Expired",
+    "Résilié": "Terminated",
+    "En renouvellement": "Renewal in progress",
   }),
 );
 
@@ -8487,6 +10045,45 @@ function translateInterfaceValue(value, allowFallback = true) {
   return `${leading}${translated}${trailing}`;
 }
 
+function uiText(value, allowFallback = true) {
+  if (getAdministrationLanguageKey() !== "en") {
+    return String(value ?? "");
+  }
+  return translateInterfaceValue(String(value ?? ""), allowFallback);
+}
+
+function uiAlert(message) {
+  window.alert(uiText(message));
+}
+
+function uiConfirm(message) {
+  return window.confirm(uiText(message));
+}
+
+function printEscT(value) {
+  if (value === null || value === undefined) return "—";
+  return printEsc(uiText(String(value)));
+}
+
+function printNumberLocale() {
+  return getAdministrationLanguageKey() === "en" ? "en-US" : "fr-DZ";
+}
+
+function printLocalizeHtml(html) {
+  if (getAdministrationLanguageKey() !== "en") return html;
+  let output = String(html ?? "");
+  output = output.replace(
+    /\b(label|title|placeholder|aria-label)="([^"]*)"/gi,
+    (match, attr, value) => `${attr}="${uiText(value)}"`,
+  );
+  output = output.replace(/>([^<]+)</g, (match, text) => {
+    if (!text.trim() || /^\s*\d/.test(text.trim())) return match;
+    const translated = uiText(text);
+    return translated === text ? match : `>${translated}<`;
+  });
+  return output;
+}
+
 function shouldUseInterfaceFallback(element) {
   if (!element) return false;
   if (
@@ -8641,6 +10238,15 @@ function applyLocalizedShell(state = null) {
   updateProfileAvatar();
 
   updateClock();
+
+  try {
+    localStorage.setItem(
+      "maintflow.authLanguage",
+      languageKey === "en" ? "en" : "fr",
+    );
+  } catch (error) {
+    // ignore storage errors
+  }
 }
 
 function formatAdministrationDateTime(value) {
@@ -9013,10 +10619,6 @@ function renderAdministrationUserDetailsModal(user) {
         <div class="org-detail-item"><span>Code entreprise associé</span><strong>${escapeHtml(user.companyCode || enterprise.code || "ORG-001")}</strong></div>
       </div>
       <div class="org-modal-actions">
-        <button class="btn btn-outline" type="button" data-admin-user-print-detail="true">
-          <i class="fa-solid fa-print"></i>
-          <span>Imprimer</span>
-        </button>
         <button class="btn btn-primary" type="button" data-admin-user-close="true">
           <i class="fa-solid fa-check"></i>
           <span>Fermer</span>
@@ -9038,15 +10640,6 @@ function renderAdministrationUserDetailsModal(user) {
         overlayRootEl.innerHTML = "";
       });
     });
-
-  const printButton = overlayRootEl.querySelector(
-    "[data-admin-user-print-detail]",
-  );
-  if (printButton) {
-    printButton.addEventListener("click", function () {
-      window.print();
-    });
-  }
 }
 
 function openAdministrationUserDetails(recordId) {
@@ -9146,9 +10739,6 @@ function buildAdministrationUsersSection(state) {
                 <div class="admin-user-list-actions">
                   <button class="btn btn-outline" type="button" data-admin-user-view="${escapeHtml(user.id)}">
                     <i class="fa-regular fa-eye"></i>
-                  </button>
-                  <button class="btn btn-outline" type="button" data-admin-user-print="${escapeHtml(user.id)}">
-                    <i class="fa-solid fa-print"></i>
                   </button>
                   <button class="btn btn-outline danger" type="button" data-admin-user-delete="${escapeHtml(user.id)}">
                     <i class="fa-regular fa-trash-can"></i>
@@ -9717,10 +11307,6 @@ function buildAdministrationActionButtons(activeSubpageKey, state) {
         <i class="fa-solid fa-file-csv"></i>
         <span>${localizeAdministrationText("Exporter CSV", state)}</span>
       </button>
-      <button class="btn btn-primary" type="button" data-admin-users-print>
-        <i class="fa-solid fa-print"></i>
-        <span>${localizeAdministrationText("Imprimer", state)}</span>
-      </button>
     `;
     return;
   }
@@ -9854,74 +11440,12 @@ function downloadAdministrationCsv(filename, rows) {
 function attachAdministrationUserHandlers(state) {
   if (!pageContentEl) return;
 
-  const exportButton = pageActionsEl
-    ? pageActionsEl.querySelector("[data-admin-export-users]")
-    : null;
-  const printButton = pageActionsEl
-    ? pageActionsEl.querySelector("[data-admin-users-print]")
-    : null;
-
-  if (exportButton) {
-    exportButton.addEventListener("click", function () {
-      const rows = [
-        [
-          "Numéro",
-          "Nom",
-          "Prénom",
-          "Nom d'utilisateur",
-          "Email",
-          "Téléphone",
-          "Rôle",
-          "Fonction",
-          "Unité",
-          "Division",
-          "Département",
-          "Statut",
-        ],
-        ...state.users.map((user) => [
-          user.code,
-          user.lastName,
-          user.firstName,
-          user.username,
-          user.email,
-          user.phone,
-          user.role,
-          user.functionTitle,
-          user.unit,
-          user.division,
-          user.department,
-          user.status,
-        ]),
-      ];
-      downloadAdministrationCsv("utilisateurs-administration.csv", rows);
-    });
-  }
-
-  if (printButton) {
-    printButton.addEventListener("click", function () {
-      window.print();
-    });
-  }
-
   pageContentEl.querySelectorAll("[data-admin-user-view]").forEach((button) => {
     button.addEventListener("click", function () {
       const recordId = this.dataset.adminUserView || "";
       openAdministrationUserDetails(recordId);
     });
   });
-
-  pageContentEl
-    .querySelectorAll("[data-admin-user-print]")
-    .forEach((button) => {
-      button.addEventListener("click", function () {
-        const recordId = this.dataset.adminUserPrint || "";
-        const user = state.users.find((item) => item.id === recordId);
-        if (!user) return;
-
-        renderAdministrationUserDetailsModal(user);
-        setTimeout(() => window.print(), 0);
-      });
-    });
 
   pageContentEl
     .querySelectorAll("[data-admin-user-delete]")
@@ -9935,7 +11459,7 @@ function attachAdministrationUserHandlers(state) {
         if (!user) return;
 
         if (
-          !window.confirm(`Supprimer ${getAdministrationUserFullName(user)} ?`)
+          !uiConfirm(`Supprimer ${getAdministrationUserFullName(user)} ?`)
         )
           return;
 
@@ -10161,49 +11685,6 @@ function attachAdministrationGeneralHandlers() {
 
 function attachAdministrationLogHandlers(state) {
   if (!pageContentEl) return;
-
-  const exportButton = pageActionsEl
-    ? pageActionsEl.querySelector("[data-admin-export-logs]")
-    : null;
-  const printButton = pageActionsEl
-    ? pageActionsEl.querySelector("[data-admin-print-logs]")
-    : null;
-
-  if (exportButton) {
-    exportButton.addEventListener("click", function () {
-      const filteredLogs = getAdministrationFilteredLogs(state);
-      const rows = [
-        [
-          "Date",
-          "Utilisateur",
-          "Action",
-          "Module",
-          "Enregistrement",
-          "Détail",
-          "Avant",
-          "Après",
-        ],
-        ...filteredLogs.map((log) => [
-          formatAdministrationDateTime(log.date),
-          log.user,
-          log.action,
-          log.module,
-          log.record,
-          log.detail,
-          log.before,
-          log.after,
-        ]),
-      ];
-      downloadAdministrationCsv("journaux-systeme.csv", rows);
-    });
-  }
-
-  if (printButton) {
-    printButton.addEventListener("click", function () {
-      window.print();
-    });
-  }
-
   pageContentEl
     .querySelectorAll("[data-admin-log-filter]")
     .forEach((control) => {
@@ -10270,13 +11751,14 @@ function renderSectionSubpages(pageKey, subpageKey) {
 }
 
 function getDashboardInterventionStats(type) {
+  const t = type || 'OT';
   const directory = loadInterventionsState();
   let total = 0;
   let planifie = 0;
   let encours = 0;
   let termine = 0;
 
-  if (type === "DI") {
+  if (t === "DI") {
     const items = directory.dis || [];
     total = items.length;
     planifie = items.filter((item) => item.status === "En attente").length;
@@ -10286,7 +11768,7 @@ function getDashboardInterventionStats(type) {
         item.status === "Transformée en OT" ||
         item.status === "Terminé",
     ).length;
-  } else if (type === "OT") {
+  } else if (t === "OT") {
     const items = directory.ots || [];
     total = items.length;
     planifie = items.filter((item) => item.status === "Planifié").length;
@@ -10297,7 +11779,7 @@ function getDashboardInterventionStats(type) {
         item.status === "Validé" ||
         item.status === "Clôturé",
     ).length;
-  } else if (type === "BT") {
+  } else if (t === "BT") {
     const items = directory.bts || [];
     total = items.length;
     planifie = items.filter(
@@ -10350,14 +11832,15 @@ function dashboardPercent(part, total) {
 }
 
 function dashboardIsClosedStatus(status) {
-  const normalized = String(status || "").toLowerCase();
+  const normalized = String(status || "").toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return (
     normalized.includes("valid") ||
     normalized.includes("termin") ||
-    normalized.includes("clôt") ||
-    normalized.includes("clÃ´t") ||
-    normalized.includes("reçu complet") ||
-    normalized.includes("reÃ§u complet") ||
+    normalized.includes("clot") ||
+    normalized.includes("clos") ||
+    normalized.includes("reuni") ||
+    normalized.includes("complet") ||
     normalized.includes("transform")
   );
 }
@@ -10393,7 +11876,7 @@ function dashboardGetInterventionRows(directory = loadInterventionsState()) {
       status: item.status || "-",
       statusClass: getInterventionStatusBadgeClass(item.status),
       technician: item.requesterLabel || "-",
-      date: item.createdAt,
+      date: item.createdAt || new Date().toISOString(),
       dueDate: item.createdAt,
       cost: 0,
       articles: [],
@@ -10408,7 +11891,7 @@ function dashboardGetInterventionRows(directory = loadInterventionsState()) {
       status: item.status || "-",
       statusClass: getInterventionStatusBadgeClass(item.status),
       technician: item.technicianLabel || "-",
-      date: item.plannedDate || item.createdAt,
+      date: item.plannedDate || item.createdAt || new Date().toISOString(),
       dueDate: item.plannedDate || item.createdAt,
       cost: 0,
       articles: item.articles || [],
@@ -10425,9 +11908,9 @@ function dashboardGetInterventionRows(directory = loadInterventionsState()) {
         status: item.status || "-",
         statusClass: getInterventionStatusBadgeClass(item.status),
         technician: item.technicianSignature?.name || item.managerSignature?.name || linkedOt?.technicianLabel || "-",
-        date: item.endDate || item.startDate || linkedOt?.plannedDate || linkedOt?.createdAt,
+        date: item.endDate || item.startDate || linkedOt?.plannedDate || linkedOt?.createdAt || new Date().toISOString(),
         dueDate: item.endDate || item.startDate || linkedOt?.plannedDate,
-        cost: dashboardGetArticleLinesCost(item.articles || []),
+        cost: item.coutTotal ?? dashboardGetArticleLinesCost(item.articles || []),
         articles: item.articles || [],
       };
     }),
@@ -10550,7 +12033,9 @@ function dashboardBuildStockFamilyPie() {
   (directory.articles || []).forEach((article) => {
     const family = (directory.families || []).find((item) => item.id === article.familyId);
     const totals = getStockTotalsForArticle(article.id);
-    const value = totals.totalValue || (Number(article.quantity) || 0) * (Number(article.price) || 0);
+    const value = (totals.totalValue > 0)
+      ? totals.totalValue
+      : (Number(totals.currentQuantity || 0) * Number(article.price ?? 0));
     const key = family?.name || "Sans famille";
     familyValues.set(key, (familyValues.get(key) || 0) + value);
   });
@@ -10582,7 +12067,7 @@ function dashboardBuildWeekPlanning(directory) {
   const days = Array.from({ length: 5 }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
-    const key = date.toISOString().slice(0, 10);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     const items = (directory.ots || []).filter((ot) => String(ot.plannedDate || "").slice(0, 10) === key);
     return {
       key,
@@ -10646,7 +12131,10 @@ function dashboardBuildActivity(rows, achatsState, stockDirectory, interventionD
 }
 
 function dashboardBuildBusinessKpis(rows, stockRecords) {
-  const failures = rows.filter((row) => String(row.type || "").toLowerCase().includes("correct"));
+  const failures = rows.filter((row) => {
+    const t = String(row.type || "").toLowerCase();
+    return t.includes("correct") || t === "" || t === "-";
+  });
   const closedBts = rows.filter((row) => row.source === "BT" && dashboardIsClosedStatus(row.status));
   const repairHours = closedBts
     .map((row) => {
@@ -10661,7 +12149,7 @@ function dashboardBuildBusinessKpis(rows, stockRecords) {
     return type.includes("prév") || type.includes("prÃ©v");
   });
   const preventiveDone = preventiveRows.filter((row) => dashboardIsClosedStatus(row.status)).length;
-  const availableStock = stockRecords.filter((record) => Number(record.currentQuantity) > Number(record.minStock || 0)).length;
+  const availableStock = stockRecords.filter((record) => Number(record.currentQuantity || 0) > Number(record.minStock || 0)).length;
 
   return [
     {
@@ -10695,7 +12183,9 @@ function dashboardBuildPurchaseBudgetChart(achatsState) {
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
     const month = months.find((item) => item.key === key);
     if (!month) return;
-    const total = Number(bc.totalTtc ?? bc.total ?? bc.amount ?? 0) || 0;
+    const total = Number(
+      bc.totalTtc ?? bc.montantTtc ?? bc.total ?? bc.montantTotal ?? bc.totalHt ?? bc.amount ?? 0
+    ) || 0;
     month.engaged += total;
     month.allocated += Number(bc.budget ?? 0) || total;
   });
@@ -10708,7 +12198,10 @@ function dashboardBuildTopSuppliers(supplierState, achatsState) {
   return (supplierState.suppliers || [])
     .map((supplier) => {
       const name = supplier.raisonSociale || supplier.nomCommercial || supplier.name || "-";
-      const supplierOrders = bons.filter((bc) => String(bc.supplierId || bc.supplierName || "").includes(supplier.id) || String(bc.supplierName || "") === name);
+      const supplierOrders = bons.filter((bc) =>
+        String(bc.supplierId) === String(supplier.id) ||
+        String(bc.supplierName || "").toLowerCase().includes(String(name || "").toLowerCase())
+      );
       const evaluations = supplier.evaluations || [];
       const score = evaluations.length
         ? evaluations.reduce((sum, item) => sum + (Number(item.global) || 0), 0) / evaluations.length
@@ -10741,7 +12234,7 @@ function renderDashboardPage() {
   const stockDirectory = getStockDirectory();
   const achatsState = loadAchatsState();
   const supplierState = dashboardGetSupplierState();
-  const selectedType = localStorage.getItem("dashboardType") || "OT";
+  const selectedType = localStorage.getItem("dashboardType") || "BT";
   const stats = getDashboardInterventionStats(selectedType);
   const interventionRows = dashboardGetInterventionRows(interventionDirectory)
     .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
@@ -10767,27 +12260,7 @@ function renderDashboardPage() {
   const purchaseBudget = dashboardBuildPurchaseBudgetChart(achatsState);
   const topSuppliers = dashboardBuildTopSuppliers(supplierState, achatsState);
   const totalEquipments = (equipmentDirectory.equipments || []).length;
-  const operationalEquipments = (equipmentDirectory.equipments || []).filter(
-    (equipment) => equipment.status === "En service",
-  ).length;
-  const equipmentAvailability = dashboardPercent(operationalEquipments, totalEquipments);
-  const lateOts = (interventionDirectory.ots || []).filter((ot) =>
-    dashboardIsLate(ot.plannedDate || ot.createdAt, ot.status),
-  ).length;
-  const activeInterventions = interventionRows.filter(
-    (row) => !dashboardIsClosedStatus(row.status),
-  ).length;
-  const pendingDa = (achatsState.demandes || []).filter(
-    (da) => !dashboardIsClosedStatus(da.status),
-  );
-  const criticalStock = getStockAlerts().filter((alert) => alert.type === "crit");
   const currentMonthKey = new Date().toISOString().slice(0, 7);
-  const monthMaintenanceCost = interventionRows
-    .filter((row) => String(row.date || "").slice(0, 7) === currentMonthKey)
-    .reduce((sum, row) => sum + (Number(row.cost) || 0), 0);
-  const budgetMonth = (achatsState.bons || [])
-    .filter((bc) => String(bc.createdAt || bc.date || bc.orderDate || "").slice(0, 7) === currentMonthKey)
-    .reduce((sum, bc) => sum + (Number(bc.budget ?? bc.totalTtc ?? bc.total ?? bc.amount ?? 0) || 0), 0);
   const upcomingWork = [...(interventionDirectory.ots || [])]
     .filter((item) => !dashboardIsClosedStatus(item.status))
     .sort(
@@ -10808,69 +12281,40 @@ function renderDashboardPage() {
       priorityClass: getInterventionBadgeClass(item.priority),
       priorityLabel: item.priority || "Standard",
     }));
-  const dashboardKpis = [
-    {
-      label: "Interventions actives",
-      value: dashboardFormatNumber(activeInterventions),
-      footer: "DI, OT et BT ouverts",
-      icon: "fa-screwdriver-wrench",
-      tone: "info",
-    },
-    {
-      label: "Équipements opérationnels",
-      value: `${dashboardFormatNumber(operationalEquipments)} / ${equipmentAvailability}%`,
-      footer: `${dashboardFormatNumber(totalEquipments)} équipements`,
-      icon: "fa-gears",
-      tone: "success",
-    },
-    {
-      label: "OT en retard",
-      value: dashboardFormatNumber(lateOts),
-      footer: "échéance dépassée",
-      icon: "fa-clock",
-      tone: lateOts ? "danger" : "success",
-    },
-    {
-      label: "DA en attente",
-      value: dashboardFormatNumber(pendingDa.length),
-      footer: `${pendingDa.filter((da) => String(da.priority || da.urgency || "").toLowerCase().includes("urgent")).length} urgentes`,
-      icon: "fa-file-circle-exclamation",
-      tone: "warning",
-    },
-    {
-      label: "Stock critique",
-      value: `${dashboardFormatNumber(criticalStock.length)} articles`,
-      footer: "sous seuil min",
-      icon: "fa-box-open",
-      tone: criticalStock.length ? "danger" : "success",
-    },
-    {
-      label: "Coût maintenance ce mois",
-      value: dashboardFormatMoney(monthMaintenanceCost),
-      footer: `budget ${dashboardFormatMoney(budgetMonth)}`,
-      icon: "fa-coins",
-      tone: "info",
-    },
-  ];
+
+  const allBtsForCost = interventionDirectory.bts || [];
+  const monthCostAll = allBtsForCost
+    .filter(bt => String(bt.endDate || bt.startDate || bt.createdAt || "").slice(0, 7) === currentMonthKey)
+    .reduce((sum, bt) => sum + (bt.coutTotal || 0), 0);
+
+  const eqCostMap = {};
+  let totalCostGlobal = 0;
+  let prevCostGlobal = 0;
+  let corrCostGlobal = 0;
+  const otsForCost = interventionDirectory.ots || [];
+
+  allBtsForCost.forEach(bt => {
+    const c = bt.coutTotal || 0;
+    if (c > 0) {
+      const eqLabel = bt.equipmentLabel || "Inconnu";
+      eqCostMap[eqLabel] = (eqCostMap[eqLabel] || 0) + c;
+      totalCostGlobal += c;
+      const ot = otsForCost.find(o => o.id === bt.otId);
+      const type = ot ? ot.typeMaintenance : "Corrective";
+      if (type === "Préventive") prevCostGlobal += c;
+      else corrCostGlobal += c;
+    }
+  });
+
+  const top3EquipementsCost = Object.entries(eqCostMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
+  const gPctPrev = totalCostGlobal ? Math.round((prevCostGlobal / totalCostGlobal) * 100) : 0;
+  const gPctCorr = totalCostGlobal ? Math.round((corrCostGlobal / totalCostGlobal) * 100) : 0;
 
   pageContentEl.className = "dashboard-page";
   pageContentEl.innerHTML = `
-    <section class="dashboard-kpi-grid">
-      ${dashboardKpis
-      .map(
-        (kpi) => `
-            <div class="kpi-card dashboard-kpi-card ${kpi.tone}">
-              <div class="kpi-header">
-                <div class="kpi-label">${kpi.label}</div>
-                <div class="kpi-icon ${kpi.tone}"><i class="fa-solid ${kpi.icon}"></i></div>
-              </div>
-              <div class="kpi-value">${kpi.value}</div>
-              <div class="kpi-footer">${kpi.footer}</div>
-            </div>
-          `,
-      )
-      .join("")}
-    </section>
 
     <section class="dashboard-grid dashboard-grid-2">
       <div class="card dashboard-chart-card">
@@ -11219,6 +12663,46 @@ function renderDashboardPage() {
         </div>
       </div>
     </section>
+
+    <section class="dashboard-grid dashboard-grid-3" style="margin-top: 1.5rem;">
+      <div class="card dashboard-pie-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-coins"></i> Coût maintenance (Mois)</div>
+        </div>
+        <div class="card-body" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem;">
+          <h2 style="font-size: 2.2rem; margin: 0; color: var(--org-brand);">${dashboardFormatMoney(monthCostAll)}</h2>
+          <span class="muted" style="margin-top: 0.5rem;">Cumul du mois en cours</span>
+        </div>
+      </div>
+      <div class="card dashboard-pie-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-ranking-star"></i> Top 3 Équipements coûteux</div>
+        </div>
+        <div class="card-body org-detail-list" style="padding: 1rem;">
+          ${top3EquipementsCost.length ? top3EquipementsCost.map(eq => `
+            <div class="org-detail-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
+              <span>${escapeHtml(eq[0])}</span>
+              <strong style="color: var(--org-danger);">${dashboardFormatMoney(eq[1])}</strong>
+            </div>
+          `).join('') : '<div class="muted" style="text-align: center; padding: 1rem;">Aucune donnée de coût</div>'}
+        </div>
+      </div>
+      <div class="card dashboard-pie-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-money-bill-transfer"></i> Répartition des coûts</div>
+        </div>
+        <div class="card-body org-detail-list" style="padding: 1rem;">
+          <div class="org-detail-item" style="display: flex; justify-content: space-between; padding: 1rem 0;">
+            <span><i class="legend-dot danger"></i> Correctif</span>
+            <strong style="font-size: 1.2rem;">${gPctCorr}%</strong>
+          </div>
+          <div class="org-detail-item" style="display: flex; justify-content: space-between; padding: 1rem 0;">
+            <span><i class="legend-dot success"></i> Préventif</span>
+            <strong style="font-size: 1.2rem;">${gPctPrev}%</strong>
+          </div>
+        </div>
+      </div>
+    </section>
   `;
 
   const typeSelect = document.getElementById("dashboardInterventionType");
@@ -11358,6 +12842,7 @@ function normalizeStockRecord(record) {
     ),
     currentQuantity: quantity,
     pmp,
+    articlePrice: Number(record.articlePrice ?? 0) || 0,
     minStock: Number(record.minStock ?? 15) || 0,
     maxStock: Number(record.maxStock ?? 120) || 0,
     safetyStock: Number(record.safetyStock ?? 20) || 0,
@@ -11568,17 +13053,12 @@ function syncStockArticleQuantityFromRecords(articleId) {
 
 function getStockTotals() {
   const records = getStockRecords();
-  const quantity = records.reduce(
-    (sum, record) => sum + (Number(record.currentQuantity) || 0),
-    0,
-  );
-  const value = records.reduce(
-    (sum, record) =>
-      sum + (Number(record.currentQuantity) || 0) * (Number(record.pmp) || 0),
-    0,
-  );
-
-  return { quantity, value };
+  const quantity = records.reduce((sum, record) => sum + (Number(record.currentQuantity) || 0), 0);
+  const value = records.reduce((sum, record) => sum + (Number(record.currentQuantity) || 0) * (Number(record.pmp) || 0), 0);
+  const catalogTotal = records.reduce((sum, record) => {
+    return sum + (Number(record.currentQuantity) || 0) * (Number(record.articlePrice) || 0);
+  }, 0);
+  return { quantity, value, catalogTotal };
 }
 
 function calculateStockPmp(
@@ -11697,7 +13177,7 @@ function cancelStockMovement(movementId) {
       !sourceRecord ||
       quantity > (Number(sourceRecord.currentQuantity) || 0)
     ) {
-      window.alert(
+      uiAlert(
         "Impossible d’annuler cette entrée: stock local insuffisant.",
       );
       return false;
@@ -11956,7 +13436,14 @@ function closeStockInventory(form) {
       ) ||
       getStockRecordsForArticle(articleId)[0] ||
       null;
-    const pmp = Number(existingRecord?.pmp) || Number(article?.price) || 0;
+    const currentPmp = Number(existingRecord?.pmp) || Number(article?.price) || 0;
+    const currentQty = Number(existingRecord?.currentQuantity) || 0;
+
+    // Si écart positif (entrée de marchandise) → recalculer le PMP
+    // Si écart négatif ou nul → PMP inchangé (règle comptable standard)
+    const pmp = discrepancy > 0
+      ? calculateStockPmp(currentQty, currentPmp, discrepancy, currentPmp)
+      : currentPmp;
 
     if (discrepancy !== 0) {
       openCount += 1;
@@ -12346,11 +13833,7 @@ function renderStockSummaryCards() {
         <strong>${formatStockNumber(totals.quantity)}</strong>
         <small>unités recensées</small>
       </div>
-      <div class="stock-stat-card">
-        <span>Valeur catalogue</span>
-        <strong>${formatStockNumber(totals.value)} DH</strong>
-        <small>valorisation estimée</small>
-      </div>
+      <div class="stock-stat-card"><span>Valeur catalogue</span><strong>${formatStockNumber(totals.catalogTotal)} DA</strong><small>cumul prix articles</small></div>
     </div>
   `;
 }
@@ -12703,7 +14186,7 @@ function openStockInventoryModal(inventoryId = "") {
     } else if (action === "edit") {
       row.querySelector("[data-stock-inventory-counted]")?.focus();
     } else if (action === "delete") {
-      const confirmed = window.confirm("Supprimer cette ligne ?");
+      const confirmed = uiConfirm("Supprimer cette ligne ?");
       if (!confirmed) return;
       row.remove();
       refreshInventorySummary(inventoryForm);
@@ -12823,7 +14306,7 @@ function deleteStockInventoryById(inventoryId) {
   const inventory = getStockInventoryById(inventoryId);
   if (!inventory) return;
 
-  const confirmed = window.confirm(
+  const confirmed = uiConfirm(
     `Supprimer définitivement l'inventaire ${inventory.id} ?`,
   );
   if (!confirmed) return;
@@ -12861,27 +14344,28 @@ function openStockRecordDetails(recordKey) {
       <div class="org-detail-list">
         <div class="org-detail-item"><span>Article</span><strong>${escapeHtml(article ? `${article.code} — ${article.name}` : record.articleId || "-")}</strong></div>
         <div class="org-detail-item"><span>Quantité</span><strong>${escapeHtml(record.currentQuantity)}</strong></div>
-        <div class="org-detail-item"><span>PMP</span><strong>${formatStockNumber(record.pmp)} DH</strong></div>
-        <div class="org-detail-item"><span>Valeur totale</span><strong>${formatStockNumber(totalValue)} DH</strong></div>
+        <div class="org-detail-item"><span>PMP</span><strong>${formatStockNumber(record.pmp)} DA</strong></div>
+        <div class="org-detail-item"><span>Prix article</span><strong>${formatStockNumber(record.articlePrice ?? 0)} DA</strong></div>
+        <div class="org-detail-item"><span>Prix total catalogue</span><strong>${formatStockNumber((record.currentQuantity ?? 0) * (record.articlePrice ?? 0))} DA</strong></div>
         <div class="org-detail-item"><span>Minimum</span><strong>${escapeHtml(record.minStock)}</strong></div>
         <div class="org-detail-item"><span>Sécurité</span><strong>${escapeHtml(record.safetyStock)}</strong></div>
         <div class="org-detail-item"><span>Réapprovisionnement</span><strong>${escapeHtml(record.replenishmentQty)}</strong></div>
         <div class="org-detail-item"><span>Emplacement</span><strong>${escapeHtml(record.locationLabel || "-")}</strong></div>
         <div class="org-detail-item"><span>État</span><strong>${getStockRecordRiskLabel(record)}</strong></div>
-        <div class="org-detail-item"><span>Dernière mise à jour</span><strong>${formatStockDateTime(parseStockDateValue(record.updatedAt) || new Date(record.updatedAt || Date.now()))}</strong></div>
       </div>
       <div class="stock-modal-notes">
         <strong>Observations</strong>
         <p>${escapeHtml(record.observations || "Aucune observation")}</p>
       </div>
     </div>
-    <div class="org-modal-actions">
-      <button class="btn btn-outline" type="button" data-stock-close="true">Fermer</button>
-      <button class="btn btn-outline" type="button" data-stock-print-record="true">
-        <i class="fa-solid fa-print"></i>
-        <span>Imprimer la fiche</span>
-      </button>
-    </div>
+     <div class="org-modal-actions">
+    <button class="btn btn-outline" type="button" 
+            onclick="printFicheStock('${escapeHtml(recordKey)}')" 
+            style="display:inline-flex;align-items:center;gap:6px;">
+      <i class="fa-solid fa-print"></i> Imprimer
+    </button>
+    <button class="btn btn-outline" type="button" data-stock-closetrue>Fermer</button>
+  </div>
   `;
 
   renderStockModal(
@@ -12889,56 +14373,6 @@ function openStockRecordDetails(recordKey) {
     "Vue détaillée de la fiche avec impression.",
     bodyHtml,
   );
-
-  overlayRootEl
-    ?.querySelector("[data-stock-print-record='true']")
-    ?.addEventListener("click", function () {
-      const printWindow = window.open("", "_blank", "width=900,height=1200");
-      if (!printWindow) return;
-
-      printWindow.document.open();
-      printWindow.document.write(`
-        <!doctype html>
-        <html lang="fr">
-          <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>${escapeHtml(record.articleId || "Fiche stock")}</title>
-            <link rel="stylesheet" href="style.css" />
-          </head>
-          <body class="stock-print-body">
-            <div class="stock-print-sheet">
-              <div class="stock-print-head">
-                <div>
-                  <div class="stock-print-kicker">Fiche stock</div>
-                  <h1>${escapeHtml(article ? `${article.code} — ${article.name}` : record.articleId || "Article")}</h1>
-                  <p>${escapeHtml(record.locationLabel || "Emplacement non renseigné")}</p>
-                </div>
-                <div class="stock-print-meta">${formatStockDateTime(new Date())}</div>
-              </div>
-              <div class="org-detail-list">
-                <div class="org-detail-item"><span>Quantité</span><strong>${escapeHtml(record.currentQuantity)}</strong></div>
-                <div class="org-detail-item"><span>PMP</span><strong>${formatStockNumber(record.pmp)} DH</strong></div>
-                <div class="org-detail-item"><span>Valeur totale</span><strong>${formatStockNumber((Number(record.currentQuantity) || 0) * (Number(record.pmp) || 0))} DH</strong></div>
-                <div class="org-detail-item"><span>Minimum</span><strong>${escapeHtml(record.minStock)}</strong></div>
-                <div class="org-detail-item"><span>Sécurité</span><strong>${escapeHtml(record.safetyStock)}</strong></div>
-                <div class="org-detail-item"><span>Réapprovisionnement</span><strong>${escapeHtml(record.replenishmentQty)}</strong></div>
-                <div class="org-detail-item"><span>État</span><strong>${getStockRecordRiskLabel(record)}</strong></div>
-              </div>
-              <div class="stock-print-notes">
-                <strong>Observations</strong>
-                <p>${escapeHtml(record.observations || "Aucune observation")}</p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.onload = function () {
-        printWindow.focus();
-        printWindow.print();
-      };
-    });
 }
 
 function openStockRecordDeleteConfirm(recordKey) {
@@ -12947,7 +14381,7 @@ function openStockRecordDeleteConfirm(recordKey) {
   );
   if (!record) return;
 
-  const confirmed = window.confirm(
+  const confirmed = uiConfirm(
     `Supprimer la fiche stock ${record.articleId || ""} / ${record.locationLabel || ""} ?`,
   );
   if (!confirmed) return;
@@ -13079,6 +14513,13 @@ function openStockRecordCreate() {
           </select>
         </div>
         <div class="field-group">
+  <label>Prix unitaire (article)</label>
+  <input type="number" name="articlePrice" id="stockCreateArticlePrice"
+         min="0" step="0.01" value="0" readonly
+         style="background:var(--color-surface-offset, #f5f5f5); cursor:not-allowed;"
+         title="Récupéré automatiquement depuis la fiche article">
+</div>
+        <div class="field-group">
           <label>Quantité</label>
           <input type="number" name="currentQuantity" min="0" step="1" value="0" />
         </div>
@@ -13124,6 +14565,18 @@ function openStockRecordCreate() {
     bodyHtml,
   );
 
+  // Auto-remplissage du prix depuis la fiche article
+  const articleSelect = overlayRootEl?.querySelector('select[name="articleId"]');
+  const priceInput = overlayRootEl?.querySelector('#stockCreateArticlePrice');
+
+  function syncArticlePrice() {
+    const directory = getArticleDirectory();
+    const art = directory.articles.find(a => a.id === articleSelect?.value) ?? null;
+    if (priceInput) priceInput.value = art?.price ?? 0;
+  }
+  syncArticlePrice();                                    // remplissage à l'ouverture
+  articleSelect?.addEventListener('change', syncArticlePrice); // màj si l'user change d'article
+
   overlayRootEl
     ?.querySelector("[data-stock-record-create-form]")
     ?.addEventListener("submit", function (event) {
@@ -13132,13 +14585,18 @@ function openStockRecordCreate() {
       const articleId = String(formData.get("articleId") || "");
       if (!articleId) return;
 
-      const locationLabel = String(formData.get("locationLabel") || "").trim();
-      const nextLocation =
-        locationLabel || buildStockLocationLabel(stockDefaultLocation);
+      const locationLabel = String(formData.get('locationLabel')).trim();
+      const nextLocation = locationLabel || buildStockLocationLabel(stockDefaultLocation);
+
+      // ✅ Lire articlePrice directement depuis le DOM
+      const articlePriceVal = Number(
+        overlayRootEl?.querySelector('#stockCreateArticlePrice')?.value
+      ) || 0;
 
       upsertStockRecord(articleId, stockDefaultLocation, {
         currentQuantity: Number(formData.get("currentQuantity") || 0),
         pmp: Number(formData.get("pmp") || 0),
+        articlePrice: articlePriceVal,
         minStock: Number(formData.get("minStock") || 0),
         maxStock: Number(formData.get("maxStock") || 0),
         safetyStock: Number(formData.get("safetyStock") || 0),
@@ -13202,7 +14660,8 @@ function renderStockRecordCards(records) {
             </div>
             <div class="stock-record-meta">
               <span>Qté ${escapeHtml(record.currentQuantity)}</span>
-              <span>PMP ${formatStockNumber(record.pmp)} DH</span>
+              <span>Prix art. ${formatStockNumber(record.articlePrice ?? 0)} DA</span>
+              <span>PMP ${formatStockNumber(record.pmp)} DA</span>
               <span>${escapeHtml(record.locationLabel || "Emplacement")}</span>
             </div>
             <p class="stock-record-description">${escapeHtml(getStockRecordDescription(record))}</p>
@@ -13768,7 +15227,7 @@ function renderStockMovementCreateModal() {
           !sourceRecord ||
           quantity > (Number(sourceRecord.currentQuantity) || 0)
         )
-          window.alert(
+          uiAlert(
             "Impossible d'effectuer le transfert : la quantité demandée dépasse le stock disponible.",
             "error"
           );
@@ -13938,8 +15397,13 @@ function openStockInventoryDetails(inventoryId) {
         </table>
       </div>
       <div class="org-modal-actions">
-        <button class="btn btn-outline" type="button" data-stock-close="true">Fermer</button>
-      </div>
+  <button class="btn btn-outline" type="button"
+          onclick="printInventaire('${escapeHtml(inventoryId)}')"
+          style="display:inline-flex;align-items:center;gap:6px;">
+    <i class="fa-solid fa-print"></i> Imprimer
+  </button>
+  <button class="btn btn-outline" type="button" data-stock-closetrue>Fermer</button>
+</div>
     `,
   );
 }
@@ -13958,9 +15422,7 @@ function buildStockFicheContent() {
   const totals = getStockTotals();
   const alerts = getStockAlerts();
   const valueByArticle = records.reduce((sum, record) => {
-    const quantity = Number(record.currentQuantity) || 0;
-    const pmp = Number(record.pmp) || 0;
-    return sum + quantity * pmp;
+    return sum + (Number(record.currentQuantity) || 0) * (Number(record.articlePrice) || 0);
   }, 0);
 
   return `
@@ -13978,7 +15440,7 @@ function buildStockFicheContent() {
         </div>
         <div class="stock-kpi-card">
           <span>Valeur catalogue</span>
-          <strong>${formatStockNumber(valueByArticle)} DH</strong>
+          <strong>${formatStockNumber(valueByArticle)} DA</strong>
           <small>valorisation actuelle</small>
         </div>
         <div class="stock-kpi-card ${alerts.length ? "danger" : ""}">
@@ -14954,7 +16416,11 @@ function openPlanificationCounterModal(mode, counterId = null) {
     const counterIndex = counter
       ? nextState.counters.findIndex(c => c.id === counter.id)
       : -1;
-
+    const customFields = (() => {
+      const labels = Array.from(form.querySelectorAll('input[name="customFieldLabel"]')).map(el => el.value.trim());
+      const values = Array.from(form.querySelectorAll('input[name="customFieldValue"]')).map(el => el.value.trim());
+      return labels.map((label, i) => ({ label, value: values[i] ?? '' })).filter(cf => cf.label !== '');
+    })();
     const nextRecord = {
       ...(counter || {}),
       id: counter?.id || `counter-${Date.now()}`,
@@ -15179,7 +16645,7 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
       } else if (action === 'edit') {
         openPlanificationCounterModal('edit', counterId);
       } else if (action === 'reset') {
-        if (!window.confirm('Remettre la valeur du compteur à zéro ?')) return;
+        if (!uiConfirm('Remettre la valeur du compteur à zéro ?')) return;
         const s = loadPlanificationState();
         const c = s.counters.find(c => c.id === counterId);
         if (c) {
@@ -15189,7 +16655,7 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
           renderPlanificationCountersPage(s, 'compteurs');
         }
       } else if (action === 'delete') {
-        if (!window.confirm('Supprimer ce compteur définitivement ?')) return;
+        if (!uiConfirm('Supprimer ce compteur définitivement ?')) return;
         const s = loadPlanificationState();
         s.counters = s.counters.filter(c => c.id !== counterId);
         savePlanificationState(s);
@@ -15260,7 +16726,10 @@ function updateStockSummaryCards() {
   const articleCount = getArticleRecords("articles").length;
   if (cards[0]) cards[0].textContent = String(articleCount);
   if (cards[1]) cards[1].textContent = formatStockNumber(totals.quantity);
-  if (cards[2]) cards[2].textContent = `${formatStockNumber(totals.value)} DH`;
+  const catalogTotal = getStockRecords().reduce((sum, r) => {
+    return sum + (Number(r.currentQuantity) || 0) * (Number(r.articlePrice) || 0);
+  }, 0);
+  if (cards[2]) cards[2].textContent = formatStockNumber(catalogTotal) + ' DA';
 }
 
 function applyStockRecordToFicheForm(form, articleId) {
@@ -15315,6 +16784,7 @@ function saveStockFicheForm(form) {
   const record = upsertStockRecord(articleId, location, {
     currentQuantity:
       Number(form.querySelector("[data-stock-current-quantity]")?.value) || 0,
+    articlePrice: Number(form.querySelector('[name="articlePrice"]')?.value) || 0,
     minStock: Number(form.querySelector("[data-stock-min]")?.value) || 0,
     maxStock: Number(form.querySelector("[data-stock-max]")?.value) || 0,
     safetyStock: Number(form.querySelector("[data-stock-safety]")?.value) || 0,
@@ -15384,7 +16854,7 @@ function applyStockMovement(type, form) {
   );
 
   if (recordsForArticle.length === 0) {
-    window.alert(
+    uiAlert(
       "Impossible d\u2019effectuer le mouvement : aucune fiche de stock n\u2019existe pour cet article.",
     );
     return;
@@ -15465,7 +16935,7 @@ function applyStockMovement(type, form) {
       null;
     if (!sourceRecord) return;
     if (quantity > (Number(sourceRecord.currentQuantity) || 0)) {
-      window.alert(
+      uiAlert(
         "La quantité sortante dépasse le stock disponible sur cet emplacement.",
       );
       return;
@@ -15529,7 +16999,7 @@ function applyStockMovement(type, form) {
       null;
     if (!sourceRecord) return;
     if (quantity > (Number(sourceRecord.currentQuantity) || 0)) {
-      window.alert(
+      uiAlert(
         "La quantité transférée dépasse le stock disponible sur cet emplacement.",
       );
       return;
@@ -15846,7 +17316,7 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
       );
       if (!movement) return;
 
-      const confirmed = window.confirm(
+      const confirmed = uiConfirm(
         `Annuler ${getStockMovementTypeLabel(movement.type)} ${movementId} par mouvement inverse ?`,
       );
       if (!confirmed) return;
@@ -16127,66 +17597,179 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
     )
     .join("");
 
+  const technician = getPlanificationTechnicianName(plan?.technicianId);
+  const relatedCounter = plan?.compteurId
+    ? state.counters.find(counter => counter.ref === plan.compteurId)
+    : null;
   const bodyHtml = isDetails
     ? `
-      <div class="org-detail-list">
-        <div class="org-detail-item"><span>Numéro</span><strong>${escapeHtml(initialRef)}</strong></div>
-        <div class="org-detail-item"><span>Titre</span><strong>${escapeHtml(plan?.title || "-")}</strong></div>
-        <div class="org-detail-item"><span>Type de plan</span><strong>${escapeHtml(plan?.planType || "-")}</strong></div>
-        <div class="org-detail-item"><span>Type maintenance</span><strong>${escapeHtml(plan?.maintenanceType || "-")}</strong></div>
-        <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(
-      (() => { const e = getEquipmentRecords('equipments').find(e => e.id === plan?.equipmentId); return e ? e.code + ' — ' + e.name : plan?.equipment || '-'; })()
-    )}</strong></div>
-<div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(
-      (() => { const o = getOrganeRecords('organes').find(o => o.id === plan?.organId); return o ? o.code + ' — ' + o.name : plan?.organ || '-'; })()
-    )}</strong></div>
-        <div class="org-detail-item"><span>Technicien</span><strong>${escapeHtml(getPlanificationTechnicianName(plan?.technicianId))}</strong></div>
-        <div class="org-detail-item"><span>Fréquence</span><strong>${escapeHtml(plan?.frequency || "-")}</strong></div>
-        <div class="org-detail-item">
-  <span>Type de plan</span>
-  <strong>${escapeHtml(plan?.planType || "-")}</strong>
-</div>
-<div class="org-detail-item">
-  <span>Déclenchement</span>
-  <strong>${escapeHtml(plan?.triggerLabel || "-")}</strong>
-</div>
-        <div class="org-detail-item"><span>Prochaine échéance</span><strong>${formatPlanificationDate(plan?.nextDueDate)}</strong></div>
+      <div class="plan-details-shell">
+
+  <!-- EN-TÊTE HERO -->
+  <div class="plan-details-hero">
+    <div class="plan-details-hero-left">
+      <span class="plan-details-ref">${escapeHtml(plan.ref)}</span>
+      <h2 class="plan-details-title">${escapeHtml(plan.title)}</h2>
+      <div class="plan-details-hero-badges">
+        <span class="status-badge ${getPlanificationPlanBadgeClass(plan.status)}">${escapeHtml(plan.status)}</span>
+        <span class="status-badge badge-info">${escapeHtml(plan.planType)}</span>
+        <span class="status-badge badge-gray">${escapeHtml(plan.maintenanceType)}</span>
       </div>
-      <div class="planning-modal-stack">
-        <div><strong>Gamme opératoire</strong><p>${escapeHtml((plan?.tasks || []).join("\n"))}</p></div>
-        <div class="field-group field-group-wide">
-      <div><strong>Articles nécessaires</strong>
-  <p>${(() => {
-      if (Array.isArray(plan?.articleIds) && plan.articleIds.length) {
-        return plan.articleIds.map(id => {
-          const a = getArticleRecord('articles', id);
-          return a ? escapeHtml(a.code + ' — ' + a.name) : escapeHtml(id);
-        }).join(', ');
-      }
-      return escapeHtml((plan?.articles || []).join(', ') || '-');
-    })()}</p>
-</div>
-  <select id="planArticles" name="articleIds" multiple size="5">
-    ${(() => {
-      const selected = Array.isArray(plan?.articleIds) ? plan.articleIds
-        : Array.isArray(preset?.articleIds) ? preset.articleIds : [];
-      return getArticleRecords('articles')
-        .sort((a, b) => a.code.localeCompare(b.code))
-        .map(a => `<option value="${escapeHtml(a.id)}"${selected.includes(a.id) ? ' selected' : ''}>
-          ${escapeHtml(a.code)} — ${escapeHtml(a.name)}
-          ${a.unitMeasure ? ' (' + escapeHtml(a.unitMeasure) + ')' : ''}
-        </option>`)
-        .join('') || '<option disabled>Aucun article dans le catalogue</option>';
-    })()}
-  </select>
-</div>
-        <div><strong>Sécurité</strong><p>${escapeHtml((plan?.safety || []).join(", ") || "-")}</p></div>
-        <div><strong>Documents</strong><p>${escapeHtml((plan?.documents || []).join(", ") || "-")}</p></div>
+    </div>
+    <div class="plan-details-hero-actions">
+      <button type="button" class="btn btn-outline" data-plan-print-from-details>
+        <i class="fa-solid fa-print"></i> Imprimer
+      </button>
+      <button type="button" class="btn btn-primary" data-plan-edit-from-details>
+        <i class="fa-solid fa-pen-to-square"></i> Modifier
+      </button>
+    </div>
+  </div>
+
+  <!-- GRILLE PRINCIPALE -->
+  <div class="plan-details-grid">
+
+    <!-- COLONNE GAUCHE -->
+    <div class="plan-details-col">
+
+      <!-- CARTE : Identification -->
+      <div class="plan-details-card">
+        <div class="plan-details-card-header">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>Identification</span>
+        </div>
+        <div class="plan-details-rows">
+          <div class="plan-details-row">
+            <span class="plan-details-label">Équipement</span>
+            <strong class="plan-details-value">${escapeHtml((() => {
+      const eDir = getEquipmentDirectory();
+      const e = eDir.equipments.find(e => e.id === plan.equipmentId);
+      return e ? `${e.code} — ${e.name}` : plan.equipment || '-';
+    })())}</strong>
+          </div>
+          <div class="plan-details-row">
+            <span class="plan-details-label">Organe</span>
+            <strong class="plan-details-value">${escapeHtml((() => {
+      const oDir = getOrganeDirectory();
+      const o = oDir.organes.find(o => o.id === plan.organId);
+      return o ? `${o.code} — ${o.name}` : plan.organ || '-';
+    })())}</strong>
+          </div>
+          <div class="plan-details-row">
+            <span class="plan-details-label">Technicien</span>
+            <strong class="plan-details-value">${escapeHtml(technician)}</strong>
+          </div>
+          <div class="plan-details-row">
+            <span class="plan-details-label">Durée estimée</span>
+            <strong class="plan-details-value">${escapeHtml(String(plan.durationHours))} h</strong>
+          </div>
+        </div>
       </div>
-      <div class="org-modal-actions">
-        <button class="btn btn-outline" type="button" data-plan-modal-close>Fermer</button>
-        <button class="btn btn-primary" type="button" data-plan-edit-from-details>Modifier</button>
+
+      <!-- CARTE : Déclenchement -->
+      <div class="plan-details-card">
+        <div class="plan-details-card-header">
+          <i class="fa-solid fa-bolt"></i>
+          <span>Déclenchement</span>
+        </div>
+        <div class="plan-details-rows">
+          <div class="plan-details-row">
+            <span class="plan-details-label">Fréquence</span>
+            <strong class="plan-details-value">${escapeHtml(plan.frequency || '-')}</strong>
+          </div>
+          <div class="plan-details-row">
+            <span class="plan-details-label">Règle</span>
+            <strong class="plan-details-value">${escapeHtml(plan.triggerLabel || '-')}</strong>
+          </div>
+          <div class="plan-details-row">
+            <span class="plan-details-label">Seuil d'alerte</span>
+            <strong class="plan-details-value">${escapeHtml(plan.alertThreshold || '-')}</strong>
+          </div>
+          <div class="plan-details-row">
+            <span class="plan-details-label">Seuil d'action</span>
+            <strong class="plan-details-value">${escapeHtml(plan.actionThreshold || '-')}</strong>
+          </div>
+          <div class="plan-details-row">
+            <span class="plan-details-label">Date de début</span>
+            <strong class="plan-details-value">${formatPlanificationDate(plan.startDate)}</strong>
+          </div>
+          <div class="plan-details-row">
+            <span class="plan-details-label">Prochaine échéance</span>
+            <strong class="plan-details-value plan-details-value--accent">${formatPlanificationDate(plan.nextDueDate)}</strong>
+          </div>
+          ${relatedCounter ? `
+          <div class="plan-details-row">
+            <span class="plan-details-label">Compteur lié</span>
+            <strong class="plan-details-value">
+              <span class="status-badge badge-gray">${relatedCounter.ref}</span>
+            </strong>
+          </div>` : ''}
+        </div>
       </div>
+
+    </div><!-- fin col gauche -->
+
+    <!-- COLONNE DROITE -->
+    <div class="plan-details-col">
+
+      <!-- CARTE : Gamme opératoire -->
+      <div class="plan-details-card plan-details-card--tasks">
+        <div class="plan-details-card-header">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Gamme opératoire</span>
+          <span class="plan-details-count">${plan.tasks.length} tâche${plan.tasks.length !== 1 ? 's' : ''}</span>
+        </div>
+        ${plan.tasks.length > 0 ? `
+        <ol class="plan-details-task-list">
+          ${plan.tasks.map((task, i) => `
+          <li class="plan-details-task-item">
+            <span class="plan-details-task-num">${i + 1}</span>
+            <span class="plan-details-task-text">${escapeHtml(task)}</span>
+          </li>`).join('')}
+        </ol>` : `
+        <p class="plan-details-empty"><i class="fa-regular fa-circle-xmark"></i> Aucune tâche définie</p>`}
+      </div>
+
+      <!-- CARTE : Sécurité -->
+      <div class="plan-details-card">
+        <div class="plan-details-card-header">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Consignes de sécurité</span>
+          <span class="plan-details-count">${plan.safety.length}</span>
+        </div>
+        ${plan.safety.length > 0 ? `
+        <div class="plan-details-safety-list">
+          ${plan.safety.map(item => `
+          <span class="plan-details-safety-badge">
+            <i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(item)}
+          </span>`).join('')}
+        </div>` : `
+        <p class="plan-details-empty"><i class="fa-regular fa-circle-xmark"></i> Aucune consigne</p>`}
+      </div>
+
+      <!-- CARTE : Articles nécessaires -->
+      <div class="plan-details-card">
+        <div class="plan-details-card-header">
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <span>Articles nécessaires</span>
+          <span class="plan-details-count">${plan.articles.length}</span>
+        </div>
+        ${plan.articles.length > 0 ? `
+        <div class="plan-details-articles-list">
+          ${plan.articles.map(item => `
+          <span class="plan-details-article-chip">
+            <i class="fa-solid fa-cube"></i> ${escapeHtml(item)}
+          </span>`).join('')}
+        </div>` : `
+        <p class="plan-details-empty"><i class="fa-regular fa-circle-xmark"></i> Aucun article</p>`}
+      </div>
+
+    </div><!-- fin col droite -->
+
+  </div><!-- fin plan-details-grid -->
+
+</div><!-- fin plan-details-shell -->
+      
     `
     : `
       <form class="org-form-grid planning-modal-form" data-plan-form>
@@ -16196,41 +17779,89 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
         <div class="field-group"><label for="planEquipment">Équipement</label><select id="planEquipment" name="equipmentId" required>${equipmentOptions}</select></div>
         <div class="field-group"><label for="planOrgan">Organe</label><select id="planOrgan" name="organId"><option value="">-- Aucun --</option>${organeOptions}</select></div>
         <div class="field-group"><label for="planTechnician">Technicien par défaut</label><select id="planTechnician" name="technicianId">
-  <option value="">— Non assigné —</option>
-  ${getPlanificationTechniciens().map(t =>
+          <option value="">— Non assigné —</option>
+          ${getPlanificationTechniciens().map(t =>
       `<option value="${escapeHtml(t.id)}"${t.id === selectedTechnicianId ? " selected" : ""}>
-      ${escapeHtml((t.firstName ? t.firstName + ' ' : '') + t.name)} · ${escapeHtml(t.role)}
-    </option>`
+              ${escapeHtml((t.firstName ? t.firstName + ' ' : '') + t.name)} · ${escapeHtml(t.role)}
+            </option>`
     ).join("") || '<option disabled>Aucun technicien — créez des utilisateurs dans Administration</option>'}
-</select></div>
+        </select></div>
         <div class="field-group"><label for="planFrequency">Fréquence</label><select id="planFrequency" name="frequency">${frequencyOptions}</select></div>
         <div class="field-group"><label for="planDuration">Durée estimée (h)</label><input id="planDuration" name="durationHours" type="number" min="0" step="0.5" value="${escapeHtml(plan?.durationHours || preset.durationHours || 1)}" /></div>
         <div class="field-group">
-  <label for="planTrigger">Déclenchement</label>
-  <select id="planTrigger" name="triggerLabel">
-    ${getPlanificationTriggerOptions(plan?.planType || preset.planType || "Systématique")
+          <label for="planTrigger">Déclenchement</label>
+          <select id="planTrigger" name="triggerLabel">
+            ${getPlanificationTriggerOptions(plan?.planType || preset.planType || "Systématique")
       .map(t => `<option${(plan?.triggerLabel || preset.triggerLabel) === t ? " selected" : ""}>${escapeHtml(t)}</option>`)
       .join("")}
-  </select>
-</div>
+          </select>
+        </div>
         <div class="field-group">
-  <label for="planStartDate">Date de début</label>
-  <input id="planStartDate" name="startDate" type="date"
-    value="${plan?.startDate || preset.startDate || new Date().toISOString().slice(0, 10)}" />
-</div>
-<div class="field-group">
-  <label for="planNextDue">Prochaine échéance <span style="color:var(--color-text-muted);font-size:0.8em">(calculée auto)</span></label>
-  <input id="planNextDue" name="nextDueDate" type="datetime-local"
-    value="${plan?.nextDueDate ? new Date(plan.nextDueDate).toISOString().slice(0, 16)
-      : computeNextDueDate(plan?.startDate || preset.startDate || new Date().toISOString(), plan?.frequency || preset.frequency || 'Mensuelle')}" 
-    readonly style="background:var(--color-surface-offset);cursor:not-allowed" />
-</div>
+          <label for="planStartDate">Date de début</label>
+          <input id="planStartDate" name="startDate" type="date"
+            value="${plan?.startDate || preset.startDate || new Date().toISOString().slice(0, 10)}" />
+        </div>
+        <div class="field-group">
+          <label for="planNextDue">Prochaine échéance <span style="color:var(--color-text-muted);font-size:0.8em">(calculée auto)</span></label>
+          <input id="planNextDue" name="nextDueDate" type="datetime-local"
+            value="${plan?.nextDueDate ? new Date(plan.nextDueDate).toISOString().slice(0, 16)
+      : computeNextDueDate(plan?.startDate || preset.startDate || new Date().toISOString(), plan?.frequency || preset.frequency || 'Mensuelle')}"
+            readonly style="background:var(--color-surface-offset);cursor:not-allowed" />
+        </div>
         <div class="field-group"><label for="planAlert">Seuil alerte</label><input id="planAlert" name="alertThreshold" type="text" value="${escapeHtml(plan?.alertThreshold || preset.alertThreshold || "")}" /></div>
         <div class="field-group"><label for="planAction">Seuil action</label><input id="planAction" name="actionThreshold" type="text" value="${escapeHtml(plan?.actionThreshold || preset.actionThreshold || "")}" /></div>
         <div class="field-group field-group-wide"><label for="planTasks">Gamme opératoire</label><textarea id="planTasks" name="tasks" rows="5">${escapeHtml((plan?.tasks || preset.tasks || []).join("\n"))}</textarea></div>
-        <div class="field-group field-group-wide"><label for="planArticles">Articles nécessaires</label><textarea id="planArticles" name="articles" rows="3">${escapeHtml((plan?.articles || preset.articles || []).join("\n"))}</textarea></div>
-        <div class="field-group field-group-wide"><label for="planSafety">Checklist sécurité</label><textarea id="planSafety" name="safety" rows="3">${escapeHtml((plan?.safety || preset.safety || []).join("\n"))}</textarea></div>
-        <div class="field-group field-group-wide"><label for="planDocuments">Documents associés</label><textarea id="planDocuments" name="documents" rows="3">${escapeHtml((plan?.documents || preset.documents || []).join("\n"))}</textarea></div>
+
+        <div class="field-group field-group-wide">
+          <label for="planArticles">Articles nécessaires</label>
+          <input type="text" id="planArticlesSearch" placeholder="Rechercher un article..."
+            oninput="Array.from(document.getElementById('planArticles').options).forEach(o=>o.style.display=o.text.toLowerCase().includes(this.value.toLowerCase())?'':'none')"
+            style="width:100%;padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm) var(--radius-sm) 0 0;font-size:var(--text-sm);border-bottom:none;" />
+          <select id="planArticles" name="articleIds" multiple size="6"
+            style="width:100%;border:1px solid var(--color-border);border-radius:0 0 var(--radius-sm) var(--radius-sm);padding:4px;">
+            ${(() => {
+      const selected = Array.isArray(plan?.articleIds) ? plan.articleIds
+        : Array.isArray(preset?.articleIds) ? preset.articleIds : [];
+      const arts = getArticleRecords('articles').sort((a, b) => a.code.localeCompare(b.code));
+      if (!arts.length) return '<option disabled>Aucun article dans le catalogue</option>';
+      return arts.map(a =>
+        `<option value="${escapeHtml(a.id)}"${selected.includes(a.id) ? ' selected' : ''}>${escapeHtml(a.code)} — ${escapeHtml(a.name)}${a.unitMeasure ? ' (' + escapeHtml(a.unitMeasure) + ')' : ''}</option>`
+      ).join('');
+    })()}
+          </select>
+          <small style="color:var(--color-text-muted);">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs articles</small>
+        </div>
+
+        <div class="field-group field-group-wide">
+          <label>Checklist sécurité</label>
+          <div id="planSafetyList" style="border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:10px;display:flex;flex-direction:column;gap:6px;">
+            ${(() => {
+      const defaults = ['Consignation électrique', 'Port des EPI requis', 'Permis de travail signé', 'Zone balisée et sécurisée', 'Outillage vérifié', "Présence d'un chef d'équipe"];
+      const saved = Array.isArray(plan?.safety) ? plan.safety : Array.isArray(preset?.safety) ? preset.safety : defaults;
+      const all = [...new Set([...defaults, ...saved])];
+      return all.map(item =>
+        `<label style="display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer;">
+                  <input type="checkbox" name="safetyItem" value="${escapeHtml(item)}"${saved.includes(item) ? ' checked' : ''} style="width:15px;height:15px;accent-color:var(--color-primary);">
+                  <span style="font-size:var(--text-sm);">${escapeHtml(item)}</span>
+                </label>`
+      ).join('');
+    })()}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <input type="text" id="planSafetyNew" placeholder="Ajouter une consigne personnalisée..."
+              style="flex:1;padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:var(--text-sm);" />
+            <button type="button" class="btn btn-outline" id="planSafetyAddBtn">
+              <i class="fa-solid fa-plus"></i> Ajouter
+            </button>
+          </div>
+        </div>
+
+        <div class="field-group field-group-wide">
+  <label for="planDocuments">Documents associés</label>
+  <input type="file" id="planDocuments" name="documents" multiple
+    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg" />
+</div>
+
         <div class="field-group"><label for="planStatus">Statut</label><select id="planStatus" name="status"><option${(plan?.status || preset.status || "Actif") === "Actif" ? " selected" : ""}>Actif</option><option${(plan?.status || preset.status) === "Inactif" ? " selected" : ""}>Inactif</option></select></div>
         <div class="org-modal-actions">
           <button class="btn btn-outline" type="button" data-plan-modal-close>Annuler</button>
@@ -16251,12 +17882,63 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
     bodyHtml,
   );
 
+  // Bouton : Ajouter une consigne sécurité
+  const safetyAddBtn = overlayRootEl?.querySelector('#planSafetyAddBtn');
+  if (safetyAddBtn) {
+    safetyAddBtn.addEventListener('click', function () {
+      const input = document.getElementById('planSafetyNew');
+      const v = input?.value.trim();
+      if (!v) return;
+      const list = document.getElementById('planSafetyList');
+      if (!list) return;
+
+      // Conteneur ligne
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;';
+
+      // Label + checkbox
+      const lb = document.createElement('label');
+      lb.style.cssText = 'display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer;flex:1;';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.name = 'safetyItem';
+      cb.value = v;
+      cb.checked = true;
+      cb.style.cssText = 'width:15px;height:15px;accent-color:var(--color-primary);';
+      const sp = document.createElement('span');
+      sp.style.fontSize = 'var(--text-sm)';
+      sp.textContent = v;
+      lb.appendChild(cb);
+      lb.appendChild(sp);
+
+      // Bouton supprimer ✕
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.textContent = '✕';
+      del.title = 'Supprimer cette consigne';
+      del.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--color-text-muted);font-size:0.85rem;padding:0 4px;';
+      del.addEventListener('click', function () { row.remove(); });
+
+      row.appendChild(lb);
+      row.appendChild(del);
+      list.appendChild(row);
+      input.value = '';
+    });
+  }
   if (isDetails) {
     overlayRootEl
-      ?.querySelector("[data-plan-edit-from-details]")
-      ?.addEventListener("click", () => {
-        openPlanificationPlanModal("edit", planId);
+      ?.querySelector('[data-plan-edit-from-details]')
+      ?.addEventListener('click', () => openPlanificationPlanModal('edit', planId));
+
+    // ✅ Bouton Imprimer dans le modal détails
+    overlayRootEl
+      ?.querySelector('[data-plan-print-from-details]')
+      ?.addEventListener('click', () => {
+        const state = loadPlanificationData();
+        const plan = state.plans.find(p => p.id === planId);
+        if (plan) printPlanMaintenance(plan);
       });
+
     return;
   }
 
@@ -16303,11 +17985,8 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean);
-    const articleIds = formData.getAll("articleIds").filter(Boolean);
-    const safety = String(formData.get("safety") || "")
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
+    const articleIds = Array.from(form.querySelectorAll('#planArticles option:checked')).map(o => o.value);
+    const safety = Array.from(form.querySelectorAll('input[name="safetyItem"]:checked')).map(cb => cb.value);
     const documents = String(formData.get("documents") || "")
       .split(/\r?\n/)
       .map((line) => line.trim())
@@ -17020,7 +18699,7 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
           const nextState = loadPlanificationData();
           const plan = nextState.plans.find((item) => item.id === planId);
           if (!plan) return;
-          if (window.confirm(`Supprimer ${plan.ref} ?`)) {
+          if (uiConfirm(`Supprimer ${plan.ref} ?`)) {
             nextState.plans = nextState.plans.filter(
               (item) => item.id !== planId,
             );
@@ -17312,20 +18991,6 @@ function closeAchatsModal(subpageKey) {
 
 function renderAchatsPageActions(activeSubpageKey) {
   if (!pageActionsEl) return;
-
-  if (activeSubpageKey === "historique") {
-    pageActionsEl.innerHTML = `
-      <button class="btn btn-outline" type="button" data-ach-export="excel">
-        <i class="fa-solid fa-file-csv"></i>
-        <span>Export Excel (CSV)</span>
-      </button>
-      <button class="btn btn-outline" type="button" data-ach-export="pdf">
-        <i class="fa-regular fa-file-pdf"></i>
-        <span>Export PDF</span>
-      </button>
-    `;
-    return;
-  }
 
   const labels = {
     "demandes-achat": "Nouvelle DA",
@@ -17996,15 +19661,18 @@ function buildAchatsDaForm(record, mode) {
           <input id="daQuantity" name="quantity" type="number" min="1" step="1" value="${escapeHtml(String(record?.quantity || ""))}" required />
         </div>
         <div class="field-group">
-  <label for="daEstimatedPrice">Prix unitaire estimé</label>
-  <input
-    id="daEstimatedPrice"
-    name="estimatedUnitPrice"
-    type="number"
-    min="0"
-    step="0.01"
-    value="${escapeHtml(String(record?.estimatedUnitPrice || ""))}"
-  />
+  <label for="daEstimatedPrice">Prix unitaire (article)</label>
+  <input id="daEstimatedPrice" name="estimatedUnitPrice" type="number" min="0" step="0.01"
+         value="${escapeHtml(String(record?.estimatedUnitPrice ?? 0))}"
+         readonly style="background:var(--color-surface-offset); cursor:not-allowed;"
+         title="Récupéré automatiquement depuis la fiche article">
+</div>
+<div class="field-group">
+  <label for="daTotalPrice">Prix total estimé</label>
+  <input id="daTotalPrice" name="totalPrice" type="number" min="0" step="0.01"
+         value="0" readonly
+         style="background:var(--color-surface-offset); cursor:not-allowed;"
+         title="Quantité × Prix unitaire">
 </div>
         <div class="field-group">
   <label for="daSupplier">Fournisseur</label>
@@ -18406,6 +20074,9 @@ function buildAchatsDaDetails(record) {
       Fermer
     </button>
   </div>
+  <button type="button" class="btn btn-outline" onclick="printDA('${escapeHtml(record.id)}')">
+  <i class="fa-solid fa-print"></i> Imprimer DA
+</button>
 
   `;
 }
@@ -18438,6 +20109,9 @@ function buildAchatsBcDetails(record, state) {
       <div class="org-detail-item org-detail-item--full"><span>Adresse de livraison</span><strong>${escapeHtml(record.deliveryAddress || "-")}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Observations</span><strong>${escapeHtml(record.observations || "-")}</strong></div>
     </div>
+    <button style="margin-top: 15px"  type="button" class="btn btn-outline" onclick="printBC('${escapeHtml(record.id)}')">
+  <i class="fa-solid fa-print"></i> Imprimer BC
+</button>
   `;
 }
 
@@ -18460,6 +20134,12 @@ function buildAchatsReceptionDetails(record, state) {
       <div class="org-detail-item org-detail-item--full"><span>Facture fournisseur</span><strong>${escapeHtml(record.invoiceRef || "-")}</strong></div>
       <div class="org-detail-item org-detail-item--full"><span>Observations</span><strong>${escapeHtml(record.observations || "-")}</strong></div>
     </div>
+    <div class="org-modal-actions" style="margin-top:16px">
+    <button type="button" class="btn btn-outline"
+      onclick="printBonReception('${escapeHtml(record.id)}')">
+      <i class="fa-solid fa-print"></i> Imprimer le bon de réception
+    </button>
+  </div>
   `;
 }
 
@@ -18495,6 +20175,7 @@ function renderAchatsModal(activeSubpageKey, state) {
       mode === "details" && record
         ? buildAchatsDaDetails(record)
         : buildAchatsDaForm(record, mode);
+
   } else if (activeSubpageKey === "bons-commande") {
     title =
       mode === "edit"
@@ -18546,10 +20227,34 @@ function renderAchatsModal(activeSubpageKey, state) {
     </div>
   `;
 
-
   const modal = overlayRootEl.querySelector(".org-modal");
   if (!modal) return;
 
+  // ✅ METTRE ICI — après modal, avant les autres addEventListener
+  if (activeSubpageKey === 'demandes-achat' && mode !== 'details') {
+    const articleSelect = modal.querySelector('select[name="articleId"]');
+    const priceInput = modal.querySelector('#daEstimatedPrice');
+    const qtyInput = modal.querySelector('#daQuantity');
+    const totalInput = modal.querySelector('#daTotalPrice');
+
+    function syncDaPrice() {
+      const articleId = articleSelect?.value;
+      const article = getArticleRecord('articles', articleId);  // ✅ CORRECT
+      const price = Number(article?.price ?? 0);
+      if (priceInput) priceInput.value = price;
+      syncDaTotal();
+    }
+
+    function syncDaTotal() {
+      const qty = Number(qtyInput?.value ?? 0);
+      const price = Number(priceInput?.value ?? 0);
+      if (totalInput) totalInput.value = (qty * price).toFixed(2);
+    }
+
+    syncDaPrice();
+    articleSelect?.addEventListener('change', syncDaPrice);
+    qtyInput?.addEventListener('input', syncDaTotal);
+  }
   const supplierSelect =
     modal.querySelector("#bcSupplierName");
 
@@ -18782,6 +20487,7 @@ function renderAchatsModal(activeSubpageKey, state) {
         estimatedUnitPrice: Number(
           formData.get("estimatedUnitPrice") || 0
         ),
+        totalPrice: Number(formData.get('totalPrice')) || 0,
         preferredSupplier: String(
           formData.get("preferredSupplier") || "",
         ).trim(),
@@ -19045,67 +20751,7 @@ function exportAchatsHistoryCsv(rows) {
   URL.revokeObjectURL(link.href);
 }
 
-function exportAchatsHistoryPdf(rows) {
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) {
-    window.alert("Impossible d'ouvrir la fenêtre d'impression.");
-    return;
-  }
 
-  const tableRows = rows
-    .map(
-      (row) => `
-        <tr>
-          <td>${escapeHtml(row.number)}</td>
-          <td>${escapeHtml(row.type)}</td>
-          <td>${escapeHtml(formatAchatsDate(row.date))}</td>
-          <td>${escapeHtml(row.article)}</td>
-          <td>${escapeHtml(row.supplier)}</td>
-          <td>${escapeHtml(row.status)}</td>
-          <td>${row.type === "BC" ? escapeHtml(formatAchatsMoney(row.amount)) : "-"}</td>
-        </tr>
-      `,
-    )
-    .join("");
-
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Historique Achats</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          h1 { margin-bottom: 12px; }
-          table { width: 100%; border-collapse: collapse; font-size: 12px; }
-          th, td { border: 1px solid #d9e1ea; padding: 8px; text-align: left; }
-          th { background: #f2f6fa; }
-        </style>
-      </head>
-      <body>
-        <h1>Historique Achats</h1>
-        <p>${localizeAdministrationText("Généré le")} ${escapeHtml(new Date().toLocaleString(getAdministrationLocale()))}</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Numéro</th>
-              <th>Type</th>
-              <th>Date</th>
-              <th>Article</th>
-              <th>Fournisseur</th>
-              <th>Statut</th>
-              <th>Montant</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-}
 
 function groupValidatedDaIntoBc() {
   const state = loadAchatsState();
@@ -19114,7 +20760,7 @@ function groupValidatedDaIntoBc() {
   );
 
   if (!validDAs.length) {
-    window.alert(
+    uiAlert(
       "Aucune DA validée avec fournisseur suggéré pour générer un BC groupé.",
     );
     return;
@@ -19183,7 +20829,7 @@ function groupValidatedDaIntoBc() {
 
   saveAchatsState(state);
   renderAchatsPage("bons-commande");
-  window.alert(
+  uiAlert(
     `${Object.keys(groups).length} BC généré(s) par regroupement fournisseur.`,
   );
 }
@@ -19219,7 +20865,7 @@ function attachAchatsPageHandlers(activeSubpageKey, state) {
         const records = getAchatsRecordsBySubpage(state, subpageKey);
         const record = records.find((item) => item.id === recordId);
         if (!record) return;
-        const confirmed = window.confirm(
+        const confirmed = uiConfirm(
           `Supprimer ${record.number || "cet élément"} ? Cette action est irréversible.`,
         );
         if (!confirmed) return;
@@ -19275,23 +20921,6 @@ function attachAchatsPageHandlers(activeSubpageKey, state) {
       groupValidatedDaIntoBc();
     });
 
-  pageActionsEl
-    ?.querySelector("[data-ach-export='excel']")
-    ?.addEventListener("click", function () {
-      const rows = filterAchatsHistoryRows(
-        buildAchatsHistoryRows(loadAchatsState()),
-      );
-      exportAchatsHistoryCsv(rows);
-    });
-
-  pageActionsEl
-    ?.querySelector("[data-ach-export='pdf']")
-    ?.addEventListener("click", function () {
-      const rows = filterAchatsHistoryRows(
-        buildAchatsHistoryRows(loadAchatsState()),
-      );
-      exportAchatsHistoryPdf(rows);
-    });
 }
 
 function renderAchatsPage(subpageKey) {
@@ -19811,14 +21440,9 @@ function renderInterventionsModal() {
 
   if (mode === "details") {
     const record = getInterventionRecord(recordType, recordId);
-    if (!record) {
-      closeInterventionsModal();
-      return;
-    }
-    overlayRootEl.innerHTML = renderInterventionRecordDetails(
-      recordType,
-      record,
-    );
+    if (!record) { closeInterventionsModal(); return; }
+    overlayRootEl.innerHTML = renderInterventionRecordDetails(recordType, record);
+    bindInterventionsModalHandlers(); // ← AJOUTER CETTE LIGNE
     return;
   }
 
@@ -19857,11 +21481,6 @@ function bindInterventionsModalHandlers() {
       });
     });
 
-  overlayRootEl
-    .querySelector("[data-int-print-details='true']")
-    ?.addEventListener("click", function () {
-      openInterventionsPrintCurrentDetails();
-    });
 
   overlayRootEl.querySelectorAll("[data-int-action]").forEach((button) => {
     button.addEventListener("click", function () {
@@ -19880,6 +21499,24 @@ function bindInterventionsModalHandlers() {
 
       if (action === "confirm-create-bt") {
         createBtFromOt(recordId);
+        return;
+      }
+      // ── IMPRESSION ──────────────────────────────────────────
+      if (action === "print-di") {
+        const record = getInterventionDi(recordId);
+        printDI(record);
+        return;
+      }
+
+      if (action === "print-ot") {
+        const record = getInterventionOt(recordId);
+        printOT(record);
+        return;
+      }
+
+      if (action === "print-bt") {
+        const record = getInterventionBt(recordId);
+        printBT(record);
         return;
       }
     });
@@ -19980,13 +21617,13 @@ function bindInterventionsModalHandlers() {
       const diIndex = directory.dis.findIndex((item) => item.id === diId);
       const di = diIndex >= 0 ? directory.dis[diIndex] : null;
       if (!di) {
-        window.alert("DI introuvable.");
+        uiAlert("DI introuvable.");
         return;
       }
 
       const plannedDate = formData.get("plannedDate");
       if (!plannedDate) {
-        window.alert("La date planifiée est obligatoire.");
+        uiAlert("La date planifiée est obligatoire.");
         return;
       }
 
@@ -20076,6 +21713,11 @@ function bindInterventionsModalHandlers() {
     });
   }
 
+  const btTauxHoraire = overlayRootEl.querySelector("#btTauxHoraire");
+  const btCoutSousTraitance = overlayRootEl.querySelector("#btCoutSousTraitance");
+  if (btTauxHoraire) btTauxHoraire.addEventListener("input", () => window.dispatchEvent(new Event("bt-cost-update")));
+  if (btCoutSousTraitance) btCoutSousTraitance.addEventListener("input", () => window.dispatchEvent(new Event("bt-cost-update")));
+
   const btEndDate = overlayRootEl.querySelector("#btEndDate");
   const btStartDate = overlayRootEl.querySelector("#btStartDate");
   const btDurationReal = overlayRootEl.querySelector("#btDurationReal");
@@ -20090,11 +21732,17 @@ function bindInterventionsModalHandlers() {
       } else {
         btDurationReal.value = "0h";
       }
+      window.dispatchEvent(new Event("bt-cost-update"));
+    });
+    btStartDate.addEventListener("change", () => {
+      window.dispatchEvent(new Event("bt-cost-update"));
     });
   }
 
   window.addEventListener("bt-cost-update", () => {
     const costArticlesEl = overlayRootEl.querySelector("#btCostArticles");
+    const costMOEl = overlayRootEl.querySelector("#btCostMO");
+    const costSTEl = overlayRootEl.querySelector("#btCostST");
     const costTotalEl = overlayRootEl.querySelector("#btCostTotal");
     if (!costArticlesEl || !costTotalEl) return;
 
@@ -20111,12 +21759,29 @@ function bindInterventionsModalHandlers() {
       }
     });
 
-    const formattedCost = new Intl.NumberFormat("fr-DZ", {
-      style: "currency",
-      currency: "DZD",
-    }).format(totalArticles);
-    costArticlesEl.textContent = formattedCost;
-    costTotalEl.textContent = formattedCost;
+    const tauxHoraireVal = Number(overlayRootEl.querySelector("#btTauxHoraire")?.value) || 0;
+    const coutSousTraitanceVal = Number(overlayRootEl.querySelector("#btCoutSousTraitance")?.value) || 0;
+
+    const startInput = overlayRootEl.querySelector("#btStartDate")?.value;
+    const endInput = overlayRootEl.querySelector("#btEndDate")?.value;
+    let durationHours = 0;
+    if (startInput && endInput) {
+      const start = new Date(startInput);
+      const end = new Date(endInput);
+      if (!isNaN(start) && !isNaN(end) && end > start) {
+        durationHours = Math.round(((end - start) / 3600000) * 10) / 10;
+      }
+    }
+
+    const coutMOVal = tauxHoraireVal * durationHours;
+    const totalGlobal = totalArticles + coutMOVal + coutSousTraitanceVal;
+
+    const formatter = new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" });
+
+    costArticlesEl.textContent = formatter.format(totalArticles);
+    if (costMOEl) costMOEl.textContent = formatter.format(coutMOVal);
+    if (costSTEl) costSTEl.textContent = formatter.format(coutSousTraitanceVal);
+    costTotalEl.textContent = formatter.format(totalGlobal);
   });
 
   const transformBtForm = overlayRootEl.querySelector(
@@ -20133,31 +21798,46 @@ function bindInterventionsModalHandlers() {
       const otIndex = directory.ots.findIndex((item) => item.id === otId);
       const ot = otIndex >= 0 ? directory.ots[otIndex] : null;
       if (!ot) {
-        window.alert("OT introuvable.");
+        uiAlert("OT introuvable.");
         return;
       }
 
       const works = formData.get("works");
       if (!works) {
-        window.alert("Les travaux réalisés sont obligatoires.");
+        uiAlert("Les travaux réalisés sont obligatoires.");
         return;
       }
 
       const start = new Date(formData.get("startDate"));
       const end = new Date(formData.get("endDate"));
+      let durationHoursReal = 0;
       let durationHours = "0h";
       if (!isNaN(start) && !isNaN(end) && end > start) {
-        durationHours = Math.round(((end - start) / 3600000) * 10) / 10 + "h";
+        durationHoursReal = Math.round(((end - start) / 3600000) * 10) / 10;
+        durationHours = durationHoursReal + "h";
       }
+
+      const tauxHoraire = Number(formData.get("tauxHoraire")) || 0;
+      const coutSousTraitance = Number(formData.get("coutSousTraitance")) || 0;
 
       const articleIds = formData.getAll("articleIds[]");
       const articleQtys = formData.getAll("articleQtys[]");
+      let coutArticles = 0;
+
       const articles = articleIds
-        .map((id, index) => ({
-          articleId: id,
-          qty: Number(articleQtys[index]) || 1,
-        }))
+        .map((id, index) => {
+          const qty = Number(articleQtys[index]) || 1;
+          const pmp = Number(getPrimaryStockRecord(id)?.pmp || 0);
+          coutArticles += pmp * qty;
+          return {
+            articleId: id,
+            qty: qty,
+          };
+        })
         .filter((a) => a.articleId);
+
+      const coutMO = tauxHoraire * durationHoursReal;
+      const coutTotal = coutArticles + coutMO + coutSousTraitance;
 
       const cause = formData.get("cause");
       const causes = cause ? [cause] : [];
@@ -20186,6 +21866,11 @@ function bindInterventionsModalHandlers() {
           : [],
         technicianLabel: ot.technicianLabel || "",
         priority: ot.priority || "",
+        tauxHoraire: tauxHoraire,
+        coutSousTraitance: coutSousTraitance,
+        coutArticles: coutArticles,
+        coutMO: coutMO,
+        coutTotal: coutTotal,
       };
 
       articles.forEach((articleLine) => {
@@ -20231,386 +21916,13 @@ function bindInterventionsModalHandlers() {
   }
 }
 
-function buildInterventionPrintDetails(recordType, record) {
-  const equipment = record.equipmentId
-    ? getEquipmentRecord("equipments", record.equipmentId)
-    : null;
-  const organ = record.organeId
-    ? getOrganeRecord("organes", record.organeId)
-    : null;
-  const requester = record.requesterId
-    ? getOrganizationUser(record.requesterId)
-    : null;
-  const technicians = (record.technicianIds || [])
-    .map((id) => getOrganizationUser(id))
-    .filter(Boolean)
-    .map((user) => user.name)
-    .join(", ");
-
-  const sharedRows = [
-    { label: "Référence", value: record.ref || "-" },
-    { label: "Statut", value: record.status || "-" },
-    {
-      label: "Équipement",
-      value: equipment
-        ? `${equipment.code} — ${equipment.name}`
-        : record.equipmentLabel || "-",
-    },
-    {
-      label: "Organe",
-      value: organ
-        ? `${organ.code} — ${organ.name}`
-        : record.organeLabel || "-",
-    },
-  ];
-
-  if (recordType === "di") {
-    sharedRows.push(
-      {
-        label: "Demandeur",
-        value: requester ? requester.name : record.requesterLabel || "-",
-      },
-      { label: "Type", value: record.requestType || "-" },
-      { label: "Urgence", value: record.urgency || "-" },
-      { label: "Localisation", value: record.location || "-" },
-      { label: "Créée le", value: formatInterventionDate(record.createdAt) },
-    );
-  }
-
-  if (recordType === "ot") {
-    sharedRows.push(
-      { label: "DI liée", value: record.diRef || "-" },
-      { label: "Type maintenance", value: record.typeMaintenance || "-" },
-      { label: "Priorité", value: record.priority || "-" },
-      {
-        label: "Technicien(s)",
-        value: technicians || record.technicianLabel || "-",
-      },
-      { label: "Date planifiée", value: record.plannedDate || "-" },
-      {
-        label: "Durée estimée",
-        value: record.durationEstimated ? `${record.durationEstimated} h` : "-",
-      },
-    );
-  }
-
-  if (recordType === "bt") {
-    sharedRows.push(
-      {
-        label: "OT lié",
-        value: record.otRef || getInterventionOt(record.otId)?.ref || "-",
-      },
-      { label: "Début", value: formatInterventionDate(record.startDate) },
-      { label: "Fin", value: formatInterventionDate(record.endDate) },
-      { label: "Durée réelle", value: record.duration || "-" },
-      { label: "Travaux réalisés", value: record.works || "-" },
-      { label: "Observations", value: record.observations || "-" },
-    );
-  }
-
-  return sharedRows;
-}
-
-function buildInterventionPrintArticles(record) {
-  if (!Array.isArray(record.articles) || !record.articles.length) {
-    return `
-      <div class="intervention-print-empty">
-        Aucun article renseigné pour ce document.
-      </div>
-    `;
-  }
-
-  const rows = record.articles
-    .map((articleLine, index) => {
-      const article = getArticleRecord("articles", articleLine.articleId);
-      return `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${article ? `${article.code} — ${article.name}` : articleLine.articleId || "Article"}</td>
-          <td>${articleLine.qty || 0}</td>
-        </tr>
-      `;
-    })
-    .join("");
-
-  return `
-    <table class="intervention-print-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Article</th>
-          <th>Qté</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-}
-
-function buildInterventionPrintSignatures(recordType, record) {
-  const requester = record.requesterId
-    ? getOrganizationUser(record.requesterId)
-    : null;
-  const technicians = (record.technicianIds || [])
-    .map((id) => getOrganizationUser(id))
-    .filter(Boolean)
-    .map((user) => user.name)
-    .join(", ");
-  const btTechnician =
-    record.technicianSignature?.name || technicians || "Nom du technicien";
-  const btManager = record.managerSignature?.name || "Nom du responsable";
-
-  const firstLabel =
-    recordType === "di"
-      ? "Demandeur"
-      : recordType === "ot"
-        ? "Technicien"
-        : "Technicien";
-  const firstName =
-    recordType === "di"
-      ? requester?.name || record.requesterLabel || "Nom du demandeur"
-      : recordType === "ot"
-        ? technicians || record.technicianLabel || "Nom du technicien"
-        : btTechnician;
-
-  const secondLabel =
-    recordType === "di" ? "Responsable validation" : "Responsable / Validation";
-  const secondName =
-    recordType === "bt"
-      ? `${btManager}${record.managerSignature?.signedAt ? ` · ${formatInterventionDate(record.managerSignature.signedAt)}` : ""}`
-      : "Nom du responsable";
-
-  return `
-    <div class="intervention-print-signatures">
-      <div class="intervention-print-signature">
-        <strong>${firstLabel}</strong>
-        <span>${firstName}</span>
-        <div class="intervention-print-signature-line"></div>
-        <small>Nom et signature</small>
-      </div>
-      <div class="intervention-print-signature">
-        <strong>${secondLabel}</strong>
-        <span>${secondName}</span>
-        <div class="intervention-print-signature-line"></div>
-        <small>Nom et signature</small>
-      </div>
-    </div>
-  `;
-}
-
-function renderInterventionPrintDocument(recordType, record, enterprise) {
-  const documentTitle =
-    recordType === "di"
-      ? "FICHE TECHNIQUE DI"
-      : recordType === "ot"
-        ? "FICHE TECHNIQUE OT"
-        : "FICHE TECHNIQUE BT";
-  const documentTypeLabel =
-    recordType === "di"
-      ? "Demande d'intervention"
-      : recordType === "ot"
-        ? "Ordre de travail"
-        : "Bon de travail";
-  const printDate = new Date().toLocaleString(getAdministrationLocale());
-  const enterpriseLocation = [
-    enterprise.wilaya,
-    enterprise.daira,
-    enterprise.commune,
-  ]
-    .filter(Boolean)
-    .join(" • ");
-  const enterprisePhone = enterprise.phone
-    ? `Téléphone : ${enterprise.phone}`
-    : "";
-  const enterpriseCode = enterprise.code ? `Code : ${enterprise.code}` : "";
-  const companyInitials = (enterprise.name || enterprise.code || "MF")
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-  const detailRows = buildInterventionPrintDetails(recordType, record)
-    .map(
-      (row) => `
-        <div class="intervention-print-item">
-          <span>${row.label}</span>
-          <strong>${row.value}</strong>
-        </div>
-      `,
-    )
-    .join("");
-  const linkedEquipment = record.equipmentId
-    ? getEquipmentRecord("equipments", record.equipmentId)
-    : null;
-  const linkedOrgan = record.organeId
-    ? getOrganeRecord("organes", record.organeId)
-    : null;
-  const contextText =
-    record.description ||
-    record.instructions ||
-    record.works ||
-    "Aucun descriptif saisi.";
-  const progressText =
-    recordType === "bt" && record.observations
-      ? record.observations
-      : recordType === "ot"
-        ? record.instructions || "Document de planification et d'exécution."
-        : "Document de demande à instruire.";
-  const logoMarkup = enterprise.logo
-    ? `<img src="${escapeHtml(enterprise.logo)}" alt="Logo de l'entreprise" />`
-    : `<span>${escapeHtml(companyInitials || "MF")}</span>`;
-
-  return `
-    <div class="intervention-print-document">
-      <header class="intervention-print-header">
-        <div class="intervention-print-brand">
-          <div class="intervention-print-logo">${logoMarkup}</div>
-          <div class="intervention-print-company">
-            <div class="intervention-print-kicker">Document technique interne</div>
-            <h1>${escapeHtml(enterprise.name || "Entreprise")}</h1>
-            <p>${escapeHtml(enterpriseLocation || "Adresse non renseignée")}</p>
-            <div class="intervention-print-company-lines">
-              ${enterpriseCode ? `<span>${escapeHtml(enterpriseCode)}</span>` : ""}
-              ${enterprisePhone ? `<span>${escapeHtml(enterprisePhone)}</span>` : ""}
-            </div>
-          </div>
-        </div>
-
-        <div class="intervention-print-meta">
-          <div class="intervention-print-meta-title">${documentTitle}</div>
-          <div class="intervention-print-meta-grid">
-            <div><span>Référence</span><strong>${escapeHtml(record.ref || "-")}</strong></div>
-            <div><span>Type</span><strong>${escapeHtml(documentTypeLabel)}</strong></div>
-            <div><span>Statut</span><strong>${escapeHtml(record.status || "-")}</strong></div>
-            <div><span>Date impression</span><strong>${escapeHtml(printDate)}</strong></div>
-          </div>
-        </div>
-      </header>
-
-      <section class="intervention-print-section">
-        <div class="intervention-print-section-head">
-          <h2>Informations de l'intervention</h2>
-          <span>${escapeHtml(recordType.toUpperCase())}</span>
-        </div>
-        <div class="intervention-print-grid">${detailRows}</div>
-      </section>
-
-      <section class="intervention-print-section">
-        <div class="intervention-print-section-head">
-          <h2>Référentiel technique</h2>
-          <span>Parc et traçabilité</span>
-        </div>
-        <div class="intervention-print-reference-grid">
-          <div class="intervention-print-reference-card">
-            <span>Équipement</span>
-            <strong>${escapeHtml(linkedEquipment ? `${linkedEquipment.code} — ${linkedEquipment.name}` : record.equipmentLabel || "-")}</strong>
-          </div>
-          <div class="intervention-print-reference-card">
-            <span>Organe</span>
-            <strong>${escapeHtml(linkedOrgan ? `${linkedOrgan.code} — ${linkedOrgan.name}` : record.organeLabel || "-")}</strong>
-          </div>
-          <div class="intervention-print-reference-card">
-            <span>Responsable / Technicien</span>
-            <strong>${escapeHtml(recordType === "di" ? record.requesterLabel || "-" : record.technicianLabel || recordType === "bt" ? record.technicianSignature?.name || "-" : "-")}</strong>
-          </div>
-        </div>
-      </section>
-
-      <section class="intervention-print-section">
-        <div class="intervention-print-section-head">
-          <h2>Contexte et observations</h2>
-          <span>Résumé métier</span>
-        </div>
-        <div class="intervention-print-notes">
-          <strong>Résumé</strong>
-          <p>${escapeHtml(contextText)}</p>
-        </div>
-        <div class="intervention-print-notes intervention-print-notes--muted">
-          <strong>Compléments</strong>
-          <p>${escapeHtml(progressText)}</p>
-        </div>
-      </section>
-
-      <section class="intervention-print-section">
-        <div class="intervention-print-section-head">
-          <h2>Consommation de pièces</h2>
-          <span>Articles liés</span>
-        </div>
-        ${buildInterventionPrintArticles(record)}
-      </section>
-
-      <section class="intervention-print-section">
-        <div class="intervention-print-section-head">
-          <h2>Signatures</h2>
-          <span>Validation documentaire</span>
-        </div>
-        ${buildInterventionPrintSignatures(recordType, record)}
-      </section>
-
-      <footer class="intervention-print-footer">
-        <div>
-          <strong>${escapeHtml(enterprise.name || "Entreprise")}</strong>
-          <span>${escapeHtml(enterpriseLocation || "Adresse non renseignée")}</span>
-        </div>
-        <div>
-          <strong>${escapeHtml(enterprise.code || "Code non défini")}</strong>
-          <span>${escapeHtml(printDate)}</span>
-        </div>
-      </footer>
-    </div>
-  `;
-}
-
-function openInterventionsPrintCurrentDetails() {
-  if (!interventionsModalState) return;
-
-  const recordType = interventionsModalState.recordType || "di";
-  const record = getInterventionRecord(
-    recordType,
-    interventionsModalState.recordId,
-  );
-  if (!record) return;
-
-  const enterprise = getEnterpriseProfile();
-  const popup = window.open("", "_blank", "width=1100,height=1400");
-  if (!popup) {
-    window.alert("Impossible d'ouvrir la fenêtre d'impression.");
-    return;
-  }
-
-  const stylesHref = new URL("style.css", window.location.href).href;
-  popup.document.open();
-  popup.document.write(`
-    <!doctype html>
-    <html lang="fr">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>${escapeHtml(record.ref || "Impression intervention")}</title>
-        <link rel="stylesheet" href="${stylesHref}" />
-      </head>
-      <body class="intervention-print-body">
-        ${renderInterventionPrintDocument(recordType, record, enterprise)}
-      </body>
-    </html>
-  `);
-  popup.document.close();
-  popup.onload = function () {
-    popup.focus();
-    popup.print();
-  };
-  popup.onafterprint = function () {
-    popup.close();
-  };
-}
 
 function openInterventionsDeleteConfirm(recordType, recordId) {
   const directory = loadInterventionsState();
   const source = getInterventionRecord(recordType, recordId);
   if (!source) return;
 
-  const confirmed = window.confirm(
+  const confirmed = uiConfirm(
     `Supprimer ${source.ref} ? Cette action est irréversible.`,
   );
   if (!confirmed) return;
@@ -20744,7 +22056,7 @@ function renderInterventionsActionButtons(activeTabKey) {
       return;
     }
 
-    window.alert("L'export Excel / PDF sera branché sur le module Historique.");
+    uiAlert("L'export Excel / PDF sera branché sur le module Historique.");
   });
 }
 
@@ -20898,7 +22210,7 @@ function attachInterventionsPageHandlers(activeTabKey) {
 
     const exportButton = event.target.closest("[data-int-export]");
     if (exportButton && pageContentEl.contains(exportButton)) {
-      window.alert(
+      uiAlert(
         `Export ${exportButton.dataset.intExport.toUpperCase()} à brancher sur le module Historique.`,
       );
       return;
@@ -20906,7 +22218,7 @@ function attachInterventionsPageHandlers(activeTabKey) {
 
     const clearHistoryButton = event.target.closest("[data-int-history-clear]");
     if (clearHistoryButton && pageContentEl.contains(clearHistoryButton)) {
-      const confirmed = window.confirm(
+      const confirmed = uiConfirm(
         "Effacer tout l'historique des interventions et réinitialiser l'état ?",
       );
       if (!confirmed) return;
@@ -21295,7 +22607,59 @@ function renderBtSection(directory) {
       </tr>
     `;
 
+  const formatterDzd = new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" });
+  let sumCost = 0;
+  let countCost = 0;
+  let costCorrectif = 0;
+  let costPreventif = 0;
+
+  const directoryOts = directory.ots || [];
+  visibleBts.forEach(bt => {
+    if (bt.coutTotal !== undefined) {
+      sumCost += bt.coutTotal;
+      countCost++;
+      const ot = directoryOts.find(o => o.id === bt.otId);
+      const type = ot ? ot.typeMaintenance : "Corrective";
+      if (type === "Préventive") costPreventif += bt.coutTotal;
+      else costCorrectif += bt.coutTotal;
+    }
+  });
+
+  const avgCost = countCost > 0 ? sumCost / countCost : 0;
+  const pctCorrectif = sumCost > 0 ? Math.round((costCorrectif / sumCost) * 100) : 0;
+  const pctPreventif = sumCost > 0 ? Math.round((costPreventif / sumCost) * 100) : 0;
+
+  const kpisHtml = `
+    <div class="dashboard-kpi-grid" style="margin-bottom: 1.5rem;">
+      <div class="kpi-card dashboard-kpi-card info">
+        <div class="kpi-header">
+          <div class="kpi-label">Coût total tous BT</div>
+          <div class="kpi-icon info"><i class="fa-solid fa-coins"></i></div>
+        </div>
+        <div class="kpi-value">${formatterDzd.format(sumCost)}</div>
+        <div class="kpi-footer">Cumul des BT affichés</div>
+      </div>
+      <div class="kpi-card dashboard-kpi-card success">
+        <div class="kpi-header">
+          <div class="kpi-label">Coût moyen par BT</div>
+          <div class="kpi-icon success"><i class="fa-solid fa-calculator"></i></div>
+        </div>
+        <div class="kpi-value">${formatterDzd.format(avgCost)}</div>
+        <div class="kpi-footer">Sur ${countCost} BT évalués</div>
+      </div>
+      <div class="kpi-card dashboard-kpi-card warning">
+        <div class="kpi-header">
+          <div class="kpi-label">Correctif vs Préventif</div>
+          <div class="kpi-icon warning"><i class="fa-solid fa-chart-pie"></i></div>
+        </div>
+        <div class="kpi-value">${pctCorrectif}% / ${pctPreventif}%</div>
+        <div class="kpi-footer">Répartition financière</div>
+      </div>
+    </div>
+  `;
+
   return `
+    ${kpisHtml}
     <div class="card org-list-card">
       <div class="card-head">
         <div class="card-title"><i class="fa-solid fa-file-signature"></i> Liste des BT</div>
@@ -21720,6 +23084,2206 @@ function buildInterventionDetailRows(rows) {
   `;
 }
 
+// ============================================================
+//  MOTEUR D'IMPRESSION CENTRALISÉ — MaintFlow
+// ============================================================
+
+function printGetEnterprise() {
+  try { return getEnterpriseProfile(); } catch (e) { return {}; }
+}
+
+function printEsc(str) {
+  if (str === null || str === undefined) return '—';
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function printFormatDate(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString(getAdministrationLocale(), {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  } catch (e) { return iso; }
+}
+
+function printGetBadgeStyle(status) {
+  const s = (status || '').toLowerCase();
+  if (['validé', 'validée', 'approved', 'terminé', 'completed', 'clôturé', 'closed', 'actif', 'active'].some(x => s.includes(x)))
+    return 'background:#dcfce7;color:#15803d;border:1px solid #86efac;';
+  if (['en attente', 'pending', 'planifié', 'scheduled', 'en cours', 'in progress'].some(x => s.includes(x)))
+    return 'background:#fef3c7;color:#92400e;border:1px solid #fcd34d;';
+  if (['rejeté', 'rejected', 'urgent', 'critique', 'critical'].some(x => s.includes(x)))
+    return 'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;';
+  return 'background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;';
+}
+
+function printDocument(title, htmlBody) {
+  const win = window.open('', '_blank', 'width=1100,height=900,scrollbars=yes');
+  if (!win) {
+    uiAlert("Impossible d'ouvrir la fenêtre d'impression. Autorisez les pop-ups.");
+    return;
+  }
+  const ent = printGetEnterprise();
+  const localizedTitle = uiText(title);
+  const localizedBody = printLocalizeHtml(htmlBody);
+  const docLang = getAdministrationLanguageKey() === 'en' ? 'en' : 'fr';
+  win.document.write(`<!DOCTYPE html>
+<html lang="${docLang}">
+<head>
+  <meta charset="utf-8">
+  <title>${printEsc(localizedTitle)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:  'Lato', Arial, sans-serif;font-size:11pt;color:#1a2533;background:#f2f4f7;padding:20px}
+    .doc-sheet{max-width:210mm;margin:0 auto;background:#fff;border-radius:12px;
+      box-shadow:0 8px 32px rgba(13,61,79,.12);overflow:hidden}
+    /* EN-TÊTE */
+    .doc-header {
+    background: #fff;
+  border-bottom: 2px solid #18a7bf;
+  padding: 14px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+  .doc-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+.doc-logo-row {
+margin-left: 0px;
+ display: flex;
+  align-items: center;
+  gap: 0;           /* ← gap géré par margin-left sur le texte */
+  overflow: visible;
+}
+.doc-logo-text { font-size: 22pt;
+  font-weight: 800;
+  letter-spacing: .5px;
+  line-height: 1;
+  color: #1a2533; }
+.doc-logo-text .flow {  color: #18a7bf; }
+.doc-logo-subtitle {
+    font-size: 8.5pt;
+  color: #8fa0b0;
+  font-style: italic;
+  margin-top: 0px;
+  line-height: 1.2;
+}
+ .doc-header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: right;
+} 
+    .doc-company{font-size: 9pt;
+  color: #1a2533;
+  line-height: 1.6;
+  text-align: right;}
+    .doc-company strong{font-size: 11pt;
+  font-weight: 800;
+  display: block;
+  color: #1a2533;}
+    /* TITRE DOCUMENT */
+    .doc-title-band{background:#fff;padding:14px 28px;
+      display:flex;justify-content:space-between;align-items:center;
+      border-bottom:2px solid #18a7bf}
+    .doc-title-band h1{font-size:15pt;font-weight:800;color:#0d3d4f;text-transform:uppercase;letter-spacing:1px}
+    .doc-title-band .doc-ref{font-size:9pt;color:#18a7bf;font-weight:700;text-align:right}
+    .doc-title-band .doc-ref strong{font-size:13pt;display:block;color:#0d3d4f}
+    /* BADGE STATUT */
+    /* ✅ APRÈS — texte simple sans cadre */
+.doc-status {
+  display: inline;
+  font-size: 9.5pt;
+  font-weight: 700;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+    /* SECTIONS */
+    .doc-section{padding:16px 28px;border-bottom:1px solid #b8bcc1}
+    .doc-section:last-of-type{border-bottom:none}
+    .doc-section-title{font-size:8.5pt;font-weight:800;text-transform:uppercase;
+      letter-spacing:1.2px;color:#18a7bf;margin-bottom:12px;
+      display:flex;align-items:center;gap:8px}
+    .doc-section-title::before{content:'';display:block;width:3px;height:14px;
+      background:#18a7bf;border-radius:2px}
+    /* GRILLE DE CHAMPS */
+    .doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px}
+    .doc-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 16px}
+    .doc-field{display:flex;flex-direction:column;gap:2px;padding: 4px 0}
+    .doc-field-full{grid-column:1 / -1}
+    .doc-field label{font-size:8pt;font-weight:700;text-transform:uppercase;
+      letter-spacing:.6px;color:#8fa0b0}
+    .doc-field span{font-size:10pt;font-weight:600;color:#1a2533;word-break:break-word}
+    /* TABLEAU */
+    .doc-table-wrap{overflow-x:auto;margin-top:8px}
+    .doc-table{width:100%;border-collapse:collapse;font-size:9pt}
+    .doc-table thead tr{background:#0d3d4f;color:#fff}
+    .doc-table th{padding:8px 10px;text-align:left;font-weight:700;font-size:8pt;
+      text-transform:uppercase;letter-spacing:.5px}
+    .doc-table td{padding:7px 10px;border-bottom:1px solid #edf1f5;vertical-align:top}
+    .doc-table tbody tr:nth-child(even){background:#f8fafc}
+    .doc-table tbody tr:hover{background:#e0f4fa20}
+    /* KPI BOXES */
+    .doc-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0}
+    .doc-kpi{padding:10px 14px;border-radius:8px;border:1px solid #e2e8ef;
+      background:#f8fafc;text-align:center}
+    .doc-kpi label{display:block;font-size:8pt;font-weight:700;text-transform:uppercase;
+      letter-spacing:.6px;color:#8fa0b0;margin-bottom:4px}
+    .doc-kpi strong{font-size:14pt;font-weight:800;color:#0d3d4f;display:block}
+    /* SIGNATURES */
+    .doc-signatures{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:16px 28px}
+    .doc-sig-box{border:1px solid #e2e8ef;border-radius:8px;padding:12px;min-height:90px;
+      display:flex;flex-direction:column;justify-content:space-between}
+    .doc-sig-box label{font-size:8pt;font-weight:800;text-transform:uppercase;
+      letter-spacing:.6px;color:#8fa0b0;margin-bottom:8px;display:block}
+    .doc-sig-box .sig-name{font-size:10pt;font-weight:700;color:#1a2533}
+    .doc-sig-box .sig-date{font-size:8pt;color:#8fa0b0;margin-top:4px}
+    .doc-sig-box .sig-line{margin-top:20px;border-top:1px dashed #cbd5e1;
+      font-size:8pt;color:#8fa0b0;padding-top:4px;text-align:center}
+    /* PIED DE PAGE */
+    .doc-footer{background:#f8fafc;padding:10px 28px;border-top:1px solid #e2e8ef;
+      display:flex;justify-content:space-between;align-items:center;font-size:8pt;color:#8fa0b0}
+    /* IMPRESSION */
+    @media print{
+     * {
+    -webkit-print-color-adjust: exact;  /* Chrome, Safari, Edge */
+    print-color-adjust: exact;          /* Firefox, standard W3C */
+  }
+      body{background:#fff;padding:0}
+      .doc-sheet{box-shadow:none;border-radius:0;margin:0}
+      @page{size:A4;margin:8mm 10mm}
+    }
+    .no-print{display:flex;justify-content:center;gap:12px;padding:16px}
+    .no-print button{padding:10px 24px;border:none;border-radius:8px;
+      font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+    .btn-print-main{background:linear-gradient(135deg,#0d3d4f,#18a7bf);color:#fff}
+    .btn-print-close{background:#f1f5f9;color:#1a2533}
+    @media print{.no-print{display:none}}
+    /* Titres principaux du document */
+.doc-title-band h1,
+.doc-section-title,
+.doc-logo-text,
+.doc-kpi strong {
+  font-family: 'Playfair Display', 'Times New Roman', serif;
+  /* Informations, champs, tableaux */
+.doc-field span,
+.doc-field label,
+.doc-table td,
+.doc-table th,
+.doc-company,
+.doc-footer,
+.doc-sig-box label,
+.sig-name,
+.sig-date {
+  font-family: 'Lato', Arial, sans-serif;
+}
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <button class="btn-print-main" onclick="window.print()">
+      🖨️ ${uiText('Imprimer / Enregistrer PDF')}
+    </button>
+    <button class="btn-print-close" onclick="window.close()">✕ ${uiText('Fermer')}</button>
+  </div>
+  <div class="doc-sheet">
+   <div class="doc-header">
+  <!-- GAUCHE : logo icône + texte + sous-titre -->
+  <div class="doc-header-left" style="margin-left:-8px;">
+  <div class="doc-logo-row">
+  
+  <!-- Logo : height augmenté directement, plus de transform -->
+  <img src="black.png" 
+       alt="MaintFlow" 
+       style="height:70px; width:70px; object-fit:contain; flex-shrink:0;">
+
+  <!-- Nom + sous-titre dans une colonne -->
+  <div style="display:flex; flex-direction:column; gap:1px; margin-left:0px;">
+    <div class="doc-logo-text">
+      <span style="color:#18a7bf">Maint</span><span style="color:#1a2533">Flow</span>
+    </div>
+    <div class="doc-logo-subtitle">${uiText('Système de gestion de maintenance')}</div>
+  </div>
+
+</div>
+</div>
+
+  <!-- DROITE : logo entreprise + infos -->
+  <div class="doc-header-right">
+    ${ent.logo
+      ? `<img src="${ent.logo}" alt="Logo" style="height:52px;max-width:80px;object-fit:contain;">`
+      : `<div style="height:52px;width:70px;border:1.5px dashed #cbd5e1;border-radius:6px;
+                     display:flex;align-items:center;justify-content:center;
+                     color:#cbd5e1;font-size:8pt;">Logo</div>`
+    }
+    <div class="doc-company">
+      <strong>${printEsc(ent.name || uiText('Entreprise'))}</strong>
+      ${ent.wilaya ? `<div>${printEsc(ent.wilaya)}${ent.commune ? ', ' + printEsc(ent.commune) : ''}</div>` : ''}
+      ${ent.phone ? `<div>${uiText('Tél')}: ${printEsc(ent.phone)}</div>` : ''}
+      ${ent.code ? `<div>Code: ${printEsc(ent.code)}</div>` : ''}
+    </div>
+    
+  </div>
+</div>
+    ${localizedBody}
+    <div class="doc-footer">
+      <span>${printEsc(localizedTitle)}</span>
+      <span>MaintFlow © ${new Date().getFullYear()} — ${uiText('Document généré automatiquement')}</span>
+    </div>
+  </div>
+</body>
+</html>`);
+  win.document.close();
+}
+
+// ============================================================
+//  DOCUMENT 1 — DEMANDE D'INTERVENTION (DI)
+// ============================================================
+
+function printDI(record) {
+  if (!record) return;
+  try {
+    const now = new Date().toLocaleString(getAdministrationLocale(), {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+    const equipDir = getEquipmentDirectory();
+    const equipment = equipDir.equipments.find(e => e.id === record.equipmentId) || null;
+    const organeDir = getOrganeDirectory();
+    const organ = organeDir.organes.find(o => o.id === record.organeId) || null;
+    const requester = getOrganizationUser(record.requesterId) || null;
+
+    const equipLabel = equipment ? `${equipment.code} — ${equipment.name}` : (record.equipmentLabel || '—');
+    const organLabel = organ ? `${organ.code} — ${organ.name}` : (record.organeLabel || '—');
+    const reqLabel = requester ? requester.name : (record.requesterLabel || '—');
+
+    const statusStyle = printGetBadgeStyle(record.status);
+
+    const body = `
+      <!-- BANDEAU TITRE -->
+      <div class="doc-title-band">
+        <div>
+          <h1>Demande d'Intervention</h1>
+          <div style="font-size:9pt;color:#5a6a7a;margin-top:4px">DI — Formulaire de demande d'intervention</div>
+        </div>
+        <div class="doc-ref">
+          <strong>${printEsc(record.ref)}</strong>
+          <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-style:italic;">
+    Imprimé le : ${now}
+  </div>
+        </div>
+         
+      </div>
+
+      <!-- SECTION 1 : IDENTIFICATION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Identification de la demande</div>
+        <div class="doc-grid">
+          <div class="doc-field doc-field-full">
+            <label>Titre de l'intervention</label>
+            <span>${printEsc(record.title)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Référence DI</label>
+            <span>${printEsc(record.ref)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Date de création</label>
+            <span>${printFormatDate(record.createdAt)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Demandeur</label>
+            <span>${printEsc(reqLabel)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Statut</label>
+            <span class="doc-status" style="${statusStyle}">${printEscT(record.status || '—')}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2 : ÉQUIPEMENT ET LOCALISATION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Équipement concerné</div>
+        <div class="doc-grid">
+          <div class="doc-field">
+            <label>Équipement</label>
+            <span>${printEsc(equipLabel)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Organe / Composant</label>
+            <span>${printEsc(organLabel)}</span>
+          </div>
+          <div class="doc-field doc-field-full">
+            <label>Localisation</label>
+            <span>${printEsc(record.location || '—')}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3 : CLASSIFICATION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Classification de la demande</div>
+        <div class="doc-grid-3">
+          <div class="doc-field">
+            <label>Type de demande</label>
+            <span>${printEsc(record.requestType || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Niveau d'urgence</label>
+            <span class="doc-status" style="${printGetBadgeStyle(record.urgency)}">${printEscT(record.urgency || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Priorité</label>
+            <span>${printEsc(record.priority || '—')}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4 : DESCRIPTION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Description du problème</div>
+        <div class="doc-field doc-field-full">
+          <label>Description détaillée</label>
+          <span style="white-space:pre-line;line-height:1.6">${printEsc(record.description || 'Aucune description fournie.')}</span>
+        </div>
+      </div>
+
+      <!-- SECTION 5 : TRAÇABILITÉ OT -->
+      ${record.otRef ? `
+      <div class="doc-section">
+        <div class="doc-section-title">Traçabilité — Ordre de travail lié</div>
+        <div class="doc-grid">
+          <div class="doc-field">
+            <label>Référence OT généré</label>
+            <span>${printEsc(record.otRef)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Date de transformation</label>
+            <span>${printFormatDate(record.transformedAt || record.updatedAt)}</span>
+          </div>
+        </div>
+      </div>` : ''}
+
+      <!-- SIGNATURES -->
+      <div class="doc-signatures">
+        <div class="doc-sig-box">
+          <label>Demandeur</label>
+          <div class="sig-name">${printEsc(reqLabel)}</div>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+        <div class="doc-sig-box">
+          <label>Responsable maintenance</label>
+          <div class="sig-name"></div>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+        <div class="doc-sig-box">
+          <label>Visa direction</label>
+          <div class="sig-name"></div>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+      </div>`;
+
+    printDocument(`Demande d'Intervention — ${record.ref}`, body);
+  } catch (err) {
+    console.error('[printDI]', err);
+    uiAlert('Erreur lors de la génération du document DI.');
+  }
+}
+
+// ============================================================
+// IMPRESSION OT — ORDRE DE TRAVAIL
+// ============================================================
+function printOT(record) {
+  if (!record) return;
+  try {
+    const now = new Date().toLocaleString(getAdministrationLocale(), {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+
+    // Résolution des données liées
+    const equipDir = getEquipmentDirectory();
+    const equipment = equipDir.equipments.find(e => e.id === record.equipmentId) || null;
+    const organeDir = getOrganeDirectory();
+    const organ = organeDir.organes.find(o => o.id === record.organeId) || null;
+
+    const technicianNames = (record.technicianIds || [])
+      .map(id => getOrganizationUser(id))
+      .filter(Boolean)
+      .map(u => u.name)
+      .join(', ') || record.technicianLabel || '—';
+
+    const equipLabel = equipment
+      ? `${equipment.code} — ${equipment.name}`
+      : (record.equipmentLabel || '—');
+
+    const organLabel = organ
+      ? `${organ.code} — ${organ.name}`
+      : (record.organeLabel || '—');
+
+    const statusStyle = printGetBadgeStyle(record.status);
+    const priorityStyle = printGetBadgeStyle(record.priority);
+
+    // Tableau articles prévus
+    const articlesRows = (record.articles && record.articles.length)
+      ? record.articles.map(line => {
+        const art = getArticleRecord('articles', line.articleId);
+        const label = art ? `${art.code} — ${art.name}` : (line.articleId || '—');
+        const pmp = art ? (getPrimaryStockRecord(line.articleId)?.pmp || 0) : 0;
+        const total = pmp * (line.qty || 0);
+        return `
+            <tr>
+              <td>${printEsc(label)}</td>
+              <td style="text-align:center;">${line.qty || 0}</td>
+              <td style="text-align:right;">${pmp.toLocaleString(printNumberLocale())} DA</td>
+              <td style="text-align:right;">${total.toLocaleString(printNumberLocale())} DA</td>
+            </tr>`;
+      }).join('')
+      : `<tr><td colspan="4" style="text-align:center;color:#8fa0b0;font-style:italic;">Aucun article prévu</td></tr>`;
+
+    // Checklist sécurité
+    const safetyRows = (record.safetyChecklist && record.safetyChecklist.length)
+      ? record.safetyChecklist.map(item => `
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f1f5f9;">
+            <div style="width:14px;height:14px;border:1.5px solid #18a7bf;border-radius:3px;flex-shrink:0;"></div>
+            <span style="font-size:9.5pt;color:#1a2533;">${printEsc(item)}</span>
+          </div>`).join('')
+      : `<div style="font-size:9pt;color:#8fa0b0;font-style:italic;padding:6px 0;">Aucune consigne de sécurité renseignée.</div>`;
+
+    const articlesTotal = (record.articles || []).reduce((sum, line) => {
+      const art = getArticleRecord('articles', line.articleId);
+      const pmp = art ? (getPrimaryStockRecord(line.articleId)?.pmp ?? 0) : 0;
+      return sum + pmp * (line.qty ?? 0);
+    }, 0);
+    const body = `
+    <!-- BANDEAU TITRE OT -->
+    <div class="doc-title-band">
+      <div>
+        <h1>ORDRE DE TRAVAIL</h1>
+        <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">OT — Planification et assignation de l'intervention</div>
+      </div>
+      <div class="doc-ref">
+        <strong>${printEsc(record.ref)}</strong>
+        <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-weight:400;font-style:italic;">
+          Imprimé le : ${now}
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 1 : IDENTIFICATION -->
+    <div class="doc-section">
+      <div class="doc-section-title">Identification de l'ordre de travail</div>
+      <div class="doc-grid">
+        <div class="doc-field">
+          <label>Référence OT</label>
+          <span>${printEsc(record.ref)}</span>
+        </div>
+        <div class="doc-field">
+          <label>DI liée</label>
+          <span>${printEsc(record.diRef || '—')}</span>
+        </div>
+        <div class="doc-field">
+          <label>Date de création</label>
+          <span>${printFormatDate(record.createdAt)}</span>
+        </div>
+        <div class="doc-field">
+          <label>Date planifiée</label>
+          <span style="font-weight:600;color:#0d7a8e;">${printEsc(record.plannedDate || '—')}</span>
+        </div>
+        <div class="doc-field">
+          <label>Durée estimée</label>
+          <span>${record.durationEstimated ? record.durationEstimated + ' h' : '—'}</span>
+        </div>
+        <div class="doc-field">
+          <label>Statut</label>
+          <span class="doc-status" style="${statusStyle}">${printEscT(record.status || '—')}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2 : ÉQUIPEMENT -->
+    <div class="doc-section">
+      <div class="doc-section-title">Équipement concerné</div>
+      <div class="doc-grid">
+        <div class="doc-field">
+          <label>Équipement</label>
+          <span>${printEsc(equipLabel)}</span>
+        </div>
+        <div class="doc-field">
+          <label>Organe / Composant</label>
+          <span>${printEsc(organLabel)}</span>
+        </div>
+        <div class="doc-field">
+          <label>Localisation</label>
+          <span>${printEsc(record.location || equipment?.location || '—')}</span>
+        </div>
+        <div class="doc-field">
+          <label>Criticité équipement</label>
+          <span>${printEsc(equipment?.criticality || '—')}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3 : CLASSIFICATION -->
+    <div class="doc-section">
+      <div class="doc-section-title">Classification de l'intervention</div>
+      <div class="doc-grid-3">
+        <div class="doc-field">
+          <label>Type de maintenance</label>
+          <span>${printEsc(record.typeMaintenance || '—')}</span>
+        </div>
+        <div class="doc-field">
+          <label>Priorité</label>
+          <span class="doc-status" style="${priorityStyle}">${printEsc(record.priority || '—')}</span>
+        </div>
+        <div class="doc-field">
+          <label>Technicien(s) assigné(s)</label>
+          <span style="font-weight:600;">${printEsc(technicianNames)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4 : INSTRUCTIONS -->
+    <div class="doc-section">
+      <div class="doc-section-title">Instructions de travail</div>
+      <div class="doc-field doc-field-full">
+        <label>Instructions techniques</label>
+        <span style="white-space:pre-line;line-height:1.6;">
+          ${printEsc(record.instructions || 'Aucune instruction fournie.')}
+        </span>
+      </div>
+    </div>
+
+    <!-- SECTION 5 : SÉCURITÉ -->
+    <div class="doc-section">
+      <div class="doc-section-title">⚠ Consignes de sécurité</div>
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px 14px;">
+        ${safetyRows}
+      </div>
+    </div>
+
+    <!-- SECTION 6 : ARTICLES PRÉVUS -->
+<div class="doc-section">
+  <div class="doc-section-title">Articles / Pièces prévus</div>
+  ${articlesRows
+        ? `<table style="width:100%;border-collapse:collapse;font-size:9.5pt;margin-top:6px;">
+        <thead>
+          <tr style="background:#0f766e;color:#ffffff;">
+            <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:left;width:50%;">Article</th>
+            <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:center;width:15%;">Qté prévue</th>
+            <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:right;width:17.5%;">PMP unitaire</th>
+            <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:right;width:17.5%;">Total estimé</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${articlesRows}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f0fdfa;font-weight:bold;">
+            <td colspan="3" style="padding:8px 10px;border:1px solid #e2e8f0;text-align:right;color:#64748b;">
+              Total articles estimé
+            </td>
+            <td style="padding:8px 10px;border:1px solid #e2e8f0;text-align:right;color:#0f766e;">
+              ${articlesTotal.toLocaleString(printNumberLocale())} DA
+            </td>
+          </tr>
+        </tfoot>
+      </table>`
+        : `<p style="color:#94a3b8;font-style:italic;padding:8px 0;">Aucun article prévu pour cet OT.</p>`
+      }
+</div>
+
+    <!-- SECTION 7 : SIGNATURES -->
+    <div class="doc-signatures">
+      <div class="doc-sig-box">
+        <label>Technicien assigné</label>
+        <div class="sig-name">${printEsc(technicianNames)}</div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+      <div class="doc-sig-box">
+        <label>Responsable maintenance</label>
+        <div class="sig-name" style="color:#b0b8c1;"></div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+      <div class="doc-sig-box">
+        <label>Visa direction</label>
+        <div class="sig-name" style="color:#b0b8c1;"></div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+    </div>`;
+
+    printDocument(`Ordre de travail ${record.ref}`, body);
+
+  } catch (err) {
+    console.error('[printOT]', err);
+    uiAlert('Erreur lors de la génération du document OT.');
+  }
+}
+
+function printBT(record) {
+  if (!record) return;
+
+  const directory = loadInterventionsState();
+  const ot = record.otId ? directory.ots.find(o => o.id === record.otId) : null;
+  // ✅ CORRECTION : utiliser getEquipmentDirectory() et getOrganeDirectory()
+  const equipDir = getEquipmentDirectory();
+  const equipment = record.equipmentId
+    ? equipDir.equipments.find(e => e.id === record.equipmentId) || null
+    : null;
+
+  const organeDir = getOrganeDirectory();
+  const organ = record.organeId
+    ? organeDir.organes.find(o => o.id === record.organeId) || null
+    : null;
+
+  const equipLabel = equipment
+    ? `${equipment.code} — ${equipment.name}`
+    : (record.equipmentLabel || '—');
+
+  const organLabel = organ
+    ? `${organ.code} — ${organ.name}`
+    : (record.organeLabel || '—');
+  // Techniciens
+  const techIds = Array.isArray(record.technicianIds) ? record.technicianIds : (record.technicianId ? [record.technicianId] : []);
+  const technicianNames = techIds.map(id => {
+    const u = getOrganizationUser(id);
+    return u ? (u.firstName ? `${u.firstName} ${u.lastName || ''}`.trim() : u.name) : id;
+  }).join(', ') || (record.technicianName || '—');
+
+  const now = new Date().toLocaleDateString(getAdministrationLocale(), {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  // Statut badge
+  const statusStyle = printGetBadgeStyle(record.status);
+
+  // Articles consommés
+  const articlesTotal = (record.articles || []).reduce((sum, line) => {
+    const art = getArticleRecord('articles', line.articleId);
+    const pmp = art ? (getPrimaryStockRecord(line.articleId)?.pmp ?? 0) : 0;
+    return sum + pmp * (line.qty ?? 0);
+  }, 0);
+
+  const articlesRows = (record.articles || []).map((line, i) => {
+    const art = getArticleRecord('articles', line.articleId);
+    const label = art ? `${art.code} — ${art.name}` : (line.articleId || '—');
+    const pmp = art ? (getPrimaryStockRecord(line.articleId)?.pmp ?? 0) : 0;
+    const total = pmp * (line.qty ?? 0);
+    const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+    return `<tr style="background:${bg};">
+      <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(label)}</td>
+      <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;">${line.qty ?? 0}</td>
+      <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:right;">${pmp.toLocaleString(printNumberLocale())} DA</td>
+      <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">${total.toLocaleString(printNumberLocale())} DA</td>
+    </tr>`;
+  }).join('');
+
+  // Durée réelle
+  const dureeReelle = record.durationReal ? `${record.durationReal} h` : '—';
+  const dureeEstimee = ot?.durationEstimated ? `${ot.durationEstimated} h` : (record.durationEstimated ? `${record.durationEstimated} h` : '—');
+
+  const body = `
+    <!-- BANDEAU TITRE BT -->
+    <div class="doc-title-band">
+      <div>
+        <h1>BON DE TRAVAIL</h1>
+        <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">BT — Rapport d'exécution et clôture de l'intervention</div>
+      </div>
+      <div class="doc-ref">
+        <strong>${printEsc(record.ref)}</strong>
+        <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-weight:400;font-style:italic;">
+          Imprimé le : ${now}
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 1 : IDENTIFICATION -->
+    <div class="doc-section">
+      <div class="doc-section-title">Identification du bon de travail</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Référence BT</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;">${printEsc(record.ref)}</td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">OT lié</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(ot?.ref || record.otRef || '—')}</td>
+        </tr>
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Date de création</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printFormatDate(record.createdAt)}</td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Date de clôture</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;color:#0d7a8e;">${printFormatDate(record.closedAt || record.completedAt)}</td>
+        </tr>
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Statut</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">
+            <span style="${statusStyle}">${printEscT(record.status || '—')}</span>
+          </td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Technicien(s)</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;">${printEsc(technicianNames)}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- SECTION 2 : ÉQUIPEMENT -->
+    <div class="doc-section">
+      <div class="doc-section-title">Équipement concerné</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Équipement</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(equipLabel)}</td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Organe / Composant</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(organLabel)}</td>
+        </tr>
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Type de maintenance</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(record.typeMaintenance || ot?.typeMaintenance || '—')}</td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Localisation</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(record.location || equipment?.location || '—')}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- SECTION 3 : DURÉES -->
+    <div class="doc-section">
+      <div class="doc-section-title">Temps d'intervention</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+        <thead>
+          <tr style="background:#0f766e;color:#fff;">
+            <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:left;">Durée estimée</th>
+            <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:left;">Durée réelle</th>
+            <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:left;">Écart</th>
+            <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:left;">Cause de panne</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:8px 10px;border:1px solid #e2e8f0;">${dureeEstimee}</td>
+            <td style="padding:8px 10px;border:1px solid #e2e8f0;font-weight:600;color:#0d7a8e;">${dureeReelle}</td>
+            <td style="padding:8px 10px;border:1px solid #e2e8f0;">
+              ${record.durationReal && ot?.durationEstimated
+      ? (() => {
+        const ecart = (record.durationReal - ot.durationEstimated);
+        const color = ecart > 0 ? '#b91c1c' : '#15803d';
+        return `<span style="color:${color};font-weight:600;">${ecart > 0 ? '+' : ''}${ecart} h</span>`;
+      })()
+      : '—'
+    }
+            </td>
+            <td style="padding:8px 10px;border:1px solid #e2e8f0;">${printEsc(record.cause || record.failureCause || '—')}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 4 : TRAVAUX RÉALISÉS -->
+    <div class="doc-section">
+      <div class="doc-section-title">Travaux réalisés</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 14px;font-size:9.5pt;line-height:1.7;white-space:pre-line;">
+        ${printEsc(record.workDone || record.observations || 'Aucune description des travaux réalisés.')}
+      </div>
+    </div>
+
+    <!-- SECTION 5 : ARTICLES CONSOMMÉS -->
+    <div class="doc-section">
+      <div class="doc-section-title">Articles / Pièces consommés</div>
+      ${articlesRows
+      ? `<table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+            <thead>
+              <tr style="background:#0f766e;color:#fff;">
+                <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:left;width:50%;">Article</th>
+                <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:center;width:15%;">Qté consommée</th>
+                <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:right;width:17.5%;">PMP unitaire</th>
+                <th style="padding:8px 10px;border:1px solid #0d6b63;text-align:right;width:17.5%;">Total réel</th>
+              </tr>
+            </thead>
+            <tbody>${articlesRows}</tbody>
+            <tfoot>
+              <tr style="background:#f0fdfa;font-weight:bold;">
+                <td colspan="3" style="padding:8px 10px;border:1px solid #e2e8f0;text-align:right;color:#64748b;">Coût total articles</td>
+                <td style="padding:8px 10px;border:1px solid #e2e8f0;text-align:right;color:#0f766e;">${articlesTotal.toLocaleString(printNumberLocale())} DA</td>
+              </tr>
+            </tfoot>
+          </table>`
+      : `<p style="color:#94a3b8;font-style:italic;padding:8px 0;">Aucun article consommé enregistré.</p>`
+    }
+    </div>
+
+    <!-- SIGNATURES -->
+    <div class="doc-signatures">
+      <div class="doc-sig-box">
+        <label>Technicien exécutant</label>
+        <div class="sig-name">${printEsc(technicianNames)}</div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+      <div class="doc-sig-box">
+        <label>Responsable maintenance</label>
+        <div class="sig-name" style="color:#b0b8c1;"></div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+      <div class="doc-sig-box">
+        <label>Visa client / Exploitant</label>
+        <div class="sig-name" style="color:#b0b8c1;"></div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+    </div>`;
+
+  printDocument(`Bon de travail ${record.ref}`, body);
+}
+
+function printPlanMaintenance(plan) {
+  if (!plan) return;
+
+  const equipDir = getEquipmentDirectory();
+  const equipment = plan.equipmentId
+    ? equipDir.equipments.find(e => e.id === plan.equipmentId) || null
+    : null;
+
+  const organeDir = getOrganeDirectory();
+  const organ = plan.organId
+    ? organeDir.organes.find(o => o.id === plan.organId) || null
+    : null;
+
+  const technicien = plan.technicianId
+    ? getOrganizationUser(plan.technicianId)
+    : null;
+  const techLabel = technicien
+    ? (technicien.firstName
+      ? `${technicien.firstName} ${technicien.lastName || ''}`.trim()
+      : technicien.name)
+    : '—';
+
+  const equipLabel = equipment
+    ? `${equipment.code} — ${equipment.name}`
+    : (plan.equipmentLabel || '—');
+  const organLabel = organ
+    ? `${organ.code} — ${organ.name}`
+    : (plan.organLabel || '—');
+
+  const statusStyle = printGetBadgeStyle(plan.status);
+
+  // Articles nécessaires
+  const articleIds = Array.isArray(plan.articleIds) ? plan.articleIds : [];
+  const articlesRows = articleIds.length
+    ? articleIds.map((id, i) => {
+      const art = getArticleRecord('articles', id);
+      const label = art ? `${art.code} — ${art.name}` : id;
+      const unit = art?.unitMeasure || '—';
+      const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+      return `<tr style="background:${bg};">
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;">${printEsc(label)}</td>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center;">${printEsc(unit)}</td>
+        </tr>`;
+    }).join('')
+    : null;
+
+  // Tâches (gamme opératoire)
+  const tasks = Array.isArray(plan.tasks)
+    ? plan.tasks
+    : (plan.tasks ? String(plan.tasks).split('\n').map(t => t.trim()).filter(Boolean) : []);
+
+  // Sécurité / Documents
+  const safetyItems = Array.isArray(plan.safety)
+    ? plan.safety
+    : (plan.safety ? String(plan.safety).split('\n').map(t => t.trim()).filter(Boolean) : []);
+  const docItems = Array.isArray(plan.documents)
+    ? plan.documents
+    : (plan.documents ? String(plan.documents).split('\n').map(t => t.trim()).filter(Boolean) : []);
+
+  const now = new Date().toLocaleDateString(getAdministrationLocale(), {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  const body = `
+    <!-- BANDEAU TITRE -->
+    <div class="doc-title-band">
+      <div>
+        <h1>PLAN DE MAINTENANCE</h1>
+        <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">Gamme opératoire — Référentiel de déclenchement</div>
+      </div>
+      <div class="doc-ref">
+        <strong>${printEsc(plan.ref)}</strong>
+        <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-weight:400;font-style:italic;">
+          Imprimé le : ${now}
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 1 : IDENTIFICATION -->
+    <div class="doc-section">
+      <div class="doc-section-title">Identification du plan</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Référence</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;">${printEsc(plan.ref)}</td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Titre</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(plan.title || '—')}</td>
+        </tr>
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Type de plan</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(plan.planType || '—')}</td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Type de maintenance</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(plan.maintenanceType || '—')}</td>
+        </tr>
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Statut</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">
+            <span style="${statusStyle}">${printEscT(plan.status || '—')}</span>
+          </td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Technicien par défaut</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;">${printEsc(techLabel)}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- SECTION 2 : ÉQUIPEMENT -->
+    <div class="doc-section">
+      <div class="doc-section-title">Équipement concerné</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Équipement</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(equipLabel)}</td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Organe / Composant</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(organLabel)}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- SECTION 3 : PLANIFICATION -->
+    <div class="doc-section">
+      <div class="doc-section-title">Planification &amp; déclenchement</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Fréquence</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;color:#0d7a8e;">${printEsc(plan.frequency || '—')}</td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Déclencheur</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(plan.triggerLabel || '—')}</td>
+        </tr>
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Date de début</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printFormatDate(plan.startDate)}</td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Prochaine échéance</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;color:#0d7a8e;">
+            ${plan.nextDueDate
+      ? (() => {
+        const d = new Date(plan.nextDueDate);
+        const diffDays = Math.ceil((d.getTime() - Date.now()) / 86400000);
+        const color = diffDays < 0 ? '#b91c1c' : diffDays <= 7 ? '#b45309' : '#15803d';
+        const label = diffDays < 0
+          ? uiText(`En retard (${Math.abs(diffDays)} j)`)
+          : uiText(`Dans ${diffDays} j`);
+        return `${d.toLocaleDateString(getAdministrationLocale())} <span style="color:${color};font-weight:600;font-size:8.5pt;">(${label})</span>`;
+      })()
+      : '—'
+    }
+          </td>
+        </tr>
+        <tr>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Durée estimée</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${plan.durationHours ? plan.durationHours + ' h' : '—'}</td>
+          <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Seuil alerte</th>
+          <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(plan.alertThreshold || '—')}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- SECTION 4 : GAMME OPÉRATOIRE -->
+    <div class="doc-section">
+      <div class="doc-section-title">Gamme opératoire</div>
+      ${tasks.length
+      ? `<table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+            <thead>
+              <tr style="background:#0f766e;color:#fff;">
+                <th style="padding:7px 10px;border:1px solid #0d6b63;width:40px;text-align:center;">#</th>
+                <th style="padding:7px 10px;border:1px solid #0d6b63;text-align:left;">Tâche / Opération</th>
+                <th style="padding:7px 10px;border:1px solid #0d6b63;width:80px;text-align:center;">Fait ✓</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tasks.map((task, i) => `
+                <tr style="background:${i % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                  <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;font-weight:600;color:#64748b;">${i + 1}</td>
+                  <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(task)}</td>
+                  <td style="padding:7px 10px;border:1px solid #e2e8f0;"></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`
+      : `<p style="color:#94a3b8;font-style:italic;padding:8px 0;">Aucune gamme opératoire définie.</p>`
+    }
+    </div>
+
+    <!-- SECTION 5 : ARTICLES NÉCESSAIRES -->
+    <div class="doc-section">
+      <div class="doc-section-title">Articles / Pièces nécessaires</div>
+      ${articlesRows
+      ? `<table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+            <thead>
+              <tr style="background:#0f766e;color:#fff;">
+                <th style="padding:7px 10px;border:1px solid #0d6b63;text-align:left;">Article</th>
+                <th style="padding:7px 10px;border:1px solid #0d6b63;width:100px;text-align:center;">Unité</th>
+                <th style="padding:7px 10px;border:1px solid #0d6b63;width:100px;text-align:center;">Qté utilisée</th>
+              </tr>
+            </thead>
+            <tbody>${articlesRows}</tbody>
+          </table>`
+      : `<p style="color:#94a3b8;font-style:italic;padding:8px 0;">Aucun article défini pour ce plan.</p>`
+    }
+    </div>
+
+    <!-- SECTION 6 : SÉCURITÉ & DOCUMENTS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+      <div class="doc-section" style="margin-top:0;">
+        <div class="doc-section-title">Consignes de sécurité</div>
+        ${safetyItems.length
+      ? `<ul style="padding-left:16px;margin:0;font-size:9.5pt;line-height:1.9;">
+              ${safetyItems.map(s => `<li>${printEsc(s)}</li>`).join('')}
+             </ul>`
+      : `<p style="color:#94a3b8;font-style:italic;font-size:9.5pt;">Aucune consigne définie.</p>`
+    }
+      </div>
+      <div class="doc-section" style="margin-top:0;">
+        <div class="doc-section-title">Documents associés</div>
+        ${docItems.length
+      ? `<ul style="padding-left:16px;margin:0;font-size:9.5pt;line-height:1.9;">
+              ${docItems.map(d => `<li>${printEsc(d)}</li>`).join('')}
+             </ul>`
+      : `<p style="color:#94a3b8;font-style:italic;font-size:9.5pt;">Aucun document associé.</p>`
+    }
+      </div>
+    </div>
+
+    <!-- SIGNATURES -->
+    <div class="doc-signatures">
+      <div class="doc-sig-box">
+        <label>Technicien exécutant</label>
+        <div class="sig-name">${printEsc(techLabel)}</div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+      <div class="doc-sig-box">
+        <label>Responsable maintenance</label>
+        <div class="sig-name" style="color:#b0b8c1;"></div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+      <div class="doc-sig-box">
+        <label>Visa HSE / Sécurité</label>
+        <div class="sig-name" style="color:#b0b8c1;"></div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+    </div>`;
+
+  printDocument(`Plan de maintenance ${plan.ref}`, body);
+}
+
+// ===================================================================
+// IMPRESSION — FICHE DE STOCK (style unifié MaintFlow)
+// ===================================================================
+function printFicheStock(recordKey) {
+  try {
+    const directory = getStockDirectory();
+    const record = directory.records.find(item => getStockRecordKey(item) === recordKey);
+    if (!record) { uiAlert('Fiche stock introuvable.'); return; }
+
+    const art = typeof getArticleRecord === 'function'
+      ? getArticleRecord(getArticleRecords(), record.articleId)
+      : null;
+
+    const now = new Date().toLocaleString(getAdministrationLocale(), {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+
+    const qty = Number(record.currentQuantity) || 0;
+    const pmp = Number(record.pmp) || 0;
+    const artPrice = Number(record.articlePrice) || 0;
+    const minStock = Number(record.minStock) || 0;
+    const valPmp = (qty * pmp).toLocaleString(printNumberLocale()) + ' DA';
+    const valCat = (qty * artPrice).toLocaleString(printNumberLocale()) + ' DA';
+
+    const risk = qty <= 0 ? uiText('Critique') : qty < minStock ? uiText('Alerte') : uiText('Normal');
+    const riskStyle = qty <= 0
+      ? 'background:#b91c1c;color:#fff;'
+      : qty < minStock
+        ? 'background:#b45309;color:#fff;'
+        : 'background:#15803d;color:#fff;';
+
+    const artLabel = art ? `${art.code} — ${art.name}` : record.articleId;
+
+    const body = `
+      <!-- BANDEAU TITRE -->
+      <div class="doc-title-band">
+        <div>
+          <h1>FICHE DE STOCK</h1>
+          <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">Stock — Fiche article et localisation</div>
+        </div>
+        <div class="doc-ref">
+          <strong>${printEsc(artLabel)}</strong>
+          <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-weight:400;font-style:italic;">
+            Imprimé le ${now}
+          </div>
+        </div>
+      </div>
+
+
+<div class="doc-section">
+  <div class="doc-section-title">Récapitulatif du stock</div>
+  <table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+    <tr>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;width:25%;text-align:left;color:#64748b;font-weight:600;">Quantité en stock</th>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700;color:#1a2533;">${printEsc(String(qty))} unité(s)</td>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;width:25%;text-align:left;color:#64748b;font-weight:600;">Statut stock</th>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;">
+        <span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:8.5pt;font-weight:bold;color:#fff;${riskStyle}">${risk}</span>
+      </td>
+    </tr>
+    <tr>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;text-align:left;color:#64748b;font-weight:600;">Prix Moyen Pondéré (PMP)</th>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:600;">${pmp.toLocaleString(printNumberLocale())} DA</td>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;text-align:left;color:#64748b;font-weight:600;">Valeur totale (PMP)</th>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700;color:#0d7a8e;">${valPmp}</td>
+    </tr>
+    <tr>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;text-align:left;color:#64748b;font-weight:600;">Prix catalogue unitaire</th>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;">${artPrice.toLocaleString(printNumberLocale())} DA</td>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;text-align:left;color:#64748b;font-weight:600;">Valeur catalogue totale</th>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;">${valCat}</td>
+    </tr>
+  </table>
+</div>
+
+      <!-- SECTION 1 : IDENTIFICATION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Identification de l'article</div>
+        <div class="doc-grid">
+          <div class="doc-field"><label>Code article</label><span>${printEsc(art?.code || record.articleId)}</span></div>
+          <div class="doc-field"><label>Désignation</label><span style="font-weight:600;">${printEsc(art?.name || '-')}</span></div>
+          <div class="doc-field"><label>Famille</label><span>${printEsc(art?.family || '-')}</span></div>
+          <div class="doc-field"><label>Groupe</label><span>${printEsc(art?.group || '-')}</span></div>
+          <div class="doc-field"><label>Unité de mesure</label><span>${printEsc(art?.unitMeasure || art?.unit || '-')}</span></div>
+          <div class="doc-field"><label>Prix catalogue</label><span>${artPrice.toLocaleString(printNumberLocale())} DA</span></div>
+        </div>
+      </div>
+
+      <!-- SECTION 2 : LOCALISATION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Localisation & seuils</div>
+        <table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+          <tr>
+            <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Emplacement</th>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;">${printEsc(record.locationLabel || '-')}</td>
+            <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;width:22%;text-align:left;color:#64748b;">Magasin</th>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(record.warehouse || '-')}</td>
+          </tr>
+          <tr>
+            <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Stock minimum</th>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(String(record.minStock || 0))}</td>
+            <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Stock maximum</th>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(String(record.maxStock || 0))}</td>
+          </tr>
+          <tr>
+            <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Stock de sécurité</th>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(String(record.safetyStock || 0))}</td>
+            <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Qté réapprovisionnement</th>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(String(record.replenishmentQty || 0))}</td>
+          </tr>
+          <tr>
+            <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">PMP</th>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;color:#0d7a8e;">${pmp.toLocaleString(printNumberLocale())} DA</td>
+            <th style="background:#f8fafc;padding:7px 10px;border:1px solid #e2e8f0;text-align:left;color:#64748b;">Valeur totale (PMP)</th>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;color:#0d7a8e;">${valPmp}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- SECTION 3 : OBSERVATIONS -->
+      <div class="doc-section">
+        <div class="doc-section-title">Observations</div>
+        <div style="background:#f8fafc;border-left:3px solid #18a7bf;padding:10px 14px;border-radius:0 4px 4px 0;font-size:9.5pt;line-height:1.6;">
+          ${printEsc(record.observations || 'Aucune observation enregistrée.')}
+        </div>
+      </div>
+
+      <!-- SIGNATURES -->
+      <div class="doc-signatures">
+        <div class="doc-sig-box"><label>Gestionnaire de stock</label><div class="sig-line">Signature &amp; Date</div></div>
+        <div class="doc-sig-box"><label>Responsable magasin</label><div class="sig-line">Signature &amp; Date</div></div>
+        <div class="doc-sig-box"><label>Visa direction</label><div class="sig-line">Signature &amp; Date</div></div>
+      </div>
+    `;
+
+    printDocument(`Fiche de Stock — ${artLabel}`, body);
+  } catch (err) {
+    console.error('printFicheStock', err);
+    uiAlert('Erreur lors de la génération du document Fiche de Stock.');
+  }
+}
+// ===================================================================
+// IMPRESSION — FEUILLE D'INVENTAIRE (style unifié MaintFlow)
+// ===================================================================
+function printInventaire(inventoryId) {
+  try {
+    const inventory = typeof getStockInventoryById === 'function'
+      ? getStockInventoryById(inventoryId)
+      : null;
+    if (!inventory) { uiAlert('Inventaire introuvable.'); return; }
+
+    const now = new Date().toLocaleString(getAdministrationLocale(), {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+
+    const rows = Array.isArray(inventory.rows) ? inventory.rows : [];
+    const discrepancies = rows.map(r => Number(r.counted || 0) - Number(r.theoretical || 0));
+    const conformes = discrepancies.filter(v => v === 0).length;
+    const manquants = discrepancies.filter(v => v < 0).length;
+    const surstocks = discrepancies.filter(v => v > 0).length;
+
+    const statusStyle = inventory.status === 'Clôturé'
+      ? 'background:#15803d;color:#fff;'
+      : 'background:#1d4ed8;color:#fff;';
+
+    const rowsHtml = rows.length
+      ? rows.map((row, i) => {
+        const art = typeof getArticleRecord === 'function'
+          ? getArticleRecord(getArticleRecords(), row.articleId)
+          : null;
+        const artLabel = art
+          ? `${art.code} — ${art.name}`
+          : (row.article || row.articleId || '-');
+        const th = Number(row.theoretical || 0);
+        const ct = Number(row.counted || 0);
+        const diff = ct - th;
+        const badgeStyle = diff === 0
+          ? 'background:#15803d;'
+          : diff > 0
+            ? 'background:#1d4ed8;'
+            : 'background:#b91c1c;';
+        const label = diff === 0
+          ? uiText('Conforme')
+          : diff > 0
+            ? uiText(`+${diff} Surstock`)
+            : uiText(`${diff} Manquant`);
+        const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        return `<tr style="background:${bg};">
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(artLabel)}</td>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(row.location || '-')}</td>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;">${th}</td>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;font-weight:bold;">${ct}</td>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;font-weight:bold;color:${diff === 0 ? '#15803d' : diff > 0 ? '#1d4ed8' : '#b91c1c'};">${diff === 0 ? '0' : diff}</td>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;">
+              <span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:8pt;font-weight:bold;color:#fff;${badgeStyle}">${label}</span>
+            </td>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;font-size:8.5pt;color:#64748b;">${printEsc(row.observations || '')}</td>
+          </tr>`;
+      }).join('')
+      : `<tr><td colspan="7" style="text-align:center;color:#8fa0b0;font-style:italic;padding:12px;">Aucune ligne de comptage enregistrée.</td></tr>`;
+
+    const body = `
+      <!-- BANDEAU TITRE -->
+      <div class="doc-title-band">
+        <div>
+          <h1>FEUILLE D'INVENTAIRE</h1>
+          <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">Stock — Comptage physique et écarts</div>
+        </div>
+        <div class="doc-ref">
+          <strong>${printEsc(inventory.id || inventory.inventoryId || '-')}</strong>
+          <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-weight:400;font-style:italic;">
+            Imprimé le ${now}
+          </div>
+        </div>
+      </div>
+
+<div class="doc-section">
+  <div class="doc-section-title">Synthèse du comptage</div>
+  <table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
+    <tr>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;width:25%;text-align:left;color:#64748b;font-weight:600;">Total lignes comptées</th>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700;color:#1a2533;">${rows.length} ligne(s)</td>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;width:25%;text-align:left;color:#64748b;font-weight:600;">Lignes conformes</th>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700;color:#15803d;">${conformes}</td>
+    </tr>
+    <tr>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;text-align:left;color:#64748b;font-weight:600;">Lignes manquantes</th>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700;color:#b91c1c;">${manquants}</td>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;text-align:left;color:#64748b;font-weight:600;">Lignes en surstock</th>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700;color:#1d4ed8;">${surstocks}</td>
+    </tr>
+    <tr>
+      <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;text-align:left;color:#64748b;font-weight:600;">Taux de conformité</th>
+      <td colspan="3" style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700;color:#0d7a8e;">
+        ${rows.length > 0 ? Math.round((conformes / rows.length) * 100) : 0} %
+      </td>
+    </tr>
+  </table>
+</div>
+
+      <!-- SECTION 1 : INFORMATIONS GÉNÉRALES -->
+      <div class="doc-section">
+        <div class="doc-section-title">Informations générales</div>
+        <div class="doc-grid">
+          <div class="doc-field"><label>Référence</label><span style="font-weight:600;">${printEsc(inventory.id || inventory.inventoryId || '-')}</span></div>
+          <div class="doc-field"><label>Type</label><span>${printEsc(inventory.type || '-')}</span></div>
+          <div class="doc-field"><label>Date inventaire</label><span>${printFormatDate(inventory.createdAt)}</span></div>
+          <div class="doc-field"><label>Statut</label>
+            <span class="doc-status" style="${statusStyle}">${printEscT(inventory.status || '-')}</span>
+          </div>
+          <div class="doc-field"><label>Responsable</label><span style="font-weight:600;">${printEsc(inventory.owner || '-')}</span></div>
+          <div class="doc-field"><label>Date clôture</label><span>${printFormatDate(inventory.closedAt)}</span></div>
+        </div>
+        ${inventory.observations ? `
+        <div style="margin-top:10px;background:#fffbeb;border-left:3px solid #f59e0b;padding:8px 12px;border-radius:0 4px 4px 0;font-size:9pt;">
+          ${printEsc(inventory.observations)}
+        </div>` : ''}
+      </div>
+
+      <!-- SECTION 2 : FEUILLE DE COMPTAGE -->
+      <div class="doc-section">
+        <div class="doc-section-title">Feuille de comptage</div>
+        <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:6px;">
+          <thead>
+            <tr style="background:#0f766e;color:#fff;">
+              <th style="padding:7px 10px;border:1px solid #0d6b63;text-align:left;">Article</th>
+              <th style="padding:7px 10px;border:1px solid #0d6b63;text-align:left;">Emplacement</th>
+              <th style="padding:7px 10px;border:1px solid #0d6b63;text-align:center;">Théorique</th>
+              <th style="padding:7px 10px;border:1px solid #0d6b63;text-align:center;">Compté</th>
+              <th style="padding:7px 10px;border:1px solid #0d6b63;text-align:center;">Écart</th>
+              <th style="padding:7px 10px;border:1px solid #0d6b63;text-align:left;">Statut</th>
+              <th style="padding:7px 10px;border:1px solid #0d6b63;text-align:left;">Observations</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+
+      <!-- SIGNATURES -->
+      <div class="doc-signatures">
+        <div class="doc-sig-box"><label>Responsable inventaire</label><div class="sig-line">Signature &amp; Date</div></div>
+        <div class="doc-sig-box"><label>Gestionnaire de stock</label><div class="sig-line">Signature &amp; Date</div></div>
+        <div class="doc-sig-box"><label>Visa direction</label><div class="sig-line">Signature &amp; Date</div></div>
+      </div>
+    `;
+
+    printDocument(`Feuille d'Inventaire — ${inventory.id || inventory.inventoryId}`, body);
+  } catch (err) {
+    console.error('printInventaire', err);
+    uiAlert("Erreur lors de la génération du document Inventaire.");
+  }
+}
+
+// ============================================================
+// IMPRESSION DEMANDE D'ACHAT (DA) — gabarit identique DI/OT/BT
+// ============================================================
+function printDA(daId) {
+  const state = loadAchatsState();
+  const da = state.demandes.find(item => item.id === daId);
+  if (!da) { uiAlert('Demande d\'achat introuvable.'); return; }
+
+  try {
+    const now = new Date().toLocaleString(
+      typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ',
+      { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+    );
+
+    const fmtD = v => {
+      if (!v) return '—';
+      try { return new Date(v).toLocaleString(getAdministrationLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+      catch (e) { return v; }
+    };
+
+    const fmtM = v => new Intl.NumberFormat(printNumberLocale(), {
+      style: 'currency', currency: 'DZD', maximumFractionDigits: 2
+    }).format(Number(v) || 0);
+
+    const totalCalc = (Number(da.quantity) || 0) * (Number(da.estimatedUnitPrice) || 0);
+    const statusStyle = printGetBadgeStyle(da.status || '');
+    const urgencyStyle = printGetBadgeStyle(da.urgency || '');
+
+    const body = `
+      <!-- BANDEAU TITRE DA -->
+      <div class="doc-title-band">
+        <div>
+          <h1>DEMANDE D'ACHAT</h1>
+          <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">DA — Flux achat interne</div>
+        </div>
+        <div class="doc-ref">
+          <strong>${printEsc(da.number)}</strong>
+          <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-weight:400;font-style:italic;">
+            Imprimé le ${now}
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 1 : IDENTIFICATION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Identification de la demande</div>
+        <div class="doc-grid">
+          <div class="doc-field">
+            <label>Référence DA</label>
+            <span>${printEsc(da.number)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Date de création</label>
+            <span>${fmtD(da.createdAt)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Demandeur</label>
+            <span>${printEsc(da.requester || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Date souhaitée</label>
+            <span>${fmtD(da.neededDate)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Niveau d'urgence</label>
+            <span class="doc-status" style="${urgencyStyle}">${printEscT(da.urgency || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Statut</label>
+            <span class="doc-status" style="${statusStyle}">${printEscT(da.status || '—')}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2 : ARTICLE DEMANDÉ -->
+      <div class="doc-section">
+        <div class="doc-section-title">Article demandé</div>
+        <div class="doc-grid">
+          <div class="doc-field doc-field-full">
+            <label>Désignation article</label>
+            <span style="font-weight:700;">${printEsc(da.articleLabel || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Quantité demandée</label>
+            <span style="font-weight:600;">${printEsc(String(da.quantity || 0))}</span>
+          </div>
+          <div class="doc-field">
+            <label>Prix unitaire estimé</label>
+            <span>${fmtM(da.estimatedUnitPrice)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Total estimé</label>
+            <span style="font-weight:700;color:#0d7a8e;">${fmtM(totalCalc)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Fournisseur suggéré</label>
+            <span>${printEsc(da.preferredSupplier || '—')}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3 : JUSTIFICATION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Justification de la demande</div>
+        <div class="doc-field doc-field-full">
+          <label>Motif et contexte</label>
+          <span style="white-space:pre-line;line-height:1.6;">${printEsc(da.reason || 'Aucune justification renseignée.')}</span>
+        </div>
+      </div>
+
+      <!-- SECTION 4 : DÉCISION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Décision</div>
+        <div class="doc-grid">
+          <div class="doc-field">
+            <label>☐ &nbsp;Validée</label>
+            <span style="min-height:28px;display:block;">Date : _____________________</span>
+          </div>
+          <div class="doc-field">
+            <label>☐ &nbsp;Refusée — Motif :</label>
+            <span style="min-height:28px;display:block;">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIGNATURES -->
+      <div class="doc-signatures">
+        <div class="doc-sig-box">
+          <label>Demandeur</label>
+          <div class="sig-name">${printEsc(da.requester || 'Nom du demandeur')}</div>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+        <div class="doc-sig-box">
+          <label>Responsable Achats</label>
+          <div class="sig-name" style="color:#b0b8c1;"></div>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+        <div class="doc-sig-box">
+          <label>Direction</label>
+          <div class="sig-name" style="color:#b0b8c1;"></div>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+      </div>
+    `;
+
+    printDocument(`Demande d'Achat ${da.number}`, body);
+
+  } catch (err) {
+    console.error('printDA', err);
+    uiAlert('Erreur lors de la génération du document DA.');
+  }
+}
+
+// ============================================================
+// IMPRESSION BON DE COMMANDE (BC) — gabarit identique DI/OT/BT
+// ============================================================
+function printBC(bcId) {
+  const state = loadAchatsState();
+  const bc = state.bons.find(item => item.id === bcId);
+  if (!bc) { uiAlert('Bon de commande introuvable.'); return; }
+
+  try {
+    const now = new Date().toLocaleString(
+      typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ',
+      { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+    );
+
+    const da = state.demandes.find(item => item.id === bc.linkedDaId) || null;
+
+    const fmtD = v => {
+      if (!v) return '—';
+      try { return new Date(v).toLocaleString(getAdministrationLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+      catch (e) { return v; }
+    };
+
+    const fmtM = v => new Intl.NumberFormat(printNumberLocale(), {
+      style: 'currency', currency: 'DZD', maximumFractionDigits: 2
+    }).format(Number(v) || 0);
+
+    const ht = Number(bc.totalHt) || 0;
+    const ttc = Number(bc.totalTtc) || 0;
+    const tva = ttc - ht;
+    const shipping = Number(bc.shippingCost) || 0;
+    const discount = Number(bc.discountPercent) || 0;
+    const tvaRate = Number(bc.tvaPercent) || 19;
+
+    const statusStyle = printGetBadgeStyle(bc.status || '');
+
+    // Ligne article
+    const articleRow = `
+      <tr style="background:#ffffff;">
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;">1</td>
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;">${printEsc(bc.articleLabel || '—')}</td>
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;">${bc.quantity || 0}</td>
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:right;">${fmtM(bc.unitPrice)}</td>
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;">${discount > 0 ? discount + ' %' : '—'}</td>
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:right;font-weight:700;">${fmtM(bc.lineTotalHt)}</td>
+      </tr>`;
+
+    const body = `
+      <!-- BANDEAU TITRE BC -->
+      <div class="doc-title-band">
+        <div>
+          <h1>BON DE COMMANDE</h1>
+          <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">BC — Commande fournisseur${da ? ' · DA liée : ' + printEsc(da.number) : ''}</div>
+        </div>
+        <div class="doc-ref">
+          <strong>${printEsc(bc.number)}</strong>
+          <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-weight:400;font-style:italic;">
+            Imprimé le ${now}
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 1 : IDENTIFICATION BC -->
+      <div class="doc-section">
+        <div class="doc-section-title">Identification du bon de commande</div>
+        <div class="doc-grid">
+          <div class="doc-field">
+            <label>Référence BC</label>
+            <span style="font-weight:700;">${printEsc(bc.number)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Date de commande</label>
+            <span>${fmtD(bc.orderDate)}</span>
+          </div>
+          <div class="doc-field">
+            <label>DA liée</label>
+            <span>${da ? printEsc(da.number) : '—'}</span>
+          </div>
+          <div class="doc-field">
+            <label>Statut</label>
+            <span class="doc-status" style="${statusStyle}">${printEscT(bc.status || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Date livraison souhaitée</label>
+            <span style="font-weight:600;color:#0d7a8e;">${fmtD(bc.wantedDate)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Mode de livraison</label>
+            <span>${printEsc(bc.deliveryMode || '—')}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2 : FOURNISSEUR -->
+      <div class="doc-section">
+        <div class="doc-section-title">Fournisseur</div>
+        <div class="doc-grid">
+          <div class="doc-field doc-field-full">
+            <label>Raison sociale</label>
+            <span style="font-weight:700;">${printEsc(bc.supplierName || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Téléphone</label>
+            <span>${printEsc(bc.supplierPhone || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Email</label>
+            <span>${printEsc(bc.supplierEmail || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Réf. fournisseur</label>
+            <span>${printEsc(bc.supplierRef || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Conditions de paiement</label>
+            <span>${printEsc(bc.paymentTerm || '—')}</span>
+          </div>
+          <div class="doc-field doc-field-full">
+            <label>Adresse de livraison</label>
+            <span>${printEsc(bc.deliveryAddress || '—')}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3 : DÉTAIL COMMANDE -->
+      <div class="doc-section">
+        <div class="doc-section-title">Détail de la commande</div>
+        <div class="doc-table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th style="width:5%;">N°</th>
+                <th>Désignation article</th>
+                <th style="width:10%;text-align:center;">Qté</th>
+                <th style="width:15%;text-align:right;">PU HT</th>
+                <th style="width:9%;text-align:center;">Remise</th>
+                <th style="width:16%;text-align:right;">Montant HT</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${articleRow}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- RÉCAP FINANCIER -->
+        <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+          <table style="border-collapse:collapse;font-size:9.5pt;min-width:260px;">
+            <tr>
+              <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">Total HT</td>
+              <td style="padding:6px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">${fmtM(ht)}</td>
+            </tr>
+            <tr>
+              <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">TVA (${tvaRate} %)</td>
+              <td style="padding:6px 12px;border:1px solid #e2e8f0;text-align:right;">${fmtM(tva)}</td>
+            </tr>
+            ${shipping > 0 ? `
+            <tr>
+              <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">Frais de livraison</td>
+              <td style="padding:6px 12px;border:1px solid #e2e8f0;text-align:right;">${fmtM(shipping)}</td>
+            </tr>` : ''}
+            <tr>
+              <td style="background:#0d3d4f;padding:8px 12px;border:1px solid #0d3d4f;color:#fff;font-weight:800;font-size:9pt;text-transform:uppercase;letter-spacing:.5px;">Total TTC</td>
+              <td style="background:#0d3d4f;padding:8px 12px;border:1px solid #0d3d4f;text-align:right;font-weight:800;color:#fff;font-size:10.5pt;">${fmtM(ttc)}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION 4 : OBSERVATIONS -->
+      <div class="doc-section">
+        <div class="doc-section-title">Observations</div>
+        <div class="doc-field doc-field-full">
+          <label>Conditions particulières</label>
+          <span style="white-space:pre-line;line-height:1.6;">${printEsc(bc.observations || 'Aucune observation.')}</span>
+        </div>
+      </div>
+
+      <!-- SIGNATURES -->
+      <div class="doc-signatures">
+        <div class="doc-sig-box">
+          <label>Établi par — Achats</label>
+          <div class="sig-name" style="color:#b0b8c1;"></div>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+        <div class="doc-sig-box">
+          <label>Validé par — Responsable</label>
+          <div class="sig-name" style="color:#b0b8c1;"></div>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+        <div class="doc-sig-box">
+          <label>Fournisseur — Accusé réception</label>
+          <div class="sig-name" style="color:#b0b8c1;">Cachet et date</div>
+          <div class="sig-line">Cachet &amp; Signature</div>
+        </div>
+      </div>
+    `;
+
+    printDocument(`Bon de Commande ${bc.number}`, body);
+
+  } catch (err) {
+    console.error('printBC', err);
+    uiAlert('Erreur lors de la génération du document BC.');
+  }
+}
+function printFicheFournisseur(supplierNom) {
+  const dir = typeof getSuppliersDirectory === 'function'
+    ? getSuppliersDirectory()
+    : (typeof loadState === 'function' ? loadState() : { suppliers: [] });
+
+  const supplier = dir.suppliers
+    ? dir.suppliers.find(s => s.nomCommercial === supplierNom || s.id === supplierNom)
+    : null;
+
+  if (!supplier) { uiAlert('Fiche fournisseur introuvable.'); return; }
+
+  try {
+    const now = new Date().toLocaleString(
+      typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ',
+      { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+    );
+
+    const fmtD = v => {
+      if (!v) return '—';
+      try { return new Date(v).toLocaleString(getAdministrationLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+      catch (e) { return String(v); }
+    };
+
+    const fmtM = v => new Intl.NumberFormat(printNumberLocale(), {
+      style: 'currency', currency: 'DZD', maximumFractionDigits: 2
+    }).format(Number(v) || 0);
+
+    const statusStyle = printGetBadgeStyle(supplier.statut || supplier.status || 'Actif');
+
+    // Données achats liées
+    const achatsState = typeof loadAchatsState === 'function' ? loadAchatsState() : { bons: [], demandes: [] };
+    const bcsLies = (achatsState.bons || []).filter(b =>
+      b.supplierName === supplier.nomCommercial || b.supplierId === supplier.id
+    );
+    const totalMontant = bcsLies.reduce((s, b) => s + (Number(b.totalTtc) || 0), 0);
+
+    // Catalogue
+    const catalogue = Array.isArray(supplier.catalogue) ? supplier.catalogue : [];
+    const catRows = catalogue.length
+      ? catalogue.map(item => `
+          <tr>
+            <td>${printEsc(item.ref || item.refFourn || '—')}</td>
+            <td>${printEsc(item.designation || item.article || '—')}</td>
+            <td style="text-align:right">${fmtM(item.price)}</td>
+            <td style="text-align:center">${printEsc(String(item.moq || '—'))}</td>
+            <td>${printEsc(item.delai || String(item.leadTime || '—'))}</td>
+            <td>${printEsc(item.observations || '—')}</td>
+          </tr>`).join('')
+      : `<tr><td colspan="6" style="text-align:center;color:#8fa0b0;font-style:italic;padding:10px">Aucun article au catalogue.</td></tr>`;
+
+    // Évaluations
+    const evals = Array.isArray(supplier.evaluations) ? supplier.evaluations : [];
+    const noteGlobale = evals.length
+      ? (evals.reduce((s, e) => s + (Number(e.global) || 0), 0) / evals.length).toFixed(1)
+      : printEsc(String(supplier.noteGlobale || '—'));
+    const derniereEval = evals.length ? fmtD(evals[evals.length - 1].createdAt) : '—';
+
+    // Historique BC
+    const bcRows = bcsLies.length
+      ? bcsLies.map((bc, i) => {
+        const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        return `<tr style="background:${bg}">
+            <td>${printEsc(bc.number)}</td>
+            <td>${fmtD(bc.createdAt)}</td>
+            <td>${printEsc(bc.articleLabel || '—')}</td>
+            <td style="text-align:center">${Number(bc.quantity) || 0}</td>
+            <td style="text-align:right">${fmtM(bc.totalTtc)}</td>
+            <td><span style="${printGetBadgeStyle(bc.status)};padding:2px 8px;border-radius:20px;font-size:8pt;font-weight:bold">${printEscT(bc.status)}</span></td>
+          </tr>`;
+      }).join('')
+      : `<tr><td colspan="6" style="text-align:center;color:#8fa0b0;font-style:italic;padding:10px">Aucun bon de commande.</td></tr>`;
+
+    const body = `
+    <!-- BANDEAU TITRE -->
+    <div class="doc-title-band">
+      <div>
+        <h1>FICHE FOURNISSEUR</h1>
+        <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px">Fournisseur — Identification, contacts et historique achats</div>
+      </div>
+      <div class="doc-ref">
+        <strong>${printEsc(supplier.number || supplier.code || supplier.id || '—')}</strong>
+        <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-weight:400;font-style:italic">Imprimé le ${now}</div>
+      </div>
+    </div>
+
+     <!-- SECTION SYNTHÈSE -->
+    <div class="doc-section">
+      <div class="doc-section-title">Synthèse des activités</div>
+      <div class="doc-grid">
+        <div class="doc-field"><label>Bons de commande</label><span>${bcsLies.length} commande(s)</span></div>
+        <div class="doc-field"><label>Montant total TTC</label><span>${fmtM(totalMontant)}</span></div>
+        <div class="doc-field"><label>Articles au catalogue</label><span>${catalogue.length} article(s)</span></div>
+        <div class="doc-field"><label>Note globale</label><span>${noteGlobale} / 5 (${evals.length} évaluation(s))</span></div>
+      </div>
+    </div>
+    <!-- SECTION 1 : IDENTIFICATION -->
+    <div class="doc-section">
+      <div class="doc-section-title">Identification du fournisseur</div>
+      <div class="doc-grid">
+        <div class="doc-field"><label>Raison sociale</label><span>${printEsc(supplier.raisonSociale || supplier.nomCommercial || '—')}</span></div>
+        <div class="doc-field"><label>Nom commercial</label><span>${printEsc(supplier.nomCommercial || '—')}</span></div>
+        <div class="doc-field"><label>Code fournisseur</label><span>${printEsc(supplier.number || supplier.code || '—')}</span></div>
+        <div class="doc-field"><label>Type</label><span>${printEsc(supplier.type || '—')}</span></div>
+        <div class="doc-field"><label>Domaine d'activité</label><span>${printEsc(supplier.domaine || '—')}</span></div>
+        <div class="doc-field"><label>Statut</label><span class="doc-status" style="${statusStyle}">${printEscT(supplier.statut || supplier.status || '—')}</span></div>
+        <div class="doc-field"><label>NIF</label><span>${printEsc(supplier.nif || supplier.legal?.nif || '—')}</span></div>
+        <div class="doc-field"><label>RC</label><span>${printEsc(supplier.rc || supplier.legal?.rc || '—')}</span></div>
+        <div class="doc-field"><label>NIS</label><span>${printEsc(supplier.nis || supplier.legal?.nis || '—')}</span></div>
+        <div class="doc-field"><label>Article d'imposition</label><span>${printEsc(supplier.articleImposition || supplier.legal?.articleImposition || '—')}</span></div>
+        <div class="doc-field doc-field-full"><label>RIB / Coordonnées bancaires</label><span>${printEsc(supplier.rib || supplier.legal?.rib || '—')}</span></div>
+      </div>
+    </div>
+
+    <!-- SECTION 2 : CONTACTS -->
+    <div class="doc-section">
+      <div class="doc-section-title">Contacts &amp; Localisation</div>
+      <div class="doc-grid">
+        <div class="doc-field"><label>Téléphone principal</label><span>${printEsc(supplier.tel1 || '—')}</span></div>
+        <div class="doc-field"><label>Téléphone secondaire</label><span>${printEsc(supplier.tel2 || '—')}</span></div>
+        <div class="doc-field"><label>Email</label><span>${printEsc(supplier.email || '—')}</span></div>
+        <div class="doc-field"><label>Site web</label><span>${printEsc(supplier.website || '—')}</span></div>
+        <div class="doc-field"><label>Contact (poste)</label><span>${printEsc(supplier.contact?.role || '—')}</span></div>
+        <div class="doc-field"><label>Email direct</label><span>${printEsc(supplier.contact?.email || '—')}</span></div>
+        <div class="doc-field"><label>Wilaya</label><span>${printEsc(supplier.wilaya || '—')}</span></div>
+        <div class="doc-field doc-field-full"><label>Adresse complète</label><span>${printEsc(supplier.adresse || '—')}</span></div>
+      </div>
+    </div>
+
+    <!-- SECTION 3 : CONDITIONS COMMERCIALES -->
+    <div class="doc-section">
+      <div class="doc-section-title">Conditions Commerciales</div>
+      <div class="doc-grid">
+        <div class="doc-field"><label>Conditions de paiement</label><span>${printEsc(supplier.conditionsPaiement || supplier.paymentTerm || '—')}</span></div>
+        <div class="doc-field"><label>Mode de livraison</label><span>${printEsc(supplier.modeLivraison || supplier.deliveryMode || '—')}</span></div>
+        <div class="doc-field"><label>Délai livraison moyen</label><span>${printEsc(String(supplier.delaiLivraison || supplier.deliveryDays || '—'))} jours</span></div>
+        <div class="doc-field"><label>Remise habituelle</label><span>${printEsc(String(supplier.remise || supplier.discount || 0))} %</span></div>
+        <div class="doc-field"><label>Montant minimum BC</label><span>${fmtM(supplier.montantMinBC || supplier.montantMin || 0)}</span></div>
+        <div class="doc-field"><label>Devise</label><span>${printEsc(supplier.currency || 'DZD')}</span></div>
+      </div>
+    </div>
+
+    <!-- SECTION 4 : ÉVALUATION -->
+    <div class="doc-section">
+      <div class="doc-section-title">Évaluation &amp; Performance</div>
+      <div class="doc-grid">
+        <div class="doc-field"><label>Note globale</label><span style="font-weight:800;color:#0d3d4f;font-size:11pt">${noteGlobale} / 5</span></div>
+        <div class="doc-field"><label>Nb. évaluations</label><span>${evals.length}</span></div>
+        <div class="doc-field"><label>Dernière évaluation</label><span>${derniereEval}</span></div>
+        <div class="doc-field"><label>Date de création</label><span>${fmtD(supplier.createdAt)}</span></div>
+        ${supplier.observations ? `<div class="doc-field doc-field-full"><label>Observations</label><span style="white-space:pre-line">${printEsc(supplier.observations)}</span></div>` : ''}
+      </div>
+    </div>
+
+    <!-- SECTION 5 : CATALOGUE -->
+    <div class="doc-section">
+      <div class="doc-section-title">Catalogue Articles — ${catalogue.length} article(s)</div>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr>
+            <th style="width:12%">Réf. fourn.</th>
+            <th>Désignation</th>
+            <th style="width:14%;text-align:right">Prix unit. HT</th>
+            <th style="width:8%;text-align:center">MOQ</th>
+            <th style="width:10%">Délai</th>
+            <th style="width:18%">Observations</th>
+          </tr></thead>
+          <tbody>${catRows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECTION 6 : HISTORIQUE BC -->
+    <div class="doc-section">
+      <div class="doc-section-title">Historique des Bons de Commande — ${bcsLies.length} commande(s) — Total : ${fmtM(totalMontant)}</div>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr>
+            <th>N° BC</th>
+            <th>Date</th>
+            <th>Article</th>
+            <th style="text-align:center">Qté</th>
+            <th style="text-align:right">Montant TTC</th>
+            <th>Statut</th>
+          </tr></thead>
+          <tbody>${bcRows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SIGNATURES -->
+    <div class="doc-signatures">
+      <div class="doc-sig-box">
+        <label>Établi par — Achats</label>
+        <div class="sig-name" style="color:#b0b8c1"></div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+      <div class="doc-sig-box">
+        <label>Validé par — Responsable</label>
+        <div class="sig-name" style="color:#b0b8c1"></div>
+        <div class="sig-line">Signature &amp; Date</div>
+      </div>
+      <div class="doc-sig-box">
+        <label>Fournisseur — Accusé réception</label>
+        <div class="sig-name" style="color:#b0b8c1">Cachet et date</div>
+        <div class="sig-line">Cachet &amp; Signature</div>
+      </div>
+    </div>`;
+
+    printDocument(`Fiche Fournisseur — ${supplier.nomCommercial || supplier.raisonSociale}`, body);
+
+  } catch (err) {
+    console.error('printFicheFournisseur', err);
+    uiAlert('Erreur lors de la génération de la fiche fournisseur.');
+  }
+}
+
+// IMPRESSION BON DE RÉCEPTION — gabarit identique DA / BC / DI / OT / BT
+function printBonReception(receptionId) {
+  const state = loadAchatsState();
+  const record = state.receptions.find(r => r.id === receptionId);
+  if (!record) { uiAlert('Bon de réception introuvable.'); return; }
+
+  try {
+    const now = new Date().toLocaleString(
+      typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ',
+      { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+    );
+
+    const linkedBc = state.bons.find(b => b.id === record.bcId) || null;
+
+    const fmtD = v => {
+      if (!v) return '—';
+      try { return new Date(v).toLocaleString(getAdministrationLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+      catch (e) { return v; }
+    };
+
+    const fmtM = v => new Intl.NumberFormat(printNumberLocale(), {
+      style: 'currency', currency: 'DZD', maximumFractionDigits: 2
+    }).format(Number(v) || 0);
+
+    const orderedQty = Number(record.orderedQty) || 0;
+    const receivedQty = Number(record.receivedQty) || 0;
+    const missingQty = Number(record.missingQty) || 0;
+    const ecartQty = receivedQty - orderedQty;
+    const ecartColor = ecartQty < 0 ? '#b91c1c' : ecartQty > 0 ? '#b45309' : '#15803d';
+    const ecartLabel = ecartQty > 0 ? `+${ecartQty}` : `${ecartQty}`;
+
+    const statusStyle = printGetBadgeStyle(record.receptionState || record.status || '—');
+    const qualityStyle = printGetBadgeStyle(record.qualityControl || '—');
+
+    // Ligne article réceptionné — même style que printBC
+    const articleRow = `
+      <tr style="background:#ffffff;">
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;">${printEsc(record.articleLabel || '—')}</td>
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;">${orderedQty}</td>
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;font-weight:700;color:#0d7a8e;">${receivedQty}</td>
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;font-weight:800;color:${ecartColor};">${ecartLabel}</td>
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;text-align:center;color:#b91c1c;font-weight:700;">${missingQty}</td>
+        <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(record.storageLocation || '—')}</td>
+      </tr>`;
+
+    // Récap quantités — même style que le récap financier du BC
+    const recapQty = `
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <table style="border-collapse:collapse;font-size:9.5pt;min-width:260px;">
+          <tr>
+            <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">Quantité commandée</td>
+            <td style="padding:6px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">${orderedQty}</td>
+          </tr>
+          <tr>
+            <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">Quantité reçue</td>
+            <td style="padding:6px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:700;color:#0d7a8e;">${receivedQty}</td>
+          </tr>
+          <tr>
+            <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">Écart</td>
+            <td style="padding:6px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:800;color:${ecartColor};">${ecartLabel}</td>
+          </tr>
+          ${missingQty > 0 ? `
+          <tr>
+            <td style="background:#fee2e2;padding:6px 12px;border:1px solid #fca5a5;color:#991b1b;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">Quantité manquante</td>
+            <td style="background:#fee2e2;padding:6px 12px;border:1px solid #fca5a5;text-align:right;font-weight:800;color:#b91c1c;">${missingQty}</td>
+          </tr>` : `
+          <tr>
+            <td style="background:#0d3d4f;padding:8px 12px;border:1px solid #0d3d4f;color:#fff;font-weight:800;font-size:9pt;text-transform:uppercase;letter-spacing:.5px;">Réception conforme</td>
+            <td style="background:#0d3d4f;padding:8px 12px;border:1px solid #0d3d4f;text-align:right;font-weight:800;color:#fff;font-size:10.5pt;">✓</td>
+          </tr>`}
+        </table>
+      </div>`;
+
+    const body = `
+      <!-- BANDEAU TITRE BON DE RÉCEPTION -->
+      <div class="doc-title-band">
+        <div>
+          <h1>BON DE RÉCEPTION</h1>
+          <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">REC — Réception marchandise${linkedBc ? ' · BC lié : ' + printEsc(linkedBc.number) : ''}</div>
+        </div>
+        <div class="doc-ref">
+          <strong>${printEsc(record.number)}</strong>
+          <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-weight:400;font-style:italic;">
+            Imprimé le ${now}
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 1 : IDENTIFICATION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Identification du bon de réception</div>
+        <div class="doc-grid">
+          <div class="doc-field">
+            <label>Référence REC</label>
+            <span style="font-weight:700;">${printEsc(record.number)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Date de réception</label>
+            <span>${fmtD(record.createdAt)}</span>
+          </div>
+          <div class="doc-field">
+            <label>BC lié</label>
+            <span>${linkedBc ? printEsc(linkedBc.number) : '—'}</span>
+          </div>
+          <div class="doc-field">
+            <label>Date commande BC</label>
+            <span>${fmtD(linkedBc?.orderDate)}</span>
+          </div>
+          <div class="doc-field">
+            <label>Réceptionné par</label>
+            <span style="font-weight:600;">${printEsc(record.receiver || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>État réception</label>
+            <span class="doc-status" style="${statusStyle}">${printEscT(record.receptionState || record.status || '—')}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2 : FOURNISSEUR -->
+      <div class="doc-section">
+        <div class="doc-section-title">Fournisseur</div>
+        <div class="doc-grid">
+          <div class="doc-field doc-field-full">
+            <label>Raison sociale</label>
+            <span style="font-weight:700;">${printEsc(record.supplierName || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Téléphone</label>
+            <span>${printEsc(linkedBc?.supplierPhone || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Email</label>
+            <span>${printEsc(linkedBc?.supplierEmail || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>N° BL fournisseur</label>
+            <span style="font-weight:600;">${printEsc(record.deliveryNoteRef || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>N° Facture fournisseur</label>
+            <span style="font-weight:600;">${printEsc(record.invoiceRef || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Conditions de paiement</label>
+            <span>${printEsc(linkedBc?.paymentTerm || '—')}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3 : DÉTAIL RÉCEPTION -->
+      <div class="doc-section">
+        <div class="doc-section-title">Détail de la réception</div>
+        <div class="doc-table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Désignation article</th>
+                <th style="width:12%;text-align:center;">Qté commandée</th>
+                <th style="width:12%;text-align:center;">Qté reçue</th>
+                <th style="width:9%;text-align:center;">Écart</th>
+                <th style="width:10%;text-align:center;">Manquant</th>
+                <th style="width:19%;">Emplacement stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${articleRow}
+            </tbody>
+          </table>
+        </div>
+        ${recapQty}
+      </div>
+
+      <!-- SECTION 4 : CONTRÔLE QUALITÉ -->
+      <div class="doc-section">
+        <div class="doc-section-title">Contrôle qualité</div>
+        <div class="doc-grid">
+          <div class="doc-field">
+            <label>Résultat contrôle</label>
+            <span class="doc-status" style="${qualityStyle}">${printEsc(record.qualityControl || '—')}</span>
+          </div>
+          <div class="doc-field">
+            <label>Motif écart / non-conformité</label>
+            <span>${printEsc(record.missingReason || '—')}</span>
+          </div>
+        </div>
+        ${record.qualityControl === 'Refusé' || record.qualityControl === 'Non conforme' ? `
+        <div style="margin-top:10px;background:#fee2e2;border-left:3px solid #b91c1c;padding:8px 14px;border-radius:0 4px 4px 0;font-size:9.5pt;color:#991b1b;line-height:1.6;">
+          ⚠ Contrôle qualité négatif — Ce lot est en litige avec le fournisseur. Voir le motif ci-dessus.
+        </div>` : ''}
+      </div>
+
+      <!-- SECTION 5 : OBSERVATIONS -->
+      <div class="doc-section">
+        <div class="doc-section-title">Observations</div>
+        <div class="doc-field doc-field-full">
+          <label>Conditions particulières</label>
+          <span style="white-space:pre-line;line-height:1.6;">${printEsc(record.observations || 'Aucune observation.')}</span>
+        </div>
+      </div>
+
+      <!-- SIGNATURES -->
+      <div class="doc-signatures">
+        <div class="doc-sig-box">
+          <label>Réceptionné par — Magasinier</label>
+          <div class="sig-name" style="color:#b0b8c1;"></div>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+        <div class="doc-sig-box">
+          <label>Contrôlé par — Responsable</label>
+          <div class="sig-name" style="color:#b0b8c1;"></div>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+        <div class="doc-sig-box">
+          <label>Fournisseur — Accusé réception</label>
+          <div class="sig-name" style="color:#b0b8c1;"></div>
+          <div class="sig-line">Cachet &amp; Signature</div>
+        </div>
+      </div>
+    `;
+
+    printDocument(`Bon de Réception ${record.number}`, body);
+
+  } catch (err) {
+    console.error('printBonReception', err);
+    uiAlert('Erreur lors de la génération du document Bon de Réception.');
+  }
+}
+
 function renderInterventionRecordDetails(recordType, record) {
   const badgeLabel =
     recordType === "di"
@@ -21840,9 +25404,24 @@ function renderInterventionRecordDetails(recordType, record) {
       {
         label: "Articles consommés",
         value: Array.isArray(record.articles)
-          ? record.articles.map(formatInterventionArticleLine).join("<br />") ||
-          "-"
+          ? record.articles.map(formatInterventionArticleLine).join("<br />") || "-"
           : "-",
+      },
+      {
+        label: "Coût articles",
+        value: record.coutArticles !== undefined ? new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" }).format(record.coutArticles ?? 0) : "-"
+      },
+      {
+        label: "Coût main d'œuvre",
+        value: record.coutMO !== undefined ? new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" }).format(record.coutMO ?? 0) : "-"
+      },
+      {
+        label: "Sous-traitance",
+        value: record.coutSousTraitance !== undefined ? new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" }).format(record.coutSousTraitance ?? 0) : "-"
+      },
+      {
+        label: "Coût total",
+        value: record.coutTotal !== undefined ? new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" }).format(record.coutTotal ?? 0) : "-"
       },
       {
         label: "Signature technicien",
@@ -21861,6 +25440,14 @@ function renderInterventionRecordDetails(recordType, record) {
 
   const workflowButtons = [];
   if (recordType === "di") {
+    workflowButtons.push(
+      `<button class="btn btn-outline" type="button" 
+      data-int-action="print-di" 
+      data-int-id="${record.id}" 
+      style="display:inline-flex;align-items:center;gap:6px;">
+      <i class="fa-solid fa-print"></i> Imprimer
+    </button>`
+    );
     if (record.status === "Validée") {
       workflowButtons.push(
         `<button class="btn btn-primary" type="button" data-int-action="transform-di" data-int-id="${record.id}"><i class="fa-solid fa-arrow-right"></i><span>Transformer en OT</span></button>`,
@@ -21870,6 +25457,12 @@ function renderInterventionRecordDetails(recordType, record) {
         `<button class="btn btn-primary" type="button" data-int-action="validate-di" data-int-id="${record.id}"><i class="fa-solid fa-circle-check"></i><span>Valider</span></button>`,
       );
     }
+  }
+  else if (recordType === 'ot') {
+    workflowButtons.push(`<button class="btn btn-outline" type="button" data-int-action="print-ot" data-int-id="${record.id}" style="display:inline-flex;align-items:center;gap:6px;"><i class="fa-solid fa-print"></i> Imprimer</button>`);
+
+  } else if (recordType === 'bt') {
+    workflowButtons.push(`<button class="btn btn-outline" type="button" data-int-action="print-bt" data-int-id="${record.id}" style="display:inline-flex;align-items:center;gap:6px;"><i class="fa-solid fa-print"></i> Imprimer</button>`);
   }
 
   return `
@@ -21889,10 +25482,6 @@ function renderInterventionRecordDetails(recordType, record) {
         ${detailsHtml}
         <div class="org-modal-actions">
           <button class="btn btn-outline" type="button" data-int-close="true">Fermer</button>
-          <button class="btn btn-outline" type="button" data-int-print-details="true">
-            <i class="fa-solid fa-print"></i>
-            <span>Imprimer</span>
-          </button>
           ${workflowButtons.join("")}
         </div>
       </div>
@@ -21903,7 +25492,7 @@ function renderInterventionRecordDetails(recordType, record) {
 function validateInterventionDi(diId) {
   const directory = loadInterventionsState();
   const di = directory.dis.find((item) => item.id === diId);
-  if (!di) return window.alert("DI introuvable.");
+  if (!di) return uiAlert("DI introuvable.");
   if (di.status === "Validée" || di.status === "Transformée en OT") {
     closeInterventionsModal();
     return;
@@ -21947,7 +25536,7 @@ function showInterventionsToast(message, type = "success") {
   toast.style.zIndex = "9999";
   toast.style.transition = "opacity 0.3s ease";
   toast.style.fontFamily = "inherit";
-  toast.textContent = message;
+  toast.textContent = uiText(message);
   document.body.appendChild(toast);
 
   setTimeout(() => {
@@ -22207,11 +25796,27 @@ function buildInterventionTransformBtModal(ot) {
                   <i class="fa-solid fa-plus"></i> Ajouter un article consommé
                 </button>
               </div>
+              <div class="field-group">
+                <label for="btTauxHoraire">Taux horaire de la ressource (DZD)</label>
+                <input id="btTauxHoraire" name="tauxHoraire" type="number" step="0.01" min="0" value="0" />
+              </div>
+              <div class="field-group">
+                <label for="btCoutSousTraitance">Coût de sous-traitance (DZD)</label>
+                <input id="btCoutSousTraitance" name="coutSousTraitance" type="number" step="0.01" min="0" value="0" />
+              </div>
             </div>
             <div style="margin-top: 1.5rem; padding: 1rem; background: var(--org-bg-alt); border-radius: 6px;">
               <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                 <span>Coût articles consommés :</span>
                 <strong id="btCostArticles">0,00 DZD</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Coût main d'œuvre :</span>
+                <strong id="btCostMO">0,00 DZD</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Sous-traitance :</span>
+                <strong id="btCostST">0,00 DZD</strong>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 1.1em; font-weight: bold; border-top: 1px solid var(--org-border); padding-top: 0.5rem;">
                 <span>Coût total intervention :</span>
@@ -22236,7 +25841,7 @@ function buildInterventionTransformBtModal(ot) {
 function closeBt(btId) {
   const directory = loadInterventionsState();
   const bt = directory.bts.find((item) => item.id === btId);
-  if (!bt) return window.alert("BT introuvable.");
+  if (!bt) return uiAlert("BT introuvable.");
 
   bt.endDate = new Date().toISOString();
   bt.duration = `${Math.max(0, Math.round((new Date(bt.endDate) - new Date(bt.startDate)) / 3600000))}h`;
@@ -23002,7 +26607,7 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     }
     if (action === "delete") {
       var label = entry.raisonSociale || entry.number || entry.article || entry.objet || entry.equipment || "cet Ã©lÃ©ment";
-      if (!window.confirm("Supprimer " + label + " ?")) return;
+      if (!uiConfirm("Supprimer " + label + " ?")) return;
       removeRecord(type, id);
       renderPage();
     }
@@ -23029,12 +26634,12 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     var fields = [];
     if (type === "fiche") {
       fields = [
-        ["NumÃ©ro", entry.number],
+        ["Numéro", entry.number],
         ["Raison sociale", entry.raisonSociale],
         ["Nom commercial", entry.nomCommercial],
         ["Type", entry.type],
         ["Domaine", entry.domaine],
-        ["TÃ©lÃ©phone", entry.tel1],
+        ["Téléphone", entry.tel1],
         ["Email", entry.email],
         ["Statut", entry.status],
       ];
@@ -23095,12 +26700,18 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     }
     openModal(
       "Voir " + TAB_CONFIG[activeTab].label,
-      "DÃ©tail du dossier " + (supplier.raisonSociale || supplier.supplierName || ""),
+      "Détail du dossier " + (supplier.raisonSociale || supplier.supplierName || ""),
       '<div class="supplier-section"><div class="supplier-form-grid">' +
       fields.map(function (pair) {
         return '<div class="full"><label>' + pair[0] + '</label><div style="padding:11px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;">' + (pair[1] || "—") + '</div></div>';
       }).join("") +
-      '</div></div>'
+      '</div></div>',
+      // ↓ Footer avec bouton Imprimer uniquement pour la fiche fournisseur
+      type === 'fiche' ? `
+    <button style="margin-top:10px" type="button" class="btn btn-outline"
+      onclick="printFicheFournisseur('${escapeHtml(entry.nomCommercial || entry.id)}')">
+      <i class="fa-solid fa-print"></i> Imprimer la fiche
+    </button>` : ``
     );
   }
 
@@ -23327,7 +26938,7 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
         if (Number(fd.get("valeur")) < 0) errors.push("La valeur ne peut pas étre négative.");
 
         if (errors.length) {
-          alert("Erreurs de validation :\n- " + errors.join("\n- "));
+          uiAlert("Erreurs de validation :\n- " + errors.join("\n- "));
           return;
         }
 
@@ -23438,7 +27049,7 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
         if (!fd.get("durationMonths") || Number(fd.get("durationMonths")) <= 0) errors.push("La durÃ©e doit Ãªtre positive.");
 
         if (errors.length) {
-          alert("Erreurs de validation :\n- " + errors.join("\n- "));
+          uiAlert("Erreurs de validation :\n- " + errors.join("\n- "));
           return;
         }
 
