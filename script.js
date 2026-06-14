@@ -2562,7 +2562,7 @@ function renderOrganizationActionButtons(pageKey, createLabel) {
   if (!pageActionsEl) return;
 
   pageActionsEl.innerHTML = `
-    <button class="btn btn-primary" type="button" data-org-create="${pageKey}">
+    <button class="btn btn-primary" type="button" data-org-create="${pageKey}" data-perm-action="create">
       <i class="fa-solid fa-plus"></i>
       <span>${createLabel}</span>
     </button>
@@ -2605,10 +2605,10 @@ function buildOrganizationListActions(pageKey, recordId) {
       <button class="org-icon-btn" type="button" data-org-action="details" data-org-page="${pageKey}" data-org-id="${recordId}" title="Voir les détails">
         <i class="fa-regular fa-eye"></i>
       </button>
-      <button class="org-icon-btn" type="button" data-org-action="edit" data-org-page="${pageKey}" data-org-id="${recordId}" title="Modifier">
+      <button class="org-icon-btn" type="button" data-org-action="edit" data-org-page="${pageKey}" data-org-id="${recordId}" data-perm-action="edit" title="Modifier">
         <i class="fa-regular fa-pen-to-square"></i>
       </button>
-      <button class="org-icon-btn danger" type="button" data-org-action="delete" data-org-page="${pageKey}" data-org-id="${recordId}" title="Supprimer">
+      <button class="org-icon-btn danger" type="button" data-org-action="delete" data-org-page="${pageKey}" data-org-id="${recordId}" data-perm-action="delete" title="Supprimer">
         <i class="fa-regular fa-trash-can"></i>
       </button>
     </div>
@@ -4281,7 +4281,7 @@ function buildMfDetailEditAction(dataAttr) {
     label: "Modifier",
     variant: "btn-primary",
     icon: "fa-solid fa-pen-to-square",
-    attrs: dataAttr,
+    attrs: `${dataAttr} data-perm-action="edit"`.trim(),
   };
 }
 
@@ -4290,7 +4290,7 @@ function buildMfDetailPrintAction(dataAttr, label = "Imprimer") {
     label,
     variant: "btn-outline",
     icon: "fa-solid fa-print",
-    attrs: dataAttr,
+    attrs: `${dataAttr} data-perm-action="print"`.trim(),
   };
 }
 
@@ -9120,6 +9120,21 @@ const englishInterfaceTranslations = new Map(
     DA: "PR",
     BC: "PO",
     REC: "Receipt",
+    "Bloqués":"Blocked",
+    "Alloué":"allocated",
+    "Engagé":"engaged",
+    "Voir module": "View Module",
+     "Aucune intervention enregistrée.":"No intervention recorded.",
+     "Aucune activité récente.":"no recent activity.",
+     "Aucun fournisseur enregistré." : "No suppliers registered.",
+     "Coût maintenance (Mois)":"Maintenance Cost (Months)",
+     "Top 3 Équipements coûteux":"Top 3 Expensive Equipment",
+     "Répartition des coûts":"costs distribution",
+     "Aucune donnée de coût":"No cost data",
+     "Taux conformité":"Compliance rate",
+     "Délai moyen":"mean time",
+     "BC en cours":"PO in progress",
+     "Cumul du mois en cours":"Monthly roll-up",
   }),
 );
 
@@ -9990,6 +10005,8 @@ const englishInterfacePhraseTranslations = new Map(
     "Expiré": "Expired",
     "Résilié": "Terminated",
     "En renouvellement": "Renewal in progress",
+    "Interventions par mois": "Work orders by month",
+    "6 derniers mois":"6 last months",
   }),
 );
 
@@ -10758,6 +10775,8 @@ function applyLocalizedShell(state = null) {
 
   updateProfileAvatar();
 
+  applyDynamicNavigation();
+
   updateClock();
 
   try {
@@ -10806,6 +10825,16 @@ function getAdministrationUserInitials(user) {
 }
 
 function getConnectedUserProfile() {
+  if (window.MaintFlowAuth) {
+    const session = MaintFlowAuth.getSession();
+    if (session?.userId) {
+      const authUser = MaintFlowAuth.getUserById(session.userId);
+      if (authUser) {
+        return MaintFlowAuth.userToLegacyAdminUser(authUser);
+      }
+    }
+  }
+
   const state = getAdministrationState();
   const storedUserId = (() => {
     try {
@@ -10815,14 +10844,310 @@ function getConnectedUserProfile() {
     }
   })();
 
-  return (
-    state.users.find((user) => user.id === storedUserId) ||
-    state.users.find(
-      (user) => String(user.status || "").toLowerCase() === "actif",
-    ) ||
-    state.users[0] ||
-    null
-  );
+  return state.users.find((user) => user.id === storedUserId) || null;
+}
+
+function canViewPageKey(pageKey) {
+  if (window.MaintFlowAuth?.canViewPage) {
+    return MaintFlowAuth.canViewPage(pageKey);
+  }
+  return true;
+}
+
+function getFirstAccessiblePageKey() {
+  if (window.MaintFlowAuth?.getFirstAllowedPageKey) {
+    return MaintFlowAuth.getFirstAllowedPageKey();
+  }
+  return "dashboard";
+}
+
+function applyDynamicNavigation() {
+  const sidebarNav = document.querySelector(".sidebar-nav");
+  if (!sidebarNav) return;
+
+  navItems.forEach((item) => {
+    const pageKey = item.dataset.page || "dashboard";
+    const allowed = canViewPageKey(pageKey);
+    item.classList.toggle("is-hidden", !allowed);
+    item.setAttribute("aria-hidden", allowed ? "false" : "true");
+    item.tabIndex = allowed ? 0 : -1;
+  });
+
+  const children = Array.from(sidebarNav.children);
+  let currentLabel = null;
+  let visibleInSection = 0;
+
+  children.forEach((child) => {
+    if (child.classList.contains("nav-section-label")) {
+      if (currentLabel) {
+        currentLabel.classList.toggle("is-hidden", visibleInSection === 0);
+      }
+      currentLabel = child;
+      visibleInSection = 0;
+      return;
+    }
+
+    if (
+      child.classList.contains("nav-item") &&
+      !child.classList.contains("is-hidden")
+    ) {
+      visibleInSection += 1;
+    }
+  });
+
+  if (currentLabel) {
+    currentLabel.classList.toggle("is-hidden", visibleInSection === 0);
+  }
+}
+
+const SUBPAGE_TO_APP_PAGE = {
+  entreprise: "organisation",
+  unites: "organisation",
+  divisions: "organisation",
+  "departements-services": "organisation",
+  "groupe-article": "articles",
+  "famille-article": "articles",
+  article: "articles",
+  "groupe-equipment": "equipements",
+  "famille-equipment": "equipements",
+  equipment: "equipements",
+  "groupe-organe": "organe",
+  "famille-organe": "organe",
+  organe: "organe",
+  "plans-maintenance": "planification",
+  calendrier: "planification",
+  compteurs: "planification",
+  di: "interventions",
+  ot: "interventions",
+  bt: "interventions",
+  "demandes-achat": "achats",
+  "bons-commande": "achats",
+  receptions: "achats",
+  "fiche-stock": "stock",
+  utilisateurs: "parametres",
+  roles: "parametres",
+  general: "parametres",
+  logs: "parametres",
+  evaluation: "fournisseurs",
+};
+
+function getCurrentPageKeyFromHash() {
+  const hash = window.location.hash.replace("#", "").trim();
+  const routeParts = hash.split("/").filter(Boolean);
+  return pages[routeParts[0]] ? routeParts[0] : "dashboard";
+}
+
+function resolvePermissionPageKey(pageKey, fallbackPageKey) {
+  const normalized = String(pageKey || fallbackPageKey || "").trim();
+  if (pages[normalized]) return normalized;
+  if (SUBPAGE_TO_APP_PAGE[normalized]) return SUBPAGE_TO_APP_PAGE[normalized];
+  return String(fallbackPageKey || normalized || "dashboard").trim();
+}
+
+function canPageAction(pageKey, action) {
+  if (!window.MaintFlowAuth?.canPerformAction) return true;
+  const resolved = resolvePermissionPageKey(pageKey, pageKey);
+  return MaintFlowAuth.canPerformAction(resolved, action);
+}
+
+function resolveElementPermissionPageKey(element, fallbackPageKey) {
+  if (element?.dataset?.permPage) {
+    return resolvePermissionPageKey(element.dataset.permPage, fallbackPageKey);
+  }
+
+  const scopedPage =
+    element?.dataset?.orgPage ||
+    element?.dataset?.artPage ||
+    element?.dataset?.eqPage ||
+    element?.dataset?.ogPage ||
+    element?.closest("[data-perm-page]")?.dataset?.permPage ||
+    element?.closest("form")?.querySelector("[name='pageKey']")?.value;
+
+  if (scopedPage) {
+    return resolvePermissionPageKey(scopedPage, fallbackPageKey);
+  }
+
+  return resolvePermissionPageKey(fallbackPageKey, fallbackPageKey);
+}
+
+function inferElementPermissionAction(element) {
+  const explicit = element?.dataset?.permAction;
+  if (explicit) return explicit;
+
+  const actionMaps = [
+    ["orgAction", { edit: "edit", delete: "delete" }],
+    ["artAction", { edit: "edit", delete: "delete" }],
+    ["eqAction", { edit: "edit", delete: "delete" }],
+    ["ogAction", { edit: "edit", delete: "delete" }],
+    ["stockRecordAction", { edit: "edit", delete: "delete" }],
+    ["stockMovementAction", { delete: "delete" }],
+    ["stockInventoryAction", { edit: "edit", delete: "delete", "delete-inventory": "delete" }],
+    ["planAction", { delete: "delete" }],
+    ["counterAction", { delete: "delete", reset: "edit" }],
+    ["action", { delete: "delete", edit: "edit", print: "print", export: "export" }],
+  ];
+
+  for (const [datasetKey, mapping] of actionMaps) {
+    const value = element?.dataset?.[datasetKey];
+    if (value && mapping[value]) return mapping[value];
+  }
+
+  const intAction = element?.dataset?.intAction || "";
+  if (intAction.startsWith("delete")) return "delete";
+  if (intAction.startsWith("create")) return "create";
+  if (intAction.includes("validate")) return "validate";
+
+  if (element?.dataset?.orgCreate !== undefined) return "create";
+  if (element?.dataset?.stockAction?.startsWith("create")) return "create";
+  if (element?.dataset?.adminUserDelete !== undefined) return "delete";
+  if (element?.dataset?.adminUserApprove !== undefined) return "validate";
+  if (element?.dataset?.adminUserReject !== undefined) return "validate";
+  if (element?.dataset?.adminExportUsers !== undefined) return "export";
+  if (element?.dataset?.daValidate !== undefined) return "validate";
+  if (element?.dataset?.daReject !== undefined) return "validate";
+  if (element?.dataset?.removeCustomField !== undefined) return "edit";
+  if (element?.dataset?.stockInventoryAddRow !== undefined) return "edit";
+  if (element?.id === "enterpriseToggleBtn") return "edit";
+  if (element?.id === "enterpriseSaveBtn") return "edit";
+  if (element?.querySelector?.(".fa-print")) return "print";
+
+  const label = `${element?.title || ""} ${element?.textContent || ""}`.toLowerCase();
+  if (/\b(exporter|export csv|export pdf)\b/.test(label)) return "export";
+  if (/\b(imprimer|print)\b/.test(label)) return "print";
+  if (/\b(valider|approuver|approve)\b/.test(label)) return "validate";
+  if (/\b(supprimer|delete|refuser|reject|réinitialiser)\b/.test(label)) {
+    return element?.classList?.contains("danger") ||
+      element?.classList?.contains("btn-danger")
+      ? element?.dataset?.daReject !== undefined
+        ? "validate"
+        : "delete"
+      : "delete";
+  }
+  if (/\b(modifier|edit|mettre à jour|enregistrer|update)\b/.test(label)) {
+    return "edit";
+  }
+  if (/\b(ajouter|créer|create|nouveau|new)\b/.test(label)) {
+    return "create";
+  }
+
+  return null;
+}
+
+function inferModalSubmitAction(button) {
+  const form = button?.closest("form");
+  if (!form) return null;
+  const recordId = form.querySelector("[name='recordId']")?.value?.trim();
+  return recordId ? "edit" : "create";
+}
+
+let applyingDynamicActionButtons = false;
+let dynamicActionButtonsScheduled = false;
+
+function applyDynamicActionButtons(pageKey, roots) {
+  if (applyingDynamicActionButtons) return;
+  applyingDynamicActionButtons = true;
+
+  try {
+    const fallbackPageKey = pageKey || getCurrentPageKeyFromHash();
+    const containers = (
+      roots || [pageActionsEl, pageContentEl, overlayRootEl]
+    ).filter(Boolean);
+
+    containers.forEach((root) => {
+      root.querySelectorAll("button, a.btn, [role='button'].btn").forEach((element) => {
+        if (!(element instanceof HTMLElement)) return;
+        if (element.dataset.permBypass === "true") return;
+        if (element.classList.contains("org-modal-close")) return;
+        if (element.dataset.orgClose !== undefined) return;
+        if (element.dataset.stockClose !== undefined) return;
+        if (element.dataset.adminApproveClose !== undefined) return;
+        if (element.dataset.adminUserClose !== undefined) return;
+        if (element.dataset.achClose !== undefined) return;
+        if (element.closest(".eq-detail-toggle-bar, .eq-detail-tab")) return;
+
+        let action = inferElementPermissionAction(element);
+
+        if (
+          !action &&
+          element.matches(
+            ".org-modal-actions .btn-primary[type='submit'], .org-modal-actions .btn-primary[data-stock-submit], .org-modal-actions .btn-primary[data-perm-submit]",
+          )
+        ) {
+          action = inferModalSubmitAction(element);
+        }
+
+        if (!action) return;
+
+        const permPage = resolveElementPermissionPageKey(element, fallbackPageKey);
+        if (!canPageAction(permPage, action)) {
+          element.remove();
+        }
+      });
+
+      root.querySelectorAll(".org-row-actions, .admin-pending-actions, .mf-details-hero-actions").forEach((group) => {
+        if (!group.querySelector("button, a.btn")) {
+          group.remove();
+        }
+      });
+
+      if (root === pageActionsEl && pageActionsEl && !pageActionsEl.innerHTML.trim()) {
+        pageActionsEl.innerHTML = "";
+      }
+    });
+  } finally {
+    applyingDynamicActionButtons = false;
+  }
+}
+
+function scheduleApplyDynamicActionButtons(pageKey) {
+  if (dynamicActionButtonsScheduled) return;
+  dynamicActionButtonsScheduled = true;
+  window.requestAnimationFrame(() => {
+    dynamicActionButtonsScheduled = false;
+    applyDynamicActionButtons(pageKey || getCurrentPageKeyFromHash());
+  });
+}
+
+function initDynamicActionPermissionObserver() {
+  if (!overlayRootEl || overlayRootEl.dataset.permObserver === "true") return;
+  overlayRootEl.dataset.permObserver = "true";
+  new MutationObserver(() => {
+    scheduleApplyDynamicActionButtons(getCurrentPageKeyFromHash());
+  }).observe(overlayRootEl, { childList: true, subtree: true });
+}
+
+function renderAccessDeniedPage(pageKey) {
+  const page = pages[pageKey] || pages.dashboard;
+  const moduleName =
+    window.MaintFlowAuth?.getPermissionModuleForPage?.(pageKey) ||
+    page.title;
+
+  navItems.forEach((item) => {
+    item.classList.toggle("active", item.dataset.page === pageKey);
+  });
+
+  if (pageTitleEl) pageTitleEl.textContent = "Access Denied";
+  if (pageSubtitleEl) {
+    pageSubtitleEl.textContent =
+      "Vous n'avez pas la permission d'accéder à ce module.";
+  }
+  if (pageActionsEl) pageActionsEl.innerHTML = "";
+
+  if (pageContentEl) {
+    pageContentEl.className = "blank-page";
+    pageContentEl.innerHTML = `
+      <div class="blank-card access-denied-card">
+        <div class="blank-badge"><i class="fa-solid fa-shield-halved"></i></div>
+        <h2>Access Denied</h2>
+        <p>Accès refusé au module <strong>${escapeHtml(moduleName)}</strong>.</p>
+        <span class="blank-note">Contactez votre administrateur si vous pensez qu'il s'agit d'une erreur.</span>
+      </div>
+    `;
+  }
+
+  if (overlayRootEl) overlayRootEl.innerHTML = "";
+  closeMenus();
+  translateRenderedInterface(document);
 }
 
 function updateProfileAvatar() {
@@ -11199,18 +11524,377 @@ function openAdministrationUserDetails(recordId) {
   renderAdministrationUserDetailsModal(user);
 }
 
+function isAdministrationUserPending(user) {
+  const status = String(user?.status || "").trim().toLowerCase();
+  return status === "en attente" || status === "pending";
+}
+
+function isAdministrationUserRejected(user) {
+  const status = String(user?.status || "").trim().toLowerCase();
+  return status === "refusé" || status === "refuse" || status === "rejected";
+}
+
+function getAdministrationSessionCompanyId() {
+  return window.MaintFlowAuth?.getSession()?.companyId || "";
+}
+
+function filterAdministrationUsersByCompany(users) {
+  const companyId = getAdministrationSessionCompanyId();
+  if (!companyId) return users;
+  return users.filter(
+    (user) => !user.companyId || user.companyId === companyId,
+  );
+}
+
+function getAdministrationApprovalRoleOptions() {
+  if (window.MaintFlowAuth?.ROLE_CATALOG) {
+    return window.MaintFlowAuth.ROLE_CATALOG.map((role) => ({
+      value: role,
+      label: window.MaintFlowAuth.toLegacyRole(role) || role,
+    }));
+  }
+
+  return administrationRoleCatalog.map((role) => ({
+    value: role,
+    label: role,
+  }));
+}
+
+function getAdministrationActorLabel() {
+  const actor = getConnectedUserProfile();
+  return actor ? getAdministrationUserFullName(actor) : "Administrateur";
+}
+
+function removeAdministrationUserFromSystem(userId, detail) {
+  const auth = window.MaintFlowAuth;
+  let removedUser = null;
+
+  if (auth) {
+    removedUser = auth.getUserById(userId);
+    if (removedUser) {
+      auth.deleteUser(userId);
+      auth.syncUsersToAdministrationState();
+      auth.appendAuditLog({
+        action: "Suppression enregistrement",
+        module: "Administration",
+        user: getAdministrationActorLabel(),
+        userId: auth.getSession()?.userId,
+        companyId: removedUser.companyId,
+        record: removedUser.email,
+        detail,
+        before: removedUser.fullName || removedUser.email,
+        after: "Compte supprimé",
+      });
+      return removedUser;
+    }
+  }
+
+  const nextState = getAdministrationState();
+  removedUser = nextState.users.find((item) => item.id === userId) || null;
+  if (!removedUser) return null;
+
+  nextState.users = nextState.users.filter((item) => item.id !== userId);
+  nextState.logs = [
+    {
+      id: `log-${Date.now()}`,
+      date: new Date().toISOString(),
+      user: getAdministrationActorLabel(),
+      action: "Suppression enregistrement",
+      module: "Administration",
+      record: removedUser.code || removedUser.email,
+      detail,
+      before: getAdministrationUserFullName(removedUser),
+      after: "Compte supprimé",
+    },
+    ...nextState.logs,
+  ];
+  saveAdministrationState(nextState);
+  return removedUser;
+}
+
+function rejectAdministrationUser(userId) {
+  const auth = window.MaintFlowAuth;
+  let rejectedUser = null;
+
+  if (auth) {
+    rejectedUser = auth.getUserById(userId);
+    if (rejectedUser) {
+      auth.updateUser(userId, {
+        status: auth.USER_STATUS.REJECTED,
+        role: null,
+      });
+      auth.syncUsersToAdministrationState();
+      auth.appendAuditLog({
+        action: "Validation",
+        module: "Administration",
+        user: getAdministrationActorLabel(),
+        userId: auth.getSession()?.userId,
+        companyId: rejectedUser.companyId,
+        record: rejectedUser.email,
+        detail: `Demande refusée pour ${rejectedUser.fullName || rejectedUser.email}.`,
+        before: "En attente",
+        after: "Refusé",
+      });
+      return rejectedUser;
+    }
+  }
+
+  const nextState = getAdministrationState();
+  rejectedUser = nextState.users.find((item) => item.id === userId) || null;
+  if (!rejectedUser) return null;
+
+  rejectedUser.status = "Refusé";
+  rejectedUser.role = "";
+  nextState.logs = [
+    {
+      id: `log-${Date.now()}`,
+      date: new Date().toISOString(),
+      user: getAdministrationActorLabel(),
+      action: "Validation",
+      module: "Administration",
+      record: rejectedUser.email,
+      detail: `Demande refusée pour ${getAdministrationUserFullName(rejectedUser)}.`,
+      before: "En attente",
+      after: "Refusé",
+    },
+    ...nextState.logs,
+  ];
+  saveAdministrationState(nextState);
+  return rejectedUser;
+}
+
+function approveAdministrationUser(userId, roleValue) {
+  const auth = window.MaintFlowAuth;
+  const canonicalRole = auth
+    ? auth.normalizeRole(roleValue) || roleValue
+    : roleValue;
+  const legacyRole = auth
+    ? auth.toLegacyRole(canonicalRole) || roleValue
+    : roleValue;
+  let approvedUser = null;
+
+  if (auth) {
+    approvedUser = auth.getUserById(userId);
+    if (approvedUser) {
+      auth.updateUser(userId, {
+        status: auth.USER_STATUS.ACTIVE,
+        role: canonicalRole,
+        functionTitle: legacyRole,
+      });
+      auth.syncUsersToAdministrationState();
+      auth.appendAuditLog({
+        action: "Validation",
+        module: "Administration",
+        user: getAdministrationActorLabel(),
+        userId: auth.getSession()?.userId,
+        companyId: approvedUser.companyId,
+        record: approvedUser.email,
+        detail: `Compte approuvé avec le rôle ${legacyRole}.`,
+        before: "En attente",
+        after: "Actif",
+      });
+      auth.appendAuditLog({
+        action: "Changement de rôle",
+        module: "Administration",
+        user: getAdministrationActorLabel(),
+        userId: auth.getSession()?.userId,
+        companyId: approvedUser.companyId,
+        record: approvedUser.email,
+        detail: `Rôle attribué : ${legacyRole}.`,
+        before: "Aucun",
+        after: legacyRole,
+      });
+      return approvedUser;
+    }
+  }
+
+  const nextState = getAdministrationState();
+  approvedUser = nextState.users.find((item) => item.id === userId) || null;
+  if (!approvedUser) return null;
+
+  approvedUser.status = "Actif";
+  approvedUser.role = legacyRole;
+  approvedUser.functionTitle = legacyRole;
+  nextState.logs = [
+    {
+      id: `log-${Date.now()}`,
+      date: new Date().toISOString(),
+      user: getAdministrationActorLabel(),
+      action: "Validation",
+      module: "Administration",
+      record: approvedUser.email,
+      detail: `Compte approuvé avec le rôle ${legacyRole}.`,
+      before: "En attente",
+      after: "Actif",
+    },
+    ...nextState.logs,
+  ];
+  saveAdministrationState(nextState);
+  return approvedUser;
+}
+
+function renderAdministrationApproveUserModal(user) {
+  if (!overlayRootEl || !user) return;
+
+  const roleOptions = getAdministrationApprovalRoleOptions();
+  const bodyHtml = `
+    <form class="org-form admin-approve-user-form" id="adminApproveUserForm" data-admin-approve-user-id="${escapeHtml(user.id)}">
+      <div class="admin-approve-user-copy">
+        <p>Attribuez un rôle à <strong>${escapeHtml(getAdministrationUserFullName(user))}</strong> (${escapeHtml(user.email)}).</p>
+      </div>
+      <div class="field-group">
+        <label for="adminApproveRoleSelect">Rôle</label>
+        <select id="adminApproveRoleSelect" name="role" required>
+          <option value="">Choisir un rôle</option>
+          ${roleOptions
+            .map(
+              (option) =>
+                `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`,
+            )
+            .join("")}
+        </select>
+      </div>
+      <div class="org-modal-actions">
+        <button class="btn btn-outline" type="button" data-admin-approve-close="true">
+          <i class="fa-solid fa-xmark"></i>
+          <span>Annuler</span>
+        </button>
+        <button class="btn btn-primary" type="submit">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Enregistrer</span>
+        </button>
+      </div>
+    </form>
+  `;
+
+  overlayRootEl.innerHTML = buildAdministrationUserDetailsModalShell(
+    "Approuver l'utilisateur",
+    "Choisissez le rôle du collaborateur avant activation du compte.",
+    bodyHtml,
+  );
+
+  overlayRootEl
+    .querySelectorAll("[data-admin-approve-close], [data-admin-user-close]")
+    .forEach((button) => {
+      button.addEventListener("click", function () {
+        overlayRootEl.innerHTML = "";
+      });
+    });
+
+  const form = overlayRootEl.querySelector("#adminApproveUserForm");
+  form?.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const userId = form.dataset.adminApproveUserId || "";
+    const roleValue = form.querySelector("#adminApproveRoleSelect")?.value || "";
+    if (!userId || !roleValue) return;
+
+    approveAdministrationUser(userId, roleValue);
+    overlayRootEl.innerHTML = "";
+    administrationUserDraftId = null;
+    renderPage("parametres", "utilisateurs");
+    window.location.hash = "parametres/utilisateurs";
+  });
+}
+
+function openAdministrationApproveUser(userId) {
+  const state = getAdministrationState();
+  const user = state.users.find((item) => item.id === userId);
+  if (!user || !isAdministrationUserPending(user)) return;
+  renderAdministrationApproveUserModal(user);
+}
+
+function buildAdministrationPendingUsersSection(pendingUsers) {
+  if (!pendingUsers.length) {
+    return `
+      <section class="administration-section admin-pending-section">
+        <div class="administration-section-head">
+          <div>
+            <div class="equipment-section-kicker">Utilisateurs en attente</div>
+            <h3>Demandes d'accès à valider</h3>
+            <p>Aucune demande en attente pour votre entreprise.</p>
+          </div>
+          <span class="status-badge badge-gray">0 en attente</span>
+        </div>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="administration-section admin-pending-section">
+      <div class="administration-section-head">
+        <div>
+          <div class="equipment-section-kicker">Utilisateurs en attente</div>
+          <h3>Demandes d'accès à valider</h3>
+          <p>Approuvez, refusez ou supprimez les inscriptions en attente de validation.</p>
+        </div>
+        <span class="status-badge badge-warning">${pendingUsers.length} en attente</span>
+      </div>
+
+      <div class="admin-permission-table-wrap admin-pending-table-wrap">
+        <table class="admin-permission-table admin-pending-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Email</th>
+              <th>Date d'inscription</th>
+              <th>Entreprise</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pendingUsers
+              .map(
+                (user) => `
+                  <tr>
+                    <td>
+                      <strong>${escapeHtml(getAdministrationUserFullName(user))}</strong>
+                    </td>
+                    <td>${escapeHtml(user.email)}</td>
+                    <td>${formatAdministrationDateTime(user.createdAt)}</td>
+                    <td>${escapeHtml(user.companyCode || getEnterpriseProfile().code || "—")}</td>
+                    <td>
+                      <div class="admin-pending-actions">
+                        <button class="btn btn-primary btn-sm" type="button" data-admin-user-approve="${escapeHtml(user.id)}" data-perm-action="validate" title="Approuver">
+                          <i class="fa-solid fa-user-check"></i>
+                          <span>Approuver</span>
+                        </button>
+                        <button class="btn btn-outline btn-sm" type="button" data-admin-user-reject="${escapeHtml(user.id)}" data-perm-action="validate" title="Refuser">
+                          <i class="fa-solid fa-user-xmark"></i>
+                          <span>Refuser</span>
+                        </button>
+                        <button class="btn btn-outline danger btn-sm" type="button" data-admin-user-delete="${escapeHtml(user.id)}" data-perm-action="delete" title="Supprimer">
+                          <i class="fa-regular fa-trash-can"></i>
+                          <span>Supprimer</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
 function buildAdministrationUsersSection(state) {
-  const currentUser = administrationUserDraftId
-    ? state.users.find((user) => user.id === administrationUserDraftId) || null
-    : null;
-  const userCount = state.users.length;
-  const activeUsers = state.users.filter(
-    (user) => user.status === "Actif",
+  const companyUsers = filterAdministrationUsersByCompany(state.users);
+  const pendingUsers = companyUsers.filter((user) =>
+    isAdministrationUserPending(user),
+  );
+  const registeredUsers = companyUsers.filter(
+    (user) => !isAdministrationUserPending(user),
+  );
+  const userCount = companyUsers.length;
+  const activeUsers = companyUsers.filter(
+    (user) => String(user.status || "").toLowerCase() === "actif" || user.status === "Active",
   ).length;
-  const suspendedUsers = state.users.filter(
-    (user) => user.status === "Suspendu",
-  ).length;
-  const roleCount = new Set(state.users.map((user) => user.role)).size;
+  const pendingCount = pendingUsers.length;
+  const roleCount = new Set(
+    registeredUsers.map((user) => user.role).filter(Boolean),
+  ).size;
 
   return `
     <section class="administration-section">
@@ -11234,9 +11918,9 @@ function buildAdministrationUsersSection(state) {
             <small>Connexions autorisées</small>
           </div>
           <div class="admin-summary-card">
-            <span>Suspendus</span>
-            <strong>${suspendedUsers}</strong>
-            <small>Accès temporairement bloqués</small>
+            <span>En attente</span>
+            <strong>${pendingCount}</strong>
+            <small>Validations administrateur requises</small>
           </div>
           <div class="admin-summary-card">
             <span>Rôles utilisés</span>
@@ -11247,21 +11931,24 @@ function buildAdministrationUsersSection(state) {
       </div>
     </section>
 
+    ${buildAdministrationPendingUsersSection(pendingUsers)}
+
     <section class="administration-section">
       <div class="administration-section-head">
         <div>
           <div class="equipment-section-kicker">Répertoire</div>
           <h3>Comptes enregistrés</h3>
-          <p>Liste des utilisateurs, des rattachements, du code entreprise associé et de la dernière connexion.</p>
+          <p>Liste des utilisateurs actifs, refusés ou suspendus, avec rattachements et dernière connexion.</p>
         </div>
         <span class="status-badge badge-info">Consultation, impression et export</span>
       </div>
       <div class="admin-user-list">
-        ${state.users
+        ${registeredUsers.length
+      ? registeredUsers
       .map(
         (user) => `
               <article class="admin-user-list-item">
-                <div class="admin-user-list-avatar ${user.status === "Suspendu" ? "is-muted" : ""}">
+                <div class="admin-user-list-avatar ${user.status === "Suspendu" || isAdministrationUserRejected(user) ? "is-muted" : ""}">
                   ${buildAdministrationPhotoMarkup(user)}
                 </div>
                 <div class="admin-user-list-main">
@@ -11270,12 +11957,12 @@ function buildAdministrationUsersSection(state) {
                       <strong>${escapeHtml(getAdministrationUserFullName(user))}</strong>
                       <p>${escapeHtml(user.username)} · ${escapeHtml(user.email)}</p>
                     </div>
-                    <span class="status-badge ${user.status === "Actif" ? "badge-success" : user.status === "Suspendu" ? "badge-warning" : "badge-gray"}">${escapeHtml(user.status)}</span>
+                    <span class="status-badge ${user.status === "Actif" ? "badge-success" : user.status === "Suspendu" ? "badge-warning" : isAdministrationUserRejected(user) ? "badge-gray" : "badge-gray"}">${escapeHtml(user.status)}</span>
                   </div>
                   <div class="admin-user-tags">
-                    <span>${escapeHtml(user.code)}</span>
-                    <span>${escapeHtml(user.role)}</span>
-                    <span>${escapeHtml(user.functionTitle)}</span>
+                    <span>${escapeHtml(user.code || "—")}</span>
+                    <span>${escapeHtml(user.role || "—")}</span>
+                    <span>${escapeHtml(user.functionTitle || "—")}</span>
                     <span>Entreprise ${escapeHtml(user.companyCode || getEnterpriseProfile().code || "ORG-001")}</span>
                     <span>${escapeHtml(user.unit || "Non renseigné")}</span>
                     <span>${escapeHtml(user.division || "Non renseigné")}</span>
@@ -11296,7 +11983,8 @@ function buildAdministrationUsersSection(state) {
               </article>
             `,
       )
-      .join("")}
+      .join("")
+      : `<div class="org-empty-card admin-empty-card"><div class="blank-badge"><i class="fa-regular fa-folder-open"></i></div><h2>Aucun compte enregistré</h2><p>Les utilisateurs approuvés apparaîtront ici.</p></div>`}
       </div>
     </section>
   `;
@@ -11852,7 +12540,7 @@ function buildAdministrationActionButtons(activeSubpageKey, state) {
 
   if (activeSubpageKey === "utilisateurs") {
     pageActionsEl.innerHTML = `
-      <button class="btn btn-outline" type="button" data-admin-export-users>
+      <button class="btn btn-outline" type="button" data-admin-export-users data-perm-action="export">
         <i class="fa-solid fa-file-csv"></i>
         <span>${localizeAdministrationText("Exporter CSV", state)}</span>
       </button>
@@ -11878,6 +12566,11 @@ function renderAdministrationPage(subpageKey) {
     ? subpageKey
     : administrationSubpages.defaultSubpage;
   const activeSubpage = administrationSubpages.tabs[activeSubpageKey];
+
+  if (window.MaintFlowAuth) {
+    MaintFlowAuth.syncUsersToAdministrationState();
+  }
+
   const state = getAdministrationState();
 
   if (pageTitleEl)
@@ -11997,37 +12690,65 @@ function attachAdministrationUserHandlers(state) {
   });
 
   pageContentEl
+    .querySelectorAll("[data-admin-user-approve]")
+    .forEach((button) => {
+      button.addEventListener("click", function () {
+        const userId = this.dataset.adminUserApprove || "";
+        if (!userId) return;
+        openAdministrationApproveUser(userId);
+      });
+    });
+
+  pageContentEl
+    .querySelectorAll("[data-admin-user-reject]")
+    .forEach((button) => {
+      button.addEventListener("click", function () {
+        const userId = this.dataset.adminUserReject || "";
+        if (!userId) return;
+
+        const user = getAdministrationState().users.find(
+          (item) => item.id === userId,
+        );
+        if (!user) return;
+
+        if (
+          !uiConfirm(
+            `Refuser la demande de ${getAdministrationUserFullName(user)} ?`,
+          )
+        )
+          return;
+
+        rejectAdministrationUser(userId);
+        administrationUserDraftId = null;
+        renderPage("parametres", "utilisateurs");
+        window.location.hash = "parametres/utilisateurs";
+      });
+    });
+
+  pageContentEl
     .querySelectorAll("[data-admin-user-delete]")
     .forEach((button) => {
       button.addEventListener("click", function () {
         const userId = this.dataset.adminUserDelete;
         if (!userId) return;
 
-        const nextState = getAdministrationState();
-        const user = nextState.users.find((item) => item.id === userId);
+        const user =
+          getAdministrationState().users.find((item) => item.id === userId) ||
+          window.MaintFlowAuth?.getUserById(userId);
         if (!user) return;
 
-        if (
-          !uiConfirm(`Supprimer ${getAdministrationUserFullName(user)} ?`)
-        )
-          return;
+        const displayName =
+          user.fullName ||
+          getAdministrationUserFullName(user) ||
+          user.email ||
+          "Utilisateur";
 
-        nextState.users = nextState.users.filter((item) => item.id !== userId);
-        nextState.logs = [
-          {
-            id: `log-${Date.now()}`,
-            date: new Date().toISOString(),
-            user: "Administrateur système",
-            action: "Suppression enregistrement",
-            module: "Administration",
-            record: user.code,
-            detail: `Utilisateur ${getAdministrationUserFullName(user)} supprimé depuis la page Administration.`,
-            before: getAdministrationUserFullName(user),
-            after: "Compte supprimé",
-          },
-          ...nextState.logs,
-        ];
-        saveAdministrationState(nextState);
+        if (!uiConfirm(`Supprimer ${displayName} ?`)) return;
+
+        removeAdministrationUserFromSystem(
+          userId,
+          `Utilisateur ${displayName} supprimé depuis la page Administration.`,
+        );
         administrationUserDraftId = null;
         renderPage("parametres", "utilisateurs");
         window.location.hash = "parametres/utilisateurs";
@@ -14343,19 +15064,19 @@ function renderStockPageActions(activeSubpageKey) {
 
   const actionMap = {
     "fiche-stock": `
-      <button class="btn btn-primary" type="button" data-stock-action="create-fiche" onclick="openStockRecordCreate()">
+      <button class="btn btn-primary" type="button" data-stock-action="create-fiche" data-perm-action="create" data-perm-page="stock" onclick="openStockRecordCreate()">
         <i class="fa-solid fa-plus"></i>
         <span>Nouvelle fiche stock</span>
       </button>
     `,
     mouvements: `
-      <button class="btn btn-primary" type="button" data-stock-action="create-movement">
+      <button class="btn btn-primary" type="button" data-stock-action="create-movement" data-perm-action="create" data-perm-page="stock">
         <i class="fa-solid fa-right-left"></i>
         <span>Nouveau mouvement</span>
       </button>
     `,
     inventaire: `
-      <button class="btn btn-primary" type="button" data-stock-action="create-inventory">
+      <button class="btn btn-primary" type="button" data-stock-action="create-inventory" data-perm-action="create" data-perm-page="stock">
         <i class="fa-solid fa-clipboard-check"></i>
         <span>Nouveau inventaire</span>
       </button>
@@ -20648,10 +21369,10 @@ function buildAchatsDaDetails(record) {
     <div class="org-modal-actions">
     ${record.status === "En attente"
       ? `
-          <button type="button" class="btn btn-success" data-da-validate="${record.id}">
+          <button type="button" class="btn btn-success" data-da-validate="${record.id}" data-perm-action="validate">
             <i class="fa-solid fa-check"></i> Valider
           </button>
-          <button type="button" class="btn btn-danger" data-da-reject="${record.id}">
+          <button type="button" class="btn btn-danger" data-da-reject="${record.id}" data-perm-action="validate">
             <i class="fa-solid fa-xmark"></i> Refuser
           </button>
         `
@@ -21610,6 +22331,11 @@ function renderPage(pageKey, subpageKey) {
     subpageKey = routeParts[1] || subpageKey;
   }
 
+  if (!canViewPageKey(pageKey)) {
+    renderAccessDeniedPage(pageKey);
+    return;
+  }
+
   const page = pages[pageKey] || pages.dashboard;
   const defaultSubpage =
     pageKey === "organisation"
@@ -21700,8 +22426,14 @@ function renderPage(pageKey, subpageKey) {
 navItems.forEach((item) => {
   item.addEventListener("click", function (event) {
     event.preventDefault();
-    renderPage(this.dataset.page || "dashboard");
-    window.location.hash = this.dataset.page || "dashboard";
+    const pageKey = this.dataset.page || "dashboard";
+    if (!canViewPageKey(pageKey)) {
+      renderAccessDeniedPage(pageKey);
+      window.location.hash = pageKey;
+      return;
+    }
+    renderPage(pageKey);
+    window.location.hash = pageKey;
   });
 });
 
@@ -26797,12 +27529,15 @@ profileBtn.addEventListener("click", function (event) {
 document.querySelectorAll("[data-action]").forEach((button) => {
   button.addEventListener("click", function () {
     const action = this.dataset.action;
-    const route =
-      action === "settings"
-        ? "parametres"
-        : action === "logout"
-          ? "deconnexion"
-          : "profil";
+    if (action === "logout") {
+      if (window.MaintFlowAuth) {
+        MaintFlowAuth.performLogout();
+      } else {
+        window.location.href = "login.html";
+      }
+      return;
+    }
+    const route = action === "settings" ? "parametres" : "profil";
     renderPage(route);
     window.location.hash = route;
   });
@@ -26824,8 +27559,20 @@ document.addEventListener("keydown", function (event) {
 function bootstrapRoute() {
   const hash = window.location.hash.replace("#", "").trim();
   const routeParts = hash.split("/").filter(Boolean);
-  const route = pages[routeParts[0]] ? routeParts[0] : "dashboard";
+  let route = pages[routeParts[0]] ? routeParts[0] : "dashboard";
   const subpage = routeParts[1];
+
+  if (!canViewPageKey(route)) {
+    const fallback = getFirstAccessiblePageKey();
+    if (fallback && canViewPageKey(fallback)) {
+      route = fallback;
+      window.location.hash = subpage ? `${route}/${subpage}` : route;
+    } else {
+      renderAccessDeniedPage(routeParts[0] || route);
+      return;
+    }
+  }
+
   renderPage(route, subpage);
 }
 
@@ -27336,26 +28083,26 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       fields = [
         ["Fournisseur", entry.supplierName],
         ["Article", entry.article],
-        ["RÃ©fÃ©rence fournisseur", entry.refFourn],
-        ["DÃ©signation", entry.designation],
+        ["Référence fournisseur", entry.refFourn],
+        ["Désignation", entry.designation],
         ["Prix HT", formatCurrency(entry.price) + " DZD"],
-        ["UnitÃ©", entry.unit],
+        ["Unité", entry.unit],
         ["MOQ", entry.moq],
-        ["DisponibilitÃ©", entry.availability],
+        ["Disponibilité", entry.availability],
         ["Observations", entry.observations],
       ];
     }
     if (type === "contract") {
       fields = [
-        ["NumÃ©ro contrat", entry.number],
+        ["Numéro contrat", entry.number],
         ["Fournisseur", entry.supplierName],
         ["Type contrat", entry.type],
         ["Objet", entry.objet],
-        ["DÃ©but", formatDate(entry.debut)],
+        ["Début", formatDate(entry.debut)],
         ["Fin", formatDate(entry.fin)],
         ["Valeur", formatCurrency(entry.valeur) + " DZD"],
         ["Conditions", entry.conditions || "—"],
-        ["Ã‰quipements couverts", Array.isArray(entry.equipmentRefs) ? entry.equipmentRefs.join(", ") : entry.equipmentRefs || "—"],
+        ["Équipements couverts", Array.isArray(entry.equipmentRefs) ? entry.equipmentRefs.join(", ") : entry.equipmentRefs || "—"],
         ["Responsable suivi", entry.responsible || "—"],
         ["Alerte expiration", entry.alertDays ? entry.alertDays + " jours" : "—"],
         ["Documents joints", entry.documents || "—"],
@@ -27364,10 +28111,10 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     }
     if (type === "warranty") {
       fields = [
-        ["Ã‰quipement", entry.equipmentCode || entry.equipment || "—"],
+        ["Équipement", entry.equipmentCode || entry.equipment || "—"],
         ["Fournisseur", entry.supplierName],
-        ["DÃ©but", formatDate(entry.debut)],
-        ["DurÃ©e", (entry.durationMonths || "—") + " mois"],
+        ["Début", formatDate(entry.debut)],
+        ["Durée", (entry.durationMonths || "—") + " mois"],
         ["Fin", formatDate(entry.endDate)],
         ["Conditions", entry.conditions || "—"],
         ["Documents", entry.documents || "—"],
@@ -27376,10 +28123,10 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     }
     if (type === "evaluation") {
       fields = [
-        ["NumÃ©ro", entry.number],
+        ["Numéro", entry.number],
         ["Fournisseur", entry.supplierName],
-        ["PÃ©riode", entry.periode],
-        ["Ã‰valuateur", entry.evaluator],
+        ["Période", entry.periode],
+        ["Évaluateur", entry.evaluator],
         ["Note globale", Number(entry.global || 0).toFixed(2)],
         ["Recommandation", entry.recommendation],
         ["Commentaires", entry.comments],
@@ -27927,6 +28674,11 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
       "maintflow.stockLedger",
       "maintflow.interventions",
       "maintflow.fournisseurs",
+      "maintflow.companies",
+      "maintflow.users",
+      "maintflow.session",
+      "maintflow.rolePermissions",
+      "maintflow.authMeta",
     ];
 
     keys.forEach((key) => localStorage.removeItem(key));
@@ -27937,8 +28689,20 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
   window._fournisseurs = { renderPage };
 })();
 resetDemoDataIfNeeded();
-startInterfaceTranslationObserver();
-bootstrapRoute();
-renderNotifications();
+if (window.MaintFlowAuth) {
+  MaintFlowAuth.initializeAuthData();
+  if (MaintFlowAuth.isSessionValid()) {
+    applyLocalizedShell(getAdministrationState());
+    applyDynamicNavigation();
+    initDynamicActionPermissionObserver();
+    startInterfaceTranslationObserver();
+    bootstrapRoute();
+    renderNotifications();
+  } else {
+    window.location.replace("login.html");
+  }
+} else {
+  window.location.replace("login.html");
+}
 
 

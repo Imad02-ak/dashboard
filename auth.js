@@ -42,7 +42,7 @@
       confirmationPlaceholder: "Confirmer le mot de passe",
       createCompany: "Créer une nouvelle entreprise",
       companyCode: "Code entreprise",
-      companyCodePlaceholder: "Ex : MF-2026-ALGER",
+      companyCodePlaceholder: "Ex : MF-8A7X2P",
       companyMiniTitle: "Entreprise",
       companyInfo: "Informations de l'entreprise",
       newBadge: "Nouvelle",
@@ -76,6 +76,23 @@
       fixFields: "Veuillez corriger les champs signalés.",
       loginSuccess: "Connexion validée. Redirection vers le tableau de bord...",
       registerSuccess: "Compte prêt à être créé. Redirection vers la connexion...",
+      invalidCredentials: "Adresse e-mail ou mot de passe incorrect.",
+      accountPending:
+        "Votre compte est en attente de validation par l'administrateur.",
+      accountRejected: "Votre demande d'inscription a été refusée.",
+      emailAlreadyUsed: "Cette adresse e-mail est déjà utilisée.",
+      invalidCompanyCode: "Code entreprise introuvable.",
+      registerPendingSuccess:
+        "Inscription enregistrée. Un administrateur doit valider votre accès.",
+      welcomeTitle: "Bienvenue !",
+      welcomeText:
+        "Votre entreprise a été créée avec succès. Votre code entreprise est :",
+      welcomeHint:
+        "Conservez ce code. Partagez-le uniquement avec les collaborateurs autorisés.",
+      copyCode: "Copier le code",
+      close: "Fermer",
+      codeCopied: "Code copié dans le presse-papiers.",
+      authUnavailable: "Le service d'authentification est indisponible.",
     },
     en: {
       documentTitleLogin: "MaintFlow - Login",
@@ -117,7 +134,7 @@
       confirmationPlaceholder: "Confirm password",
       createCompany: "Create a new company",
       companyCode: "Company code",
-      companyCodePlaceholder: "Ex: MF-2026-ALGER",
+      companyCodePlaceholder: "Ex: MF-8A7X2P",
       companyMiniTitle: "Company",
       companyInfo: "Company information",
       newBadge: "New",
@@ -151,6 +168,21 @@
       fixFields: "Please correct the highlighted fields.",
       loginSuccess: "Login validated. Redirecting to the dashboard...",
       registerSuccess: "Account ready to be created. Redirecting to login...",
+      invalidCredentials: "Incorrect email address or password.",
+      accountPending: "Your account is pending approval by an administrator.",
+      accountRejected: "Your registration request was rejected.",
+      emailAlreadyUsed: "This email address is already in use.",
+      invalidCompanyCode: "Company code not found.",
+      registerPendingSuccess:
+        "Registration saved. An administrator must approve your access.",
+      welcomeTitle: "Welcome!",
+      welcomeText: "Your company was created successfully. Your company code is:",
+      welcomeHint:
+        "Keep this code safe. Share it only with authorized collaborators.",
+      copyCode: "Copy code",
+      close: "Close",
+      codeCopied: "Code copied to clipboard.",
+      authUnavailable: "The authentication service is unavailable.",
     },
   };
 
@@ -410,12 +442,295 @@
     });
   }
 
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = function () {
+        resolve(String(reader.result || ""));
+      };
+      reader.onerror = function () {
+        reject(new Error("FILE_READ_ERROR"));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function getAuthApi() {
+    return window.MaintFlowAuth || null;
+  }
+
+  function setSubmitLoading(form, isLoading) {
+    const button = form.querySelector(".auth-submit");
+    if (!button) return;
+    button.disabled = isLoading;
+    button.classList.toggle("is-loading", isLoading);
+  }
+
+  function showWelcomePopup(companyCode, onClose) {
+    let root = document.getElementById("authWelcomeRoot");
+    if (!root) {
+      root = document.createElement("div");
+      root.id = "authWelcomeRoot";
+      document.body.appendChild(root);
+    }
+
+    root.innerHTML = `
+      <div class="auth-welcome-overlay" role="presentation">
+        <div class="auth-welcome-modal" role="dialog" aria-modal="true" aria-labelledby="authWelcomeTitle">
+          <div class="auth-welcome-icon"><i class="fa-solid fa-building-circle-check"></i></div>
+          <h2 id="authWelcomeTitle">${translate("welcomeTitle")}</h2>
+          <p>${translate("welcomeText")}</p>
+          <div class="auth-welcome-code" id="authWelcomeCode">${companyCode}</div>
+          <p class="auth-welcome-hint">${translate("welcomeHint")}</p>
+          <div class="auth-welcome-actions">
+            <button class="btn btn-outline" type="button" id="authWelcomeCopyBtn">
+              <i class="fa-regular fa-copy"></i>
+              <span>${translate("copyCode")}</span>
+            </button>
+            <button class="btn btn-primary" type="button" id="authWelcomeCloseBtn">
+              <i class="fa-solid fa-check"></i>
+              <span>${translate("close")}</span>
+            </button>
+          </div>
+          <p class="auth-welcome-copy-status" id="authWelcomeCopyStatus" aria-live="polite"></p>
+        </div>
+      </div>
+    `;
+
+    const copyBtn = root.querySelector("#authWelcomeCopyBtn");
+    const closeBtn = root.querySelector("#authWelcomeCloseBtn");
+    const copyStatus = root.querySelector("#authWelcomeCopyStatus");
+
+    copyBtn?.addEventListener("click", async function () {
+      try {
+        await navigator.clipboard.writeText(companyCode);
+        if (copyStatus) copyStatus.textContent = translate("codeCopied");
+      } catch (_error) {
+        const range = document.createRange();
+        const codeEl = root.querySelector("#authWelcomeCode");
+        if (codeEl) {
+          range.selectNodeContents(codeEl);
+          const selection = window.getSelection();
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+          document.execCommand("copy");
+          selection?.removeAllRanges();
+          if (copyStatus) copyStatus.textContent = translate("codeCopied");
+        }
+      }
+    });
+
+    closeBtn?.addEventListener("click", function () {
+      root.innerHTML = "";
+      if (typeof onClose === "function") onClose();
+    });
+  }
+
+  async function handleLoginSubmit(form) {
+    const auth = getAuthApi();
+    if (!auth) {
+      setStatus(form, translate("authUnavailable"), true);
+      return;
+    }
+
+    const email = form.querySelector("#loginEmail")?.value || "";
+    const password = form.querySelector("#loginPassword")?.value || "";
+    const user = auth.getUserByEmail(email);
+
+    if (!user) {
+      auth.appendAuditLog({
+        action: "Connexion refusée",
+        module: "Authentification",
+        user: email,
+        detail: "Adresse e-mail inconnue.",
+      });
+      setStatus(form, translate("invalidCredentials"), true);
+      return;
+    }
+
+    if (user.status === auth.USER_STATUS.PENDING) {
+      setStatus(form, translate("accountPending"), true);
+      return;
+    }
+
+    if (user.status === auth.USER_STATUS.REJECTED) {
+      setStatus(form, translate("accountRejected"), true);
+      return;
+    }
+
+    const passwordValid = await auth.verifyPassword(password, user);
+    if (!passwordValid || user.status !== auth.USER_STATUS.ACTIVE) {
+      auth.appendAuditLog({
+        action: "Connexion refusée",
+        module: "Authentification",
+        user: user.fullName || user.email,
+        userId: user.id,
+        companyId: user.companyId,
+        detail: "Mot de passe incorrect ou compte inactif.",
+      });
+      setStatus(form, translate("invalidCredentials"), true);
+      return;
+    }
+
+    await auth.createSessionForUser(user, { language: getAuthLanguage() });
+    auth.appendAuditLog({
+      action: "Connexion",
+      module: "Authentification",
+      user: user.fullName || user.email,
+      userId: user.id,
+      companyId: user.companyId,
+      detail: "Connexion réussie.",
+    });
+
+    setStatus(form, translate("loginSuccess"), false);
+    window.setTimeout(() => {
+      window.location.href = "index.html";
+    }, 650);
+  }
+
+  async function handleRegisterSubmit(form) {
+    const auth = getAuthApi();
+    if (!auth) {
+      setStatus(form, translate("authUnavailable"), true);
+      return;
+    }
+
+    const createCompanyChecked = Boolean(
+      form.querySelector("#createCompany")?.checked,
+    );
+    const firstName = form.querySelector("#firstName")?.value.trim() || "";
+    const lastName = form.querySelector("#lastName")?.value.trim() || "";
+    const email = form.querySelector("#registerEmail")?.value.trim() || "";
+    const password = form.querySelector("#registerPassword")?.value || "";
+
+    if (auth.emailExists(email)) {
+      setError(form.querySelector("#registerEmail"), translate("emailAlreadyUsed"));
+      setStatus(form, translate("fixFields"), true);
+      return;
+    }
+
+    const passwordCreds = await auth.createPasswordHash(password);
+
+    if (createCompanyChecked) {
+      let logoData = "";
+      const logoFile = form.querySelector("#companyLogo")?.files?.[0];
+      if (logoFile) {
+        logoData = await readFileAsDataUrl(logoFile);
+      }
+
+      const company = auth.addCompany({
+        companyName: form.querySelector("#companyName")?.value.trim() || "",
+        activity: "",
+        country: form.querySelector("#wilaya")?.value.trim() || "",
+        city: form.querySelector("#commune")?.value.trim() || "",
+        wilaya: form.querySelector("#wilaya")?.value.trim() || "",
+        daira: form.querySelector("#daira")?.value.trim() || "",
+        commune: form.querySelector("#commune")?.value.trim() || "",
+        address: form.querySelector("#companyAddress")?.value.trim() || "",
+        phone: form.querySelector("#companyPhone")?.value.trim() || "",
+        website: form.querySelector("#companyWebsite")?.value.trim() || "",
+        logo: logoData,
+      });
+
+      auth.syncCompanyToEnterpriseProfile(company);
+
+      const adminUser = auth.addUser({
+        companyId: company.id,
+        firstName,
+        lastName,
+        email,
+        ...passwordCreds,
+        role: auth.ROLES.ADMINISTRATOR,
+        status: auth.USER_STATUS.ACTIVE,
+        companyCode: company.companyCode,
+        username: email.split("@")[0],
+        functionTitle: auth.toLegacyRole(auth.ROLES.ADMINISTRATOR),
+        language: getAuthLanguage(),
+      });
+
+      auth.syncUsersToAdministrationState();
+      auth.appendAuditLog({
+        action: "Création entreprise",
+        module: "Authentification",
+        user: adminUser.fullName,
+        userId: adminUser.id,
+        companyId: company.id,
+        company: company.companyName,
+        record: company.companyCode,
+        detail: `Entreprise ${company.companyName} créée.`,
+      });
+      auth.appendAuditLog({
+        action: "Création utilisateur",
+        module: "Authentification",
+        user: adminUser.fullName,
+        userId: adminUser.id,
+        companyId: company.id,
+        record: adminUser.email,
+        detail: "Compte administrateur créé.",
+      });
+
+      await auth.createSessionForUser(adminUser, { language: getAuthLanguage() });
+      auth.appendAuditLog({
+        action: "Connexion",
+        module: "Authentification",
+        user: adminUser.fullName,
+        userId: adminUser.id,
+        companyId: company.id,
+        detail: "Connexion automatique après création d'entreprise.",
+      });
+
+      setSubmitLoading(form, false);
+      showWelcomePopup(company.companyCode, function () {
+        window.location.href = "index.html";
+      });
+      return;
+    }
+
+    const companyCode = form.querySelector("#companyCode")?.value.trim() || "";
+    const company = auth.getCompanyByCode(companyCode);
+    if (!company) {
+      setError(form.querySelector("#companyCode"), translate("invalidCompanyCode"));
+      setStatus(form, translate("fixFields"), true);
+      return;
+    }
+
+    const pendingUser = auth.addUser({
+      companyId: company.id,
+      firstName,
+      lastName,
+      email,
+      ...passwordCreds,
+      role: null,
+      status: auth.USER_STATUS.PENDING,
+      companyCode: company.companyCode,
+      username: email.split("@")[0],
+      language: getAuthLanguage(),
+    });
+
+    auth.syncUsersToAdministrationState();
+    auth.appendAuditLog({
+      action: "Création utilisateur",
+      module: "Authentification",
+      user: pendingUser.fullName,
+      userId: pendingUser.id,
+      companyId: company.id,
+      company: company.companyName,
+      record: pendingUser.email,
+      detail: "Inscription en attente de validation.",
+    });
+
+    setStatus(form, translate("registerPendingSuccess"), false);
+    window.setTimeout(() => {
+      window.location.href = "login.html";
+    }, 1200);
+  }
+
   function initLoginForm() {
     const form = document.getElementById("loginForm");
     if (!form) return;
 
     initLiveValidation(form);
-    form.addEventListener("submit", function (event) {
+    form.addEventListener("submit", async function (event) {
       event.preventDefault();
       setStatus(form, "", false);
 
@@ -424,10 +739,14 @@
         return;
       }
 
-      setStatus(form, translate("loginSuccess"));
-      window.setTimeout(() => {
-        window.location.href = "index.html";
-      }, 650);
+      setSubmitLoading(form, true);
+      try {
+        await handleLoginSubmit(form);
+      } catch (_error) {
+        setStatus(form, translate("authUnavailable"), true);
+      } finally {
+        setSubmitLoading(form, false);
+      }
     });
   }
 
@@ -488,7 +807,7 @@
       });
     }
 
-    form.addEventListener("submit", function (event) {
+    form.addEventListener("submit", async function (event) {
       event.preventDefault();
       setStatus(form, "", false);
 
@@ -497,16 +816,39 @@
         return;
       }
 
-      setStatus(form, translate("registerSuccess"));
-      window.setTimeout(() => {
-        window.location.href = "login.html";
-      }, 750);
+      setSubmitLoading(form, true);
+      try {
+        await handleRegisterSubmit(form);
+      } catch (error) {
+        if (error?.message === "DUPLICATE_EMAIL") {
+          setError(form.querySelector("#registerEmail"), translate("emailAlreadyUsed"));
+          setStatus(form, translate("fixFields"), true);
+        } else {
+          setStatus(form, translate("authUnavailable"), true);
+        }
+      } finally {
+        setSubmitLoading(form, false);
+      }
     });
   }
 
-  applyAuthTranslations();
-  initAuthLanguageSelector();
-  initPasswordToggles(document);
-  initLoginForm();
-  initRegisterForm();
+  function bootAuthPages() {
+    const auth = getAuthApi();
+    if (auth) {
+      auth.initializeAuthData();
+      if (auth.redirectIfAuthenticated()) return;
+    }
+
+    applyAuthTranslations();
+    initAuthLanguageSelector();
+    initPasswordToggles(document);
+    initLoginForm();
+    initRegisterForm();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootAuthPages);
+  } else {
+    bootAuthPages();
+  }
 })();

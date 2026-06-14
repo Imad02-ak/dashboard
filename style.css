@@ -252,6 +252,11 @@ body {
   opacity: 1;
 }
 
+.nav-item.is-hidden,
+.nav-section-label.is-hidden {
+  display: none !important;
+}
+
 .nav-label {
   opacity: 0;
   transform: translateX(-6px);
@@ -1181,6 +1186,45 @@ body {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.admin-pending-section {
+  margin-top: 4px;
+}
+
+.admin-pending-table-wrap {
+  margin-top: 4px;
+}
+
+.admin-pending-table td,
+.admin-pending-table th {
+  vertical-align: middle;
+}
+
+.admin-pending-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-pending-actions .btn-sm {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.admin-pending-actions .btn-sm span {
+  display: inline;
+}
+
+.admin-approve-user-form .field-group {
+  margin-top: 8px;
+}
+
+.admin-approve-user-copy {
+  margin-bottom: 12px;
+  color: var(--text-muted);
+  line-height: 1.55;
 }
 
 .admin-role-grid,

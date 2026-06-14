@@ -18,13 +18,6 @@
     <link rel="stylesheet" href="auth.css" />
   </head>
   <body class="auth-page">
-    <div class="auth-language-row lang-switcher-fixed" aria-label="Language selector">
-            <i class="fa-solid fa-globe" aria-hidden="true"></i>
-            <select id="authLanguageSelect" aria-label="Choisir la langue">
-              <option value="fr">Fr</option>
-              <option value="en">Eng</option>
-            </select>
-          </div>
     <main class="auth-layout" aria-label="Authentification MaintFlow">
       <aside class="auth-brand-panel" aria-label="Présentation MaintFlow">
         <div class="auth-blur-shape auth-blur-shape-one"></div>
@@ -32,7 +25,7 @@
         <div class="auth-blur-shape auth-blur-shape-three"></div>
 
         <div class="auth-brand-header">
-    <a class="auth-logo" href="index.html" aria-label="MaintFlow accueil">
+    <a class="auth-logo" href="login.html" aria-label="MaintFlow accueil">
         <img src="white.png" alt="Logo MaintFlow" />
     </a>
     <div class="auth-brand-copy">
@@ -205,7 +198,7 @@
                   id="companyCode"
                   name="companyCode"
                   type="text"
-                  placeholder="Ex : MF-2026-ALGER"
+                  placeholder="Ex : MF-8A7X2P"
                   autocomplete="organization"
                   required
                 />
@@ -396,6 +389,7 @@
       </section>
     </main>
 
+    <script src="auth-core.js"></script>
     <script src="auth.js"></script>
   </body>
 </html>
