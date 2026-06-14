@@ -1264,7 +1264,6 @@ function buildArticleDetailsContent(record) {
   const primaryPhotoSrc = primaryPhoto?.dataUrl || primaryPhoto;
   const primaryPhotoLabel = primaryPhoto?.name || record.name || 'Article';
 
-  // ✅ Toutes les clés avec quotes simples :
   const substituteLabels = joinRecordLabels(
     getArticleRecords('articles'),
     record.substituteIds,
@@ -1286,110 +1285,154 @@ function buildArticleDetailsContent(record) {
   const hasPhotos = Array.isArray(record.photos) && record.photos.length > 1;
   const hasTechSlide = hasCustomFields || hasPhotos;
 
-  return `
-    <div class="eq-detail-toggle-container" style="display:flex;justify-content:center;margin-bottom:32px;margin-top:10px">
-      <div style="width:100%;max-width:500px">
-        <div class="eq-detail-toggle-bar" style="height:14px;border:1.5px solid var(--border,#e2e8ef);border-radius:14px;position:relative;cursor:pointer;background:var(--card-bg,#ffffff);margin-bottom:10px;box-sizing:content-box">
-          <div class="eq-detail-toggle-thumb" style="position:absolute;top:-1.5px;left:-1.5px;height:calc(100% + 3px);width:calc(50% + 1.5px);background-color:var(--brand,#18a7bf);border-radius:14px;transition:transform 0.3s cubic-bezier(0.25,1,0.5,1)"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between">
-          <button type="button" class="eq-detail-tab active" data-tab="0" style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:var(--text-primary,#1a2533);cursor:pointer;transition:color 0.3s">Infos générales</button>
-          <button type="button" class="eq-detail-tab" data-tab="1" style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:var(--text-muted,#8fa0b0);cursor:pointer;transition:color 0.3s">Caractéristiques techniques</button>
-        </div>
-      </div>
-    </div>
+  const generalTab = buildMfDetailGrid([
+    [
+      buildMfDetailCard({
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        bodyHtml: `
+          ${buildMfDetailMediaBlock(primaryPhotoSrc, primaryPhotoLabel)}
+          ${buildMfDetailRows([
+            { label: "Code", value: record.code || "-" },
+            { label: "Nom", value: record.name || "-" },
+            { label: "Type d'article", value: record.articleType || "-" },
+            { label: "Marque", value: record.brand || "-" },
+            { label: "Unité de mesure", value: record.unitMeasure || "-" },
+            { label: "Prix", value: record.price ? String(record.price) : "-" },
+            { label: "Fournisseur", value: record.supplier || "-" },
+          ])}
+        `,
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-sitemap",
+        title: "Organisation",
+        rows: [
+          { label: "Groupe", value: group ? `${group.code} ${group.name}` : "-" },
+          { label: "Famille", value: family ? `${family.code} ${family.name}` : "-" },
+          ...(record.designations
+            ? [{ label: "Désignation", value: record.designations }]
+            : []),
+        ],
+      }),
+    ].join(""),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-link",
+      title: "Liaisons",
+      rows: [
+        { label: "Articles substituts", value: substituteLabels || "-" },
+        { label: "Organes liés", value: linkedOrganeLabels || "-" },
+        { label: "Équipements liés", value: linkedEquipmentLabels || "-" },
+      ],
+    }),
+  ]);
 
-    <div class="eq-detail-slider" data-active="0">
-
-      <!-- SLIDE 0 : Infos générales + Stock & Liaisons -->
-      <div class="eq-detail-slide" data-slide="0">
-        <div class="equipment-detail-layout">
-          <div class="equipment-detail-media">
-            <div class="equipment-detail-image">
-              ${primaryPhotoSrc
-      ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}">`
-      : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`
+  let technicalTab = buildMfDetailEmpty("Aucune caractéristique technique renseignée.", "fa-solid fa-circle-info");
+  if (hasTechSlide) {
+    const techParts = [];
+    if (hasCustomFields) {
+      techParts.push(
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-sliders",
+          title: "Caractéristiques spécifiques",
+          count: record.customFields.length,
+          rows: record.customFields.map((cf) => ({
+            label: cf.label,
+            value: cf.value || "-",
+          })),
+        }),
+      );
     }
-            </div>
-          </div>
-          <div class="equipment-detail-info">
-            <div class="equipment-detail-list">
-              <div class="equipment-detail-row"><span>CODE</span><strong>${escapeHtml(record.code) || '-'}</strong></div>
-              <div class="equipment-detail-row"><span>NOM</span><strong>${escapeHtml(record.name) || '-'}</strong></div>
-              <div class="equipment-detail-row"><span>TYPE D'ARTICLE</span><strong>${escapeHtml(record.articleType) || '-'}</strong></div>
-              <div class="equipment-detail-row"><span>MARQUE</span><strong>${escapeHtml(record.brand) || '-'}</strong></div>
-              <div class="equipment-detail-row"><span>UNITÉ DE MESURE</span><strong>${escapeHtml(record.unitMeasure) || '-'}</strong></div>
-              <div class="equipment-detail-row"><span>PRIX</span><strong>${record.price ? String(record.price) : '-'}</strong></div>
-              <div class="equipment-detail-row"><span>FOURNISSEUR</span><strong>${escapeHtml(record.supplier) || '-'}</strong></div>
-              <div class="equipment-detail-row"><span>GROUPE</span><strong>${escapeHtml(group ? `${group.code} ${group.name}` : '-')}</strong></div>
-              <div class="equipment-detail-row"><span>FAMILLE</span><strong>${escapeHtml(family ? `${family.code} ${family.name}` : '-')}</strong></div>
-              ${record.designations ? `<div class="equipment-detail-row" style="grid-column:1/-1"><span>DÉSIGNATION</span><strong>${escapeHtml(record.designations)}</strong></div>` : ''}
-              <div class="equipment-detail-row"><span>ARTICLES SUBSTITUTS</span><strong>${escapeHtml(substituteLabels) || '-'}</strong></div>
-              <div class="equipment-detail-row"><span>ORGANES LIÉS</span><strong>${escapeHtml(linkedOrganeLabels) || '-'}</strong></div>
-              <div class="equipment-detail-row"><span>ÉQUIPEMENTS LIÉS</span><strong>${escapeHtml(linkedEquipmentLabels) || '-'}</strong></div>
-            </div>
-          </div>
-        </div>
-      </div>
+    if (hasPhotos) {
+      techParts.push(
+        buildMfDetailCard({
+          icon: "fa-solid fa-images",
+          title: "Photos associées",
+          count: record.photos.length,
+          bodyHtml: `<div style="padding:12px 14px">${buildStoredAttachmentsPreview(record, { editable: false, showDocuments: true })}</div>`,
+        }),
+      );
+    }
+    technicalTab = techParts.join("");
+  }
 
-      <!-- SLIDE 1 : Caractéristiques techniques + Photos -->
-      <div class="eq-detail-slide" data-slide="1">
-        ${hasTechSlide ? `
-          ${hasCustomFields ? `
-            <div class="equipment-section-card">
-              <div class="equipment-section-head">
-                <div>
-                  <div class="equipment-section-kicker">Caractéristiques spécifiques</div>
-                  <h4>Champs personnalisés</h4>
-                </div>
-              </div>
-              <div class="equipment-detail-list">
-                ${record.customFields.map(cf => `
-                  <div class="equipment-detail-row"><span>${escapeHtml(cf.label)}</span><strong>${escapeHtml(cf.value) || '-'}</strong></div>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
-          ${hasPhotos ? `
-            <div class="equipment-section-card" style="margin-top:16px">
-              <div class="equipment-section-head">
-                <div><div class="equipment-section-kicker">Photos associées</div></div>
-              </div>
-              ${buildStoredAttachmentsPreview(record, { editable: false, showDocuments: true })}
-            </div>
-          ` : ''}
-        ` : `
-          <div class="equipment-detail-placeholder" style="padding:40px;text-align:center;color:var(--color-text-muted)">
-            <i class="fa-solid fa-circle-info" style="font-size:24px;margin-bottom:12px;opacity:0.5"></i><br>
-            Aucune caractéristique technique renseignée.
-          </div>
-        `}
-      </div>
-
-    </div>
-  `;
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      badges: [
+        { label: record.articleType || "-", className: "badge-info" },
+        { label: record.unitMeasure || "-", className: "badge-gray" },
+      ],
+      actions: [buildMfDetailEditAction('data-art-edit-from-details')],
+    })}
+    ${buildMfDetailTabSlider([
+      { label: "Infos générales", content: generalTab },
+      { label: "Caractéristiques techniques", content: technicalTab },
+    ])}
+  `);
 }
 
 function buildArticleGroupDetailsContent(record) {
-  return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
-      <div class="org-detail-item"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Désignations</span><strong>${record.designations || "Aucune désignation"}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Organes associés</span><strong>${joinRecordLabels(getOrganeRecords("organes"), record.associatedOrganeIds || [], (o) => `${o.code} — ${o.name}`)}</strong></div>
-    </div>
-  `;
+  const organeLabels = joinRecordLabels(
+    getOrganeRecords("organes"),
+    record.associatedOrganeIds || [],
+    (o) => `${o.code} — ${o.name}`,
+  );
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      actions: [buildMfDetailEditAction('data-art-edit-from-details')],
+    })}
+    ${buildMfDetailGrid([
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        rows: [
+          { label: "Code", value: record.code },
+          { label: "Nom", value: record.name },
+          { label: "Désignations", value: record.designations || "Aucune désignation" },
+        ],
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-link",
+        title: "Liaisons",
+        rows: [{ label: "Organes associés", value: organeLabels || "-" }],
+      }),
+    ])}
+  `);
 }
 
 function buildArticleFamilyDetailsContent(record) {
-  return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
-      <div class="org-detail-item"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item"><span>Groupe</span><strong>${getArticleRecord("groups", record.groupId) ? `${getArticleRecord("groups", record.groupId).code} — ${getArticleRecord("groups", record.groupId).name}` : "-"}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Désignations</span><strong>${record.designations || "Aucune désignation"}</strong></div>
-    </div>
-  `;
+  const group = getArticleRecord("groups", record.groupId);
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      actions: [buildMfDetailEditAction('data-art-edit-from-details')],
+    })}
+    ${buildMfDetailGrid([
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        rows: [
+          { label: "Code", value: record.code },
+          { label: "Nom", value: record.name },
+          { label: "Désignations", value: record.designations || "Aucune désignation" },
+        ],
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-sitemap",
+        title: "Organisation",
+        rows: [
+          {
+            label: "Groupe",
+            value: group ? `${group.code} — ${group.name}` : "-",
+          },
+        ],
+      }),
+    ])}
+  `);
 }
 
 function renderArticleGroupsPage() {
@@ -1864,6 +1907,13 @@ function attachArticlePageHandlers(pageKey) {
     });
   });
   initializeDetailSlider(modal);
+
+  bindMfDetailEditFromModal(modal, "[data-art-edit-from-details]", function () {
+    if (articleModalState?.recordId) {
+      openArticleModal(pageKey, "edit", articleModalState.recordId);
+    }
+  });
+
   const form = modal.querySelector("[data-art-form]");
   if (!form) return;
 
@@ -2761,17 +2811,36 @@ function buildUnitsFormContent(record, mode) {
 
 function buildUnitsDetailsContent(record) {
   const responsible = getOrganizationUser(record.responsibleUserId);
-  return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
-      <div class="org-detail-item"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item"><span>Localisations</span><strong>${record.locations || "-"}</strong></div>
-      <div class="org-detail-item"><span>Téléphone</span><strong>${record.phone || "-"}</strong></div>
-      <div class="org-detail-item"><span>Responsable</span><strong>${responsible ? responsible.name : "Non défini"}</strong></div>
-      <div class="org-detail-item"><span>Email</span><strong>${responsible ? responsible.email : "-"}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Description</span><strong>${record.description || "Aucune description"}</strong></div>
-    </div>
-  `;
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      actions: [buildMfDetailEditAction('data-org-edit-from-details')],
+    })}
+    ${buildMfDetailGrid([
+      [
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-circle-info",
+          title: "Identification",
+          rows: [
+            { label: "Code", value: record.code },
+            { label: "Nom", value: record.name },
+            { label: "Localisations", value: record.locations || "-" },
+            { label: "Description", value: record.description || "Aucune description" },
+          ],
+        }),
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-user",
+          title: "Responsable",
+          rows: [
+            { label: "Responsable", value: responsible ? responsible.name : "Non défini" },
+            { label: "Email", value: responsible ? responsible.email : "-" },
+            { label: "Téléphone", value: record.phone || "-" },
+          ],
+        }),
+      ].join(""),
+    ])}
+  `);
 }
 
 function renderDivisionsManagementPage() {
@@ -2952,16 +3021,44 @@ function buildDivisionsFormContent(record, mode) {
 
 function buildDivisionsDetailsContent(record) {
   const responsible = getOrganizationUser(record.responsibleUserId);
-  return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
-      <div class="org-detail-item"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Unités liées</span><strong>${joinNames(getOrganizationRecords("unites"), record.unitIds || [])}</strong></div>
-      <div class="org-detail-item"><span>Responsable</span><strong>${responsible ? responsible.name : "Non défini"}</strong></div>
-      <div class="org-detail-item"><span>Email</span><strong>${responsible ? responsible.email : "-"}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Description</span><strong>${record.description || "Aucune description"}</strong></div>
-    </div>
-  `;
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      actions: [buildMfDetailEditAction('data-org-edit-from-details')],
+    })}
+    ${buildMfDetailGrid([
+      [
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-circle-info",
+          title: "Identification",
+          rows: [
+            { label: "Code", value: record.code },
+            { label: "Nom", value: record.name },
+            { label: "Description", value: record.description || "Aucune description" },
+          ],
+        }),
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-sitemap",
+          title: "Organisation",
+          rows: [
+            {
+              label: "Unités liées",
+              value: joinNames(getOrganizationRecords("unites"), record.unitIds || []),
+            },
+          ],
+        }),
+      ].join(""),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-user",
+        title: "Responsable",
+        rows: [
+          { label: "Responsable", value: responsible ? responsible.name : "Non défini" },
+          { label: "Email", value: responsible ? responsible.email : "-" },
+        ],
+      }),
+    ])}
+  `);
 }
 
 function renderDepartmentServicesManagementPage() {
@@ -3154,16 +3251,44 @@ function buildDepartmentServicesFormContent(record, mode) {
 
 function buildDepartmentServicesDetailsContent(record) {
   const responsible = getOrganizationUser(record.responsibleUserId);
-  return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Unités liées</span><strong>${joinNames(getOrganizationRecords("unites"), record.unitIds || [])}</strong></div>
-      <div class="org-detail-item"><span>Responsable</span><strong>${responsible ? responsible.name : "Non défini"}</strong></div>
-      <div class="org-detail-item"><span>Email</span><strong>${responsible ? responsible.email : "-"}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Description</span><strong>${record.description || "Aucune description"}</strong></div>
-    </div>
-  `;
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      actions: [buildMfDetailEditAction('data-org-edit-from-details')],
+    })}
+    ${buildMfDetailGrid([
+      [
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-circle-info",
+          title: "Identification",
+          rows: [
+            { label: "Code", value: record.code },
+            { label: "Nom", value: record.name },
+            { label: "Description", value: record.description || "Aucune description" },
+          ],
+        }),
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-sitemap",
+          title: "Organisation",
+          rows: [
+            {
+              label: "Unités liées",
+              value: joinNames(getOrganizationRecords("unites"), record.unitIds || []),
+            },
+          ],
+        }),
+      ].join(""),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-user",
+        title: "Responsable",
+        rows: [
+          { label: "Responsable", value: responsible ? responsible.name : "Non défini" },
+          { label: "Email", value: responsible ? responsible.email : "-" },
+        ],
+      }),
+    ])}
+  `);
 }
 
 function attachOrganizationPageHandlers(pageKey) {
@@ -3253,6 +3378,13 @@ function attachOrganizationPageHandlers(pageKey) {
   });
   // ✅ AJOUT — Active le slider onglets comme dans Équipement
   initializeDetailSlider(modal);
+
+  bindMfDetailEditFromModal(modal, "[data-org-edit-from-details]", function () {
+    if (organizationModalState?.recordId) {
+      openOrganizationModal(pageKey, "edit", organizationModalState.recordId);
+    }
+  });
+
   const form = modal.querySelector("[data-org-form]");
   if (!form) return;
 
@@ -4011,6 +4143,231 @@ function getStatusBadgeClass(status) {
   return "badge-success";
 }
 
+// ============================================================
+//  MF DETAIL VIEW — Modèle réutilisable (réf. Plans de maintenance)
+// ============================================================
+
+function buildMfDetailShell(innerHtml) {
+  return `<div class="mf-details-shell">${innerHtml}</div>`;
+}
+
+function buildMfDetailHero({ ref = "", title = "", badges = [], actions = [] } = {}) {
+  const badgesHtml = badges
+    .map((badge) => {
+      if (!badge) return "";
+      if (typeof badge === "string") {
+        return `<span class="status-badge badge-gray">${escapeHtml(badge)}</span>`;
+      }
+      return `<span class="status-badge ${escapeHtml(badge.className || "badge-gray")}">${escapeHtml(badge.label || "")}</span>`;
+    })
+    .join("");
+
+  const actionsHtml = actions
+    .map((action) => {
+      if (!action) return "";
+      const variant = action.variant || "btn-outline";
+      const attrs = action.attrs || "";
+      const icon = action.icon
+        ? `<i class="${escapeHtml(action.icon)}"></i> `
+        : "";
+      return `<button type="button" class="btn ${variant}" ${attrs}>${icon}${escapeHtml(action.label || "")}</button>`;
+    })
+    .join("");
+
+  return `
+    <div class="mf-details-hero">
+      <div class="mf-details-hero-left">
+        ${ref ? `<span class="mf-details-ref">${escapeHtml(ref)}</span>` : ""}
+        <h2 class="mf-details-title">${escapeHtml(title)}</h2>
+        ${badgesHtml ? `<div class="mf-details-hero-badges">${badgesHtml}</div>` : ""}
+      </div>
+      ${actionsHtml ? `<div class="mf-details-hero-actions">${actionsHtml}</div>` : ""}
+    </div>
+  `;
+}
+
+function buildMfDetailGrid(columns) {
+  if (typeof columns === "string") {
+    return `<div class="mf-details-grid">${columns}</div>`;
+  }
+  return `<div class="mf-details-grid">${columns.map((column) => `<div class="mf-details-col">${column}</div>`).join("")}</div>`;
+}
+
+function buildMfDetailCard({ icon = "fa-solid fa-circle-info", title = "", count, bodyHtml = "", extraClass = "" } = {}) {
+  const countHtml =
+    count !== undefined && count !== null
+      ? `<span class="mf-details-count">${escapeHtml(String(count))}</span>`
+      : "";
+  return `
+    <div class="mf-details-card ${extraClass}">
+      <div class="mf-details-card-header">
+        <i class="${icon}"></i>
+        <span>${escapeHtml(title)}</span>
+        ${countHtml}
+      </div>
+      ${bodyHtml}
+    </div>
+  `;
+}
+
+function buildMfDetailRows(rows = []) {
+  return `<div class="mf-details-rows">${rows
+    .map((row) => {
+      const valueClass = row.accent
+        ? "mf-details-value mf-details-value--accent"
+        : "mf-details-value";
+      const valueContent =
+        row.valueHtml !== undefined
+          ? row.valueHtml
+          : `<strong class="${valueClass}">${escapeHtml(row.value ?? "-")}</strong>`;
+      return `
+        <div class="mf-details-row">
+          <span class="mf-details-label">${escapeHtml(row.label)}</span>
+          ${valueContent}
+        </div>`;
+    })
+    .join("")}</div>`;
+}
+
+function buildMfDetailEmpty(message, icon = "fa-regular fa-circle-xmark") {
+  return `<p class="mf-details-empty"><i class="${icon}"></i> ${escapeHtml(message)}</p>`;
+}
+
+function buildMfDetailTaskList(items = []) {
+  if (!items.length) {
+    return buildMfDetailEmpty("Aucun élément");
+  }
+  return `
+    <ol class="mf-details-task-list">
+      ${items
+        .map(
+          (item, index) => `
+        <li class="mf-details-task-item">
+          <span class="mf-details-task-num">${index + 1}</span>
+          <span class="mf-details-task-text">${escapeHtml(item)}</span>
+        </li>`,
+        )
+        .join("")}
+    </ol>`;
+}
+
+function buildMfDetailChipList(items = [], variant = "article") {
+  if (!items.length) {
+    return buildMfDetailEmpty(
+      variant === "safety" ? "Aucune consigne" : "Aucun élément",
+    );
+  }
+  const chipClass =
+    variant === "safety" ? "mf-details-safety-badge" : "mf-details-article-chip";
+  const listClass =
+    variant === "safety" ? "mf-details-safety-list" : "mf-details-articles-list";
+  const icon =
+    variant === "safety" ? "fa-solid fa-triangle-exclamation" : "fa-solid fa-cube";
+  return `
+    <div class="${listClass}">
+      ${items
+        .map(
+          (item) => `
+        <span class="${chipClass}">
+          <i class="${icon}"></i> ${escapeHtml(item)}
+        </span>`,
+        )
+        .join("")}
+    </div>`;
+}
+
+function buildMfDetailEditAction(dataAttr) {
+  return {
+    label: "Modifier",
+    variant: "btn-primary",
+    icon: "fa-solid fa-pen-to-square",
+    attrs: dataAttr,
+  };
+}
+
+function buildMfDetailPrintAction(dataAttr, label = "Imprimer") {
+  return {
+    label,
+    variant: "btn-outline",
+    icon: "fa-solid fa-print",
+    attrs: dataAttr,
+  };
+}
+
+function buildMfDetailTabSlider(tabs = []) {
+  const safeTabs = tabs.length ? tabs : [{ label: "Détails", content: "" }];
+  return `
+    <div class="eq-detail-toggle-container" style="display:flex;justify-content:center;margin-bottom:24px;margin-top:4px">
+      <div style="width:100%;max-width:500px">
+        <div class="eq-detail-toggle-bar" style="height:14px;border:1.5px solid var(--border,#e2e8ef);border-radius:14px;position:relative;cursor:pointer;background:var(--card-bg,#ffffff);margin-bottom:10px;box-sizing:content-box">
+          <div class="eq-detail-toggle-thumb" style="position:absolute;top:-1.5px;left:-1.5px;height:calc(100% + 3px);width:calc(${100 / safeTabs.length}% + 1.5px);background-color:var(--brand,#18a7bf);border-radius:14px;transition:transform 0.3s cubic-bezier(0.25,1,0.5,1)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          ${safeTabs
+            .map(
+              (tab, index) => `
+            <button type="button" class="eq-detail-tab${index === 0 ? " active" : ""}" data-tab="${index}"
+              style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:${index === 0 ? "var(--text-primary,#1a2533)" : "var(--text-muted,#8fa0b0)"};cursor:pointer;transition:color 0.3s">
+              ${escapeHtml(tab.label)}
+            </button>`,
+            )
+            .join("")}
+        </div>
+      </div>
+    </div>
+    <div class="eq-detail-slider" data-active="0">
+      ${safeTabs
+        .map(
+          (tab, index) => `
+        <div class="eq-detail-slide" data-slide="${index}">
+          ${tab.content}
+        </div>`,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function buildMfDetailMediaBlock(photoSrc, photoLabel) {
+  return `
+    <div class="mf-details-card-media">
+      <div class="equipment-detail-image">
+        ${
+          photoSrc
+            ? `<img src="${photoSrc}" alt="${escapeHtml(photoLabel)}">`
+            : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+function buildMfDetailRowsFromPairs(pairs = []) {
+  return buildMfDetailRows(
+    pairs.map(([label, value]) => ({
+      label,
+      value:
+        value === null || value === undefined || value === ""
+          ? "-"
+          : value,
+    })),
+  );
+}
+
+function buildMfDetailCardSection({ icon = "fa-solid fa-circle-info", title = "", count, rows = [] }) {
+  return buildMfDetailCard({
+    icon,
+    title,
+    count,
+    bodyHtml: buildMfDetailRows(rows),
+  });
+}
+
+function bindMfDetailEditFromModal(modal, selector, onEdit) {
+  const button = modal?.querySelector(selector);
+  if (button) button.addEventListener("click", onEdit);
+}
+
 function readEquipmentFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -4396,17 +4753,52 @@ function buildGroupEquipmentDetailsContent(record) {
   const linkedEquipments = directory.equipments.filter(
     (equipment) => equipment.groupId === record.id,
   );
+  const departmentLabels = joinRecordLabels(
+    getOrganizationRecords("departmentServices"),
+    record.departmentIds || [],
+    (department) => `${department.code} — ${department.name}`,
+  );
 
-  return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
-      <div class="org-detail-item"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Désignations</span><strong>${record.designations || "Aucune désignation"}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Départements associés</span><strong>${joinRecordLabels(getOrganizationRecords("departmentServices"), record.departmentIds || [], (department) => `${department.code} — ${department.name}`)}</strong></div>
-      <div class="org-detail-item"><span>Familles liées</span><strong>${linkedFamilies.length}</strong></div>
-      <div class="org-detail-item"><span>Équipements liés</span><strong>${linkedEquipments.length}</strong></div>
-    </div>
-  `;
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      badges: [
+        { label: `${linkedFamilies.length} famille${linkedFamilies.length !== 1 ? "s" : ""}`, className: "badge-info" },
+        { label: `${linkedEquipments.length} équipement${linkedEquipments.length !== 1 ? "s" : ""}`, className: "badge-gray" },
+      ],
+      actions: [buildMfDetailEditAction('data-eq-edit-from-details')],
+    })}
+    ${buildMfDetailGrid([
+      [
+        buildMfDetailCard({
+          icon: "fa-solid fa-circle-info",
+          title: "Identification",
+          bodyHtml: buildMfDetailRows([
+            { label: "Code", value: record.code },
+            { label: "Nom", value: record.name },
+            { label: "Désignations", value: record.designations || "Aucune désignation" },
+          ]),
+        }),
+        buildMfDetailCard({
+          icon: "fa-solid fa-sitemap",
+          title: "Organisation",
+          bodyHtml: buildMfDetailRows([
+            { label: "Départements associés", value: departmentLabels || "-" },
+          ]),
+        }),
+      ].join(""),
+      buildMfDetailCard({
+        icon: "fa-solid fa-link",
+        title: "Liaisons",
+        count: linkedFamilies.length + linkedEquipments.length,
+        bodyHtml: buildMfDetailRows([
+          { label: "Familles liées", value: String(linkedFamilies.length) },
+          { label: "Équipements liés", value: String(linkedEquipments.length) },
+        ]),
+      }),
+    ])}
+  `);
 }
 
 function renderGroupEquipmentPage() {
@@ -4584,17 +4976,53 @@ function buildFamilyEquipmentDetailsContent(record) {
     (equipment) => equipment.familyId === record.id,
   );
   const group = getEquipmentRecord("groups", record.groupId);
+  const familyState = linkedEquipments.length
+    ? "Utilisée par le parc"
+    : "Famille disponible";
 
-  return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
-      <div class="org-detail-item"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item"><span>Groupe associé</span><strong>${group ? `${group.code} — ${group.name}` : "Aucune sélection"}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Désignations</span><strong>${record.designations || "Aucune désignation"}</strong></div>
-      <div class="org-detail-item"><span>Équipements liés</span><strong>${linkedEquipments.length}</strong></div>
-      <div class="org-detail-item"><span>État</span><strong>${linkedEquipments.length ? "Utilisée par le parc" : "Famille disponible"}</strong></div>
-    </div>
-  `;
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      badges: [
+        { label: familyState, className: linkedEquipments.length ? "badge-success" : "badge-gray" },
+        { label: `${linkedEquipments.length} équipement${linkedEquipments.length !== 1 ? "s" : ""}`, className: "badge-info" },
+      ],
+      actions: [buildMfDetailEditAction('data-eq-edit-from-details')],
+    })}
+    ${buildMfDetailGrid([
+      [
+        buildMfDetailCard({
+          icon: "fa-solid fa-circle-info",
+          title: "Identification",
+          bodyHtml: buildMfDetailRows([
+            { label: "Code", value: record.code },
+            { label: "Nom", value: record.name },
+            { label: "Désignations", value: record.designations || "Aucune désignation" },
+          ]),
+        }),
+        buildMfDetailCard({
+          icon: "fa-solid fa-layer-group",
+          title: "Organisation",
+          bodyHtml: buildMfDetailRows([
+            {
+              label: "Groupe associé",
+              value: group ? `${group.code} — ${group.name}` : "Aucune sélection",
+            },
+            { label: "État", value: familyState },
+          ]),
+        }),
+      ].join(""),
+      buildMfDetailCard({
+        icon: "fa-solid fa-link",
+        title: "Liaisons",
+        count: linkedEquipments.length,
+        bodyHtml: buildMfDetailRows([
+          { label: "Équipements liés", value: String(linkedEquipments.length) },
+        ]),
+      }),
+    ])}
+  `);
 }
 
 function renderFamilyEquipmentPage() {
@@ -5137,88 +5565,116 @@ function buildEquipmentDetailsContent(record) {
     (article) => `${article.code} — ${article.name}`,
   );
 
-  return `
-  <div class="eq-detail-toggle-container" style="display: flex; justify-content: center; margin-bottom: 32px; margin-top: 10px;">
-    <div style="width: 100%; max-width: 500px;">
-      <!-- Barre visuelle -->
-      <div class="eq-detail-toggle-bar" style="height: 14px; border: 1.5px solid var(--border, #e2e8ef); border-radius: 14px; position: relative; cursor: pointer; background: var(--card-bg, #ffffff); margin-bottom: 10px; box-sizing: content-box;">
-        <div class="eq-detail-toggle-thumb" style="position: absolute; top: -1.5px; left: -1.5px; height: calc(100% + 3px); width: calc(50% + 1.5px); background-color: var(--brand, #18a7bf); border-radius: 14px; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);"></div>
-      </div>
-      <!-- Boutons textes -->
-      <div style="display: flex; justify-content: space-between;">
-        <button type="button" class="eq-detail-tab active" data-tab="0" style="flex: 1; text-align: center; background: none; border: none; font-size: 15px; font-weight: 500; color: var(--text-primary, #1a2533); cursor: pointer; transition: color 0.3s;">Infos générales</button>
-        <button type="button" class="eq-detail-tab" data-tab="1" style="flex: 1; text-align: center; background: none; border: none; font-size: 15px; font-weight: 500; color: var(--text-muted, #8fa0b0); cursor: pointer; transition: color 0.3s;">Caractéristiques techniques</button>
-      </div>
-    </div>
-  </div>
+  const hasTechFields =
+    record.energyType ||
+    record.power ||
+    record.voltage ||
+    record.frequency ||
+    record.pressure ||
+    record.speed ||
+    record.capacity ||
+    record.dimensions ||
+    record.weight ||
+    record.tempMin ||
+    record.tempMax ||
+    record.controlType ||
+    (Array.isArray(record.customFields) && record.customFields.length > 0);
 
-  <div class="eq-detail-slider" data-active="0">
-    <div class="eq-detail-slide" data-slide="0">
-      <div class="equipment-detail-layout">
-        <div class="equipment-detail-media">
-          <div class="equipment-detail-image">
-            ${primaryPhotoSrc
-      ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}">`
-      : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`
-    }
-          </div>
-        </div>
-        <div class="equipment-detail-info">
-          <div class="equipment-detail-list">
-            <div class="equipment-detail-row"><span>Code</span><strong>${record.code}</strong></div>
-            <div class="equipment-detail-row"><span>N° de série</span><strong>${record.serialNumber || '-'}</strong></div>
-            <div class="equipment-detail-row"><span>Nom</span><strong>${record.name}</strong></div>
-            <div class="equipment-detail-row"><span>Marque</span><strong>${record.brand || '-'}</strong></div>
-            <div class="equipment-detail-row"><span>Criticité</span><strong>${record.criticality || '-'}</strong></div>
-            <div class="equipment-detail-row"><span>État</span><strong>${record.status || '-'}</strong></div>
-            <div class="equipment-detail-row"><span>Groupe</span><strong>${group ? group.code + ' ' + group.name : 'Aucune sélection'}</strong></div>
-            <div class="equipment-detail-row"><span>Famille</span><strong>${family ? family.code + ' ' + family.name : 'Aucune sélection'}</strong></div>
-            <div class="equipment-detail-row"><span>Organes liés</span><strong>${linkedOrganeLabels}</strong></div>
-            <div class="equipment-detail-row"><span>Articles liés</span><strong>${linkedArticleLabels}</strong></div>
-          </div>
-        </div>
-      </div>
-    </div>
+  const techRows = [];
+  if (record.energyType) techRows.push({ label: "Type d'énergie", value: record.energyType });
+  if (record.power) techRows.push({ label: "Puissance", value: record.power });
+  if (record.voltage) techRows.push({ label: "Tension", value: record.voltage });
+  if (record.frequency) techRows.push({ label: "Fréquence", value: record.frequency });
+  if (record.pressure) techRows.push({ label: "Pression de service", value: record.pressure });
+  if (record.speed) techRows.push({ label: "Vitesse nominale", value: record.speed });
+  if (record.capacity) techRows.push({ label: "Capacité / Débit", value: record.capacity });
+  if (record.dimensions) techRows.push({ label: "Dimensions", value: record.dimensions });
+  if (record.weight) techRows.push({ label: "Poids", value: `${record.weight} kg` });
+  if (record.tempMin || record.tempMax) {
+    techRows.push({
+      label: "Température fonct.",
+      value: `${record.tempMin ?? "?"}°C → ${record.tempMax ?? "?"}°C`,
+    });
+  }
+  if (record.controlType) techRows.push({ label: "Type de commande", value: record.controlType });
+  if (Array.isArray(record.customFields) && record.customFields.length > 0) {
+    record.customFields.forEach((cf) => {
+      techRows.push({ label: cf.label, value: cf.value || "-" });
+    });
+  }
 
-    <div class="eq-detail-slide" data-slide="1">
-      ${(record.energyType || record.power || record.voltage || record.frequency || record.pressure || record.speed || record.capacity || record.dimensions || record.weight || record.tempMin || record.tempMax || record.controlType || (Array.isArray(record.customFields) && record.customFields.length > 0)) ? `
-      <div class="equipment-section-card">
-        <div class="equipment-section-head">
-          <div>
-            <div class="equipment-section-kicker">Caractéristiques techniques</div>
-            <h4>Données techniques de l'équipement</h4>
-            <p>Type d'énergie, puissance, dimensions et paramètres de fonctionnement.</p>
-          </div>
-        </div>
-        <div class="equipment-detail-list">
-          ${record.energyType ? `<div class="equipment-detail-row"><span>Type d'énergie</span><strong>${record.energyType}</strong></div>` : ''}
-          ${record.power ? `<div class="equipment-detail-row"><span>Puissance</span><strong>${record.power}</strong></div>` : ''}
-          ${record.voltage ? `<div class="equipment-detail-row"><span>Tension</span><strong>${record.voltage}</strong></div>` : ''}
-          ${record.frequency ? `<div class="equipment-detail-row"><span>Fréquence</span><strong>${record.frequency}</strong></div>` : ''}
-          ${record.pressure ? `<div class="equipment-detail-row"><span>Pression de service</span><strong>${record.pressure}</strong></div>` : ''}
-          ${record.speed ? `<div class="equipment-detail-row"><span>Vitesse nominale</span><strong>${record.speed}</strong></div>` : ''}
-          ${record.capacity ? `<div class="equipment-detail-row"><span>Capacité / Débit</span><strong>${record.capacity}</strong></div>` : ''}
-          ${record.dimensions ? `<div class="equipment-detail-row"><span>Dimensions</span><strong>${record.dimensions}</strong></div>` : ''}
-          ${record.weight ? `<div class="equipment-detail-row"><span>Poids</span><strong>${record.weight} kg</strong></div>` : ''}
-          ${(record.tempMin || record.tempMax) ? `<div class="equipment-detail-row"><span>Température fonct.</span><strong>${record.tempMin ?? '?'}°C → ${record.tempMax ?? '?'}°C</strong></div>` : ''}
-          ${record.controlType ? `<div class="equipment-detail-row"><span>Type de commande</span><strong>${record.controlType}</strong></div>` : ''}
-          ${Array.isArray(record.customFields) && record.customFields.length > 0 ? `
-            <div class="equipment-detail-row" style="grid-column:1/-1"><span style="font-weight:600">Caractéristiques spécifiques</span></div>
-            ${record.customFields.map(cf => `
-              <div class="equipment-detail-row"><span>${escapeHtml(cf.label)}</span><strong>${escapeHtml(cf.value) || '-'}</strong></div>
-            `).join('')}
-          ` : ''}
-        </div>
-      </div>
-      ` : `
-      <div class="equipment-detail-placeholder" style="padding: 40px; text-align: center; color: var(--color-text-muted);">
-        <i class="fa-solid fa-circle-info" style="font-size: 24px; margin-bottom: 12px; opacity: 0.5;"></i><br>
-        Aucune caractéristique technique renseignée.
-      </div>
-      `}
-    </div>
-  </div>
-`;
+  const generalTab = buildMfDetailGrid([
+    [
+      buildMfDetailCard({
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        bodyHtml: `
+          ${buildMfDetailMediaBlock(primaryPhotoSrc, primaryPhotoLabel)}
+          ${buildMfDetailRows([
+            { label: "Code", value: record.code },
+            { label: "N° de série", value: record.serialNumber || "-" },
+            { label: "Nom", value: record.name },
+            { label: "Marque", value: record.brand || "-" },
+            {
+              label: "Criticité",
+              valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>`,
+            },
+            {
+              label: "État",
+              valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>`,
+            },
+          ])}
+        `,
+      }),
+      buildMfDetailCard({
+        icon: "fa-solid fa-sitemap",
+        title: "Organisation",
+        bodyHtml: buildMfDetailRows([
+          {
+            label: "Groupe",
+            value: group ? `${group.code} ${group.name}` : "Aucune sélection",
+          },
+          {
+            label: "Famille",
+            value: family ? `${family.code} ${family.name}` : "Aucune sélection",
+          },
+        ]),
+      }),
+    ].join(""),
+    buildMfDetailCard({
+      icon: "fa-solid fa-link",
+      title: "Liaisons",
+      bodyHtml: buildMfDetailRows([
+        { label: "Organes liés", value: linkedOrganeLabels || "-" },
+        { label: "Articles liés", value: linkedArticleLabels || "-" },
+      ]),
+    }),
+  ]);
+
+  const technicalTab = hasTechFields
+    ? buildMfDetailCard({
+        icon: "fa-solid fa-gears",
+        title: "Caractéristiques techniques",
+        count: techRows.length,
+        bodyHtml: buildMfDetailRows(techRows),
+      })
+    : buildMfDetailEmpty("Aucune caractéristique technique renseignée.", "fa-solid fa-circle-info");
+
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      badges: [
+        { label: record.status || "-", className: getStatusBadgeClass(record.status) },
+        { label: record.criticality || "-", className: getCriticalityBadgeClass(record.criticality) },
+      ],
+      actions: [buildMfDetailEditAction('data-eq-edit-from-details')],
+    })}
+    ${buildMfDetailTabSlider([
+      { label: "Infos générales", content: generalTab },
+      { label: "Caractéristiques techniques", content: technicalTab },
+    ])}
+  `);
 }
 
 function renderEquipmentPage(subpageKey) {
@@ -5511,6 +5967,13 @@ function attachEquipmentPageHandlers(pageKey) {
         setActiveTab(index);
       });
     }
+  }
+
+  const editFromDetailsBtn = modal.querySelector("[data-eq-edit-from-details]");
+  if (editFromDetailsBtn && equipmentModalState?.recordId) {
+    editFromDetailsBtn.addEventListener("click", function () {
+      openEquipmentModal(pageKey, "edit", equipmentModalState.recordId);
+    });
   }
 
   modal.querySelectorAll("[data-org-close]").forEach((button) => {
@@ -6168,17 +6631,50 @@ function buildOrganeGroupDetailsContent(record) {
   const linkedOrganes = directory.organes.filter(
     (item) => item.groupId === record.id,
   );
+  const equipmentLabels = joinRecordLabels(
+    getEquipmentRecords("equipments"),
+    record.associatedEquipmentIds || [],
+    (equipment) => `${equipment.code} — ${equipment.name}`,
+  );
 
-  return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
-      <div class="org-detail-item"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Désignations</span><strong>${record.designations || "Aucune désignation"}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Équipements associés</span><strong>${joinRecordLabels(getEquipmentRecords("equipments"), record.associatedEquipmentIds || [], (equipment) => `${equipment.code} — ${equipment.name}`)}</strong></div>
-      <div class="org-detail-item"><span>Familles liées</span><strong>${linkedFamilies.length}</strong></div>
-      <div class="org-detail-item"><span>Organes liés</span><strong>${linkedOrganes.length}</strong></div>
-    </div>
-  `;
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      badges: [
+        { label: `${linkedFamilies.length} famille${linkedFamilies.length !== 1 ? "s" : ""}`, className: "badge-info" },
+        { label: `${linkedOrganes.length} organe${linkedOrganes.length !== 1 ? "s" : ""}`, className: "badge-gray" },
+      ],
+      actions: [buildMfDetailEditAction('data-og-edit-from-details')],
+    })}
+    ${buildMfDetailGrid([
+      [
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-circle-info",
+          title: "Identification",
+          rows: [
+            { label: "Code", value: record.code },
+            { label: "Nom", value: record.name },
+            { label: "Désignations", value: record.designations || "Aucune désignation" },
+          ],
+        }),
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-sitemap",
+          title: "Organisation",
+          rows: [{ label: "Équipements associés", value: equipmentLabels || "-" }],
+        }),
+      ].join(""),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-link",
+        title: "Liaisons",
+        count: linkedFamilies.length + linkedOrganes.length,
+        rows: [
+          { label: "Familles liées", value: String(linkedFamilies.length) },
+          { label: "Organes liés", value: String(linkedOrganes.length) },
+        ],
+      }),
+    ])}
+  `);
 }
 
 function renderOrganeGroupsPage() {
@@ -6343,21 +6839,53 @@ function buildOrganeFamilyFormContent(record, mode) {
 }
 
 function buildOrganeFamilyDetailsContent(record) {
-  const group = getOrganeRecord("groups", record.groupId);
   const linkedOrganes = getOrganeRecords("organes").filter(
     (item) => item.familyId === record.id,
   );
+  const group = getOrganeRecord("groups", record.groupId);
+  const familyState = linkedOrganes.length ? "Utilisée" : "Disponible";
 
-  return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Code</span><strong>${record.code}</strong></div>
-      <div class="org-detail-item"><span>Nom</span><strong>${record.name}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Désignations</span><strong>${record.designations || "Aucune désignation"}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Groupe associé</span><strong>${group ? `${group.code} — ${group.name}` : "Aucune sélection"}</strong></div>
-      <div class="org-detail-item"><span>Organes liés</span><strong>${linkedOrganes.length}</strong></div>
-      <div class="org-detail-item"><span>Statut</span><strong>${linkedOrganes.length ? "Utilisée" : "Disponible"}</strong></div>
-    </div>
-  `;
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      badges: [
+        { label: familyState, className: linkedOrganes.length ? "badge-success" : "badge-gray" },
+        { label: `${linkedOrganes.length} organe${linkedOrganes.length !== 1 ? "s" : ""}`, className: "badge-info" },
+      ],
+      actions: [buildMfDetailEditAction('data-og-edit-from-details')],
+    })}
+    ${buildMfDetailGrid([
+      [
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-circle-info",
+          title: "Identification",
+          rows: [
+            { label: "Code", value: record.code },
+            { label: "Nom", value: record.name },
+            { label: "Désignations", value: record.designations || "Aucune désignation" },
+          ],
+        }),
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-layer-group",
+          title: "Organisation",
+          rows: [
+            {
+              label: "Groupe associé",
+              value: group ? `${group.code} — ${group.name}` : "Aucune sélection",
+            },
+            { label: "Statut", value: familyState },
+          ],
+        }),
+      ].join(""),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-link",
+        title: "Liaisons",
+        count: linkedOrganes.length,
+        rows: [{ label: "Organes liés", value: String(linkedOrganes.length) }],
+      }),
+    ])}
+  `);
 }
 
 function renderOrganeFamiliesPage() {
@@ -6800,112 +7328,99 @@ function buildOrganeDetailsContent(record) {
     article => `${article.code} — ${article.name}`
   );
 
-  // Détecter si des caractéristiques techniques existent
-  const hasTech = [
-    record.innerDiameter, record.outerDiameter, record.mainDimension,
-    record.material, record.staticLoad, record.dynamicLoad, record.maxSpeed,
-    record.tempMin, record.tempMax, record.lubricationType,
-    record.pressureRating, record.estimatedLife, record.precisionClass,
-    record.nominalTorque, record.manufacturerStandard, record.fluidCompatibility,
-  ].some(Boolean) || (Array.isArray(record.customFields) && record.customFields.length > 0);
+  const techRows = [];
+  if (record.innerDiameter) techRows.push({ label: "Diamètre intérieur", value: `${record.innerDiameter} mm` });
+  if (record.outerDiameter) techRows.push({ label: "Diamètre extérieur", value: `${record.outerDiameter} mm` });
+  if (record.mainDimension) techRows.push({ label: "Largeur / Longueur", value: `${record.mainDimension} mm` });
+  if (record.material) techRows.push({ label: "Matériau", value: record.material });
+  if (record.staticLoad) techRows.push({ label: "Charge statique", value: record.staticLoad });
+  if (record.dynamicLoad) techRows.push({ label: "Charge dynamique", value: record.dynamicLoad });
+  if (record.maxSpeed) techRows.push({ label: "Vitesse maximale", value: `${record.maxSpeed} tr/min` });
+  if (record.tempMin || record.tempMax) {
+    techRows.push({
+      label: "Température fonct.",
+      value: `${record.tempMin ?? "?"}°C → ${record.tempMax ?? "?"}°C`,
+    });
+  }
+  if (record.lubricationType) techRows.push({ label: "Lubrification", value: record.lubricationType });
+  if (record.pressureRating) techRows.push({ label: "Pression admissible", value: `${record.pressureRating} bar` });
+  if (record.estimatedLife) techRows.push({ label: "Durée de vie estimée", value: record.estimatedLife });
+  if (record.precisionClass) techRows.push({ label: "Précision / Classe", value: record.precisionClass });
+  if (record.nominalTorque) techRows.push({ label: "Couple nominal", value: `${record.nominalTorque} Nm` });
+  if (record.manufacturerStandard) techRows.push({ label: "Norme constructeur", value: record.manufacturerStandard });
+  if (record.fluidCompatibility) techRows.push({ label: "Compatibilité fluide", value: record.fluidCompatibility });
+  if (Array.isArray(record.customFields)) {
+    record.customFields.forEach((cf) => {
+      techRows.push({ label: cf.label, value: cf.value || "-" });
+    });
+  }
 
-  return `
-    <div class="eq-detail-toggle-container" style="display:flex;justify-content:center;margin-bottom:32px;margin-top:10px">
-      <div style="width:100%;max-width:500px">
-        <div class="eq-detail-toggle-bar" style="height:14px;border:1.5px solid var(--border,#e2e8ef);border-radius:14px;position:relative;cursor:pointer;background:var(--card-bg,#ffffff);margin-bottom:10px;box-sizing:content-box">
-          <div class="eq-detail-toggle-thumb" style="position:absolute;top:-1.5px;left:-1.5px;height:calc(100% + 3px);width:calc(50% + 1.5px);background-color:var(--brand,#18a7bf);border-radius:14px;transition:transform 0.3s cubic-bezier(0.25,1,0.5,1)"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between">
-          <button type="button" class="eq-detail-tab active" data-tab="0"
-            style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:var(--text-primary,#1a2533);cursor:pointer;transition:color 0.3s">
-            Infos générales
-          </button>
-          <button type="button" class="eq-detail-tab" data-tab="1"
-            style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:var(--text-muted,#8fa0b0);cursor:pointer;transition:color 0.3s">
-            Caractéristiques techniques
-          </button>
-        </div>
-      </div>
-    </div>
+  const generalTab = buildMfDetailGrid([
+    [
+      buildMfDetailCard({
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        bodyHtml: `
+          ${buildMfDetailMediaBlock(primaryPhotoSrc, primaryPhotoLabel)}
+          ${buildMfDetailRows([
+            { label: "Code", value: record.code || "-" },
+            { label: "Nom", value: record.name || "-" },
+            { label: "Marque", value: record.brand || "-" },
+            { label: "N° de série", value: record.serialNumber || "-" },
+            {
+              label: "Criticité",
+              valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>`,
+            },
+            {
+              label: "État",
+              valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>`,
+            },
+          ])}
+        `,
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-sitemap",
+        title: "Organisation",
+        rows: [
+          { label: "Groupe", value: group ? `${group.code} ${group.name}` : "-" },
+          { label: "Famille", value: family ? `${family.code} ${family.name}` : "-" },
+        ],
+      }),
+    ].join(""),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-link",
+      title: "Liaisons",
+      rows: [
+        { label: "Équipements liés", value: linkedEquipmentLabels || "-" },
+        { label: "Articles liés", value: linkedArticleLabels || "-" },
+      ],
+    }),
+  ]);
 
-    <div class="eq-detail-slider" data-active="0">
+  const technicalTab = techRows.length
+    ? buildMfDetailCardSection({
+        icon: "fa-solid fa-gears",
+        title: "Caractéristiques techniques",
+        count: techRows.length,
+        rows: techRows,
+      })
+    : buildMfDetailEmpty("Aucune caractéristique technique renseignée.", "fa-solid fa-circle-info");
 
-      <!-- SLIDE 0 — Infos générales -->
-      <div class="eq-detail-slide" data-slide="0">
-        <div class="equipment-detail-layout">
-          <div class="equipment-detail-media">
-            <div class="equipment-detail-image">
-              ${primaryPhotoSrc
-      ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}" />`
-      : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`
-    }
-            </div>
-          </div>
-          <div class="equipment-detail-info">
-            <div class="equipment-detail-list">
-              <div class="equipment-detail-row"><span>CODE</span><strong>${escapeHtml(record.code || '-')}</strong></div>
-              <div class="equipment-detail-row"><span>NOM</span><strong>${escapeHtml(record.name || '-')}</strong></div>
-              <div class="equipment-detail-row"><span>MARQUE</span><strong>${escapeHtml(record.brand || '-')}</strong></div>
-              <div class="equipment-detail-row"><span>N° DE SÉRIE</span><strong>${escapeHtml(record.serialNumber || '-')}</strong></div>
-              <div class="equipment-detail-row"><span>CRITICITÉ</span><strong>${escapeHtml(record.criticality || '-')}</strong></div>
-              <div class="equipment-detail-row"><span>ÉTAT</span><strong>${escapeHtml(record.status || '-')}</strong></div>
-              <div class="equipment-detail-row"><span>GROUPE</span><strong>${escapeHtml(group ? `${group.code} ${group.name}` : '-')}</strong></div>
-              <div class="equipment-detail-row"><span>FAMILLE</span><strong>${escapeHtml(family ? `${family.code} ${family.name}` : '-')}</strong></div>
-              <div class="equipment-detail-row"><span>ÉQUIPEMENTS LIÉS</span><strong>${escapeHtml(linkedEquipmentLabels || '-')}</strong></div>
-              <div class="equipment-detail-row"><span>ARTICLES LIÉS</span><strong>${escapeHtml(linkedArticleLabels || '-')}</strong></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SLIDE 1 — Caractéristiques techniques -->
-      <div class="eq-detail-slide" data-slide="1">
-        ${hasTech ? `
-        <div class="equipment-section-card">
-          <div class="equipment-section-head">
-            <div>
-              <div class="equipment-section-kicker">Caractéristiques techniques</div>
-              <h4>Données techniques de l'organe</h4>
-              <p>Dimensions, matériau, charges admissibles et conditions de fonctionnement.</p>
-            </div>
-          </div>
-          <div class="equipment-detail-list">
-            ${record.innerDiameter ? `<div class="equipment-detail-row"><span>DIAMÈTRE INTÉRIEUR</span><strong>${escapeHtml(record.innerDiameter)} mm</strong></div>` : ''}
-            ${record.outerDiameter ? `<div class="equipment-detail-row"><span>DIAMÈTRE EXTÉRIEUR</span><strong>${escapeHtml(record.outerDiameter)} mm</strong></div>` : ''}
-            ${record.mainDimension ? `<div class="equipment-detail-row"><span>LARGEUR / LONGUEUR</span><strong>${escapeHtml(record.mainDimension)} mm</strong></div>` : ''}
-            ${record.material ? `<div class="equipment-detail-row"><span>MATÉRIAU</span><strong>${escapeHtml(record.material)}</strong></div>` : ''}
-            ${record.staticLoad ? `<div class="equipment-detail-row"><span>CHARGE STATIQUE</span><strong>${escapeHtml(record.staticLoad)}</strong></div>` : ''}
-            ${record.dynamicLoad ? `<div class="equipment-detail-row"><span>CHARGE DYNAMIQUE</span><strong>${escapeHtml(record.dynamicLoad)}</strong></div>` : ''}
-            ${record.maxSpeed ? `<div class="equipment-detail-row"><span>VITESSE MAXIMALE</span><strong>${escapeHtml(record.maxSpeed)} tr/min</strong></div>` : ''}
-            ${record.tempMin || record.tempMax ? `<div class="equipment-detail-row"><span>TEMPÉRATURE FONCT.</span><strong>${record.tempMin ?? '?'}°C → ${record.tempMax ?? '?'}°C</strong></div>` : ''}
-            ${record.lubricationType ? `<div class="equipment-detail-row"><span>LUBRIFICATION</span><strong>${escapeHtml(record.lubricationType)}</strong></div>` : ''}
-            ${record.pressureRating ? `<div class="equipment-detail-row"><span>PRESSION ADMISSIBLE</span><strong>${escapeHtml(record.pressureRating)} bar</strong></div>` : ''}
-            ${record.estimatedLife ? `<div class="equipment-detail-row"><span>DURÉE DE VIE ESTIMÉE</span><strong>${escapeHtml(record.estimatedLife)}</strong></div>` : ''}
-            ${record.precisionClass ? `<div class="equipment-detail-row"><span>PRÉCISION / CLASSE</span><strong>${escapeHtml(record.precisionClass)}</strong></div>` : ''}
-            ${record.nominalTorque ? `<div class="equipment-detail-row"><span>COUPLE NOMINAL</span><strong>${escapeHtml(record.nominalTorque)} Nm</strong></div>` : ''}
-            ${record.manufacturerStandard ? `<div class="equipment-detail-row"><span>NORME CONSTRUCTEUR</span><strong>${escapeHtml(record.manufacturerStandard)}</strong></div>` : ''}
-            ${record.fluidCompatibility ? `<div class="equipment-detail-row"><span>COMPATIBILITÉ FLUIDE</span><strong>${escapeHtml(record.fluidCompatibility)}</strong></div>` : ''}
-            ${Array.isArray(record.customFields) && record.customFields.length > 0 ? `
-              <div class="equipment-detail-row" style="grid-column:1/-1">
-                <span style="font-weight:600">CARACTÉRISTIQUES SPÉCIFIQUES</span>
-              </div>
-              ${record.customFields.map(cf => `
-                <div class="equipment-detail-row">
-                  <span>${escapeHtml(cf.label)}</span>
-                  <strong>${escapeHtml(cf.value || '-')}</strong>
-                </div>
-              `).join('')}
-            ` : ''}
-          </div>
-        </div>` : `
-        <div class="equipment-detail-placeholder" style="padding:40px;text-align:center;color:var(--color-text-muted)">
-          <i class="fa-solid fa-circle-info" style="font-size:24px;margin-bottom:12px;opacity:0.5"></i><br>
-          Aucune caractéristique technique renseignée.
-        </div>`}
-      </div>
-
-    </div>
-  `;
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.code,
+      title: record.name,
+      badges: [
+        { label: record.status || "-", className: getStatusBadgeClass(record.status) },
+        { label: record.criticality || "-", className: getCriticalityBadgeClass(record.criticality) },
+      ],
+      actions: [buildMfDetailEditAction('data-og-edit-from-details')],
+    })}
+    ${buildMfDetailTabSlider([
+      { label: "Infos générales", content: generalTab },
+      { label: "Caractéristiques techniques", content: technicalTab },
+    ])}
+  `);
 }
 
 function renderOrganeItemsPage() {
@@ -7144,6 +7659,12 @@ function attachOrganePageHandlers(pageKey) {
   if (!modal) return;
 
   initializeDetailSlider(modal);
+
+  bindMfDetailEditFromModal(modal, "[data-og-edit-from-details]", function () {
+    if (organeModalState?.recordId) {
+      openOrganeModal(pageKey, "edit", organeModalState.recordId);
+    }
+  });
 
   modal.querySelectorAll("[data-org-close]").forEach((button) => {
     button.addEventListener("click", function () {
@@ -7990,7 +8511,7 @@ const administrationUiText = {
       arborescence: ["Tree", "Assets and locations structure"],
       organisation: ["Organization", "Structure of the company and teams"],
       equipements: ["Equipment", "Equipment catalog and tracking"],
-      organe: ["Component", "Component and sub-assembly management"],
+      organe: ["Organe", "Organe and sub-assembly management"],
       articles: ["Items", "Item and consumables reference"],
       planification: ["Planning", "Plans, calendar and counters"],
       stock: ["Stock", "Stock settings, movements and inventory"],
@@ -8343,8 +8864,8 @@ const englishInterfaceTranslations = new Map(
     Organisation: "Organization",
     "\u00c9quipements": "Equipment",
     Equipements: "Equipment",
-    Organe: "Component",
-    Organes: "Components",
+    Organe: "Organ",
+    Organes: "Organs",
     Articles: "Items",
     Planification: "Planning",
     Interventions: "interventions",
@@ -8461,7 +8982,7 @@ const englishInterfaceTranslations = new Map(
     "Ajouter une division": "Add division",
     "Ajouter un d\u00e9partement": "Add department",
     "Ajouter un \u00e9quipement": "Add equipment",
-    "Ajouter un organe": "Add component",
+    "Ajouter un organe": "Add organ",
     "Ajouter un article": "Add item",
     "Ajouter le logo": "Add logo",
     "Aucune photo disponible": "No photo available",
@@ -8486,8 +9007,8 @@ const englishInterfaceTranslations = new Map(
     "Code entreprise": "Company code",
     "Code \u00e9quipement": "Equipment code",
     "Nom \u00e9quipement": "Equipment name",
-    "Code organe": "Component code",
-    "Nom organe": "Component name",
+    "Code organe": "Organ code",
+    "Nom organe": "Organ name",
     "Code article": "Item code",
     "N\u00b0 s\u00e9rie": "Serial no.",
     "Prix d'achat": "Purchase price",
@@ -8507,13 +9028,13 @@ const englishInterfaceTranslations = new Map(
     "Liste des divisions": "Division list",
     "Liste des d\u00e9partements": "Department list",
     "Liste des \u00e9quipements": "Equipment list",
-    "Liste des organes": "Component list",
+    "Liste des organes": "Organ list",
     "Liste des articles": "Item list",
     "Liste des groupes": "Group list",
     "Liste des familles": "Family list",
     "R\u00e9f\u00e9rentiel organisation": "Organization directory",
     "R\u00e9f\u00e9rentiel \u00e9quipement": "Equipment directory",
-    "R\u00e9f\u00e9rentiel organe": "Component directory",
+    "R\u00e9f\u00e9rentiel organe": "Organ directory",
     "R\u00e9f\u00e9rentiel article": "Item directory",
     "Mouvements de stock": "Stock movements",
     "Entr\u00e9e stock": "Stock entry",
@@ -8567,11 +9088,11 @@ const englishInterfaceTranslations = new Map(
     "Status op\u00e9rationnel": "Operational status",
     "Nouvel \u00e9quipement": "New equipment",
     "Nouvel equipment": "New equipment",
-    "Nouvel organe": "New component",
-    "Nouvel component": "New component",
+    "Nouvel organe": "New Organ",
+    "Nouvel component": "New organ",
     "Nouvelle famille": "New family",
     "Nouvelle famille \u00e9quipement": "New equipment family",
-    "Nouvelle famille organe": "New component family",
+    "Nouvelle famille organe": "New organ family",
     "\u00c9l\u00e9ments r\u00e9f\u00e9renc\u00e9s": "Referenced items",
     "Elements r\u00e9f\u00e9renc\u00e9s": "Referenced items",
     "D\u00e9partements uniquement": "Departments only",
@@ -8585,8 +9106,8 @@ const englishInterfaceTranslations = new Map(
     "Familles reli\u00e9es \u00e0 un groupe": "Families linked to a group",
     "Rattachements actifs": "Active assignments",
     "Articles r\u00e9f\u00e9renc\u00e9s": "Referenced items",
-    "Components r\u00e9f\u00e9renc\u00e9s": "Referenced components",
-    "Organes r\u00e9f\u00e9renc\u00e9s": "Referenced components",
+    "Components r\u00e9f\u00e9renc\u00e9s": "Referenced organs",
+    "Organes r\u00e9f\u00e9renc\u00e9s": "Referenced organs",
     "Le formulaire est d\u00e9coup\u00e9 entre les champs principaux et les informations compl\u00e9mentaires pour simplifier la saisie.":
       "The form is split between main fields and additional information to simplify data entry.",
     "The formulaire is d\u00e9coup\u00e9 between the fields principaux and the information":
@@ -8607,14 +9128,14 @@ const englishInterfacePatterns = [
   [/^Cr\u00e9er un BT depuis (.+)$/i, "Create a WT from $1"],
   [/^Transformer en OT$/i, "Convert to WO"],
   [/^1 familles\s*·\s*1 \u00e9quipements$/i, "1 family · 1 equipment"],
-  [/^1 familles\s*·\s*1 organes$/i, "1 family · 1 component"],
+  [/^1 familles\s*·\s*1 organes$/i, "1 family · 1 organ"],
   [/^1 familles$/i, "1 family"],
-  [/^1 organes$/i, "1 component"],
+  [/^1 organes$/i, "1 organ"],
   [/^(\d+) familles\s*·\s*(\d+) \u00e9quipements$/i, "$1 families · $2 equipment"],
-  [/^(\d+) familles\s*·\s*(\d+) organes$/i, "$1 families · $2 components"],
+  [/^(\d+) familles\s*·\s*(\d+) organes$/i, "$1 families · $2 organs"],
   [/^(\d+) familles$/i, "$1 families"],
   [/^(\d+) \u00e9quipements$/i, "$1 equipment"],
-  [/^(\d+) organes$/i, "$1 components"],
+  [/^(\d+) organes$/i, "$1 organs"],
   [/^Liste des (.+)$/i, "List of $1"],
   [/^Cr\u00e9\u00e9 le (.+)$/i, "Created on $1"],
   [/^Derni\u00e8re connexion (.+)$/i, "Last login $1"],
@@ -8631,7 +9152,7 @@ const englishInterfacePatterns = [
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.":
-      "Hold Ctrl or Cmd to select multiple components.",
+      "Hold Ctrl or Cmd to select multiple organs.",
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.":
       "Hold Ctrl or Cmd to select multiple equipment items.",
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs départements.":
@@ -8641,9 +9162,9 @@ const englishInterfacePhraseTranslations = new Map(
     "Saisissez les informations du nouvel article.":
       "Enter the information of the new item.",
     "Saisissez les informations du nouvel organe.":
-      "Enter the information of the new component.",
+      "Enter the information of the new organ.",
     "Saisissez les informations du nouveau groupe organe.":
-      "Enter the information of the new group component.",
+      "Enter the information of the new group organ.",
     "Saisissez les informations du nouvel équipement":
       "Enter the information of the new equipment",
     "Saisissez les informations de la nouvelle famille":
@@ -8668,7 +9189,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Catalogue et suivi des \u00e9quipements":
       "Equipment catalog and tracking",
     "Gestion des organes et sous-ensembles":
-      "Component and subassembly management",
+      "organ and subassembly management",
     "R\u00e9f\u00e9rentiel des articles et consommables":
       "Item and consumables directory",
     "Param\u00e9trage du stock, mouvements et inventaire":
@@ -8694,7 +9215,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Configuration globale du logiciel, des alertes et de la num\u00e9rotation automatique.":
       "Global software, alert and automatic numbering configuration.",
     "Ajoutez les fichiers de r\u00e9f\u00e9rence de l'organe.":
-      "Add the component reference files.",
+      "Add the organ reference files.",
     "D\u00e9finir qui peut faire quoi dans chaque module, avec une matrice \u00e9ditable par r\u00f4le.":
       "Define who can do what in each module, with an editable matrix by role.",
     "Choisissez un r\u00f4le, puis modifiez ses permissions via des boutons \u00e0 \u00e9tat.":
@@ -8719,9 +9240,9 @@ const englishInterfacePhraseTranslations = new Map(
     "Chaque famille d\u00e9pend d\u2019un groupe et pr\u00e9pare la cr\u00e9ation des fiches \u00e9quipements.":
       "Each family belongs to a group and supports equipment record creation.",
     "Chaque groupe organe peut \u00eatre associ\u00e9 \u00e0 plusieurs \u00e9quipements.":
-      "Each component group can be linked to multiple equipment records.",
+      "Each organ group can be linked to multiple equipment records.",
     "Chaque famille organe est rattach\u00e9e \u00e0 un groupe organe.":
-      "Each component family belongs to a component group.",
+      "Each organ family belongs to a organ group.",
     "Gestion des groupes d'\u00e9quipements avec affectation multi-divisions.":
       "Manage equipment groups assigned to multiple divisions.",
     "Gestion des familles d'\u00e9quipements rattach\u00e9es \u00e0 un groupe.":
@@ -8729,11 +9250,11 @@ const englishInterfacePhraseTranslations = new Map(
     "Liste des \u00e9quipements avec fiche d\u00e9taill\u00e9e et formulaire en plusieurs sections.":
       "Equipment list with detailed records and a multi-section form.",
     "Gestion des groupes d'organes avec association multi-\u00e9quipements.":
-      "Manage component groups associated with multiple equipment records.",
+      "Manage organ groups associated with multiple equipment records.",
     "Gestion des familles d'organes rattach\u00e9es \u00e0 un groupe.":
-      "Manage component families assigned to a group.",
+      "Manage organ families assigned to a group.",
     "Liste des organes avec formulaire complet et pi\u00e8ces jointes.":
-      "Component list with a complete form and attachments.",
+      "organs list with a complete form and attachments.",
     "R\u00e9f\u00e9rentiel des plans, d\u00e9clenchements et gammes op\u00e9ratoires.":
       "Directory of plans, triggers and operating procedures.",
     "Vue des OT planifi\u00e9s, en cours et en retard sur plusieurs horizons.":
@@ -8770,10 +9291,10 @@ const englishInterfacePhraseTranslations = new Map(
     "Famille \u00e9quipement": "Equipment family",
     "Groupes \u00e9quipement": "Equipment groups",
     "Familles \u00e9quipement": "Equipment families",
-    "Groupe organe": "Component group",
-    "Famille organe": "Component family",
-    "Groupes organes": "Component groups",
-    "Familles organes": "Component families",
+    "Groupe organe": "organ group",
+    "Famille organe": "organ family",
+    "Groupes organes": "organ groups",
+    "Familles organes": "organ families",
     "Groupes articles": "Item groups",
     "Familles articles": "Item families",
     "Arborescence hi\u00e9rarchique": "Hierarchical asset tree",
@@ -8833,7 +9354,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Plan li\u00e9": "Linked plan",
     "Document li\u00e9": "Linked document",
     "\u00c9quipement li\u00e9": "Linked equipment",
-    "Organe li\u00e9": "Linked component",
+    "Organe li\u00e9": "Linked organ",
     "Adresse compl\u00e8te": "Full address",
     "Adresse de livraison": "Delivery address",
     "Nom commercial": "Trading name",
@@ -9068,7 +9589,7 @@ const englishInterfacePhraseTranslations = new Map(
     "BC re\u00e7us complets": "Fully received PO",
     "Nom ou r\u00e9f\u00e9rence article": "Item name or reference",
     "Cr\u00e9ation, validation et transformation en OT avec \u00e9quipements, organes et demandeur li\u00e9s au r\u00e9f\u00e9rentiel.":
-      "Create, approve and convert to WO with equipment, components and requester linked to the directory.",
+      "Create, approve and convert to WO with equipment, organs and requester linked to the directory.",
     "Vue consolid\u00e9e des DI, OT et BT avec filtres et export Excel / PDF.":
       "Consolidated WR, WO and WRP view with filters and Excel / PDF export.",
     "Total DI": "Total WR",
@@ -9115,16 +9636,16 @@ const englishInterfacePhraseTranslations = new Map(
     "Demandes d'intervention (DI)":
       "Work Request (WR)",
     "Substituts, organes et équipements associés":
-      "Substitutes, components and linked equipment",
+      "Substitutes, organs and linked equipment",
     "Associez les articles de remplacement, les organes et équipements liés à cet article.":
-      "Link replacement items, components and equipment to this item.",
+      "Link replacement items, organs and equipment to this item.",
     "Organes et articles associés":
-      "Linked components and items",
+      "Linked organs and items",
     "Associez les organes et articles déjà créés à cet équipement.":
-      "Link existing components and items to this equipment.",
-    "Organes associés": "Linked components",
-    "Organes liés": "Linked components",
-    "Organe / Composant": "Component",
+      "Link existing organs and items to this equipment.",
+    "Organes associés": "Linked organs",
+    "Organes liés": "Linked organs",
+    "Organe / Composant": "organ",
     "Système de gestion de maintenance": "Maintenance management system",
     "Document généré automatiquement": "Automatically generated document",
     "Imprimer / Enregistrer PDF": "Print / Save PDF",
@@ -9433,11 +9954,11 @@ const englishInterfacePhraseTranslations = new Map(
     "Unités actives": "Active units",
     "Email chargé automatiquement": "Email loaded automatically",
     "Référentiel organisation": "Organization directory",
-    "Sous-pages organes": "Component subpages",
+    "Sous-pages organes": "organs subpages",
     "Référentiel des groupes, familles et organes.":
-      "Directory of groups, families and components.",
+      "Directory of groups, families and organs.",
     "familles ·": "families ·",
-    "organes": "components",
+    "organes": "organs",
     "Planifié": "Scheduled",
     "En cours": "In progress",
     "Clôturé": "Closed",
@@ -9793,8 +10314,8 @@ const englishInterfaceWordTranslations = new Map(
     observations: "observations",
     op\u00e9rations: "operations",
     optionnel: "optional",
-    organe: "component",
-    organes: "components",
+    organe: "organ",
+    organes: "organs",
     origine: "source",
     panne: "failure",
     param\u00e8tres: "settings",
@@ -10593,37 +11114,65 @@ function renderAdministrationUserDetailsModal(user) {
 
   const enterprise = getEnterpriseProfile();
   const bodyHtml = `
-    <div class="admin-user-detail-modal">
-      <div class="admin-user-detail-hero">
-        <div class="admin-user-avatar admin-user-detail-avatar">
-          ${buildAdministrationPhotoMarkup(user)}
+    ${buildMfDetailShell(`
+      ${buildMfDetailHero({
+        ref: user.code,
+        title: getAdministrationUserFullName(user),
+        badges: [
+          { label: user.role, className: "badge-info" },
+          { label: user.status, className: user.status === "Actif" ? "badge-success" : "badge-gray" },
+        ],
+      })}
+      <div class="mf-details-grid">
+        <div class="mf-details-col">
+          ${buildMfDetailCard({
+            icon: "fa-solid fa-user",
+            title: "Profil",
+            bodyHtml: `
+              <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border-light)">
+                <div class="admin-user-avatar admin-user-detail-avatar">${buildAdministrationPhotoMarkup(user)}</div>
+                <div>
+                  <div style="font-size:13px;font-weight:700">${escapeHtml(getAdministrationUserFullName(user))}</div>
+                  <div style="font-size:12px;color:var(--text-muted)">${escapeHtml(user.role)} · ${escapeHtml(user.functionTitle)}</div>
+                </div>
+              </div>
+              ${buildMfDetailRows([
+                { label: "Nom d'utilisateur", value: user.username },
+                { label: "Email", value: user.email },
+                { label: "Téléphone", value: user.phone || "-" },
+              ])}
+            `,
+          })}
         </div>
-        <div>
-          <div class="admin-user-detail-code">${escapeHtml(user.code)}</div>
-          <h4>${escapeHtml(getAdministrationUserFullName(user))}</h4>
-          <p>${escapeHtml(user.role)} · ${escapeHtml(user.functionTitle)}</p>
+        <div class="mf-details-col">
+          ${buildMfDetailCardSection({
+            icon: "fa-solid fa-sitemap",
+            title: "Organisation",
+            rows: [
+              { label: "Unité", value: user.unit || "Non renseigné" },
+              { label: "Division", value: user.division || "Non renseigné" },
+              { label: "Département", value: user.department || "Non renseigné" },
+              { label: "Code entreprise associé", value: user.companyCode || enterprise.code || "ORG-001" },
+            ],
+          })}
+          ${buildMfDetailCardSection({
+            icon: "fa-solid fa-gear",
+            title: "Préférences & activité",
+            rows: [
+              { label: "Langue", value: user.language || "-" },
+              { label: "Fuseau horaire", value: user.timezone || "-" },
+              { label: "Date création", value: formatAdministrationDateTime(user.createdAt) },
+              { label: "Dernière connexion", value: formatAdministrationDateTime(user.lastLogin) },
+            ],
+          })}
         </div>
       </div>
-      <div class="org-detail-grid">
-        <div class="org-detail-item"><span>Nom d'utilisateur</span><strong>${escapeHtml(user.username)}</strong></div>
-        <div class="org-detail-item"><span>Email</span><strong>${escapeHtml(user.email)}</strong></div>
-        <div class="org-detail-item"><span>Téléphone</span><strong>${escapeHtml(user.phone || "-")}</strong></div>
-        <div class="org-detail-item"><span>Unité</span><strong>${escapeHtml(user.unit || "Non renseigné")}</strong></div>
-        <div class="org-detail-item"><span>Division</span><strong>${escapeHtml(user.division || "Non renseigné")}</strong></div>
-        <div class="org-detail-item"><span>Département</span><strong>${escapeHtml(user.department || "Non renseigné")}</strong></div>
-        <div class="org-detail-item"><span>Langue</span><strong>${escapeHtml(user.language || "-")}</strong></div>
-        <div class="org-detail-item"><span>Fuseau horaire</span><strong>${escapeHtml(user.timezone || "-")}</strong></div>
-        <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(user.status)}</strong></div>
-        <div class="org-detail-item"><span>Date création</span><strong>${formatAdministrationDateTime(user.createdAt)}</strong></div>
-        <div class="org-detail-item"><span>Dernière connexion</span><strong>${formatAdministrationDateTime(user.lastLogin)}</strong></div>
-        <div class="org-detail-item"><span>Code entreprise associé</span><strong>${escapeHtml(user.companyCode || enterprise.code || "ORG-001")}</strong></div>
-      </div>
-      <div class="org-modal-actions">
-        <button class="btn btn-primary" type="button" data-admin-user-close="true">
-          <i class="fa-solid fa-check"></i>
-          <span>Fermer</span>
-        </button>
-      </div>
+    `)}
+    <div class="org-modal-actions">
+      <button class="btn btn-primary" type="button" data-admin-user-close="true">
+        <i class="fa-solid fa-check"></i>
+        <span>Fermer</span>
+      </button>
     </div>
   `;
 
@@ -14336,36 +14885,61 @@ function openStockRecordDetails(recordKey) {
   }
 
   const article = getArticleRecord("articles", record.articleId);
-
-  const totalValue =
-    (Number(record.currentQuantity) || 0) * (Number(record.pmp) || 0);
+  const riskLabel = getStockRecordRiskLabel(record);
   const bodyHtml = `
-    <div class="stock-detail-grid">
-      <div class="org-detail-list">
-        <div class="org-detail-item"><span>Article</span><strong>${escapeHtml(article ? `${article.code} — ${article.name}` : record.articleId || "-")}</strong></div>
-        <div class="org-detail-item"><span>Quantité</span><strong>${escapeHtml(record.currentQuantity)}</strong></div>
-        <div class="org-detail-item"><span>PMP</span><strong>${formatStockNumber(record.pmp)} DA</strong></div>
-        <div class="org-detail-item"><span>Prix article</span><strong>${formatStockNumber(record.articlePrice ?? 0)} DA</strong></div>
-        <div class="org-detail-item"><span>Prix total catalogue</span><strong>${formatStockNumber((record.currentQuantity ?? 0) * (record.articlePrice ?? 0))} DA</strong></div>
-        <div class="org-detail-item"><span>Minimum</span><strong>${escapeHtml(record.minStock)}</strong></div>
-        <div class="org-detail-item"><span>Sécurité</span><strong>${escapeHtml(record.safetyStock)}</strong></div>
-        <div class="org-detail-item"><span>Réapprovisionnement</span><strong>${escapeHtml(record.replenishmentQty)}</strong></div>
-        <div class="org-detail-item"><span>Emplacement</span><strong>${escapeHtml(record.locationLabel || "-")}</strong></div>
-        <div class="org-detail-item"><span>État</span><strong>${getStockRecordRiskLabel(record)}</strong></div>
-      </div>
-      <div class="stock-modal-notes">
-        <strong>Observations</strong>
-        <p>${escapeHtml(record.observations || "Aucune observation")}</p>
-      </div>
+    ${buildMfDetailShell(`
+      ${buildMfDetailHero({
+        ref: article ? article.code : record.articleId,
+        title: article ? article.name : "Fiche stock",
+        badges: [{ label: riskLabel, className: riskLabel.includes("critique") || riskLabel.includes("rupture") ? "badge-danger" : "badge-info" }],
+        actions: [{
+          label: "Imprimer",
+          variant: "btn-outline",
+          icon: "fa-solid fa-print",
+          attrs: `onclick="printFicheStock('${escapeHtml(recordKey)}')"`,
+        }],
+      })}
+      ${buildMfDetailGrid([
+        [
+          buildMfDetailCardSection({
+            icon: "fa-solid fa-boxes-stacked",
+            title: "Stock",
+            rows: [
+              {
+                label: "Article",
+                value: article ? `${article.code} — ${article.name}` : record.articleId || "-",
+              },
+              { label: "Quantité", value: record.currentQuantity },
+              { label: "PMP", value: `${formatStockNumber(record.pmp)} DA` },
+              { label: "Prix article", value: `${formatStockNumber(record.articlePrice ?? 0)} DA` },
+              {
+                label: "Prix total catalogue",
+                value: `${formatStockNumber((record.currentQuantity ?? 0) * (record.articlePrice ?? 0))} DA`,
+              },
+            ],
+          }),
+          buildMfDetailCardSection({
+            icon: "fa-solid fa-chart-line",
+            title: "Seuils",
+            rows: [
+              { label: "Minimum", value: record.minStock },
+              { label: "Sécurité", value: record.safetyStock },
+              { label: "Réapprovisionnement", value: record.replenishmentQty },
+              { label: "Emplacement", value: record.locationLabel || "-" },
+              { label: "État", value: riskLabel },
+            ],
+          }),
+        ].join(""),
+        buildMfDetailCard({
+          icon: "fa-solid fa-note-sticky",
+          title: "Observations",
+          bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(record.observations || "Aucune observation")}</p></div></div>`,
+        }),
+      ])}
+    `)}
+    <div class="org-modal-actions">
+      <button class="btn btn-outline" type="button" data-stock-closetrue>Fermer</button>
     </div>
-     <div class="org-modal-actions">
-    <button class="btn btn-outline" type="button" 
-            onclick="printFicheStock('${escapeHtml(recordKey)}')" 
-            style="display:inline-flex;align-items:center;gap:6px;">
-      <i class="fa-solid fa-print"></i> Imprimer
-    </button>
-    <button class="btn btn-outline" type="button" data-stock-closetrue>Fermer</button>
-  </div>
   `;
 
   renderStockModal(
@@ -14731,84 +15305,58 @@ function renderStockMovementDetails(movement) {
   );
 
   const bodyHtml = `
-    <div class="org-detail-list">
-
-      <div class="org-detail-item">
-        <span>Référence</span>
-        <strong>${escapeHtml(movement.id || "-")}</strong>
-      </div>
-
-      <div class="org-detail-item">
-        <span>Article</span>
-        <strong>
-          ${escapeHtml(
-    article
-      ? `${article.code} — ${article.name}`
-      : movement.articleId || "-",
-  )}
-        </strong>
-      </div>
-
-      <div class="org-detail-item">
-        <span>Type</span>
-        <strong>
-          ${escapeHtml(getStockMovementTypeLabel(movement.type))}
-        </strong>
-      </div>
-
-      <div class="org-detail-item">
-        <span>Quantité</span>
-        <strong>
-          ${escapeHtml(movement.quantity || 0)}
-        </strong>
-      </div>
-
-      <div class="org-detail-item">
-        <span>Magasin source</span>
-        <strong>
-          ${escapeHtml(
-    sourceLocation
-      ? `${sourceLocation.code} - ${sourceLocation.name}`
-      : "-",
-  )}
-        </strong>
-      </div>
-
-      <div class="org-detail-item">
-        <span>Magasin destination</span>
-        <strong>
-          ${escapeHtml(
-    destinationLocation
-      ? `${destinationLocation.code} - ${destinationLocation.name}`
-      : "-",
-  )}
-        </strong>
-      </div>
-
-      <div class="org-detail-item">
-        <span>Pièce jointe</span>
-        <strong>
-          ${escapeHtml(movement.attachmentName || "Aucune pièce jointe")}
-        </strong>
-      </div>
-
-      <div class="org-detail-item org-detail-item--full">
-        <span>Observations</span>
-        <strong>
-          ${escapeHtml(movement.observations || "Aucune observation")}
-        </strong>
-      </div>
-
-    </div>
-
+    ${buildMfDetailShell(`
+      ${buildMfDetailHero({
+        ref: movement.id || "-",
+        title: getStockMovementTypeLabel(movement.type),
+        badges: [{ label: String(movement.quantity || 0), className: "badge-info" }],
+      })}
+      ${buildMfDetailGrid([
+        [
+          buildMfDetailCardSection({
+            icon: "fa-solid fa-circle-info",
+            title: "Identification",
+            rows: [
+              { label: "Référence", value: movement.id || "-" },
+              {
+                label: "Article",
+                value: article
+                  ? `${article.code} — ${article.name}`
+                  : movement.articleId || "-",
+              },
+              { label: "Type", value: getStockMovementTypeLabel(movement.type) },
+              { label: "Quantité", value: movement.quantity || 0 },
+            ],
+          }),
+          buildMfDetailCardSection({
+            icon: "fa-solid fa-warehouse",
+            title: "Magasins",
+            rows: [
+              {
+                label: "Magasin source",
+                value: sourceLocation
+                  ? `${sourceLocation.code} - ${sourceLocation.name}`
+                  : "-",
+              },
+              {
+                label: "Magasin destination",
+                value: destinationLocation
+                  ? `${destinationLocation.code} - ${destinationLocation.name}`
+                  : "-",
+              },
+              { label: "Pièce jointe", value: movement.attachmentName || "Aucune pièce jointe" },
+            ],
+          }),
+        ].join(""),
+        buildMfDetailCard({
+          icon: "fa-solid fa-note-sticky",
+          title: "Observations",
+          bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(movement.observations || "Aucune observation")}</p></div></div>`,
+        }),
+      ])}
+    `)}
     <div class="org-modal-actions">
-      <button
-        class="btn btn-outline"
-        type="button"
-        data-stock-close="true"
-      >
-        Fermer
-      </button>
+      <button class="btn btn-outline" type="button" data-stock-close="true">Fermer</button>
     </div>
   `;
 
@@ -15287,18 +15835,41 @@ function renderStockInventoryRowDetails(row) {
     Number(row.querySelector("[data-stock-inventory-counted]")?.value || 0) ||
     0;
   const discrepancy = counted - theoretical;
+  const statusLabel = discrepancy === 0 ? "Validé" : "À vérifier";
   renderStockModal(
     `Détail inventaire ${article ? article.code : ""}`.trim(),
     "Détail de la ligne d'inventaire sélectionnée.",
     `
-      <div class="org-detail-list">
-        <div class="org-detail-item"><span>Article</span><strong>${escapeHtml(article ? `${article.code} — ${article.name}` : row.dataset.articleId || "-")}</strong></div>
-        <div class="org-detail-item"><span>Emplacement</span><strong>${escapeHtml(row.dataset.locationLabel || "-")}</strong></div>
-        <div class="org-detail-item"><span>Théorique</span><strong>${escapeHtml(theoretical)}</strong></div>
-        <div class="org-detail-item"><span>Comptée</span><strong>${escapeHtml(counted)}</strong></div>
-        <div class="org-detail-item"><span>Écart</span><strong>${discrepancy > 0 ? `+${discrepancy}` : discrepancy}</strong></div>
-        <div class="org-detail-item"><span>Statut</span><strong>${discrepancy === 0 ? "Validé" : "À vérifier"}</strong></div>
-      </div>
+      ${buildMfDetailShell(`
+        ${buildMfDetailHero({
+          ref: article ? article.code : row.dataset.articleId || "-",
+          title: article ? article.name : "Ligne inventaire",
+          badges: [{
+            label: statusLabel,
+            className: discrepancy === 0 ? "badge-success" : "badge-warning",
+          }],
+        })}
+        ${buildMfDetailCardSection({
+          icon: "fa-solid fa-clipboard-check",
+          title: "Comptage",
+          rows: [
+            {
+              label: "Article",
+              value: article
+                ? `${article.code} — ${article.name}`
+                : row.dataset.articleId || "-",
+            },
+            { label: "Emplacement", value: row.dataset.locationLabel || "-" },
+            { label: "Théorique", value: theoretical },
+            { label: "Comptée", value: counted },
+            {
+              label: "Écart",
+              value: discrepancy > 0 ? `+${discrepancy}` : discrepancy,
+            },
+            { label: "Statut", value: statusLabel },
+          ],
+        })}
+      `)}
       <div class="org-modal-actions">
         <button class="btn btn-outline" type="button" data-stock-close="true">Fermer</button>
       </div>
@@ -15366,44 +15937,82 @@ function openStockInventoryDetails(inventoryId) {
     `Inventaire ${escapeHtml(inventory.id)}`,
     "Détails et résultats de l'inventaire sélectionné.",
     `
-      <div class="stock-inventory-details-grid">
-        <div class="stock-summary-item"><span>Type</span><strong>${escapeHtml(inventory.type || "-")}</strong></div>
-        <div class="stock-summary-item"><span>Responsable</span><strong>${escapeHtml(inventory.owner || "-")}</strong></div>
-        <div class="stock-summary-item"><span>Statut</span><strong>${escapeHtml(inventory.status || "-")}</strong></div>
-        <div class="stock-summary-item"><span>Créé le</span><strong>${inventory.createdAt ? formatStockDateTime(new Date(inventory.createdAt)) : "-"}</strong></div>
-        <div class="stock-summary-item"><span>Lignes</span><strong>${rows.length}</strong></div>
-        <div class="stock-summary-item"><span>Écarts ouverts</span><strong>${openCount}</strong></div>
-        <div class="stock-summary-item"><span>Surstocks</span><strong>${positiveCount}</strong></div>
-        <div class="stock-summary-item"><span>Manquants</span><strong>${negativeCount}</strong></div>
-      </div>
-      <div class="stock-modal-notes">
-        <strong>Observations</strong>
-        <p>${escapeHtml(inventory.observations || "Aucune observation.")}</p>
-      </div>
-      <div class="table-wrap stock-count-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Article</th>
-              <th>Emplacement</th>
-              <th>Théorique</th>
-              <th>Comptée</th>
-              <th>Écart</th>
-              <th>Statut</th>
-              <th>Observations</th>
-            </tr>
-          </thead>
-          <tbody>${rowsMarkup}</tbody>
-        </table>
+      ${buildMfDetailShell(`
+        ${buildMfDetailHero({
+          ref: inventory.id,
+          title: inventory.type || "Inventaire",
+          badges: [
+            { label: inventory.status || "-", className: "badge-info" },
+            { label: `${rows.length} ligne${rows.length !== 1 ? "s" : ""}`, className: "badge-gray" },
+          ],
+          actions: [{
+            label: "Imprimer",
+            variant: "btn-outline",
+            icon: "fa-solid fa-print",
+            attrs: `onclick="printInventaire('${escapeHtml(inventoryId)}')"`,
+          }],
+        })}
+        ${buildMfDetailGrid([
+          [
+            buildMfDetailCardSection({
+              icon: "fa-solid fa-circle-info",
+              title: "Identification",
+              rows: [
+                { label: "Type", value: inventory.type || "-" },
+                { label: "Responsable", value: inventory.owner || "-" },
+                { label: "Statut", value: inventory.status || "-" },
+                {
+                  label: "Créé le",
+                  value: inventory.createdAt
+                    ? formatStockDateTime(new Date(inventory.createdAt))
+                    : "-",
+                },
+              ],
+            }),
+            buildMfDetailCardSection({
+              icon: "fa-solid fa-chart-pie",
+              title: "Résultats",
+              rows: [
+                { label: "Lignes", value: String(rows.length) },
+                { label: "Écarts ouverts", value: String(openCount) },
+                { label: "Surstocks", value: String(positiveCount) },
+                { label: "Manquants", value: String(negativeCount) },
+              ],
+            }),
+          ].join(""),
+          buildMfDetailCard({
+            icon: "fa-solid fa-note-sticky",
+            title: "Observations",
+            bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(inventory.observations || "Aucune observation.")}</p></div></div>`,
+          }),
+        ])}
+      `)}
+      <div class="mf-details-card" style="margin-top:14px">
+        <div class="mf-details-card-header">
+          <i class="fa-solid fa-table"></i>
+          <span>Lignes de comptage</span>
+          <span class="mf-details-count">${rows.length}</span>
+        </div>
+        <div class="table-wrap stock-count-wrap" style="padding:0 14px 14px">
+          <table>
+            <thead>
+              <tr>
+                <th>Article</th>
+                <th>Emplacement</th>
+                <th>Théorique</th>
+                <th>Comptée</th>
+                <th>Écart</th>
+                <th>Statut</th>
+                <th>Observations</th>
+              </tr>
+            </thead>
+            <tbody>${rowsMarkup}</tbody>
+          </table>
+        </div>
       </div>
       <div class="org-modal-actions">
-  <button class="btn btn-outline" type="button"
-          onclick="printInventaire('${escapeHtml(inventoryId)}')"
-          style="display:inline-flex;align-items:center;gap:6px;">
-    <i class="fa-solid fa-print"></i> Imprimer
-  </button>
-  <button class="btn btn-outline" type="button" data-stock-closetrue>Fermer</button>
-</div>
+        <button class="btn btn-outline" type="button" data-stock-closetrue>Fermer</button>
+      </div>
     `,
   );
 }
@@ -15951,6 +16560,84 @@ function formatPlanificationDate(value) {
   return Number.isNaN(date.getTime())
     ? "-"
     : date.toLocaleString(getAdministrationLocale());
+}
+
+function buildCounterDetailHtml(ctr, state) {
+  if (!ctr) {
+    return buildMfDetailEmpty("Aucun compteur sélectionné.");
+  }
+  const eqDir = getEquipmentDirectory();
+  const eqMatch = eqDir.equipments.find((e) => e.id === ctr.equipmentId);
+  const oDir = getOrganeDirectory();
+  const oMatch = oDir.organes.find((o) => o.id === ctr.organId);
+  const thresholdClass =
+    Number(ctr.currentValue) >= Number(ctr.actionThreshold || 0)
+      ? "badge-danger"
+      : Number(ctr.currentValue) >= Number(ctr.alertThreshold || 0)
+        ? "badge-warning"
+        : "badge-success";
+
+  return buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: ctr.ref,
+      title: ctr.name,
+      badges: [
+        {
+          label: `${ctr.currentValue ?? 0} ${ctr.unit || ""}`.trim(),
+          className: thresholdClass,
+        },
+        {
+          label: ctr.status || "Actif",
+          className: ctr.status === "Actif" ? "badge-success" : "badge-gray",
+        },
+      ],
+    })}
+    ${buildMfDetailGrid([
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-link",
+        title: "Liaisons",
+        rows: [
+          {
+            label: "Équipement lié",
+            value: eqMatch
+              ? `${eqMatch.code} ${eqMatch.name}`
+              : ctr.equipment || "-",
+          },
+          {
+            label: "Organe lié",
+            value: oMatch ? `${oMatch.code} ${oMatch.name}` : ctr.organ || "-",
+          },
+          { label: "Plan lié", value: ctr.planId || "-" },
+        ],
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-gauge-high",
+        title: "Mesures & seuils",
+        rows: [
+          { label: "Type", value: ctr.type || "-" },
+          {
+            label: "Valeur initiale",
+            value: `${ctr.initialValue ?? 0} ${ctr.unit || ""}`.trim(),
+          },
+          {
+            label: "Valeur actuelle",
+            value: `${ctr.currentValue ?? 0} ${ctr.unit || ""}`.trim(),
+            accent: true,
+          },
+          {
+            label: "Seuil alerte",
+            value: `${ctr.alertThreshold || "-"} ${ctr.unit || ""}`.trim(),
+          },
+          {
+            label: "Seuil action (→ OT)",
+            value: `${ctr.actionThreshold || "-"} ${ctr.unit || ""}`.trim(),
+          },
+          { label: "Mise à jour", value: formatPlanificationDate(ctr.lastUpdate) },
+          { label: "Créé le", value: formatPlanificationDate(ctr.createdAt) },
+        ],
+      }),
+    ])}
+  `);
 }
 
 function getPlanificationPlanBadgeClass(value) {
@@ -18435,124 +19122,9 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
       pageContentEl.querySelector('[data-counter-btn-delete]')
         ?.setAttribute('data-counter-action', 'delete');
 
-      const eqDir = getEquipmentDirectory();
-      const eqMatch = eqDir.equipments.find(e => e.id === ctr.equipmentId);
-
-      const oDir = getOrganeDirectory();
-      const oMatch = oDir.organes.find(o => o.id === ctr.organId);
-      const ts = Number(ctr.currentValue) >= Number(ctr.actionThreshold || 0) ? "badge-danger"
-        : Number(ctr.currentValue) >= Number(ctr.alertThreshold || 0) ? "badge-warning" : "badge-success";
       const detailEl = pageContentEl.querySelector("[data-counter-detail-main]");
       if (detailEl) {
-        detailEl.innerHTML = `
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
-      <span class="status-badge badge-gray">${escapeHtml(ctr.ref)}</span>
-      <strong style="font-size:1rem">${escapeHtml(ctr.name)}</strong>
-      <span class="status-badge ${ts}">
-        ${escapeHtml(String(ctr.currentValue ?? 0))} ${escapeHtml(ctr.unit)}
-      </span>
-      <span class="status-badge ${ctr.status === "Actif" ? "badge-success" : "badge-gray"
-          }">
-        ${escapeHtml(ctr.status || "Actif")}
-      </span>
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:6px;font-size:0.92rem">
-
-      <div style="display:flex;gap:8px">
-        <span style="color:var(--color-text-muted);min-width:140px">
-          Équipement lié
-        </span>
-        <span>
-          ${escapeHtml(
-            eqMatch
-              ? `${eqMatch.code} ${eqMatch.name}`
-              : (ctr.equipment || "-")
-          )}
-        </span>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <span style="color:var(--color-text-muted);min-width:140px">
-          Organe lié
-        </span>
-        <span>
-          ${escapeHtml(
-            oMatch
-              ? `${oMatch.code} ${oMatch.name}`
-              : (ctr.organ || "-")
-          )}
-        </span>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <span style="color:var(--color-text-muted);min-width:140px">
-          Type
-        </span>
-        <span>${escapeHtml(ctr.type || "-")}</span>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <span style="color:var(--color-text-muted);min-width:140px">
-          Valeur initiale
-        </span>
-        <span>
-          ${escapeHtml(String(ctr.initialValue ?? 0))} ${escapeHtml(ctr.unit)}
-        </span>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <span style="color:var(--color-text-muted);min-width:140px">
-          Valeur actuelle
-        </span>
-        <span>
-          <strong>
-            ${escapeHtml(String(ctr.currentValue ?? 0))} ${escapeHtml(ctr.unit)}
-          </strong>
-        </span>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <span style="color:var(--color-text-muted);min-width:140px">
-          Seuil alerte
-        </span>
-        <span>
-          ${escapeHtml(String(ctr.alertThreshold || "-"))} ${escapeHtml(ctr.unit)}
-        </span>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <span style="color:var(--color-text-muted);min-width:140px">
-          Seuil action (→ OT)
-        </span>
-        <span>
-          ${escapeHtml(String(ctr.actionThreshold || "-"))} ${escapeHtml(ctr.unit)}
-        </span>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <span style="color:var(--color-text-muted);min-width:140px">
-          Plan lié
-        </span>
-        <span>${escapeHtml(ctr.planId || "-")}</span>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <span style="color:var(--color-text-muted);min-width:140px">
-          Mise à jour
-        </span>
-        <span>${formatPlanificationDate(ctr.lastUpdate)}</span>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <span style="color:var(--color-text-muted);min-width:140px">
-          Créé le
-        </span>
-        <span>${formatPlanificationDate(ctr.createdAt)}</span>
-      </div>
-
-    </div>
-  `;
+        detailEl.innerHTML = buildCounterDetailHtml(ctr, state);
       }
 
       const readingSel = pageContentEl.querySelector("[data-plan-reading-form] select[name='counterId']");
@@ -20023,61 +20595,70 @@ function buildAchatsReceptionForm(record, mode, state) {
 
 function buildAchatsDaDetails(record) {
   return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Numéro</span><strong>${escapeHtml(record.number)}</strong></div>
-      <div class="org-detail-item"><span>Date création</span><strong>${formatAchatsDate(record.createdAt)}</strong></div>
-      <div class="org-detail-item"><span>Demandeur</span><strong>${escapeHtml(record.requester || "-")}</strong></div>
-      <div class="org-detail-item">
-  <span>Urgence</span>
-  <strong>${escapeHtml(record.urgency || "Normale")}</strong>
-</div>
-      <div class="org-detail-item"><span>Article</span><strong>${escapeHtml(record.articleLabel || "-")}</strong></div>
-      <div class="org-detail-item"><span>Quantité</span><strong>${formatStockNumber(record.quantity || 0)}</strong></div>
-      <div class="org-detail-item">
-  <span>Prix unitaire estimé</span>
-  <strong>${formatStockNumber(record.estimatedUnitPrice || 0)} DH</strong>
-</div>
-      <div class="org-detail-item"><span>Fournisseur suggéré</span><strong>${escapeHtml(record.preferredSupplier || "-")}</strong></div>
-      <div class="org-detail-item"><span>Date souhaitée</span><strong>${escapeHtml(record.neededDate || "-")}</strong></div>
-      <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(record.status || "-")}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Justification</span><strong>${escapeHtml(record.reason || "-")}</strong></div>
-    </div>
+    ${buildMfDetailShell(`
+      ${buildMfDetailHero({
+        ref: record.number,
+        title: record.articleLabel || "Demande d'achat",
+        badges: [
+          { label: record.status || "-", className: getPlanificationPlanBadgeClass(record.status) },
+          { label: record.urgency || "Normale", className: "badge-warning" },
+        ],
+        actions: [{
+          label: "Imprimer DA",
+          variant: "btn-outline",
+          icon: "fa-solid fa-print",
+          attrs: `onclick="printDA('${escapeHtml(record.id)}')"`,
+        }],
+      })}
+      ${buildMfDetailGrid([
+        [
+          buildMfDetailCardSection({
+            icon: "fa-solid fa-circle-info",
+            title: "Identification",
+            rows: [
+              { label: "Numéro", value: record.number },
+              { label: "Date création", value: formatAchatsDate(record.createdAt) },
+              { label: "Demandeur", value: record.requester || "-" },
+              { label: "Urgence", value: record.urgency || "Normale" },
+            ],
+          }),
+          buildMfDetailCardSection({
+            icon: "fa-solid fa-box",
+            title: "Article",
+            rows: [
+              { label: "Article", value: record.articleLabel || "-" },
+              { label: "Quantité", value: formatStockNumber(record.quantity || 0) },
+              {
+                label: "Prix unitaire estimé",
+                value: `${formatStockNumber(record.estimatedUnitPrice || 0)} DH`,
+              },
+              { label: "Fournisseur suggéré", value: record.preferredSupplier || "-" },
+              { label: "Date souhaitée", value: record.neededDate || "-" },
+              { label: "Statut", value: record.status || "-" },
+            ],
+          }),
+        ].join(""),
+        buildMfDetailCard({
+          icon: "fa-solid fa-note-sticky",
+          title: "Justification",
+          bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(record.reason || "-")}</p></div></div>`,
+        }),
+      ])}
+    `)}
     <div class="org-modal-actions">
     ${record.status === "En attente"
       ? `
-          <button
-            type="button"
-            class="btn btn-success"
-            data-da-validate="${record.id}"
-          >
-            <i class="fa-solid fa-check"></i>
-            Valider
+          <button type="button" class="btn btn-success" data-da-validate="${record.id}">
+            <i class="fa-solid fa-check"></i> Valider
           </button>
-
-          <button
-            type="button"
-            class="btn btn-danger"
-            data-da-reject="${record.id}"
-          >
-            <i class="fa-solid fa-xmark"></i>
-            Refuser
+          <button type="button" class="btn btn-danger" data-da-reject="${record.id}">
+            <i class="fa-solid fa-xmark"></i> Refuser
           </button>
         `
       : ""
     }
-
-    <button
-      type="button"
-      class="btn btn-outline"
-      data-ach-close="true"
-    >
-      Fermer
-    </button>
+    <button type="button" class="btn btn-outline" data-ach-close="true">Fermer</button>
   </div>
-  <button type="button" class="btn btn-outline" onclick="printDA('${escapeHtml(record.id)}')">
-  <i class="fa-solid fa-print"></i> Imprimer DA
-</button>
-
   `;
 }
 
@@ -20092,54 +20673,123 @@ function buildAchatsBcDetails(record, state) {
     linkedDa?.number || "-";
 
   return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Numéro</span><strong>${escapeHtml(record.number)}</strong></div>
-      <div class="org-detail-item"><span>Date création</span><strong>${formatAchatsDate(record.createdAt)}</strong></div>
-      <div class="org-detail-item"><span>Date commande</span><strong>${escapeHtml(record.orderDate || "-")}</strong></div>
-      <div class="org-detail-item"><span>Date livraison souhaitée</span><strong>${escapeHtml(record.wantedDate || "-")}</strong></div>
-      <div class="org-detail-item"><span>Fournisseur</span><strong>${escapeHtml(record.supplierName || "-")}</strong></div>
-      <div class="org-detail-item"><span>Contact</span><strong>${escapeHtml(record.supplierPhone || "-")} | ${escapeHtml(record.supplierEmail || "-")}</strong></div>
-      <div class="org-detail-item"><span>Article</span><strong>${escapeHtml(record.articleLabel || "-")}</strong></div>
-      <div class="org-detail-item"><span>Réf fournisseur</span><strong>${escapeHtml(record.supplierRef || "-")}</strong></div>
-      <div class="org-detail-item"><span>Quantité</span><strong>${formatStockNumber(record.quantity || 0)}</strong></div>
-      <div class="org-detail-item"><span>Total HT</span><strong>${formatAchatsMoney(record.totalHt || 0)}</strong></div>
-      <div class="org-detail-item"><span>Total TTC</span><strong>${formatAchatsMoney(record.totalTtc || 0)}</strong></div>
-      <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(record.status || "-")}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>DA liée</span><strong>${escapeHtml(linkedDaNumber)}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Adresse de livraison</span><strong>${escapeHtml(record.deliveryAddress || "-")}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Observations</span><strong>${escapeHtml(record.observations || "-")}</strong></div>
-    </div>
-    <button style="margin-top: 15px"  type="button" class="btn btn-outline" onclick="printBC('${escapeHtml(record.id)}')">
-  <i class="fa-solid fa-print"></i> Imprimer BC
-</button>
+    ${buildMfDetailShell(`
+      ${buildMfDetailHero({
+        ref: record.number,
+        title: record.supplierName || "Bon de commande",
+        badges: [
+          { label: record.status || "-", className: getPlanificationPlanBadgeClass(record.status) },
+          { label: formatAchatsMoney(record.totalTtc || 0), className: "badge-info" },
+        ],
+        actions: [{
+          label: "Imprimer BC",
+          variant: "btn-outline",
+          icon: "fa-solid fa-print",
+          attrs: `onclick="printBC('${escapeHtml(record.id)}')"`,
+        }],
+      })}
+      ${buildMfDetailGrid([
+        [
+          buildMfDetailCardSection({
+            icon: "fa-solid fa-circle-info",
+            title: "Identification",
+            rows: [
+              { label: "Numéro", value: record.number },
+              { label: "Date création", value: formatAchatsDate(record.createdAt) },
+              { label: "Date commande", value: record.orderDate || "-" },
+              { label: "Date livraison souhaitée", value: record.wantedDate || "-" },
+              { label: "Statut", value: record.status || "-" },
+              { label: "DA liée", value: linkedDaNumber },
+            ],
+          }),
+          buildMfDetailCardSection({
+            icon: "fa-solid fa-truck",
+            title: "Fournisseur",
+            rows: [
+              { label: "Fournisseur", value: record.supplierName || "-" },
+              {
+                label: "Contact",
+                value: `${record.supplierPhone || "-"} | ${record.supplierEmail || "-"}`,
+              },
+              { label: "Adresse de livraison", value: record.deliveryAddress || "-" },
+            ],
+          }),
+        ].join(""),
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-box",
+          title: "Article & montants",
+          rows: [
+            { label: "Article", value: record.articleLabel || "-" },
+            { label: "Réf fournisseur", value: record.supplierRef || "-" },
+            { label: "Quantité", value: formatStockNumber(record.quantity || 0) },
+            { label: "Total HT", value: formatAchatsMoney(record.totalHt || 0) },
+            { label: "Total TTC", value: formatAchatsMoney(record.totalTtc || 0) },
+            { label: "Observations", value: record.observations || "-" },
+          ],
+        }),
+      ])}
+    `)}
   `;
 }
 
 function buildAchatsReceptionDetails(record, state) {
   const linkedBc = state.bons.find((item) => item.id === record.bcId);
   return `
-    <div class="org-detail-grid">
-      <div class="org-detail-item"><span>Numéro</span><strong>${escapeHtml(record.number)}</strong></div>
-      <div class="org-detail-item"><span>Date réception</span><strong>${formatAchatsDate(record.createdAt)}</strong></div>
-      <div class="org-detail-item"><span>BC lié</span><strong>${escapeHtml(linkedBc?.number || "-")}</strong></div>
-      <div class="org-detail-item"><span>Réceptionné par</span><strong>${escapeHtml(record.receiver || "-")}</strong></div>
-      <div class="org-detail-item"><span>Fournisseur</span><strong>${escapeHtml(record.supplierName || "-")}</strong></div>
-      <div class="org-detail-item"><span>Article</span><strong>${escapeHtml(record.articleLabel || "-")}</strong></div>
-      <div class="org-detail-item"><span>Qté commandée</span><strong>${formatStockNumber(record.orderedQty || 0)}</strong></div>
-      <div class="org-detail-item"><span>Qté reçue</span><strong>${formatStockNumber(record.receivedQty || 0)}</strong></div>
-      <div class="org-detail-item"><span>Écart</span><strong>${formatStockNumber(record.missingQty || 0)}</strong></div>
-      <div class="org-detail-item"><span>État réception</span><strong>${escapeHtml(record.receptionState || "-")}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Emplacement stock</span><strong>${escapeHtml(record.storageLocation || "-")}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>BL fournisseur</span><strong>${escapeHtml(record.deliveryNoteRef || "-")}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Facture fournisseur</span><strong>${escapeHtml(record.invoiceRef || "-")}</strong></div>
-      <div class="org-detail-item org-detail-item--full"><span>Observations</span><strong>${escapeHtml(record.observations || "-")}</strong></div>
-    </div>
+    ${buildMfDetailShell(`
+      ${buildMfDetailHero({
+        ref: record.number,
+        title: record.supplierName || "Réception",
+        badges: [
+          { label: record.receptionState || "-", className: "badge-info" },
+          { label: record.status || "-", className: getPlanificationPlanBadgeClass(record.status) },
+        ],
+        actions: [{
+          label: "Imprimer le bon de réception",
+          variant: "btn-outline",
+          icon: "fa-solid fa-print",
+          attrs: `onclick="printBonReception('${escapeHtml(record.id)}')"`,
+        }],
+      })}
+      ${buildMfDetailGrid([
+        [
+          buildMfDetailCardSection({
+            icon: "fa-solid fa-circle-info",
+            title: "Identification",
+            rows: [
+              { label: "Numéro", value: record.number },
+              { label: "Date réception", value: formatAchatsDate(record.createdAt) },
+              { label: "BC lié", value: linkedBc?.number || "-" },
+              { label: "Réceptionné par", value: record.receiver || "-" },
+              { label: "Fournisseur", value: record.supplierName || "-" },
+            ],
+          }),
+          buildMfDetailCardSection({
+            icon: "fa-solid fa-box",
+            title: "Quantités",
+            rows: [
+              { label: "Article", value: record.articleLabel || "-" },
+              { label: "Qté commandée", value: formatStockNumber(record.orderedQty || 0) },
+              { label: "Qté reçue", value: formatStockNumber(record.receivedQty || 0) },
+              { label: "Écart", value: formatStockNumber(record.missingQty || 0) },
+              { label: "État réception", value: record.receptionState || "-" },
+              { label: "Emplacement stock", value: record.storageLocation || "-" },
+            ],
+          }),
+        ].join(""),
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-file-lines",
+          title: "Documents",
+          rows: [
+            { label: "BL fournisseur", value: record.deliveryNoteRef || "-" },
+            { label: "Facture fournisseur", value: record.invoiceRef || "-" },
+            { label: "Observations", value: record.observations || "-" },
+          ],
+        }),
+      ])}
+    `)}
     <div class="org-modal-actions" style="margin-top:16px">
-    <button type="button" class="btn btn-outline"
-      onclick="printBonReception('${escapeHtml(record.id)}')">
-      <i class="fa-solid fa-print"></i> Imprimer le bon de réception
-    </button>
-  </div>
+      <button type="button" class="btn btn-outline" data-ach-close="true">Fermer</button>
+    </div>
   `;
 }
 
@@ -23068,20 +23718,26 @@ function formatInterventionArticleLine(articleLine) {
 }
 
 function buildInterventionDetailRows(rows) {
-  return `
-    <div class="org-detail-list">
-      ${rows
-      .map(
-        (row) => `
-            <div class="org-detail-item">
-              <span>${row.label}</span>
-              <strong>${row.value}</strong>
-            </div>
-          `,
-      )
-      .join("")}
-    </div>
-  `;
+  return buildMfDetailGrid(
+    buildMfDetailCard({
+      icon: "fa-solid fa-circle-info",
+      title: "Détails",
+      count: rows.length,
+      bodyHtml: buildMfDetailRows(
+        rows.map((row) => {
+          const hasHtml =
+            typeof row.value === "string" && row.value.includes("<");
+          return {
+            label: row.label,
+            value: hasHtml ? undefined : row.value ?? "-",
+            valueHtml: hasHtml
+              ? `<strong class="mf-details-value">${row.value}</strong>`
+              : undefined,
+          };
+        }),
+      ),
+    }),
+  );
 }
 
 // ============================================================
@@ -25042,7 +25698,7 @@ function printFicheFournisseur(supplierNom) {
       </div>
       <div class="doc-sig-box">
         <label>Fournisseur — Accusé réception</label>
-        <div class="sig-name" style="color:#b0b8c1">Cachet et date</div>
+        <div class="sig-name" style="color:#b0b8c1"></div>
         <div class="sig-line">Cachet &amp; Signature</div>
       </div>
     </div>`;
@@ -25439,15 +26095,14 @@ function renderInterventionRecordDetails(recordType, record) {
   }
 
   const workflowButtons = [];
+  const heroActions = [];
   if (recordType === "di") {
-    workflowButtons.push(
-      `<button class="btn btn-outline" type="button" 
-      data-int-action="print-di" 
-      data-int-id="${record.id}" 
-      style="display:inline-flex;align-items:center;gap:6px;">
-      <i class="fa-solid fa-print"></i> Imprimer
-    </button>`
-    );
+    heroActions.push({
+      label: "Imprimer",
+      variant: "btn-outline",
+      icon: "fa-solid fa-print",
+      attrs: `data-int-action="print-di" data-int-id="${record.id}"`,
+    });
     if (record.status === "Validée") {
       workflowButtons.push(
         `<button class="btn btn-primary" type="button" data-int-action="transform-di" data-int-id="${record.id}"><i class="fa-solid fa-arrow-right"></i><span>Transformer en OT</span></button>`,
@@ -25457,13 +26112,46 @@ function renderInterventionRecordDetails(recordType, record) {
         `<button class="btn btn-primary" type="button" data-int-action="validate-di" data-int-id="${record.id}"><i class="fa-solid fa-circle-check"></i><span>Valider</span></button>`,
       );
     }
+  } else if (recordType === "ot") {
+    heroActions.push({
+      label: "Imprimer",
+      variant: "btn-outline",
+      icon: "fa-solid fa-print",
+      attrs: `data-int-action="print-ot" data-int-id="${record.id}"`,
+    });
+  } else if (recordType === "bt") {
+    heroActions.push({
+      label: "Imprimer",
+      variant: "btn-outline",
+      icon: "fa-solid fa-print",
+      attrs: `data-int-action="print-bt" data-int-id="${record.id}"`,
+    });
   }
-  else if (recordType === 'ot') {
-    workflowButtons.push(`<button class="btn btn-outline" type="button" data-int-action="print-ot" data-int-id="${record.id}" style="display:inline-flex;align-items:center;gap:6px;"><i class="fa-solid fa-print"></i> Imprimer</button>`);
 
-  } else if (recordType === 'bt') {
-    workflowButtons.push(`<button class="btn btn-outline" type="button" data-int-action="print-bt" data-int-id="${record.id}" style="display:inline-flex;align-items:center;gap:6px;"><i class="fa-solid fa-print"></i> Imprimer</button>`);
+  const heroTitle =
+    recordType === "di" ? record.title || title : title;
+  const heroBadges = [
+    {
+      label: record.status || "-",
+      className: getPlanificationPlanBadgeClass(record.status),
+    },
+  ];
+  if (recordType === "di" && record.urgency) {
+    heroBadges.push({ label: record.urgency, className: "badge-warning" });
   }
+  if (recordType === "ot" && record.priority) {
+    heroBadges.push({ label: record.priority, className: "badge-info" });
+  }
+
+  const detailsBody = buildMfDetailShell(`
+    ${buildMfDetailHero({
+      ref: record.ref,
+      title: heroTitle,
+      badges: heroBadges,
+      actions: heroActions,
+    })}
+    ${detailsHtml}
+  `);
 
   return `
     <div class="org-modal open" role="presentation">
@@ -25479,7 +26167,7 @@ function renderInterventionRecordDetails(recordType, record) {
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        ${detailsHtml}
+        ${detailsBody}
         <div class="org-modal-actions">
           <button class="btn btn-outline" type="button" data-int-close="true">Fermer</button>
           ${workflowButtons.join("")}
@@ -26698,21 +27386,70 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
         ["Actions correctives", entry.correctiveActions],
       ];
     }
+    const heroRef = type === "fiche" ? entry.number : (entry.number || entry.id || "");
+    const heroTitle =
+      type === "fiche"
+        ? (entry.raisonSociale || entry.nomCommercial || "Fournisseur")
+        : (entry.supplierName || entry.article || entry.objet || entry.equipment || TAB_CONFIG[activeTab].label);
+
+    const heroBadges = [];
+    if (entry.status) {
+      heroBadges.push({
+        label: entry.status,
+        className: entry.status === "Actif" ? "badge-success" : "badge-gray",
+      });
+    }
+    if (type === "evaluation" && entry.global !== undefined) {
+      heroBadges.push({ label: Number(entry.global || 0).toFixed(2), className: "badge-info" });
+    }
+
+    const heroActions = [];
+    if (type === "fiche") {
+      heroActions.push({
+        label: "Imprimer la fiche",
+        variant: "btn-outline",
+        icon: "fa-solid fa-print",
+        attrs: `onclick="printFicheFournisseur('${escapeHtml(entry.nomCommercial || entry.id)}')"`,
+      });
+      heroActions.push({
+        label: "Modifier",
+        variant: "btn-primary",
+        icon: "fa-solid fa-pen-to-square",
+        attrs: `data-supplier-edit="${escapeHtml(entry.id)}"`,
+      });
+    }
+
+    const contentHtml = buildMfDetailShell(`
+      ${buildMfDetailHero({
+        ref: heroRef,
+        title: heroTitle,
+        badges: heroBadges,
+        actions: heroActions,
+      })}
+      ${buildMfDetailCardSection({
+        icon: "fa-solid fa-circle-info",
+        title: TAB_CONFIG[activeTab].label,
+        count: fields.length,
+        rows: fields.map(([label, value]) => ({ label, value: value ?? "-" })),
+      })}
+    `);
+
     openModal(
       "Voir " + TAB_CONFIG[activeTab].label,
       "Détail du dossier " + (supplier.raisonSociale || supplier.supplierName || ""),
-      '<div class="supplier-section"><div class="supplier-form-grid">' +
-      fields.map(function (pair) {
-        return '<div class="full"><label>' + pair[0] + '</label><div style="padding:11px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;">' + (pair[1] || "—") + '</div></div>';
-      }).join("") +
-      '</div></div>',
-      // ↓ Footer avec bouton Imprimer uniquement pour la fiche fournisseur
-      type === 'fiche' ? `
-    <button style="margin-top:10px" type="button" class="btn btn-outline"
-      onclick="printFicheFournisseur('${escapeHtml(entry.nomCommercial || entry.id)}')">
-      <i class="fa-solid fa-print"></i> Imprimer la fiche
-    </button>` : ``
+      contentHtml,
+      "",
     );
+
+    if (type === "fiche") {
+      const editBtn = qs("[data-supplier-edit]", root.overlay());
+      if (editBtn) {
+        editBtn.addEventListener("click", function () {
+          closeModal();
+          openSupplierModal(entry);
+        });
+      }
+    }
   }
 
   /* ---------------------------------------------------------------
