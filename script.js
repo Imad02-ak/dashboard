@@ -13931,6 +13931,59 @@ function renderDashboardPage() {
 
   pageContentEl.className = "dashboard-page";
   pageContentEl.innerHTML = `
+    <section class="dashboard-business-grid">
+      ${businessKpis
+      .map(
+        (kpi) => `
+            <div class="planning-kpi-card dashboard-business-card">
+              <strong>${escapeHtml(kpi.value)}</strong>
+              <span>${escapeHtml(kpi.label)}</span>
+              <small>${escapeHtml(kpi.sub)}</small>
+            </div>
+          `,
+      )
+      .join("")}
+    </section>
+
+    <section class="dashboard-grid dashboard-grid-3" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+      <div class="card dashboard-pie-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-coins"></i> Coût maintenance (Mois)</div>
+        </div>
+        <div class="card-body" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem;">
+          <h2 style="font-size: 2.2rem; margin: 0; color: var(--org-brand);">${dashboardFormatMoney(monthCostAll)}</h2>
+          <span class="muted" style="margin-top: 0.5rem;">Cumul du mois en cours</span>
+        </div>
+      </div>
+      <div class="card dashboard-pie-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-ranking-star"></i> Top 3 Équipements coûteux</div>
+        </div>
+        <div class="card-body org-detail-list" style="padding: 1rem;">
+          ${top3EquipementsCost.length ? top3EquipementsCost.map(eq => `
+            <div class="org-detail-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
+              <span>${escapeHtml(eq[0])}</span>
+              <strong style="color: var(--org-danger);">${dashboardFormatMoney(eq[1])}</strong>
+            </div>
+          `).join('') : '<div class="muted" style="text-align: center; padding: 1rem;">Aucune donnée de coût</div>'}
+        </div>
+      </div>
+      <div class="card dashboard-pie-card">
+        <div class="card-head">
+          <div class="card-title"><i class="fa-solid fa-money-bill-transfer"></i> Répartition des coûts</div>
+        </div>
+        <div class="card-body org-detail-list" style="padding: 1rem;">
+          <div class="org-detail-item" style="display: flex; justify-content: space-between; padding: 1rem 0;">
+            <span><i class="legend-dot danger"></i> Correctif</span>
+            <strong style="font-size: 1.2rem;">${gPctCorr}%</strong>
+          </div>
+          <div class="org-detail-item" style="display: flex; justify-content: space-between; padding: 1rem 0;">
+            <span><i class="legend-dot success"></i> Préventif</span>
+            <strong style="font-size: 1.2rem;">${gPctPrev}%</strong>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="dashboard-grid dashboard-grid-2">
       <div class="card dashboard-chart-card">
@@ -14201,19 +14254,7 @@ function renderDashboardPage() {
       </div>
     </section>
 
-    <section class="dashboard-business-grid">
-      ${businessKpis
-      .map(
-        (kpi) => `
-            <div class="planning-kpi-card dashboard-business-card">
-              <strong>${escapeHtml(kpi.value)}</strong>
-              <span>${escapeHtml(kpi.label)}</span>
-              <small>${escapeHtml(kpi.sub)}</small>
-            </div>
-          `,
-      )
-      .join("")}
-    </section>
+
 
     <section class="dashboard-grid dashboard-grid-2">
       <div class="card dashboard-chart-card">
@@ -14280,45 +14321,7 @@ function renderDashboardPage() {
       </div>
     </section>
 
-    <section class="dashboard-grid dashboard-grid-3" style="margin-top: 1.5rem;">
-      <div class="card dashboard-pie-card">
-        <div class="card-head">
-          <div class="card-title"><i class="fa-solid fa-coins"></i> Coût maintenance (Mois)</div>
-        </div>
-        <div class="card-body" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem;">
-          <h2 style="font-size: 2.2rem; margin: 0; color: var(--org-brand);">${dashboardFormatMoney(monthCostAll)}</h2>
-          <span class="muted" style="margin-top: 0.5rem;">Cumul du mois en cours</span>
-        </div>
-      </div>
-      <div class="card dashboard-pie-card">
-        <div class="card-head">
-          <div class="card-title"><i class="fa-solid fa-ranking-star"></i> Top 3 Équipements coûteux</div>
-        </div>
-        <div class="card-body org-detail-list" style="padding: 1rem;">
-          ${top3EquipementsCost.length ? top3EquipementsCost.map(eq => `
-            <div class="org-detail-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
-              <span>${escapeHtml(eq[0])}</span>
-              <strong style="color: var(--org-danger);">${dashboardFormatMoney(eq[1])}</strong>
-            </div>
-          `).join('') : '<div class="muted" style="text-align: center; padding: 1rem;">Aucune donnée de coût</div>'}
-        </div>
-      </div>
-      <div class="card dashboard-pie-card">
-        <div class="card-head">
-          <div class="card-title"><i class="fa-solid fa-money-bill-transfer"></i> Répartition des coûts</div>
-        </div>
-        <div class="card-body org-detail-list" style="padding: 1rem;">
-          <div class="org-detail-item" style="display: flex; justify-content: space-between; padding: 1rem 0;">
-            <span><i class="legend-dot danger"></i> Correctif</span>
-            <strong style="font-size: 1.2rem;">${gPctCorr}%</strong>
-          </div>
-          <div class="org-detail-item" style="display: flex; justify-content: space-between; padding: 1rem 0;">
-            <span><i class="legend-dot success"></i> Préventif</span>
-            <strong style="font-size: 1.2rem;">${gPctPrev}%</strong>
-          </div>
-        </div>
-      </div>
-    </section>
+
   `;
 
   const typeSelect = document.getElementById("dashboardInterventionType");
