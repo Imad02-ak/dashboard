@@ -995,16 +995,16 @@ function buildArticleFormContent(record, mode) {
       <!-- Indicateur de progression -->
       <div class="eq-wizard-progress" data-wizard-progress>
         <div class="eq-wizard-steps">
-          ${['Identification', 'Liaisons métier', 'Caractéristiques techniques', 'Pièces jointes']
+          ${['Identification', 'Liaisons métier', "Type complémentaire", 'Caractéristiques techniques', 'Pièces jointes']
       .map((label, i) => `
               <div class="eq-wizard-step ${i === 0 ? 'active' : ''}" data-wizard-step-dot="${i}">
                 <div class="eq-wizard-step-bubble">${i + 1}</div>
                 <span class="eq-wizard-step-label">${label}</span>
               </div>
-              ${i < 3 ? '<div class="eq-wizard-step-line"></div>' : ''}
+              ${i < 4 ? '<div class="eq-wizard-step-line"></div>' : ''}
             `).join('')}
         </div>
-        <div class="eq-wizard-step-title" data-wizard-step-title>Étape 1 / 4 — Identification</div>
+        <div class="eq-wizard-step-title" data-wizard-step-title>Étape 1 / 5 — Identification</div>
       </div>
 
       <div class="eq-wizard-panels">
@@ -1041,20 +1041,6 @@ function buildArticleFormContent(record, mode) {
                 </select>
               </div>
               <div class="field-group">
-                <label for="articleBrand">Marque</label>
-                <input id="articleBrand" name="brand" type="text" value="${escapeHtml(record?.brand || '')}" placeholder="Marque" />
-              </div>
-              <div class="field-group">
-                <label for="articlePrice">Prix</label>
-                <input id="articlePrice" name="price" type="number" step="0.01" value="${escapeHtml(record?.price || '')}" placeholder="Prix" />
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="articleSupplier">Fournisseur principal</label>
-                <select id="articleSupplier" name="supplier">
-                  ${buildArticleSupplierOptions(selectedSupplier)}
-                </select>
-              </div>
-              <div class="field-group">
                 <label for="articleGroup">Groupe</label>
                 <select id="articleGroup" name="groupId">
                   ${buildArticleGroupOptions(selectedGroup)}
@@ -1074,44 +1060,103 @@ function buildArticleFormContent(record, mode) {
           </section>
         </div>
 
-        <!-- PANEL 2 — Liaisons métier -->
-        <div class="eq-wizard-panel" data-wizard-panel="1">
-          <section class="equipment-section-card">
-            <div class="equipment-section-head">
-              <div>
-                <div class="equipment-section-kicker">Liaisons métier</div>
-                <h4>Substituts, organes et équipements associés</h4>
-                <p>Associez les articles de remplacement, les organes et équipements liés à cet article.</p>
-              </div>
-            </div>
-            <div class="org-form-grid">
-              <div class="field-group field-group-wide">
-                <label for="articleSubstitutes">Articles substituts</label>
-                <select id="articleSubstitutes" name="substituteIds" multiple size="4">
-                  ${buildArticleSubstituteOptions(selectedSubstitutes, record?.id)}
-                </select>
-                <div class="org-field-hint">Sélectionnez un ou plusieurs articles de remplacement en cas de rupture.</div>
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="articleLinkedOrganes">Organes liés</label>
-                <select id="articleLinkedOrganes" name="linkedOrganeIds" multiple size="5">
-                  ${buildOrganeMultiOptions(linkedOrganeIds)}
-                </select>
-                <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.</div>
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="articleLinkedEquipments">Équipements liés</label>
-                <select id="articleLinkedEquipments" name="linkedEquipmentIds" multiple size="5">
-                  ${buildAssociatedEquipmentOptions(linkedEquipmentIds)}
-                </select>
-                <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.</div>
-              </div>
-            </div>
-          </section>
-        </div>
+        <!-- PANEL 1 – Liaisons métier (doit venir EN PREMIER) -->
+<div class="eq-wizard-panel" data-wizard-panel="1">
+  <section class="equipment-section-card">
+    <div class="equipment-section-head">
+      <div>
+        <div class="equipment-section-kicker">Liaisons métier</div>
+        <h4>Substituts, organes et équipements associés</h4>
+        <p>Associez les articles de remplacement, les organes et équipements liés à cet article.</p>
+      </div>
+    </div>
+    <div class="org-form-grid">
+      <div class="field-group field-group-wide">
+        <label for="articleSubstitutes">Articles substituts</label>
+        <select id="articleSubstitutes" name="substituteIds" multiple size="4">
+          ${buildArticleSubstituteOptions(selectedSubstitutes, record?.id)}
+        </select>
+        <div class="org-field-hint">Sélectionnez un ou plusieurs articles de remplacement en cas de rupture.</div>
+      </div>
+      <div class="field-group field-group-wide">
+        <label for="articleLinkedOrganes">Organes liés</label>
+        <select id="articleLinkedOrganes" name="linkedOrganeIds" multiple size="5">
+          ${buildOrganeMultiOptions(linkedOrganeIds)}
+        </select>
+        <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.</div>
+      </div>
+      <div class="field-group field-group-wide">
+        <label for="articleLinkedEquipments">Équipements liés</label>
+        <select id="articleLinkedEquipments" name="linkedEquipmentIds" multiple size="5">
+          ${buildAssociatedEquipmentOptions(linkedEquipmentIds)}
+        </select>
+        <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- PANEL 2 – Type complémentaire (doit venir EN SECOND) -->
+<div class="eq-wizard-panel" data-wizard-panel="2">
+  <section class="equipment-section-card">
+    <div class="equipment-section-head">
+      <div>
+        <div class="equipment-section-kicker">Type complémentaire</div>
+        <h4>Informations techniques et achats</h4>
+        <p>Marque, fournisseur, traçabilité et historique d'achat.</p>
+      </div>
+    </div>
+    <div class="org-form-grid">
+      <div class="field-group">
+        <label for="articleBrand">Marque</label>
+        <input id="articleBrand" name="brand" type="text"
+          value="${escapeHtml(record?.brand || '')}" placeholder="Marque" />
+      </div>
+      <div class="field-group">
+  <label for="articleModel">Modèle</label>
+  <input id="articleModel" name="model" type="text"
+    value="${escapeHtml(record?.model || '')}"
+    placeholder="Modèle de l'article" />
+</div>
+      <div class="field-group">
+        <label for="articleSupplier">Fournisseur principal</label>
+        <select id="articleSupplier" name="supplier">
+          ${buildArticleSupplierOptions(record?.supplier)}
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="articleSerialNumber">N° série / Référence fabricant</label>
+        <input id="articleSerialNumber" name="serialNumber" type="text"
+          value="${escapeHtml(record?.serialNumber || '')}"
+          placeholder="Référence ou N° de série" />
+      </div>
+      <div class="field-group">
+        <label for="articlePrice">Prix d'achat</label>
+        <input id="articlePrice" name="price" type="number" step="0.01"
+          value="${escapeHtml(record?.price || '')}" placeholder="Prix" />
+      </div>
+      <div class="field-group">
+        <label for="articlePurchaseDate">Date d'achat</label>
+        <input id="articlePurchaseDate" name="purchaseDate" type="date"
+          value="${escapeHtml(record?.purchaseDate || '')}" />
+      </div>
+      <div class="field-group">
+        <label for="articleServiceDate">Date de mise en service</label>
+        <input id="articleServiceDate" name="serviceDate" type="date"
+          value="${escapeHtml(record?.serviceDate || '')}" />
+      </div>
+      <div class="field-group">
+        <label for="articleWarranty">Durée de garantie</label>
+        <input id="articleWarranty" name="warrantyDuration" type="text"
+          value="${escapeHtml(record?.warrantyDuration || '')}"
+          placeholder="Ex : 12 mois" />
+      </div>
+    </div>
+  </section>
+</div>
 
         <!-- PANEL 3 — Caractéristiques techniques -->
-        <div class="eq-wizard-panel" data-wizard-panel="2">
+        <div class="eq-wizard-panel" data-wizard-panel="3">
           <section class="equipment-section-card">
             <div class="equipment-section-head">
               <div>
@@ -1201,7 +1246,7 @@ function buildArticleFormContent(record, mode) {
         </div>
 
         <!-- PANEL 4 — Pièces jointes -->
-        <div class="eq-wizard-panel" data-wizard-panel="3">
+        <div class="eq-wizard-panel" data-wizard-panel="4">
           <section class="equipment-section-card">
             <div class="equipment-section-head">
               <div>
@@ -1293,14 +1338,14 @@ function buildArticleDetailsContent(record) {
         bodyHtml: `
           ${buildMfDetailMediaBlock(primaryPhotoSrc, primaryPhotoLabel)}
           ${buildMfDetailRows([
-            { label: "Code", value: record.code || "-" },
-            { label: "Nom", value: record.name || "-" },
-            { label: "Type d'article", value: record.articleType || "-" },
-            { label: "Marque", value: record.brand || "-" },
-            { label: "Unité de mesure", value: record.unitMeasure || "-" },
-            { label: "Prix", value: record.price ? String(record.price) : "-" },
-            { label: "Fournisseur", value: record.supplier || "-" },
-          ])}
+          { label: "Code", value: record.code || "-" },
+          { label: "Nom", value: record.name || "-" },
+          { label: "Type d'article", value: record.articleType || "-" },
+          { label: "Marque", value: record.brand || "-" },
+          { label: "Unité de mesure", value: record.unitMeasure || "-" },
+          { label: "Prix", value: record.price ? String(record.price) : "-" },
+          { label: "Fournisseur", value: record.supplier || "-" },
+        ])}
         `,
       }),
       buildMfDetailCardSection({
@@ -1324,6 +1369,19 @@ function buildArticleDetailsContent(record) {
         { label: "Équipements liés", value: linkedEquipmentLabels || "-" },
       ],
     }),
+    buildMfDetailCardSection({
+      icon: 'fa-solid fa-tag',
+      title: 'Type complémentaire',
+      rows: [
+        { label: 'Marque', value: record.brand || '-' },
+        { label: 'Fournisseur', value: record.supplier || '-' },
+        { label: 'N° série', value: record.serialNumber || '-' },
+        { label: "Prix d'achat", value: record.price ? `${record.price}` : '-' },
+        { label: "Date d'achat", value: record.purchaseDate || '-' },
+        { label: 'Mise en service', value: record.serviceDate || '-' },
+        { label: 'Garantie', value: record.warrantyDuration || '-' },
+      ]
+    })
   ]);
 
   let technicalTab = buildMfDetailEmpty("Aucune caractéristique technique renseignée.", "fa-solid fa-circle-info");
@@ -1357,18 +1415,18 @@ function buildArticleDetailsContent(record) {
 
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      badges: [
-        { label: record.articleType || "-", className: "badge-info" },
-        { label: record.unitMeasure || "-", className: "badge-gray" },
-      ],
-      actions: [buildMfDetailEditAction('data-art-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    badges: [
+      { label: record.articleType || "-", className: "badge-info" },
+      { label: record.unitMeasure || "-", className: "badge-gray" },
+    ],
+    actions: [buildMfDetailEditAction('data-art-edit-from-details')],
+  })}
     ${buildMfDetailTabSlider([
-      { label: "Infos générales", content: generalTab },
-      { label: "Caractéristiques techniques", content: technicalTab },
-    ])}
+    { label: "Infos générales", content: generalTab },
+    { label: "Caractéristiques techniques", content: technicalTab },
+  ])}
   `);
 }
 
@@ -1380,26 +1438,26 @@ function buildArticleGroupDetailsContent(record) {
   );
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      actions: [buildMfDetailEditAction('data-art-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    actions: [buildMfDetailEditAction('data-art-edit-from-details')],
+  })}
     ${buildMfDetailGrid([
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-circle-info",
-        title: "Identification",
-        rows: [
-          { label: "Code", value: record.code },
-          { label: "Nom", value: record.name },
-          { label: "Désignations", value: record.designations || "Aucune désignation" },
-        ],
-      }),
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-link",
-        title: "Liaisons",
-        rows: [{ label: "Organes associés", value: organeLabels || "-" }],
-      }),
-    ])}
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-circle-info",
+      title: "Identification",
+      rows: [
+        { label: "Code", value: record.code },
+        { label: "Nom", value: record.name },
+        { label: "Désignations", value: record.designations || "Aucune désignation" },
+      ],
+    }),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-link",
+      title: "Liaisons",
+      rows: [{ label: "Organes associés", value: organeLabels || "-" }],
+    }),
+  ])}
   `);
 }
 
@@ -1407,31 +1465,31 @@ function buildArticleFamilyDetailsContent(record) {
   const group = getArticleRecord("groups", record.groupId);
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      actions: [buildMfDetailEditAction('data-art-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    actions: [buildMfDetailEditAction('data-art-edit-from-details')],
+  })}
     ${buildMfDetailGrid([
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-circle-info",
-        title: "Identification",
-        rows: [
-          { label: "Code", value: record.code },
-          { label: "Nom", value: record.name },
-          { label: "Désignations", value: record.designations || "Aucune désignation" },
-        ],
-      }),
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-sitemap",
-        title: "Organisation",
-        rows: [
-          {
-            label: "Groupe",
-            value: group ? `${group.code} — ${group.name}` : "-",
-          },
-        ],
-      }),
-    ])}
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-circle-info",
+      title: "Identification",
+      rows: [
+        { label: "Code", value: record.code },
+        { label: "Nom", value: record.name },
+        { label: "Désignations", value: record.designations || "Aucune désignation" },
+      ],
+    }),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-sitemap",
+      title: "Organisation",
+      rows: [
+        {
+          label: "Groupe",
+          value: group ? `${group.code} — ${group.name}` : "-",
+        },
+      ],
+    }),
+  ])}
   `);
 }
 
@@ -1922,6 +1980,7 @@ function attachArticlePageHandlers(pageKey) {
   initializeWizardForm(form, [
     'Identification',
     'Liaisons métier',
+    'Type complémentaire',
     'Caractéristiques techniques',
     'Pièces jointes'
   ]);
@@ -2098,6 +2157,7 @@ function attachArticlePageHandlers(pageKey) {
       brand: String(
         form.querySelector("input[name='brand']")?.value || "",
       ).trim(),
+      model: String(form.querySelector('input[name="model"]')?.value ?? '').trim(),
       price: String(
         form.querySelector("input[name='price']")?.value || "",
       ).trim(),
@@ -2117,6 +2177,10 @@ function attachArticlePageHandlers(pageKey) {
         ...photos,
       ],
       customFields,
+      serialNumber: String(form.querySelector('input[name="serialNumber"]')?.value ?? '').trim(),
+      purchaseDate: String(form.querySelector('input[name="purchaseDate"]')?.value ?? ''),
+      serviceDate: String(form.querySelector('input[name="serviceDate"]')?.value ?? ''),
+      warrantyDuration: String(form.querySelector('input[name="warrantyDuration"]')?.value ?? '').trim(),
     };
 
     const updated = directory.articles.filter((a) => a.id !== next.id);
@@ -2813,33 +2877,33 @@ function buildUnitsDetailsContent(record) {
   const responsible = getOrganizationUser(record.responsibleUserId);
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      actions: [buildMfDetailEditAction('data-org-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    actions: [buildMfDetailEditAction('data-org-edit-from-details')],
+  })}
     ${buildMfDetailGrid([
-      [
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-circle-info",
-          title: "Identification",
-          rows: [
-            { label: "Code", value: record.code },
-            { label: "Nom", value: record.name },
-            { label: "Localisations", value: record.locations || "-" },
-            { label: "Description", value: record.description || "Aucune description" },
-          ],
-        }),
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-user",
-          title: "Responsable",
-          rows: [
-            { label: "Responsable", value: responsible ? responsible.name : "Non défini" },
-            { label: "Email", value: responsible ? responsible.email : "-" },
-            { label: "Téléphone", value: record.phone || "-" },
-          ],
-        }),
-      ].join(""),
-    ])}
+    [
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        rows: [
+          { label: "Code", value: record.code },
+          { label: "Nom", value: record.name },
+          { label: "Localisations", value: record.locations || "-" },
+          { label: "Description", value: record.description || "Aucune description" },
+        ],
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-user",
+        title: "Responsable",
+        rows: [
+          { label: "Responsable", value: responsible ? responsible.name : "Non défini" },
+          { label: "Email", value: responsible ? responsible.email : "-" },
+          { label: "Téléphone", value: record.phone || "-" },
+        ],
+      }),
+    ].join(""),
+  ])}
   `);
 }
 
@@ -3023,41 +3087,41 @@ function buildDivisionsDetailsContent(record) {
   const responsible = getOrganizationUser(record.responsibleUserId);
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      actions: [buildMfDetailEditAction('data-org-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    actions: [buildMfDetailEditAction('data-org-edit-from-details')],
+  })}
     ${buildMfDetailGrid([
-      [
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-circle-info",
-          title: "Identification",
-          rows: [
-            { label: "Code", value: record.code },
-            { label: "Nom", value: record.name },
-            { label: "Description", value: record.description || "Aucune description" },
-          ],
-        }),
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-sitemap",
-          title: "Organisation",
-          rows: [
-            {
-              label: "Unités liées",
-              value: joinNames(getOrganizationRecords("unites"), record.unitIds || []),
-            },
-          ],
-        }),
-      ].join(""),
+    [
       buildMfDetailCardSection({
-        icon: "fa-solid fa-user",
-        title: "Responsable",
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
         rows: [
-          { label: "Responsable", value: responsible ? responsible.name : "Non défini" },
-          { label: "Email", value: responsible ? responsible.email : "-" },
+          { label: "Code", value: record.code },
+          { label: "Nom", value: record.name },
+          { label: "Description", value: record.description || "Aucune description" },
         ],
       }),
-    ])}
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-sitemap",
+        title: "Organisation",
+        rows: [
+          {
+            label: "Unités liées",
+            value: joinNames(getOrganizationRecords("unites"), record.unitIds || []),
+          },
+        ],
+      }),
+    ].join(""),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-user",
+      title: "Responsable",
+      rows: [
+        { label: "Responsable", value: responsible ? responsible.name : "Non défini" },
+        { label: "Email", value: responsible ? responsible.email : "-" },
+      ],
+    }),
+  ])}
   `);
 }
 
@@ -3253,41 +3317,41 @@ function buildDepartmentServicesDetailsContent(record) {
   const responsible = getOrganizationUser(record.responsibleUserId);
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      actions: [buildMfDetailEditAction('data-org-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    actions: [buildMfDetailEditAction('data-org-edit-from-details')],
+  })}
     ${buildMfDetailGrid([
-      [
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-circle-info",
-          title: "Identification",
-          rows: [
-            { label: "Code", value: record.code },
-            { label: "Nom", value: record.name },
-            { label: "Description", value: record.description || "Aucune description" },
-          ],
-        }),
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-sitemap",
-          title: "Organisation",
-          rows: [
-            {
-              label: "Unités liées",
-              value: joinNames(getOrganizationRecords("unites"), record.unitIds || []),
-            },
-          ],
-        }),
-      ].join(""),
+    [
       buildMfDetailCardSection({
-        icon: "fa-solid fa-user",
-        title: "Responsable",
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
         rows: [
-          { label: "Responsable", value: responsible ? responsible.name : "Non défini" },
-          { label: "Email", value: responsible ? responsible.email : "-" },
+          { label: "Code", value: record.code },
+          { label: "Nom", value: record.name },
+          { label: "Description", value: record.description || "Aucune description" },
         ],
       }),
-    ])}
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-sitemap",
+        title: "Organisation",
+        rows: [
+          {
+            label: "Unités liées",
+            value: joinNames(getOrganizationRecords("unites"), record.unitIds || []),
+          },
+        ],
+      }),
+    ].join(""),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-user",
+      title: "Responsable",
+      rows: [
+        { label: "Responsable", value: responsible ? responsible.name : "Non défini" },
+        { label: "Email", value: responsible ? responsible.email : "-" },
+      ],
+    }),
+  ])}
   `);
 }
 
@@ -4240,14 +4304,14 @@ function buildMfDetailTaskList(items = []) {
   return `
     <ol class="mf-details-task-list">
       ${items
-        .map(
-          (item, index) => `
+      .map(
+        (item, index) => `
         <li class="mf-details-task-item">
           <span class="mf-details-task-num">${index + 1}</span>
           <span class="mf-details-task-text">${escapeHtml(item)}</span>
         </li>`,
-        )
-        .join("")}
+      )
+      .join("")}
     </ol>`;
 }
 
@@ -4266,13 +4330,13 @@ function buildMfDetailChipList(items = [], variant = "article") {
   return `
     <div class="${listClass}">
       ${items
-        .map(
-          (item) => `
+      .map(
+        (item) => `
         <span class="${chipClass}">
           <i class="${icon}"></i> ${escapeHtml(item)}
         </span>`,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>`;
 }
 
@@ -4304,26 +4368,26 @@ function buildMfDetailTabSlider(tabs = []) {
         </div>
         <div style="display:flex;justify-content:space-between">
           ${safeTabs
-            .map(
-              (tab, index) => `
+      .map(
+        (tab, index) => `
             <button type="button" class="eq-detail-tab${index === 0 ? " active" : ""}" data-tab="${index}"
               style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:${index === 0 ? "var(--text-primary,#1a2533)" : "var(--text-muted,#8fa0b0)"};cursor:pointer;transition:color 0.3s">
               ${escapeHtml(tab.label)}
             </button>`,
-            )
-            .join("")}
+      )
+      .join("")}
         </div>
       </div>
     </div>
     <div class="eq-detail-slider" data-active="0">
       ${safeTabs
-        .map(
-          (tab, index) => `
+      .map(
+        (tab, index) => `
         <div class="eq-detail-slide" data-slide="${index}">
           ${tab.content}
         </div>`,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 }
@@ -4332,11 +4396,10 @@ function buildMfDetailMediaBlock(photoSrc, photoLabel) {
   return `
     <div class="mf-details-card-media">
       <div class="equipment-detail-image">
-        ${
-          photoSrc
-            ? `<img src="${photoSrc}" alt="${escapeHtml(photoLabel)}">`
-            : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`
-        }
+        ${photoSrc
+      ? `<img src="${photoSrc}" alt="${escapeHtml(photoLabel)}">`
+      : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`
+    }
       </div>
     </div>
   `;
@@ -4761,43 +4824,43 @@ function buildGroupEquipmentDetailsContent(record) {
 
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      badges: [
-        { label: `${linkedFamilies.length} famille${linkedFamilies.length !== 1 ? "s" : ""}`, className: "badge-info" },
-        { label: `${linkedEquipments.length} équipement${linkedEquipments.length !== 1 ? "s" : ""}`, className: "badge-gray" },
-      ],
-      actions: [buildMfDetailEditAction('data-eq-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    badges: [
+      { label: `${linkedFamilies.length} famille${linkedFamilies.length !== 1 ? "s" : ""}`, className: "badge-info" },
+      { label: `${linkedEquipments.length} équipement${linkedEquipments.length !== 1 ? "s" : ""}`, className: "badge-gray" },
+    ],
+    actions: [buildMfDetailEditAction('data-eq-edit-from-details')],
+  })}
     ${buildMfDetailGrid([
-      [
-        buildMfDetailCard({
-          icon: "fa-solid fa-circle-info",
-          title: "Identification",
-          bodyHtml: buildMfDetailRows([
-            { label: "Code", value: record.code },
-            { label: "Nom", value: record.name },
-            { label: "Désignations", value: record.designations || "Aucune désignation" },
-          ]),
-        }),
-        buildMfDetailCard({
-          icon: "fa-solid fa-sitemap",
-          title: "Organisation",
-          bodyHtml: buildMfDetailRows([
-            { label: "Départements associés", value: departmentLabels || "-" },
-          ]),
-        }),
-      ].join(""),
+    [
       buildMfDetailCard({
-        icon: "fa-solid fa-link",
-        title: "Liaisons",
-        count: linkedFamilies.length + linkedEquipments.length,
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
         bodyHtml: buildMfDetailRows([
-          { label: "Familles liées", value: String(linkedFamilies.length) },
-          { label: "Équipements liés", value: String(linkedEquipments.length) },
+          { label: "Code", value: record.code },
+          { label: "Nom", value: record.name },
+          { label: "Désignations", value: record.designations || "Aucune désignation" },
         ]),
       }),
-    ])}
+      buildMfDetailCard({
+        icon: "fa-solid fa-sitemap",
+        title: "Organisation",
+        bodyHtml: buildMfDetailRows([
+          { label: "Départements associés", value: departmentLabels || "-" },
+        ]),
+      }),
+    ].join(""),
+    buildMfDetailCard({
+      icon: "fa-solid fa-link",
+      title: "Liaisons",
+      count: linkedFamilies.length + linkedEquipments.length,
+      bodyHtml: buildMfDetailRows([
+        { label: "Familles liées", value: String(linkedFamilies.length) },
+        { label: "Équipements liés", value: String(linkedEquipments.length) },
+      ]),
+    }),
+  ])}
   `);
 }
 
@@ -4982,46 +5045,46 @@ function buildFamilyEquipmentDetailsContent(record) {
 
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      badges: [
-        { label: familyState, className: linkedEquipments.length ? "badge-success" : "badge-gray" },
-        { label: `${linkedEquipments.length} équipement${linkedEquipments.length !== 1 ? "s" : ""}`, className: "badge-info" },
-      ],
-      actions: [buildMfDetailEditAction('data-eq-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    badges: [
+      { label: familyState, className: linkedEquipments.length ? "badge-success" : "badge-gray" },
+      { label: `${linkedEquipments.length} équipement${linkedEquipments.length !== 1 ? "s" : ""}`, className: "badge-info" },
+    ],
+    actions: [buildMfDetailEditAction('data-eq-edit-from-details')],
+  })}
     ${buildMfDetailGrid([
-      [
-        buildMfDetailCard({
-          icon: "fa-solid fa-circle-info",
-          title: "Identification",
-          bodyHtml: buildMfDetailRows([
-            { label: "Code", value: record.code },
-            { label: "Nom", value: record.name },
-            { label: "Désignations", value: record.designations || "Aucune désignation" },
-          ]),
-        }),
-        buildMfDetailCard({
-          icon: "fa-solid fa-layer-group",
-          title: "Organisation",
-          bodyHtml: buildMfDetailRows([
-            {
-              label: "Groupe associé",
-              value: group ? `${group.code} — ${group.name}` : "Aucune sélection",
-            },
-            { label: "État", value: familyState },
-          ]),
-        }),
-      ].join(""),
+    [
       buildMfDetailCard({
-        icon: "fa-solid fa-link",
-        title: "Liaisons",
-        count: linkedEquipments.length,
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
         bodyHtml: buildMfDetailRows([
-          { label: "Équipements liés", value: String(linkedEquipments.length) },
+          { label: "Code", value: record.code },
+          { label: "Nom", value: record.name },
+          { label: "Désignations", value: record.designations || "Aucune désignation" },
         ]),
       }),
-    ])}
+      buildMfDetailCard({
+        icon: "fa-solid fa-layer-group",
+        title: "Organisation",
+        bodyHtml: buildMfDetailRows([
+          {
+            label: "Groupe associé",
+            value: group ? `${group.code} — ${group.name}` : "Aucune sélection",
+          },
+          { label: "État", value: familyState },
+        ]),
+      }),
+    ].join(""),
+    buildMfDetailCard({
+      icon: "fa-solid fa-link",
+      title: "Liaisons",
+      count: linkedEquipments.length,
+      bodyHtml: buildMfDetailRows([
+        { label: "Équipements liés", value: String(linkedEquipments.length) },
+      ]),
+    }),
+  ])}
   `);
 }
 
@@ -5320,6 +5383,12 @@ function buildEquipmentFormContent(record, mode) {
               <input id="equipmentBrand" name="brand" type="text" value="${escapeHtml(record?.brand || "")}" placeholder="Marque" />
             </div>
             <div class="field-group">
+  <label for="equipmentModel">Modèle</label>
+  <input id="equipmentModel" name="model" type="text"
+    value="${escapeHtml(record?.model || '')}"
+    placeholder="Modèle de l'équipement" />
+</div>
+            <div class="field-group">
   <label for="equipmentSupplier">Fournisseur</label>
   <select id="equipmentSupplier" name="supplier">
     ${buildEquipmentSupplierOptions(record?.supplier)}
@@ -5611,19 +5680,19 @@ function buildEquipmentDetailsContent(record) {
         bodyHtml: `
           ${buildMfDetailMediaBlock(primaryPhotoSrc, primaryPhotoLabel)}
           ${buildMfDetailRows([
-            { label: "Code", value: record.code },
-            { label: "N° de série", value: record.serialNumber || "-" },
-            { label: "Nom", value: record.name },
-            { label: "Marque", value: record.brand || "-" },
-            {
-              label: "Criticité",
-              valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>`,
-            },
-            {
-              label: "État",
-              valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>`,
-            },
-          ])}
+          { label: "Code", value: record.code },
+          { label: "N° de série", value: record.serialNumber || "-" },
+          { label: "Nom", value: record.name },
+          { label: "Marque", value: record.brand || "-" },
+          {
+            label: "Criticité",
+            valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>`,
+          },
+          {
+            label: "État",
+            valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>`,
+          },
+        ])}
         `,
       }),
       buildMfDetailCard({
@@ -5653,27 +5722,27 @@ function buildEquipmentDetailsContent(record) {
 
   const technicalTab = hasTechFields
     ? buildMfDetailCard({
-        icon: "fa-solid fa-gears",
-        title: "Caractéristiques techniques",
-        count: techRows.length,
-        bodyHtml: buildMfDetailRows(techRows),
-      })
+      icon: "fa-solid fa-gears",
+      title: "Caractéristiques techniques",
+      count: techRows.length,
+      bodyHtml: buildMfDetailRows(techRows),
+    })
     : buildMfDetailEmpty("Aucune caractéristique technique renseignée.", "fa-solid fa-circle-info");
 
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      badges: [
-        { label: record.status || "-", className: getStatusBadgeClass(record.status) },
-        { label: record.criticality || "-", className: getCriticalityBadgeClass(record.criticality) },
-      ],
-      actions: [buildMfDetailEditAction('data-eq-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    badges: [
+      { label: record.status || "-", className: getStatusBadgeClass(record.status) },
+      { label: record.criticality || "-", className: getCriticalityBadgeClass(record.criticality) },
+    ],
+    actions: [buildMfDetailEditAction('data-eq-edit-from-details')],
+  })}
     ${buildMfDetailTabSlider([
-      { label: "Infos générales", content: generalTab },
-      { label: "Caractéristiques techniques", content: technicalTab },
-    ])}
+    { label: "Infos générales", content: generalTab },
+    { label: "Caractéristiques techniques", content: technicalTab },
+  ])}
   `);
 }
 
@@ -6277,6 +6346,7 @@ function attachEquipmentPageHandlers(pageKey) {
       brand: String(
         form.querySelector("input[name='brand']")?.value || "",
       ).trim(),
+      model: String(form.querySelector('input[name="model"]')?.value ?? '').trim(),
       supplier: String(
         form.querySelector("select[name='supplier']")?.value || "",
       ).trim(),
@@ -6589,36 +6659,41 @@ function buildOrganeGroupFormContent(record, mode) {
           <label for="organeGroupCode">Code groupe</label>
           <input id="organeGroupCode" type="text" value="${escapeHtml(codePreview)}" disabled />
         </div>
+
         <div class="field-group">
           <label for="organeGroupName">Nom</label>
-          <input id="organeGroupName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom du groupe organe" required />
+          <input
+            id="organeGroupName"
+            name="name"
+            type="text"
+            value="${escapeHtml(record?.name || "")}"
+            placeholder="Nom du groupe organe"
+            required
+          />
         </div>
+
         <div class="field-group field-group-wide">
           <label for="organeGroupDesignations">Désignations</label>
-          <textarea id="organeGroupDesignations" name="designations" rows="4" placeholder="Désignations du groupe">${escapeTextarea(record?.designations || "")}</textarea>
+          <textarea
+            id="organeGroupDesignations"
+            name="designations"
+            rows="4"
+            placeholder="Désignations du groupe"
+          >${escapeTextarea(record?.designations || "")}</textarea>
         </div>
+
         <div class="field-group field-group-wide">
           <label for="organeGroupEquipments">Équipements associés</label>
           <select id="organeGroupEquipments" name="associatedEquipmentIds" multiple size="6">
             ${buildAssociatedEquipmentOptions(record?.associatedEquipmentIds || [])}
           </select>
-          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.</div>
+          <div class="org-field-hint">
+            Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.
+          </div>
         </div>
       </div>
-    <!-- Navigation wizard -->
-    <div class="eq-wizard-nav" data-wizard-nav>
-      <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
-        <i class="fa-solid fa-arrow-left"></i> Précédent
-      </button>
-      <div class="eq-wizard-nav-right">
-        <button type="button" class="btn btn-primary eq-wizard-next" data-wizard-next>
-          Suivant <i class="fa-solid fa-arrow-right"></i>
-        </button>
-        <button type="submit" class="btn btn-primary eq-wizard-submit" data-wizard-submit style="display:none">
-          <i class="fa-solid fa-check"></i> ${mode === 'edit' ? 'Enregistrer' : "Créer l'organe"}
-        </button>
-      </div>
-    </div>
+
+      ${buildOrganizationFormFooter("groupe-organe", mode, record?.id)}
     </form>
   `;
 }
@@ -6639,41 +6714,41 @@ function buildOrganeGroupDetailsContent(record) {
 
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      badges: [
-        { label: `${linkedFamilies.length} famille${linkedFamilies.length !== 1 ? "s" : ""}`, className: "badge-info" },
-        { label: `${linkedOrganes.length} organe${linkedOrganes.length !== 1 ? "s" : ""}`, className: "badge-gray" },
-      ],
-      actions: [buildMfDetailEditAction('data-og-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    badges: [
+      { label: `${linkedFamilies.length} famille${linkedFamilies.length !== 1 ? "s" : ""}`, className: "badge-info" },
+      { label: `${linkedOrganes.length} organe${linkedOrganes.length !== 1 ? "s" : ""}`, className: "badge-gray" },
+    ],
+    actions: [buildMfDetailEditAction('data-og-edit-from-details')],
+  })}
     ${buildMfDetailGrid([
-      [
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-circle-info",
-          title: "Identification",
-          rows: [
-            { label: "Code", value: record.code },
-            { label: "Nom", value: record.name },
-            { label: "Désignations", value: record.designations || "Aucune désignation" },
-          ],
-        }),
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-sitemap",
-          title: "Organisation",
-          rows: [{ label: "Équipements associés", value: equipmentLabels || "-" }],
-        }),
-      ].join(""),
+    [
       buildMfDetailCardSection({
-        icon: "fa-solid fa-link",
-        title: "Liaisons",
-        count: linkedFamilies.length + linkedOrganes.length,
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
         rows: [
-          { label: "Familles liées", value: String(linkedFamilies.length) },
-          { label: "Organes liés", value: String(linkedOrganes.length) },
+          { label: "Code", value: record.code },
+          { label: "Nom", value: record.name },
+          { label: "Désignations", value: record.designations || "Aucune désignation" },
         ],
       }),
-    ])}
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-sitemap",
+        title: "Organisation",
+        rows: [{ label: "Équipements associés", value: equipmentLabels || "-" }],
+      }),
+    ].join(""),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-link",
+      title: "Liaisons",
+      count: linkedFamilies.length + linkedOrganes.length,
+      rows: [
+        { label: "Familles liées", value: String(linkedFamilies.length) },
+        { label: "Organes liés", value: String(linkedOrganes.length) },
+      ],
+    }),
+  ])}
   `);
 }
 
@@ -6847,44 +6922,44 @@ function buildOrganeFamilyDetailsContent(record) {
 
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      badges: [
-        { label: familyState, className: linkedOrganes.length ? "badge-success" : "badge-gray" },
-        { label: `${linkedOrganes.length} organe${linkedOrganes.length !== 1 ? "s" : ""}`, className: "badge-info" },
-      ],
-      actions: [buildMfDetailEditAction('data-og-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    badges: [
+      { label: familyState, className: linkedOrganes.length ? "badge-success" : "badge-gray" },
+      { label: `${linkedOrganes.length} organe${linkedOrganes.length !== 1 ? "s" : ""}`, className: "badge-info" },
+    ],
+    actions: [buildMfDetailEditAction('data-og-edit-from-details')],
+  })}
     ${buildMfDetailGrid([
-      [
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-circle-info",
-          title: "Identification",
-          rows: [
-            { label: "Code", value: record.code },
-            { label: "Nom", value: record.name },
-            { label: "Désignations", value: record.designations || "Aucune désignation" },
-          ],
-        }),
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-layer-group",
-          title: "Organisation",
-          rows: [
-            {
-              label: "Groupe associé",
-              value: group ? `${group.code} — ${group.name}` : "Aucune sélection",
-            },
-            { label: "Statut", value: familyState },
-          ],
-        }),
-      ].join(""),
+    [
       buildMfDetailCardSection({
-        icon: "fa-solid fa-link",
-        title: "Liaisons",
-        count: linkedOrganes.length,
-        rows: [{ label: "Organes liés", value: String(linkedOrganes.length) }],
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        rows: [
+          { label: "Code", value: record.code },
+          { label: "Nom", value: record.name },
+          { label: "Désignations", value: record.designations || "Aucune désignation" },
+        ],
       }),
-    ])}
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-layer-group",
+        title: "Organisation",
+        rows: [
+          {
+            label: "Groupe associé",
+            value: group ? `${group.code} — ${group.name}` : "Aucune sélection",
+          },
+          { label: "Statut", value: familyState },
+        ],
+      }),
+    ].join(""),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-link",
+      title: "Liaisons",
+      count: linkedOrganes.length,
+      rows: [{ label: "Organes liés", value: String(linkedOrganes.length) }],
+    }),
+  ])}
   `);
 }
 
@@ -7132,6 +7207,12 @@ function buildOrganeFormContent(record, mode) {
               <label for="organeBrand">Marque</label>
               <input id="organeBrand" name="brand" type="text" value="${escapeHtml(record?.brand || "")}" placeholder="Marque" />
             </div>
+            <div class="field-group">
+  <label for="organeModel">Modèle</label>
+  <input id="organeModel" name="model" type="text"
+    value="${escapeHtml(record?.model || '')}"
+    placeholder="Modèle de l'organe" />
+</div>
            <div class="field-group">
   <label for="organeSupplier">Fournisseur</label>
   <select id="organeSupplier" name="supplier">
@@ -7363,19 +7444,19 @@ function buildOrganeDetailsContent(record) {
         bodyHtml: `
           ${buildMfDetailMediaBlock(primaryPhotoSrc, primaryPhotoLabel)}
           ${buildMfDetailRows([
-            { label: "Code", value: record.code || "-" },
-            { label: "Nom", value: record.name || "-" },
-            { label: "Marque", value: record.brand || "-" },
-            { label: "N° de série", value: record.serialNumber || "-" },
-            {
-              label: "Criticité",
-              valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>`,
-            },
-            {
-              label: "État",
-              valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>`,
-            },
-          ])}
+          { label: "Code", value: record.code || "-" },
+          { label: "Nom", value: record.name || "-" },
+          { label: "Marque", value: record.brand || "-" },
+          { label: "N° de série", value: record.serialNumber || "-" },
+          {
+            label: "Criticité",
+            valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>`,
+          },
+          {
+            label: "État",
+            valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>`,
+          },
+        ])}
         `,
       }),
       buildMfDetailCardSection({
@@ -7399,27 +7480,27 @@ function buildOrganeDetailsContent(record) {
 
   const technicalTab = techRows.length
     ? buildMfDetailCardSection({
-        icon: "fa-solid fa-gears",
-        title: "Caractéristiques techniques",
-        count: techRows.length,
-        rows: techRows,
-      })
+      icon: "fa-solid fa-gears",
+      title: "Caractéristiques techniques",
+      count: techRows.length,
+      rows: techRows,
+    })
     : buildMfDetailEmpty("Aucune caractéristique technique renseignée.", "fa-solid fa-circle-info");
 
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.code,
-      title: record.name,
-      badges: [
-        { label: record.status || "-", className: getStatusBadgeClass(record.status) },
-        { label: record.criticality || "-", className: getCriticalityBadgeClass(record.criticality) },
-      ],
-      actions: [buildMfDetailEditAction('data-og-edit-from-details')],
-    })}
+    ref: record.code,
+    title: record.name,
+    badges: [
+      { label: record.status || "-", className: getStatusBadgeClass(record.status) },
+      { label: record.criticality || "-", className: getCriticalityBadgeClass(record.criticality) },
+    ],
+    actions: [buildMfDetailEditAction('data-og-edit-from-details')],
+  })}
     ${buildMfDetailTabSlider([
-      { label: "Infos générales", content: generalTab },
-      { label: "Caractéristiques techniques", content: technicalTab },
-    ])}
+    { label: "Infos générales", content: generalTab },
+    { label: "Caractéristiques techniques", content: technicalTab },
+  ])}
   `);
 }
 
@@ -7852,6 +7933,7 @@ function attachOrganePageHandlers(pageKey) {
       brand: String(
         form.querySelector("input[name='brand']")?.value || "",
       ).trim(),
+      model: String(form.querySelector('input[name="model"]')?.value ?? '').trim(),
       supplier: String(form.querySelector("select[name='supplier']")?.value || "").trim(),
       serialNumber: String(
         form.querySelector("input[name='serialNumber']")?.value || "",
@@ -9120,21 +9202,76 @@ const englishInterfaceTranslations = new Map(
     DA: "PR",
     BC: "PO",
     REC: "Receipt",
-    "Bloqués":"Blocked",
-    "Alloué":"allocated",
-    "Engagé":"engaged",
+    "Bloqués": "Blocked",
+    "Alloué": "allocated",
+    "Engagé": "engaged",
     "Voir module": "View Module",
-     "Aucune intervention enregistrée.":"No intervention recorded.",
-     "Aucune activité récente.":"no recent activity.",
-     "Aucun fournisseur enregistré." : "No suppliers registered.",
-     "Coût maintenance (Mois)":"Maintenance Cost (Months)",
-     "Top 3 Équipements coûteux":"Top 3 Expensive Equipment",
-     "Répartition des coûts":"costs distribution",
-     "Aucune donnée de coût":"No cost data",
-     "Taux conformité":"Compliance rate",
-     "Délai moyen":"mean time",
-     "BC en cours":"PO in progress",
-     "Cumul du mois en cours":"Monthly roll-up",
+    "Aucune intervention enregistrée.": "No intervention recorded.",
+    "Aucune activité récente.": "no recent activity.",
+    "Aucun fournisseur enregistré.": "No suppliers registered.",
+    "Coût maintenance (Mois)": "Maintenance Cost (Months)",
+    "Top 3 Équipements coûteux": "Top 3 Expensive Equipment",
+    "Répartition des coûts": "costs distribution",
+    "Aucune donnée de coût": "No cost data",
+    "Taux conformité": "Compliance rate",
+    "Délai moyen": "mean time",
+    "BC en cours": "PO in progress",
+    "Cumul du mois en cours": "Monthly roll-up",
+    "Toutes les informations de l’unité sélectionnée.": "All information for the selected unit.",
+    "Toutes les informations du département sélectionné.": "All information for the selected department.",
+    "Groupes actifs": "active groups",
+    "Départements liés": "Linked departments",
+    "Équipements associés": "associated equipment",
+    "Base du référentiel équipement": "Base of the equipment repository",
+    "Association multi-départements": "Multi-department association",
+    "Rattachement direct au groupe": "Direct connection to the group",
+    "Créez le premier groupe d'équipements pour commencer la structuration du référentiel.": "Create the first equipment group to start structuring the repository.",
+    "Le bouton Nouveau groupe ouvre le formulaire de création.": "The New Group button opens the create form.",
+    "Familles actives": "active families",
+    "Équipements liés": "related equipment",
+    "Niveau de structuration intermédiaire": "Intermediate level of structuring",
+    "Relation obligatoire au groupe": "Mandatory group relationship",
+    "Le parc est rattaché à la famille": "The park is attached to the family.",
+    "Créez une famille et rattachez-la à un groupe existant.": "Create a family and attach it to an existing group.",
+    "Le bouton Nouvelle famille ouvre le formulaire de création.": "The New Family button opens the create form.",
+    "Créez la première fiche équipement après avoir défini les groupes et les familles.": "Create the first equipment sheet after defining the groups and families.",
+    "Le bouton Nouvel équipement ouvre le formulaire complet.": "The New Equipment button opens the full form.",
+    "Type général": "general type",
+    "Liaisons métier": "Connections",
+    "Type complémentaire": "complementary type",
+    "Caractéristiques techniques": "technical characteristics",
+    "Pièces jointes": "attachments",
+    "Les champs principaux définissent le rattachement et le statut de l'équipement.": "Master fields define the equipment’s attachment and status.",
+    "Associez les organes et articles déjà créés à cet équipement.": "Associate the organs and items already created with this equipment.",
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.": "Hold down Ctrl or Cmd to select multiple articles.",
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.": "Hold down Ctrl or Cmd to select multiple organs.",
+    "Les champs complémentaires décrivent le suivi fournisseur, la traçabilité et l'historique d'achat.": "The additional fields describe supplier tracking, traceability, and purchase history.",
+    "Type d'énergie, puissance, dimensions et paramètres de fonctionnement.": "Type of energy, power, dimensions and operating parameters.",
+    "Vous pouvez ajouter plusieurs photos et documents pour enrichir la fiche.": "You can add several photos and documents to enrich the file.",
+    "Plusieurs images peuvent être ajoutées à la fiche.": "Several images can be added to the form.",
+    "PDF, images ou autres fichiers utiles au suivi de l’équipement.": "PDF, images or other files useful for monitoring equipment.",
+    "Type d'énergie": "energy type",
+    "Fréquence (Hz)": "Frequency (Hz)",
+    "Capacité / Débit (m³/h, L/min, kg/h...)": "Capacity / Flow rate (m 3/h, L/min, kg/h...)",
+    "Poids (kg)": "Weight (Kg)",
+    "Température de fonctionnement (°C)": "Operating temperature (°C)",
+    "Type de commande": "command type",
+    "Puissance (kW / CV)": "Power (kW / HP)",
+    "Vitesse nominale (tr/min)": "Rated speed (RPM)",
+    "Dimensions (L × l × h)": "Dimensions (L×W×H)",
+    "Toutes les informations de l’équipement sélectionné.": "All information for the selected equipment.",
+    "Chaque groupe organe peut être associé à plusieurs équipements.": "Each organ group can be associated with several pieces of equipment.",
+    "Référentiel de premier niveau": "Top-Level Repository",
+    "Association multi-équipements": "Association multi-équipements",
+    "Inventaire des organes": "Organs inventory ",
+    "Créez le premier groupe organe et associez-le à un ou plusieurs équipements.": "Create the first organ group and associate it with one or more devices.",
+    "Le bouton Nouveau groupe organe ouvre le formulaire de création.": "The New Organ Group button opens the creation form.",
+    "Chaque famille organe est rattachée à un groupe organe": "Each organ family is attached to an organ group.",
+    "Créez une famille organe et associez-la à un groupe existant.": "Create an organ family and associate it with an existing group.",
+    "Le bouton Nouvelle famille organe ouvre le formulaire de création.": "The button New organ family opens the creation form.",
+    "Créez la première fiche organe après avoir défini les groupes et familles.": "Create the first organ record after defining the groups and families.",
+    "Le bouton Nouvel organe ouvre le formulaire complet.": "The New Organ button opens the complete form.",
+
   }),
 );
 
@@ -10006,7 +10143,8 @@ const englishInterfacePhraseTranslations = new Map(
     "Résilié": "Terminated",
     "En renouvellement": "Renewal in progress",
     "Interventions par mois": "Work orders by month",
-    "6 derniers mois":"6 last months",
+    "6 derniers mois": "6 last months",
+    "Équipements associés": "associated equipment",
   }),
 );
 
@@ -11441,19 +11579,19 @@ function renderAdministrationUserDetailsModal(user) {
   const bodyHtml = `
     ${buildMfDetailShell(`
       ${buildMfDetailHero({
-        ref: user.code,
-        title: getAdministrationUserFullName(user),
-        badges: [
-          { label: user.role, className: "badge-info" },
-          { label: user.status, className: user.status === "Actif" ? "badge-success" : "badge-gray" },
-        ],
-      })}
+    ref: user.code,
+    title: getAdministrationUserFullName(user),
+    badges: [
+      { label: user.role, className: "badge-info" },
+      { label: user.status, className: user.status === "Actif" ? "badge-success" : "badge-gray" },
+    ],
+  })}
       <div class="mf-details-grid">
         <div class="mf-details-col">
           ${buildMfDetailCard({
-            icon: "fa-solid fa-user",
-            title: "Profil",
-            bodyHtml: `
+    icon: "fa-solid fa-user",
+    title: "Profil",
+    bodyHtml: `
               <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border-light)">
                 <div class="admin-user-avatar admin-user-detail-avatar">${buildAdministrationPhotoMarkup(user)}</div>
                 <div>
@@ -11462,34 +11600,34 @@ function renderAdministrationUserDetailsModal(user) {
                 </div>
               </div>
               ${buildMfDetailRows([
-                { label: "Nom d'utilisateur", value: user.username },
-                { label: "Email", value: user.email },
-                { label: "Téléphone", value: user.phone || "-" },
-              ])}
+      { label: "Nom d'utilisateur", value: user.username },
+      { label: "Email", value: user.email },
+      { label: "Téléphone", value: user.phone || "-" },
+    ])}
             `,
-          })}
+  })}
         </div>
         <div class="mf-details-col">
           ${buildMfDetailCardSection({
-            icon: "fa-solid fa-sitemap",
-            title: "Organisation",
-            rows: [
-              { label: "Unité", value: user.unit || "Non renseigné" },
-              { label: "Division", value: user.division || "Non renseigné" },
-              { label: "Département", value: user.department || "Non renseigné" },
-              { label: "Code entreprise associé", value: user.companyCode || enterprise.code || "ORG-001" },
-            ],
-          })}
+    icon: "fa-solid fa-sitemap",
+    title: "Organisation",
+    rows: [
+      { label: "Unité", value: user.unit || "Non renseigné" },
+      { label: "Division", value: user.division || "Non renseigné" },
+      { label: "Département", value: user.department || "Non renseigné" },
+      { label: "Code entreprise associé", value: user.companyCode || enterprise.code || "ORG-001" },
+    ],
+  })}
           ${buildMfDetailCardSection({
-            icon: "fa-solid fa-gear",
-            title: "Préférences & activité",
-            rows: [
-              { label: "Langue", value: user.language || "-" },
-              { label: "Fuseau horaire", value: user.timezone || "-" },
-              { label: "Date création", value: formatAdministrationDateTime(user.createdAt) },
-              { label: "Dernière connexion", value: formatAdministrationDateTime(user.lastLogin) },
-            ],
-          })}
+    icon: "fa-solid fa-gear",
+    title: "Préférences & activité",
+    rows: [
+      { label: "Langue", value: user.language || "-" },
+      { label: "Fuseau horaire", value: user.timezone || "-" },
+      { label: "Date création", value: formatAdministrationDateTime(user.createdAt) },
+      { label: "Dernière connexion", value: formatAdministrationDateTime(user.lastLogin) },
+    ],
+  })}
         </div>
       </div>
     `)}
@@ -11551,6 +11689,178 @@ function getAdministrationApprovalRoleOptions() {
     return window.MaintFlowAuth.ROLE_CATALOG.map((role) => ({
       value: role,
       label: window.MaintFlowAuth.toLegacyRole(role) || role,
+
+      "Consommable": "Consumable",
+      "Outil": "Tool",
+      "EPI": "PPE",
+      "Identification": "Identification",
+      "Type d'article": "Item type",
+      "Désignation": "Description",
+      "Liaisons": "Links",
+      "Articles substituts": "Substitute items",
+      "Photos associées": "Associated photos",
+      "Désignations": "Descriptions",
+      "Articles totaux": "Total items",
+      "Articles complets": "Complete items",
+      "Articles avec substitut": "Items with substitute",
+      "Description moyenne": "Average description",
+      "Divisions actives": "Active divisions",
+      "Divisions multi-unités": "Multi-unit divisions",
+      "Unités liées": "Linked units",
+      "Détails": "Details",
+      "Départements associés": "Associated departments",
+      "Groupe associé": "Associated group",
+      "Puissance": "Power",
+      "Tension": "Voltage",
+      "Pression de service": "Operating pressure",
+      "Vitesse nominale": "Nominal speed",
+      "Capacité / Débit": "Capacity / Flow",
+      "Dimensions": "Dimensions",
+      "Poids": "Weight",
+      "Température fonct.": "Operating temp.",
+      "N° de série": "Serial No.",
+      "Criticité": "Criticality",
+      "Articles liés": "Linked items",
+      "Équipements total": "Total equipment",
+      "Équipements en service": "Equipment in service",
+      "Équipements avec pièces jointes": "Equipment with attachments",
+      "Organes créés": "Organs created",
+      "Diamètre intérieur": "Inner diameter",
+      "Diamètre extérieur": "Outer diameter",
+      "Largeur / Longueur": "Width / Length",
+      "Matériau": "Material",
+      "Charge statique": "Static load",
+      "Charge dynamique": "Dynamic load",
+      "Vitesse maximale": "Maximum speed",
+      "Lubrification": "Lubrication",
+      "Pression admissible": "Allowable pressure",
+      "Durée de vie estimée": "Estimated lifespan",
+      "Précision / Classe": "Precision / Class",
+      "Couple nominal": "Nominal torque",
+      "Norme constructeur": "Manufacturer standard",
+      "Compatibilité fluide": "Fluid compatibility",
+      "Organes total": "Total organs",
+      "Organes en service": "Organs in service",
+      "Nom d'équipement": "Equipment name",
+      "Parc équipements": "Equipment fleet",
+      "Terminés": "Completed",
+      "Planifiés": "Scheduled",
+      "DA créée": "PR created",
+      "BC envoyé": "PO sent",
+      "Réception validée": "Receipt validated",
+      "Taux PM réalisées": "PM completion rate",
+      "Taux service stock": "Stock service rate",
+      "Quantité": "Quantity",
+      "PMP": "WAC",
+      "Prix article": "Item price",
+      "Prix total catalogue": "Total catalog price",
+      "Seuils": "Thresholds",
+      "Minimum": "Minimum",
+      "Sécurité": "Safety",
+      "Réapprovisionnement": "Replenishment",
+      "Observations": "Observations",
+      "Magasins": "Warehouses",
+      "Pièce jointe": "Attachment",
+      "Comptage": "Count",
+      "Comptée": "Counted",
+      "Créé le": "Created on",
+      "Résultats": "Results",
+      "Lignes": "Lines",
+      "Écarts ouverts": "Open variances",
+      "Surstocks": "Overstocks",
+      "Manquants": "Missing",
+      "Mesures & seuils": "Measures & thresholds",
+      "Valeur initiale": "Initial value",
+      "Seuil action (→ OT)": "Action threshold (→ WO)",
+      "Mise à jour": "Update",
+      "Montant cumulé TTC": "Cumulative amount incl. tax",
+      "Réceptions conformes": "Compliant receipts",
+      "Qté reçue totale": "Total qty. received",
+      "Contrôle qualité refusé": "Quality control rejected",
+      "Numéro": "Number",
+      "Urgence": "Urgency",
+      "Justification": "Justification",
+      "Contact": "Contact",
+      "Article & montants": "Item & amounts",
+      "Quantités": "Quantities",
+      "Documents": "Documents",
+      "Validées": "Validated",
+      "Transformées": "Converted",
+      "Clôturés": "Closed",
+      "Validés": "Validated",
+      "Événements": "Events",
+      "Réf": "Ref",
+      "Titre": "Title",
+      "Localisation": "Location",
+      "Priorité": "Priority",
+      "Technicien(s)": "Technician(s)",
+      "Instructions": "Instructions",
+      "Début": "Start",
+      "Fin": "End",
+      "Causes": "Causes",
+      "Coût articles": "Items cost",
+      "Coût main d'œuvre": "Labor cost",
+      "Sous-traitance": "Subcontracting",
+      "Coût total": "Total cost",
+      "Évaluation": "Evaluation",
+      "Groupess article": "Item groups",
+      "Espace vide pour construire la gestion des groupes d'articles.": "Empty space to build item group management.",
+      "Espace vide pour construire la gestion des familles d'articles.": "Empty space to build item family management.",
+      "Espace vide pour construire la liste des articles.": "Empty space to build the item list.",
+      "Suivi simple des plans de maintenance et de leurs déclenchements.": "Simple tracking of maintenance plans and their triggers.",
+      "Suivi des relevés, seuils d'alerte et génération automatique d'OT.": "Tracking of readings, alert thresholds, and automatic WO generation.",
+      "Fiche entreprise, informations de base et logo.": "Company record, basic information, and logo.",
+      "Gestion des groupes d'équipements avec affectation multi-divisions.": "Management of equipment groups with multi-division assignment.",
+      "Gestion des familles d'équipements rattachées à un groupe.": "Management of equipment families linked to a group.",
+      "Liste des équipements avec fiche détaillée et formulaire en plusieurs sections.": "List of equipment with detailed records and multi-section forms.",
+      "Gestion des groupes d'organes avec association multi-équipements.": "Management of organ groups with multi-equipment association.",
+      "Gestion des familles d'organes rattachées à un groupe.": "Management of organ families linked to a group.",
+      "Liste des organes avec formulaire complet et pièces jointes.": "List of organs with complete forms and attachments.",
+      "Référentiel des plans, déclenchements et gammes opératoires.": "Directory of plans, triggers, and operating procedures.",
+      "Vue des OT planifiés, en cours et en retard sur plusieurs horizons.": "View of scheduled, in-progress, and overdue WOs across multiple horizons.",
+      "Paramétrage du stock, emplacements et valorisation des articles.": "Stock settings, locations, and item valuation.",
+      "Entrées, sorties et transferts de stock avec traçabilité complète.": "Stock entries, issues, and transfers with complete traceability.",
+      "Création d’inventaires et feuille de comptage terrain.": "Creation of inventories and field count sheets.",
+      "Consultation des mouvements filtrée par article, type, date ou utilisateur.": "View of movements filtered by item, type, date, or user.",
+      "JSON export base, full import and reset options by module.": "JSON export base, full import and reset options by module.",
+      "Planification, assignation technicien et suivi de l'exécution": "Planning, technician assignment, and execution tracking",
+      "Saisie terrain, articles consommés, signatures et validation finale.": "Field entry, consumed items, signatures, and final validation.",
+      "Notation périodique, commentaires et recommandations.": "Periodic rating, comments, and recommendations.",
+      "Corrective": "Corrective",
+      "Préventive": "Preventive",
+      "Réglementaire": "Regulatory",
+      "Prédictive": "Predictive",
+      "Disponibilité équipements par zone": "Equipment availability by area",
+      "équipements": "equipment",
+      "Aucune zone disponible.": "No area available.",
+      "Statut des interventions": "Work order status",
+      "Types de maintenance": "Maintenance types",
+      "Valeur stock par famille": "Stock value by family",
+      "Aucune valeur stock.": "No stock value.",
+      "Interventions récentes": "Recent work orders",
+      "Réf.": "Ref.",
+      "Alertes actives": "Active alerts",
+      "actives": "active",
+      "Aucune alerte active.": "No active alert.",
+      "Planning semaine": "Weekly schedule",
+      "Aucune intervention planifiée.": "No scheduled work order.",
+      "Activité récente": "Recent activity",
+      "Budget achats par mois": "Purchase budget by month",
+      "Top fournisseurs": "Top suppliers",
+      "Note": "Rating",
+      "Correctif": "Corrective",
+      "Préventif": "Preventive",
+      "moy pannes": "avg failures",
+      "moy répar.": "avg repair",
+      "dans délais": "on time",
+      "dispo immé.": "avail. immed.",
+      "En service": "In service",
+      "Sans famille": "No family",
+      "Panne déclarée": "Failure reported",
+      "Intervention terminée": "Work order completed",
+      "Intervention mise à jour": "Work order updated",
+      "Mouvement stock": "Stock movement",
+      "Entrée stock": "Stock entry",
     }));
   }
 
@@ -11747,11 +12057,11 @@ function renderAdministrationApproveUserModal(user) {
         <select id="adminApproveRoleSelect" name="role" required>
           <option value="">Choisir un rôle</option>
           ${roleOptions
-            .map(
-              (option) =>
-                `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`,
-            )
-            .join("")}
+      .map(
+        (option) =>
+          `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`,
+      )
+      .join("")}
         </select>
       </div>
       <div class="org-modal-actions">
@@ -11843,8 +12153,8 @@ function buildAdministrationPendingUsersSection(pendingUsers) {
           </thead>
           <tbody>
             ${pendingUsers
-              .map(
-                (user) => `
+      .map(
+        (user) => `
                   <tr>
                     <td>
                       <strong>${escapeHtml(getAdministrationUserFullName(user))}</strong>
@@ -11870,8 +12180,8 @@ function buildAdministrationPendingUsersSection(pendingUsers) {
                     </td>
                   </tr>
                 `,
-              )
-              .join("")}
+      )
+      .join("")}
           </tbody>
         </table>
       </div>
@@ -11945,8 +12255,8 @@ function buildAdministrationUsersSection(state) {
       <div class="admin-user-list">
         ${registeredUsers.length
       ? registeredUsers
-      .map(
-        (user) => `
+        .map(
+          (user) => `
               <article class="admin-user-list-item">
                 <div class="admin-user-list-avatar ${user.status === "Suspendu" || isAdministrationUserRejected(user) ? "is-muted" : ""}">
                   ${buildAdministrationPhotoMarkup(user)}
@@ -11982,8 +12292,8 @@ function buildAdministrationUsersSection(state) {
                 </div>
               </article>
             `,
-      )
-      .join("")
+        )
+        .join("")
       : `<div class="org-empty-card admin-empty-card"><div class="blank-badge"><i class="fa-regular fa-folder-open"></i></div><h2>Aucun compte enregistré</h2><p>Les utilisateurs approuvés apparaîtront ici.</p></div>`}
       </div>
     </section>
@@ -15610,53 +15920,53 @@ function openStockRecordDetails(recordKey) {
   const bodyHtml = `
     ${buildMfDetailShell(`
       ${buildMfDetailHero({
-        ref: article ? article.code : record.articleId,
-        title: article ? article.name : "Fiche stock",
-        badges: [{ label: riskLabel, className: riskLabel.includes("critique") || riskLabel.includes("rupture") ? "badge-danger" : "badge-info" }],
-        actions: [{
-          label: "Imprimer",
-          variant: "btn-outline",
-          icon: "fa-solid fa-print",
-          attrs: `onclick="printFicheStock('${escapeHtml(recordKey)}')"`,
-        }],
-      })}
+    ref: article ? article.code : record.articleId,
+    title: article ? article.name : "Fiche stock",
+    badges: [{ label: riskLabel, className: riskLabel.includes("critique") || riskLabel.includes("rupture") ? "badge-danger" : "badge-info" }],
+    actions: [{
+      label: "Imprimer",
+      variant: "btn-outline",
+      icon: "fa-solid fa-print",
+      attrs: `onclick="printFicheStock('${escapeHtml(recordKey)}')"`,
+    }],
+  })}
       ${buildMfDetailGrid([
-        [
-          buildMfDetailCardSection({
-            icon: "fa-solid fa-boxes-stacked",
-            title: "Stock",
-            rows: [
-              {
-                label: "Article",
-                value: article ? `${article.code} — ${article.name}` : record.articleId || "-",
-              },
-              { label: "Quantité", value: record.currentQuantity },
-              { label: "PMP", value: `${formatStockNumber(record.pmp)} DA` },
-              { label: "Prix article", value: `${formatStockNumber(record.articlePrice ?? 0)} DA` },
-              {
-                label: "Prix total catalogue",
-                value: `${formatStockNumber((record.currentQuantity ?? 0) * (record.articlePrice ?? 0))} DA`,
-              },
-            ],
-          }),
-          buildMfDetailCardSection({
-            icon: "fa-solid fa-chart-line",
-            title: "Seuils",
-            rows: [
-              { label: "Minimum", value: record.minStock },
-              { label: "Sécurité", value: record.safetyStock },
-              { label: "Réapprovisionnement", value: record.replenishmentQty },
-              { label: "Emplacement", value: record.locationLabel || "-" },
-              { label: "État", value: riskLabel },
-            ],
-          }),
-        ].join(""),
-        buildMfDetailCard({
-          icon: "fa-solid fa-note-sticky",
-          title: "Observations",
-          bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(record.observations || "Aucune observation")}</p></div></div>`,
-        }),
-      ])}
+    [
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-boxes-stacked",
+        title: "Stock",
+        rows: [
+          {
+            label: "Article",
+            value: article ? `${article.code} — ${article.name}` : record.articleId || "-",
+          },
+          { label: "Quantité", value: record.currentQuantity },
+          { label: "PMP", value: `${formatStockNumber(record.pmp)} DA` },
+          { label: "Prix article", value: `${formatStockNumber(record.articlePrice ?? 0)} DA` },
+          {
+            label: "Prix total catalogue",
+            value: `${formatStockNumber((record.currentQuantity ?? 0) * (record.articlePrice ?? 0))} DA`,
+          },
+        ],
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-chart-line",
+        title: "Seuils",
+        rows: [
+          { label: "Minimum", value: record.minStock },
+          { label: "Sécurité", value: record.safetyStock },
+          { label: "Réapprovisionnement", value: record.replenishmentQty },
+          { label: "Emplacement", value: record.locationLabel || "-" },
+          { label: "État", value: riskLabel },
+        ],
+      }),
+    ].join(""),
+    buildMfDetailCard({
+      icon: "fa-solid fa-note-sticky",
+      title: "Observations",
+      bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(record.observations || "Aucune observation")}</p></div></div>`,
+    }),
+  ])}
     `)}
     <div class="org-modal-actions">
       <button class="btn btn-outline" type="button" data-stock-closetrue>Fermer</button>
@@ -16028,53 +16338,53 @@ function renderStockMovementDetails(movement) {
   const bodyHtml = `
     ${buildMfDetailShell(`
       ${buildMfDetailHero({
-        ref: movement.id || "-",
-        title: getStockMovementTypeLabel(movement.type),
-        badges: [{ label: String(movement.quantity || 0), className: "badge-info" }],
-      })}
+    ref: movement.id || "-",
+    title: getStockMovementTypeLabel(movement.type),
+    badges: [{ label: String(movement.quantity || 0), className: "badge-info" }],
+  })}
       ${buildMfDetailGrid([
-        [
-          buildMfDetailCardSection({
-            icon: "fa-solid fa-circle-info",
-            title: "Identification",
-            rows: [
-              { label: "Référence", value: movement.id || "-" },
-              {
-                label: "Article",
-                value: article
-                  ? `${article.code} — ${article.name}`
-                  : movement.articleId || "-",
-              },
-              { label: "Type", value: getStockMovementTypeLabel(movement.type) },
-              { label: "Quantité", value: movement.quantity || 0 },
-            ],
-          }),
-          buildMfDetailCardSection({
-            icon: "fa-solid fa-warehouse",
-            title: "Magasins",
-            rows: [
-              {
-                label: "Magasin source",
-                value: sourceLocation
-                  ? `${sourceLocation.code} - ${sourceLocation.name}`
-                  : "-",
-              },
-              {
-                label: "Magasin destination",
-                value: destinationLocation
-                  ? `${destinationLocation.code} - ${destinationLocation.name}`
-                  : "-",
-              },
-              { label: "Pièce jointe", value: movement.attachmentName || "Aucune pièce jointe" },
-            ],
-          }),
-        ].join(""),
-        buildMfDetailCard({
-          icon: "fa-solid fa-note-sticky",
-          title: "Observations",
-          bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(movement.observations || "Aucune observation")}</p></div></div>`,
-        }),
-      ])}
+    [
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        rows: [
+          { label: "Référence", value: movement.id || "-" },
+          {
+            label: "Article",
+            value: article
+              ? `${article.code} — ${article.name}`
+              : movement.articleId || "-",
+          },
+          { label: "Type", value: getStockMovementTypeLabel(movement.type) },
+          { label: "Quantité", value: movement.quantity || 0 },
+        ],
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-warehouse",
+        title: "Magasins",
+        rows: [
+          {
+            label: "Magasin source",
+            value: sourceLocation
+              ? `${sourceLocation.code} - ${sourceLocation.name}`
+              : "-",
+          },
+          {
+            label: "Magasin destination",
+            value: destinationLocation
+              ? `${destinationLocation.code} - ${destinationLocation.name}`
+              : "-",
+          },
+          { label: "Pièce jointe", value: movement.attachmentName || "Aucune pièce jointe" },
+        ],
+      }),
+    ].join(""),
+    buildMfDetailCard({
+      icon: "fa-solid fa-note-sticky",
+      title: "Observations",
+      bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(movement.observations || "Aucune observation")}</p></div></div>`,
+    }),
+  ])}
     `)}
     <div class="org-modal-actions">
       <button class="btn btn-outline" type="button" data-stock-close="true">Fermer</button>
@@ -16563,33 +16873,33 @@ function renderStockInventoryRowDetails(row) {
     `
       ${buildMfDetailShell(`
         ${buildMfDetailHero({
-          ref: article ? article.code : row.dataset.articleId || "-",
-          title: article ? article.name : "Ligne inventaire",
-          badges: [{
-            label: statusLabel,
-            className: discrepancy === 0 ? "badge-success" : "badge-warning",
-          }],
-        })}
+      ref: article ? article.code : row.dataset.articleId || "-",
+      title: article ? article.name : "Ligne inventaire",
+      badges: [{
+        label: statusLabel,
+        className: discrepancy === 0 ? "badge-success" : "badge-warning",
+      }],
+    })}
         ${buildMfDetailCardSection({
-          icon: "fa-solid fa-clipboard-check",
-          title: "Comptage",
-          rows: [
-            {
-              label: "Article",
-              value: article
-                ? `${article.code} — ${article.name}`
-                : row.dataset.articleId || "-",
-            },
-            { label: "Emplacement", value: row.dataset.locationLabel || "-" },
-            { label: "Théorique", value: theoretical },
-            { label: "Comptée", value: counted },
-            {
-              label: "Écart",
-              value: discrepancy > 0 ? `+${discrepancy}` : discrepancy,
-            },
-            { label: "Statut", value: statusLabel },
-          ],
-        })}
+      icon: "fa-solid fa-clipboard-check",
+      title: "Comptage",
+      rows: [
+        {
+          label: "Article",
+          value: article
+            ? `${article.code} — ${article.name}`
+            : row.dataset.articleId || "-",
+        },
+        { label: "Emplacement", value: row.dataset.locationLabel || "-" },
+        { label: "Théorique", value: theoretical },
+        { label: "Comptée", value: counted },
+        {
+          label: "Écart",
+          value: discrepancy > 0 ? `+${discrepancy}` : discrepancy,
+        },
+        { label: "Statut", value: statusLabel },
+      ],
+    })}
       `)}
       <div class="org-modal-actions">
         <button class="btn btn-outline" type="button" data-stock-close="true">Fermer</button>
@@ -16660,53 +16970,53 @@ function openStockInventoryDetails(inventoryId) {
     `
       ${buildMfDetailShell(`
         ${buildMfDetailHero({
-          ref: inventory.id,
-          title: inventory.type || "Inventaire",
-          badges: [
-            { label: inventory.status || "-", className: "badge-info" },
-            { label: `${rows.length} ligne${rows.length !== 1 ? "s" : ""}`, className: "badge-gray" },
-          ],
-          actions: [{
-            label: "Imprimer",
-            variant: "btn-outline",
-            icon: "fa-solid fa-print",
-            attrs: `onclick="printInventaire('${escapeHtml(inventoryId)}')"`,
-          }],
-        })}
+      ref: inventory.id,
+      title: inventory.type || "Inventaire",
+      badges: [
+        { label: inventory.status || "-", className: "badge-info" },
+        { label: `${rows.length} ligne${rows.length !== 1 ? "s" : ""}`, className: "badge-gray" },
+      ],
+      actions: [{
+        label: "Imprimer",
+        variant: "btn-outline",
+        icon: "fa-solid fa-print",
+        attrs: `onclick="printInventaire('${escapeHtml(inventoryId)}')"`,
+      }],
+    })}
         ${buildMfDetailGrid([
-          [
-            buildMfDetailCardSection({
-              icon: "fa-solid fa-circle-info",
-              title: "Identification",
-              rows: [
-                { label: "Type", value: inventory.type || "-" },
-                { label: "Responsable", value: inventory.owner || "-" },
-                { label: "Statut", value: inventory.status || "-" },
-                {
-                  label: "Créé le",
-                  value: inventory.createdAt
-                    ? formatStockDateTime(new Date(inventory.createdAt))
-                    : "-",
-                },
-              ],
-            }),
-            buildMfDetailCardSection({
-              icon: "fa-solid fa-chart-pie",
-              title: "Résultats",
-              rows: [
-                { label: "Lignes", value: String(rows.length) },
-                { label: "Écarts ouverts", value: String(openCount) },
-                { label: "Surstocks", value: String(positiveCount) },
-                { label: "Manquants", value: String(negativeCount) },
-              ],
-            }),
-          ].join(""),
-          buildMfDetailCard({
-            icon: "fa-solid fa-note-sticky",
-            title: "Observations",
-            bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(inventory.observations || "Aucune observation.")}</p></div></div>`,
-          }),
-        ])}
+      [
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-circle-info",
+          title: "Identification",
+          rows: [
+            { label: "Type", value: inventory.type || "-" },
+            { label: "Responsable", value: inventory.owner || "-" },
+            { label: "Statut", value: inventory.status || "-" },
+            {
+              label: "Créé le",
+              value: inventory.createdAt
+                ? formatStockDateTime(new Date(inventory.createdAt))
+                : "-",
+            },
+          ],
+        }),
+        buildMfDetailCardSection({
+          icon: "fa-solid fa-chart-pie",
+          title: "Résultats",
+          rows: [
+            { label: "Lignes", value: String(rows.length) },
+            { label: "Écarts ouverts", value: String(openCount) },
+            { label: "Surstocks", value: String(positiveCount) },
+            { label: "Manquants", value: String(negativeCount) },
+          ],
+        }),
+      ].join(""),
+      buildMfDetailCard({
+        icon: "fa-solid fa-note-sticky",
+        title: "Observations",
+        bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(inventory.observations || "Aucune observation.")}</p></div></div>`,
+      }),
+    ])}
       `)}
       <div class="mf-details-card" style="margin-top:14px">
         <div class="mf-details-card-header">
@@ -17300,64 +17610,64 @@ function buildCounterDetailHtml(ctr, state) {
 
   return buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: ctr.ref,
-      title: ctr.name,
-      badges: [
-        {
-          label: `${ctr.currentValue ?? 0} ${ctr.unit || ""}`.trim(),
-          className: thresholdClass,
-        },
-        {
-          label: ctr.status || "Actif",
-          className: ctr.status === "Actif" ? "badge-success" : "badge-gray",
-        },
-      ],
-    })}
+    ref: ctr.ref,
+    title: ctr.name,
+    badges: [
+      {
+        label: `${ctr.currentValue ?? 0} ${ctr.unit || ""}`.trim(),
+        className: thresholdClass,
+      },
+      {
+        label: ctr.status || "Actif",
+        className: ctr.status === "Actif" ? "badge-success" : "badge-gray",
+      },
+    ],
+  })}
     ${buildMfDetailGrid([
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-link",
-        title: "Liaisons",
-        rows: [
-          {
-            label: "Équipement lié",
-            value: eqMatch
-              ? `${eqMatch.code} ${eqMatch.name}`
-              : ctr.equipment || "-",
-          },
-          {
-            label: "Organe lié",
-            value: oMatch ? `${oMatch.code} ${oMatch.name}` : ctr.organ || "-",
-          },
-          { label: "Plan lié", value: ctr.planId || "-" },
-        ],
-      }),
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-gauge-high",
-        title: "Mesures & seuils",
-        rows: [
-          { label: "Type", value: ctr.type || "-" },
-          {
-            label: "Valeur initiale",
-            value: `${ctr.initialValue ?? 0} ${ctr.unit || ""}`.trim(),
-          },
-          {
-            label: "Valeur actuelle",
-            value: `${ctr.currentValue ?? 0} ${ctr.unit || ""}`.trim(),
-            accent: true,
-          },
-          {
-            label: "Seuil alerte",
-            value: `${ctr.alertThreshold || "-"} ${ctr.unit || ""}`.trim(),
-          },
-          {
-            label: "Seuil action (→ OT)",
-            value: `${ctr.actionThreshold || "-"} ${ctr.unit || ""}`.trim(),
-          },
-          { label: "Mise à jour", value: formatPlanificationDate(ctr.lastUpdate) },
-          { label: "Créé le", value: formatPlanificationDate(ctr.createdAt) },
-        ],
-      }),
-    ])}
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-link",
+      title: "Liaisons",
+      rows: [
+        {
+          label: "Équipement lié",
+          value: eqMatch
+            ? `${eqMatch.code} ${eqMatch.name}`
+            : ctr.equipment || "-",
+        },
+        {
+          label: "Organe lié",
+          value: oMatch ? `${oMatch.code} ${oMatch.name}` : ctr.organ || "-",
+        },
+        { label: "Plan lié", value: ctr.planId || "-" },
+      ],
+    }),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-gauge-high",
+      title: "Mesures & seuils",
+      rows: [
+        { label: "Type", value: ctr.type || "-" },
+        {
+          label: "Valeur initiale",
+          value: `${ctr.initialValue ?? 0} ${ctr.unit || ""}`.trim(),
+        },
+        {
+          label: "Valeur actuelle",
+          value: `${ctr.currentValue ?? 0} ${ctr.unit || ""}`.trim(),
+          accent: true,
+        },
+        {
+          label: "Seuil alerte",
+          value: `${ctr.alertThreshold || "-"} ${ctr.unit || ""}`.trim(),
+        },
+        {
+          label: "Seuil action (→ OT)",
+          value: `${ctr.actionThreshold || "-"} ${ctr.unit || ""}`.trim(),
+        },
+        { label: "Mise à jour", value: formatPlanificationDate(ctr.lastUpdate) },
+        { label: "Créé le", value: formatPlanificationDate(ctr.createdAt) },
+      ],
+    }),
+  ])}
   `);
 }
 
@@ -21318,53 +21628,53 @@ function buildAchatsDaDetails(record) {
   return `
     ${buildMfDetailShell(`
       ${buildMfDetailHero({
-        ref: record.number,
-        title: record.articleLabel || "Demande d'achat",
-        badges: [
-          { label: record.status || "-", className: getPlanificationPlanBadgeClass(record.status) },
-          { label: record.urgency || "Normale", className: "badge-warning" },
-        ],
-        actions: [{
-          label: "Imprimer DA",
-          variant: "btn-outline",
-          icon: "fa-solid fa-print",
-          attrs: `onclick="printDA('${escapeHtml(record.id)}')"`,
-        }],
-      })}
+    ref: record.number,
+    title: record.articleLabel || "Demande d'achat",
+    badges: [
+      { label: record.status || "-", className: getPlanificationPlanBadgeClass(record.status) },
+      { label: record.urgency || "Normale", className: "badge-warning" },
+    ],
+    actions: [{
+      label: "Imprimer DA",
+      variant: "btn-outline",
+      icon: "fa-solid fa-print",
+      attrs: `onclick="printDA('${escapeHtml(record.id)}')"`,
+    }],
+  })}
       ${buildMfDetailGrid([
-        [
-          buildMfDetailCardSection({
-            icon: "fa-solid fa-circle-info",
-            title: "Identification",
-            rows: [
-              { label: "Numéro", value: record.number },
-              { label: "Date création", value: formatAchatsDate(record.createdAt) },
-              { label: "Demandeur", value: record.requester || "-" },
-              { label: "Urgence", value: record.urgency || "Normale" },
-            ],
-          }),
-          buildMfDetailCardSection({
-            icon: "fa-solid fa-box",
-            title: "Article",
-            rows: [
-              { label: "Article", value: record.articleLabel || "-" },
-              { label: "Quantité", value: formatStockNumber(record.quantity || 0) },
-              {
-                label: "Prix unitaire estimé",
-                value: `${formatStockNumber(record.estimatedUnitPrice || 0)} DH`,
-              },
-              { label: "Fournisseur suggéré", value: record.preferredSupplier || "-" },
-              { label: "Date souhaitée", value: record.neededDate || "-" },
-              { label: "Statut", value: record.status || "-" },
-            ],
-          }),
-        ].join(""),
-        buildMfDetailCard({
-          icon: "fa-solid fa-note-sticky",
-          title: "Justification",
-          bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(record.reason || "-")}</p></div></div>`,
-        }),
-      ])}
+    [
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        rows: [
+          { label: "Numéro", value: record.number },
+          { label: "Date création", value: formatAchatsDate(record.createdAt) },
+          { label: "Demandeur", value: record.requester || "-" },
+          { label: "Urgence", value: record.urgency || "Normale" },
+        ],
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-box",
+        title: "Article",
+        rows: [
+          { label: "Article", value: record.articleLabel || "-" },
+          { label: "Quantité", value: formatStockNumber(record.quantity || 0) },
+          {
+            label: "Prix unitaire estimé",
+            value: `${formatStockNumber(record.estimatedUnitPrice || 0)} DH`,
+          },
+          { label: "Fournisseur suggéré", value: record.preferredSupplier || "-" },
+          { label: "Date souhaitée", value: record.neededDate || "-" },
+          { label: "Statut", value: record.status || "-" },
+        ],
+      }),
+    ].join(""),
+    buildMfDetailCard({
+      icon: "fa-solid fa-note-sticky",
+      title: "Justification",
+      bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(record.reason || "-")}</p></div></div>`,
+    }),
+  ])}
     `)}
     <div class="org-modal-actions">
     ${record.status === "En attente"
@@ -21396,59 +21706,59 @@ function buildAchatsBcDetails(record, state) {
   return `
     ${buildMfDetailShell(`
       ${buildMfDetailHero({
-        ref: record.number,
-        title: record.supplierName || "Bon de commande",
-        badges: [
-          { label: record.status || "-", className: getPlanificationPlanBadgeClass(record.status) },
-          { label: formatAchatsMoney(record.totalTtc || 0), className: "badge-info" },
-        ],
-        actions: [{
-          label: "Imprimer BC",
-          variant: "btn-outline",
-          icon: "fa-solid fa-print",
-          attrs: `onclick="printBC('${escapeHtml(record.id)}')"`,
-        }],
-      })}
+    ref: record.number,
+    title: record.supplierName || "Bon de commande",
+    badges: [
+      { label: record.status || "-", className: getPlanificationPlanBadgeClass(record.status) },
+      { label: formatAchatsMoney(record.totalTtc || 0), className: "badge-info" },
+    ],
+    actions: [{
+      label: "Imprimer BC",
+      variant: "btn-outline",
+      icon: "fa-solid fa-print",
+      attrs: `onclick="printBC('${escapeHtml(record.id)}')"`,
+    }],
+  })}
       ${buildMfDetailGrid([
-        [
-          buildMfDetailCardSection({
-            icon: "fa-solid fa-circle-info",
-            title: "Identification",
-            rows: [
-              { label: "Numéro", value: record.number },
-              { label: "Date création", value: formatAchatsDate(record.createdAt) },
-              { label: "Date commande", value: record.orderDate || "-" },
-              { label: "Date livraison souhaitée", value: record.wantedDate || "-" },
-              { label: "Statut", value: record.status || "-" },
-              { label: "DA liée", value: linkedDaNumber },
-            ],
-          }),
-          buildMfDetailCardSection({
-            icon: "fa-solid fa-truck",
-            title: "Fournisseur",
-            rows: [
-              { label: "Fournisseur", value: record.supplierName || "-" },
-              {
-                label: "Contact",
-                value: `${record.supplierPhone || "-"} | ${record.supplierEmail || "-"}`,
-              },
-              { label: "Adresse de livraison", value: record.deliveryAddress || "-" },
-            ],
-          }),
-        ].join(""),
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-box",
-          title: "Article & montants",
-          rows: [
-            { label: "Article", value: record.articleLabel || "-" },
-            { label: "Réf fournisseur", value: record.supplierRef || "-" },
-            { label: "Quantité", value: formatStockNumber(record.quantity || 0) },
-            { label: "Total HT", value: formatAchatsMoney(record.totalHt || 0) },
-            { label: "Total TTC", value: formatAchatsMoney(record.totalTtc || 0) },
-            { label: "Observations", value: record.observations || "-" },
-          ],
-        }),
-      ])}
+    [
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        rows: [
+          { label: "Numéro", value: record.number },
+          { label: "Date création", value: formatAchatsDate(record.createdAt) },
+          { label: "Date commande", value: record.orderDate || "-" },
+          { label: "Date livraison souhaitée", value: record.wantedDate || "-" },
+          { label: "Statut", value: record.status || "-" },
+          { label: "DA liée", value: linkedDaNumber },
+        ],
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-truck",
+        title: "Fournisseur",
+        rows: [
+          { label: "Fournisseur", value: record.supplierName || "-" },
+          {
+            label: "Contact",
+            value: `${record.supplierPhone || "-"} | ${record.supplierEmail || "-"}`,
+          },
+          { label: "Adresse de livraison", value: record.deliveryAddress || "-" },
+        ],
+      }),
+    ].join(""),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-box",
+      title: "Article & montants",
+      rows: [
+        { label: "Article", value: record.articleLabel || "-" },
+        { label: "Réf fournisseur", value: record.supplierRef || "-" },
+        { label: "Quantité", value: formatStockNumber(record.quantity || 0) },
+        { label: "Total HT", value: formatAchatsMoney(record.totalHt || 0) },
+        { label: "Total TTC", value: formatAchatsMoney(record.totalTtc || 0) },
+        { label: "Observations", value: record.observations || "-" },
+      ],
+    }),
+  ])}
     `)}
   `;
 }
@@ -21458,55 +21768,55 @@ function buildAchatsReceptionDetails(record, state) {
   return `
     ${buildMfDetailShell(`
       ${buildMfDetailHero({
-        ref: record.number,
-        title: record.supplierName || "Réception",
-        badges: [
-          { label: record.receptionState || "-", className: "badge-info" },
-          { label: record.status || "-", className: getPlanificationPlanBadgeClass(record.status) },
-        ],
-        actions: [{
-          label: "Imprimer le bon de réception",
-          variant: "btn-outline",
-          icon: "fa-solid fa-print",
-          attrs: `onclick="printBonReception('${escapeHtml(record.id)}')"`,
-        }],
-      })}
+    ref: record.number,
+    title: record.supplierName || "Réception",
+    badges: [
+      { label: record.receptionState || "-", className: "badge-info" },
+      { label: record.status || "-", className: getPlanificationPlanBadgeClass(record.status) },
+    ],
+    actions: [{
+      label: "Imprimer le bon de réception",
+      variant: "btn-outline",
+      icon: "fa-solid fa-print",
+      attrs: `onclick="printBonReception('${escapeHtml(record.id)}')"`,
+    }],
+  })}
       ${buildMfDetailGrid([
-        [
-          buildMfDetailCardSection({
-            icon: "fa-solid fa-circle-info",
-            title: "Identification",
-            rows: [
-              { label: "Numéro", value: record.number },
-              { label: "Date réception", value: formatAchatsDate(record.createdAt) },
-              { label: "BC lié", value: linkedBc?.number || "-" },
-              { label: "Réceptionné par", value: record.receiver || "-" },
-              { label: "Fournisseur", value: record.supplierName || "-" },
-            ],
-          }),
-          buildMfDetailCardSection({
-            icon: "fa-solid fa-box",
-            title: "Quantités",
-            rows: [
-              { label: "Article", value: record.articleLabel || "-" },
-              { label: "Qté commandée", value: formatStockNumber(record.orderedQty || 0) },
-              { label: "Qté reçue", value: formatStockNumber(record.receivedQty || 0) },
-              { label: "Écart", value: formatStockNumber(record.missingQty || 0) },
-              { label: "État réception", value: record.receptionState || "-" },
-              { label: "Emplacement stock", value: record.storageLocation || "-" },
-            ],
-          }),
-        ].join(""),
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-file-lines",
-          title: "Documents",
-          rows: [
-            { label: "BL fournisseur", value: record.deliveryNoteRef || "-" },
-            { label: "Facture fournisseur", value: record.invoiceRef || "-" },
-            { label: "Observations", value: record.observations || "-" },
-          ],
-        }),
-      ])}
+    [
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-circle-info",
+        title: "Identification",
+        rows: [
+          { label: "Numéro", value: record.number },
+          { label: "Date réception", value: formatAchatsDate(record.createdAt) },
+          { label: "BC lié", value: linkedBc?.number || "-" },
+          { label: "Réceptionné par", value: record.receiver || "-" },
+          { label: "Fournisseur", value: record.supplierName || "-" },
+        ],
+      }),
+      buildMfDetailCardSection({
+        icon: "fa-solid fa-box",
+        title: "Quantités",
+        rows: [
+          { label: "Article", value: record.articleLabel || "-" },
+          { label: "Qté commandée", value: formatStockNumber(record.orderedQty || 0) },
+          { label: "Qté reçue", value: formatStockNumber(record.receivedQty || 0) },
+          { label: "Écart", value: formatStockNumber(record.missingQty || 0) },
+          { label: "État réception", value: record.receptionState || "-" },
+          { label: "Emplacement stock", value: record.storageLocation || "-" },
+        ],
+      }),
+    ].join(""),
+    buildMfDetailCardSection({
+      icon: "fa-solid fa-file-lines",
+      title: "Documents",
+      rows: [
+        { label: "BL fournisseur", value: record.deliveryNoteRef || "-" },
+        { label: "Facture fournisseur", value: record.invoiceRef || "-" },
+        { label: "Observations", value: record.observations || "-" },
+      ],
+    }),
+  ])}
     `)}
     <div class="org-modal-actions" style="margin-top:16px">
       <button type="button" class="btn btn-outline" data-ach-close="true">Fermer</button>
@@ -26877,11 +27187,11 @@ function renderInterventionRecordDetails(recordType, record) {
 
   const detailsBody = buildMfDetailShell(`
     ${buildMfDetailHero({
-      ref: record.ref,
-      title: heroTitle,
-      badges: heroBadges,
-      actions: heroActions,
-    })}
+    ref: record.ref,
+    title: heroTitle,
+    badges: heroBadges,
+    actions: heroActions,
+  })}
     ${detailsHtml}
   `);
 
@@ -28168,17 +28478,17 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
 
     const contentHtml = buildMfDetailShell(`
       ${buildMfDetailHero({
-        ref: heroRef,
-        title: heroTitle,
-        badges: heroBadges,
-        actions: heroActions,
-      })}
+      ref: heroRef,
+      title: heroTitle,
+      badges: heroBadges,
+      actions: heroActions,
+    })}
       ${buildMfDetailCardSection({
-        icon: "fa-solid fa-circle-info",
-        title: TAB_CONFIG[activeTab].label,
-        count: fields.length,
-        rows: fields.map(([label, value]) => ({ label, value: value ?? "-" })),
-      })}
+      icon: "fa-solid fa-circle-info",
+      title: TAB_CONFIG[activeTab].label,
+      count: fields.length,
+      rows: fields.map(([label, value]) => ({ label, value: value ?? "-" })),
+    })}
     `);
 
     openModal(
