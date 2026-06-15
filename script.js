@@ -4752,7 +4752,9 @@ function initializeWizardForm(form, stepLabels) {
     if (submitBtn) submitBtn.style.display = index === total - 1 ? "" : "none";
 
     currentStep = index;
-    form.closest(".org-modal-panel")?.scrollTo({ top: 0, behavior: "smooth" });
+    form
+      .querySelector(".eq-wizard-panel.active .equipment-section-card")
+      ?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function validateCurrentPanel() {
@@ -5634,7 +5636,9 @@ function buildEquipmentFormContent(record, mode) {
         </div>
       </section>
     </div>
-<!-- Navigation wizard -->
+  </div><!-- fin eq-wizard-panels -->
+
+  <!-- Navigation wizard -->
   <div class="eq-wizard-nav" data-wizard-nav>
     <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
       <i class="fa-solid fa-arrow-left"></i> Précédent
@@ -5649,7 +5653,6 @@ function buildEquipmentFormContent(record, mode) {
       </button>
     </div>
   </div>
-  </div><!-- fin eq-wizard-panels -->
 
   
 
@@ -6131,8 +6134,10 @@ function attachEquipmentPageHandlers(pageKey) {
 
     currentStep = index;
 
-    // Scroll en haut du modal
-    form.closest('.org-modal-panel')?.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll en haut de la zone des champs
+    form
+      .querySelector('.eq-wizard-panel.active .equipment-section-card')
+      ?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // Validation simple avant de passer à l'étape suivante
