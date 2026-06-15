@@ -5581,6 +5581,7 @@ body.sidebar-collapsed .sidebar-toggle {
 
 /* -- Slider D�tails �quipement ----------------------------------- */
 .eq-detail-slider {
+  margin-top: 0px;
   display: flex;
   overflow: hidden;
   width: 100%;
@@ -5609,7 +5610,7 @@ body.sidebar-collapsed .sidebar-toggle {
 .mf-details-ref {
   display: flex;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
   flex-wrap: wrap;
 }
 .plan-details-badge {
@@ -5772,7 +5773,7 @@ body.sidebar-collapsed .sidebar-toggle {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 22px;
+  padding: 12px 16px;
   border-radius: 18px;
   background: linear-gradient(
     135deg,
@@ -5813,7 +5814,7 @@ body.sidebar-collapsed .sidebar-toggle {
   color: var(--text-primary);
   letter-spacing: -0.3px;
   line-height: 1.2;
-  margin: 0;
+  margin: 2px 0 4px 0;
 }
 
 .plan-details-hero-badges,
@@ -5837,7 +5838,7 @@ body.sidebar-collapsed .sidebar-toggle {
 .plan-details-grid,
 .mf-details-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   align-items: start;
 }
@@ -6104,4 +6105,81 @@ body.sidebar-collapsed .sidebar-toggle {
   width: 100%;
   height: 220px;
   object-fit: cover;
+}
+/* Grille 2 colonnes */
+.mf-detail-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch; /* ← les deux colonnes ont la même hauteur */
+}
+
+.mf-detail-col-left,
+.mf-detail-col-right {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Photo : prend toute la hauteur de la colonne gauche */
+.mf-detail-photo-block {
+  width: 100%;
+  height: 100%; /* ← s'étire pour matcher la colonne droite */
+  min-height: 180px;
+  border-radius: var(--radius-lg, 10px);
+  overflow: hidden;
+  background: var(--color-surface-offset, #f0f0f0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mf-detail-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* ← couvre tout sans déformer */
+  display: block;
+}
+
+/* Placeholder quand pas de photo */
+.mf-detail-photo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--color-text-faint, #aaa);
+  height: 100%;
+  width: 100%;
+  padding: 24px;
+}
+
+.mf-detail-photo-empty i {
+  font-size: 2.5rem;
+}
+
+.mf-detail-photo-empty span {
+  font-size: 0.85rem;
+}
+
+/* Responsive mobile */
+@media (max-width: 700px) {
+  .mf-detail-two-col {
+    grid-template-columns: 1fr;
+  }
+  .mf-detail-photo-block {
+    min-height: 200px;
+    height: 200px;
+  }
+}
+.stock-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+@media (max-width: 768px) {
+  .stock-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }

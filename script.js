@@ -1306,109 +1306,117 @@ function buildArticleListActions(pageKey, recordId) {
 
 function buildArticleDetailsContent(record) {
   const primaryPhoto = Array.isArray(record.photos) ? record.photos[0] : null;
-  const primaryPhotoSrc = primaryPhoto?.dataUrl || primaryPhoto;
+  const primaryPhotoSrc = primaryPhoto?.dataUrl || primaryPhoto || '';
   const primaryPhotoLabel = primaryPhoto?.name || record.name || 'Article';
 
   const substituteLabels = joinRecordLabels(
     getArticleRecords('articles'),
     record.substituteIds,
-    a => `${a.code} ${a.name}`
+    a => `${a.code} — ${a.name}`
   );
   const linkedOrganeLabels = joinRecordLabels(
     getOrganeRecords('organes'),
     record.linkedOrganeIds,
-    o => `${o.code} ${o.name}`
+    o => `${o.code} — ${o.name}`
   );
   const linkedEquipmentLabels = joinRecordLabels(
     getEquipmentRecords('equipments'),
     record.linkedEquipmentIds,
-    e => `${e.code} ${e.name}`
+    e => `${e.code} — ${e.name}`
   );
   const group = getArticleRecord('groups', record.groupId);
   const family = getArticleRecord('families', record.familyId);
+
   const hasCustomFields = Array.isArray(record.customFields) && record.customFields.length > 0;
   const hasPhotos = Array.isArray(record.photos) && record.photos.length > 1;
-  const hasTechSlide = hasCustomFields || hasPhotos;
 
-  const generalTab = buildMfDetailGrid([
-    [
-      buildMfDetailCard({
-        icon: "fa-solid fa-circle-info",
-        title: "Identification",
-        bodyHtml: `
-          ${buildMfDetailMediaBlock(primaryPhotoSrc, primaryPhotoLabel)}
-          ${buildMfDetailRows([
-          { label: "Code", value: record.code || "-" },
-          { label: "Nom", value: record.name || "-" },
-          { label: "Type d'article", value: record.articleType || "-" },
-          { label: "Marque", value: record.brand || "-" },
-          { label: "Unité de mesure", value: record.unitMeasure || "-" },
-          { label: "Prix", value: record.price ? String(record.price) : "-" },
-          { label: "Fournisseur", value: record.supplier || "-" },
-        ])}
-        `,
-      }),
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-sitemap",
-        title: "Organisation",
-        rows: [
-          { label: "Groupe", value: group ? `${group.code} ${group.name}` : "-" },
-          { label: "Famille", value: family ? `${family.code} ${family.name}` : "-" },
-          ...(record.designations
-            ? [{ label: "Désignation", value: record.designations }]
-            : []),
-        ],
-      }),
-    ].join(""),
-    buildMfDetailCardSection({
-      icon: "fa-solid fa-link",
-      title: "Liaisons",
-      rows: [
-        { label: "Articles substituts", value: substituteLabels || "-" },
-        { label: "Organes liés", value: linkedOrganeLabels || "-" },
-        { label: "Équipements liés", value: linkedEquipmentLabels || "-" },
-      ],
-    }),
-    buildMfDetailCardSection({
-      icon: 'fa-solid fa-tag',
-      title: 'Type complémentaire',
-      rows: [
-        { label: 'Marque', value: record.brand || '-' },
-        { label: 'Fournisseur', value: record.supplier || '-' },
-        { label: 'N° série', value: record.serialNumber || '-' },
-        { label: "Prix d'achat", value: record.price ? `${record.price}` : '-' },
-        { label: "Date d'achat", value: record.purchaseDate || '-' },
-        { label: 'Mise en service', value: record.serviceDate || '-' },
-        { label: 'Garantie', value: record.warrantyDuration || '-' },
-      ]
-    })
-  ]);
+  // ─── LIGNE 1 : Photo (gauche) + Identification (droite) ───────────────────
+  const row1 = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div class="mf-details-card" style="overflow:hidden;min-height:180px;display:flex;flex-direction:column;justify-content:center;background:#f0f4f8;">
+        ${primaryPhotoSrc
+      ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}" style="width:100%;height:100%;max-height:280px;object-fit:contain;object-position:center;display:block;background:#f0f4f8;">`
+      : `<div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-muted);">
+                   <i class="fa-regular fa-image" style="font-size:2rem;opacity:.35;"></i>
+                   <span style="font-size:.8rem;opacity:.45;">Aucune photo disponible</span>
+                 </div>`
+    }
+      </div>
+      ${buildMfDetailCard({
+      icon: "fa-solid fa-circle-info",
+      title: "Identification",
+      bodyHtml: buildMfDetailRows([
+        { label: "Code", value: record.code || "-" },
+        { label: "Nom", value: record.name || "-" },
+        { label: "Type d'article", value: record.articleType || "-" },
+        { label: "Unité de mesure", value: record.unitMeasure || "-" },
+        { label: "Marque", value: record.brand || "-" },
+        { label: "Prix", value: record.price ? String(record.price) : "-" },
+        { label: "Fournisseur", value: record.supplier || "-" },
+      ]),
+    })}
+    </div>`;
 
+  // ─── LIGNE 2 : Organisation (gauche) + Liaisons (droite) ──────────────────
+  const row2 = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      ${buildMfDetailCard({
+    icon: "fa-solid fa-sitemap",
+    title: "Organisation",
+    bodyHtml: buildMfDetailRows([
+      { label: "Groupe", value: group ? `${group.code} — ${group.name}` : "-" },
+      { label: "Famille", value: family ? `${family.code} — ${family.name}` : "-" },
+      ...(record.designations ? [{ label: "Désignation", value: record.designations }] : []),
+    ]),
+  })}
+      ${buildMfDetailCard({
+    icon: "fa-solid fa-link",
+    title: "Liaisons",
+    bodyHtml: buildMfDetailRows([
+      { label: "Articles substituts", value: substituteLabels || "-" },
+      { label: "Organes liés", value: linkedOrganeLabels || "-" },
+      { label: "Équipements liés", value: linkedEquipmentLabels || "-" },
+    ]),
+  })}
+    </div>`;
+
+  // ─── LIGNE 3 : Type complémentaire (pleine largeur) ───────────────────────
+  const row3 = buildMfDetailCard({
+    icon: "fa-solid fa-tag",
+    title: "Type complémentaire",
+    bodyHtml: buildMfDetailRows([
+      { label: "N° série", value: record.serialNumber || "-" },
+      { label: "Prix d'achat", value: record.price ? `${record.price}` : "-" },
+      { label: "Date d'achat", value: record.purchaseDate || "-" },
+      { label: "Mise en service", value: record.serviceDate || "-" },
+      { label: "Garantie", value: record.warrantyDuration || "-" },
+    ]),
+  });
+
+  const generalTab = row1 + row2 + row3;
+
+  // ─── ONGLET TECHNIQUE ─────────────────────────────────────────────────────
   let technicalTab = buildMfDetailEmpty("Aucune caractéristique technique renseignée.", "fa-solid fa-circle-info");
-  if (hasTechSlide) {
+  if (hasCustomFields || hasPhotos) {
     const techParts = [];
     if (hasCustomFields) {
-      techParts.push(
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-sliders",
-          title: "Caractéristiques spécifiques",
-          count: record.customFields.length,
-          rows: record.customFields.map((cf) => ({
-            label: cf.label,
-            value: cf.value || "-",
-          })),
-        }),
-      );
+      techParts.push(buildMfDetailCard({
+        icon: "fa-solid fa-sliders",
+        title: "Caractéristiques spécifiques",
+        count: record.customFields.length,
+        bodyHtml: buildMfDetailRows(record.customFields.map(cf => ({
+          label: cf.label,
+          value: cf.value || "-",
+        }))),
+      }));
     }
     if (hasPhotos) {
-      techParts.push(
-        buildMfDetailCard({
-          icon: "fa-solid fa-images",
-          title: "Photos associées",
-          count: record.photos.length,
-          bodyHtml: `<div style="padding:12px 14px">${buildStoredAttachmentsPreview(record, { editable: false, showDocuments: true })}</div>`,
-        }),
-      );
+      techParts.push(buildMfDetailCard({
+        icon: "fa-solid fa-images",
+        title: "Photos associées",
+        count: record.photos.length,
+        bodyHtml: `<div style="padding:12px 14px">${buildStoredAttachmentsPreview(record, { editable: false, showDocuments: true })}</div>`,
+      }));
     }
     technicalTab = techParts.join("");
   }
@@ -2482,7 +2490,21 @@ function saveOrganizationDirectory(directory) {
 }
 
 function getOrganizationUser(userId) {
-  return organizationUsers.find((user) => user.id === userId) || null;
+  try {
+    const state = StorageManager.get(administrationStorageKey, administrationDefaults);
+    const users = Array.isArray(state?.users) ? state.users : [];
+    let user = users.find((user) => user.id === userId);
+    if (!user) {
+      user = organizationUsers.find((user) => user.id === userId);
+    }
+    if (user) {
+      const computedName = user.firstName ? `${user.firstName} ${user.lastName || user.name || ''}`.trim() : (user.name || '');
+      return { ...user, name: computedName || user.id };
+    }
+    return null;
+  } catch (e) {
+    return organizationUsers.find((user) => user.id === userId) || null;
+  }
 }
 
 function getOrganizationRecords(kind) {
@@ -4361,17 +4383,15 @@ function buildMfDetailPrintAction(dataAttr, label = "Imprimer") {
 function buildMfDetailTabSlider(tabs = []) {
   const safeTabs = tabs.length ? tabs : [{ label: "Détails", content: "" }];
   return `
-    <div class="eq-detail-toggle-container" style="display:flex;justify-content:center;margin-bottom:24px;margin-top:4px">
+    <div class="eq-detail-toggle-container" style="display:flex;justify-content:center;margin-bottom:2px;margin-top:2px">
       <div style="width:100%;max-width:500px">
-        <div class="eq-detail-toggle-bar" style="height:14px;border:1.5px solid var(--border,#e2e8ef);border-radius:14px;position:relative;cursor:pointer;background:var(--card-bg,#ffffff);margin-bottom:10px;box-sizing:content-box">
-          <div class="eq-detail-toggle-thumb" style="position:absolute;top:-1.5px;left:-1.5px;height:calc(100% + 3px);width:calc(${100 / safeTabs.length}% + 1.5px);background-color:var(--brand,#18a7bf);border-radius:14px;transition:transform 0.3s cubic-bezier(0.25,1,0.5,1)"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between">
+        <div class="eq-detail-toggle-bar" style="position:relative;display:flex;background:var(--card-bg,#ffffff);border:1.5px solid var(--border,#e2e8ef);border-radius:24px;padding:4px;margin-bottom:5px;box-sizing:border-box;height:auto;">
+          <div class="eq-detail-toggle-thumb" style="position:absolute;top:4px;bottom:2px;left:4px;width:calc((100% - 8px) / ${safeTabs.length});background-color:var(--brand,#18a7bf);border-radius:20px;transition:transform 0.3s cubic-bezier(0.25,1,0.5,1);z-index:0;"></div>
           ${safeTabs
       .map(
         (tab, index) => `
             <button type="button" class="eq-detail-tab${index === 0 ? " active" : ""}" data-tab="${index}"
-              style="flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;color:${index === 0 ? "var(--text-primary,#1a2533)" : "var(--text-muted,#8fa0b0)"};cursor:pointer;transition:color 0.3s">
+              style="position:relative;flex:1;text-align:center;background:none;border:none;font-size:15px;font-weight:500;padding:8px 16px;color:${index === 0 ? "#ffffff" : "var(--text-muted,#8fa0b0)"};cursor:pointer;transition:color 0.3s;z-index:1;">
               ${escapeHtml(tab.label)}
             </button>`,
       )
@@ -4393,14 +4413,37 @@ function buildMfDetailTabSlider(tabs = []) {
 }
 
 function buildMfDetailMediaBlock(photoSrc, photoLabel) {
-  return `
-    <div class="mf-details-card-media">
-      <div class="equipment-detail-image">
-        ${photoSrc
-      ? `<img src="${photoSrc}" alt="${escapeHtml(photoLabel)}">`
-      : `<div class="equipment-detail-placeholder"><i class="fa-regular fa-image"></i><span>Aucune photo disponible</span></div>`
-    }
+  if (!photoSrc) {
+    return `
+      <div class="mf-details-card-media">
+        <div class="equipment-detail-placeholder">
+          <i class="fa-regular fa-image"></i>
+          <span>Aucune photo disponible</span>
+        </div>
       </div>
+    `;
+  }
+  return `
+    <div style="
+      margin: -1px -1px 0 -1px;
+      border-radius: 16px 16px 0 0;
+      overflow: hidden;
+      background: #000;
+      line-height: 0;
+    ">
+      <img
+        src="${photoSrc}"
+        alt="${escapeHtml(photoLabel)}"
+        style="
+          width: 100%;
+          max-height: 280px;
+          height: auto;
+          object-fit: contain;
+          object-position: center;
+          display: block;
+          background: #f0f4f8;
+        "
+      >
     </div>
   `;
 }
@@ -4648,11 +4691,11 @@ function initializeDetailSlider(modal) {
     const activeTab = modal.querySelector(`.eq-detail-tab[data-tab="${idx}"]`);
     if (activeTab) {
       activeTab.classList.add('active');
-      activeTab.style.color = 'var(--text-primary, #1a2533)';
+      activeTab.style.color = '#ffffff';
     }
     detailSlider.setAttribute('data-active', idx);
     if (toggleThumb) {
-      toggleThumb.style.transform = idx === 1 ? 'translateX(100%)' : 'translateX(0)';
+      toggleThumb.style.transform = `translateX(${idx * 100}%)`;
     }
   };
 
@@ -5626,28 +5669,13 @@ function buildEquipmentDetailsContent(record) {
   const linkedOrganeLabels = joinRecordLabels(
     getOrganeRecords("organes"),
     record.linkedOrganeIds || [],
-    (organe) => `${organe.code} — ${organe.name}`,
+    (e) => `${e.code} — ${e.name}`
   );
   const linkedArticleLabels = joinRecordLabels(
     getArticleRecords("articles"),
     record.linkedArticleIds || [],
-    (article) => `${article.code} — ${article.name}`,
+    (e) => `${e.code} — ${e.name}`
   );
-
-  const hasTechFields =
-    record.energyType ||
-    record.power ||
-    record.voltage ||
-    record.frequency ||
-    record.pressure ||
-    record.speed ||
-    record.capacity ||
-    record.dimensions ||
-    record.weight ||
-    record.tempMin ||
-    record.tempMax ||
-    record.controlType ||
-    (Array.isArray(record.customFields) && record.customFields.length > 0);
 
   const techRows = [];
   if (record.energyType) techRows.push({ label: "Type d'énergie", value: record.energyType });
@@ -5659,68 +5687,63 @@ function buildEquipmentDetailsContent(record) {
   if (record.capacity) techRows.push({ label: "Capacité / Débit", value: record.capacity });
   if (record.dimensions) techRows.push({ label: "Dimensions", value: record.dimensions });
   if (record.weight) techRows.push({ label: "Poids", value: `${record.weight} kg` });
-  if (record.tempMin || record.tempMax) {
-    techRows.push({
-      label: "Température fonct.",
-      value: `${record.tempMin ?? "?"}°C → ${record.tempMax ?? "?"}°C`,
-    });
-  }
+  if (record.tempMin || record.tempMax)
+    techRows.push({ label: "Température fonct.", value: `${record.tempMin ?? "?"}°C → ${record.tempMax ?? "?"}°C` });
   if (record.controlType) techRows.push({ label: "Type de commande", value: record.controlType });
-  if (Array.isArray(record.customFields) && record.customFields.length > 0) {
-    record.customFields.forEach((cf) => {
-      techRows.push({ label: cf.label, value: cf.value || "-" });
-    });
+  if (Array.isArray(record.customFields)) {
+    record.customFields.forEach((cf) => techRows.push({ label: cf.label, value: cf.value || "-" }));
   }
 
-  const generalTab = buildMfDetailGrid([
-    [
-      buildMfDetailCard({
-        icon: "fa-solid fa-circle-info",
-        title: "Identification",
-        bodyHtml: `
-          ${buildMfDetailMediaBlock(primaryPhotoSrc, primaryPhotoLabel)}
-          ${buildMfDetailRows([
-          { label: "Code", value: record.code },
-          { label: "N° de série", value: record.serialNumber || "-" },
-          { label: "Nom", value: record.name },
-          { label: "Marque", value: record.brand || "-" },
-          {
-            label: "Criticité",
-            valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>`,
-          },
-          {
-            label: "État",
-            valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>`,
-          },
-        ])}
-        `,
-      }),
-      buildMfDetailCard({
-        icon: "fa-solid fa-sitemap",
-        title: "Organisation",
-        bodyHtml: buildMfDetailRows([
-          {
-            label: "Groupe",
-            value: group ? `${group.code} ${group.name}` : "Aucune sélection",
-          },
-          {
-            label: "Famille",
-            value: family ? `${family.code} ${family.name}` : "Aucune sélection",
-          },
-        ]),
-      }),
-    ].join(""),
-    buildMfDetailCard({
-      icon: "fa-solid fa-link",
-      title: "Liaisons",
+  // ─── LIGNE 1 : Photo (gauche) + Identification (droite) ───────────────────
+  const row1 = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div class="mf-details-card" style="overflow:hidden;min-height:180px;display:flex;flex-direction:column;justify-content:center;background:#f0f4f8;">
+        ${primaryPhotoSrc
+      ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}" style="width:100%;height:100%;max-height:280px;object-fit:contain;object-position:center;display:block;background:#f0f4f8;">`
+      : `<div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-muted);">
+                   <i class="fa-regular fa-image" style="font-size:2rem;opacity:.35;"></i>
+                   <span style="font-size:.8rem;opacity:.45;">Aucune photo disponible</span>
+                 </div>`
+    }
+      </div>
+      ${buildMfDetailCard({
+      icon: "fa-solid fa-circle-info",
+      title: "Identification",
       bodyHtml: buildMfDetailRows([
-        { label: "Organes liés", value: linkedOrganeLabels || "-" },
-        { label: "Articles liés", value: linkedArticleLabels || "-" },
+        { label: "Code", value: record.code || "-" },
+        { label: "N° série", value: record.serialNumber || "-" },
+        { label: "Nom", value: record.name || "-" },
+        { label: "Marque", value: record.brand || "-" },
+        { label: "Criticité", valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>` },
+        { label: "État", valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>` },
       ]),
-    }),
-  ]);
+    })}
+    </div>`;
 
-  const technicalTab = hasTechFields
+  // ─── LIGNE 2 : Organisation (gauche) + Liaisons (droite) ──────────────────
+  const row2 = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      ${buildMfDetailCard({
+    icon: "fa-solid fa-sitemap",
+    title: "Organisation",
+    bodyHtml: buildMfDetailRows([
+      { label: "Groupe", value: group ? `${group.code} — ${group.name}` : "-" },
+      { label: "Famille", value: family ? `${family.code} — ${family.name}` : "-" },
+    ]),
+  })}
+      ${buildMfDetailCard({
+    icon: "fa-solid fa-link",
+    title: "Liaisons",
+    bodyHtml: buildMfDetailRows([
+      { label: "Organes liés", value: linkedOrganeLabels || "-" },
+      { label: "Articles liés", value: linkedArticleLabels || "-" },
+    ]),
+  })}
+    </div>`;
+
+  const generalTab = row1 + row2;
+
+  const technicalTab = techRows.length
     ? buildMfDetailCard({
       icon: "fa-solid fa-gears",
       title: "Caractéristiques techniques",
@@ -5737,7 +5760,7 @@ function buildEquipmentDetailsContent(record) {
       { label: record.status || "-", className: getStatusBadgeClass(record.status) },
       { label: record.criticality || "-", className: getCriticalityBadgeClass(record.criticality) },
     ],
-    actions: [buildMfDetailEditAction('data-eq-edit-from-details')],
+    actions: [buildMfDetailEditAction("data-eq-edit-from-details")],
   })}
     ${buildMfDetailTabSlider([
     { label: "Infos générales", content: generalTab },
@@ -5745,6 +5768,8 @@ function buildEquipmentDetailsContent(record) {
   ])}
   `);
 }
+
+
 
 function renderEquipmentPage(subpageKey) {
   const activeSubpageKey = sectionSubpages.equipements.tabs[subpageKey]
@@ -5998,23 +6023,19 @@ function attachEquipmentPageHandlers(pageKey) {
 
   if (detailTabs.length > 0 && detailSlider) {
     const setActiveTab = (index) => {
-      // Mettre à jour les couleurs des boutons
-      detailTabs.forEach((t) => {
-        t.classList.remove('active');
-        t.style.color = 'var(--text-muted, #8fa0b0)';
+      const idx = Number(index);
+      detailTabs.forEach(tab => {
+        tab.classList.remove('active');
+        tab.style.color = 'var(--text-muted, #8fa0b0)';  // inactif = gris
       });
-      const activeTab = modal.querySelector(`.eq-detail-tab[data-tab="${index}"]`);
+      const activeTab = modal.querySelector(`.eq-detail-tab[data-tab="${idx}"]`);
       if (activeTab) {
         activeTab.classList.add('active');
-        activeTab.style.color = 'var(--text-primary, #1a2533)';
+        activeTab.style.color = '#ffffff';  // actif = blanc (sur fond teal)
       }
-
-      // Mettre à jour le slider
-      detailSlider.setAttribute('data-active', index);
-
-      // Mettre à jour la pilule
+      detailSlider.setAttribute('data-active', idx);
       if (toggleThumb) {
-        toggleThumb.style.transform = index === "1" ? 'translateX(100%)' : 'translateX(0)';
+        toggleThumb.style.transform = idx === 1 ? 'translateX(100%)' : 'translateX(0)';
       }
     };
 
@@ -7436,54 +7457,61 @@ function buildOrganeDetailsContent(record) {
     });
   }
 
-  const generalTab = buildMfDetailGrid([
-    [
-      buildMfDetailCard({
-        icon: "fa-solid fa-circle-info",
-        title: "Identification",
-        bodyHtml: `
-          ${buildMfDetailMediaBlock(primaryPhotoSrc, primaryPhotoLabel)}
-          ${buildMfDetailRows([
-          { label: "Code", value: record.code || "-" },
-          { label: "Nom", value: record.name || "-" },
-          { label: "Marque", value: record.brand || "-" },
-          { label: "N° de série", value: record.serialNumber || "-" },
-          {
-            label: "Criticité",
-            valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>`,
-          },
-          {
-            label: "État",
-            valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>`,
-          },
-        ])}
-        `,
-      }),
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-sitemap",
-        title: "Organisation",
-        rows: [
-          { label: "Groupe", value: group ? `${group.code} ${group.name}` : "-" },
-          { label: "Famille", value: family ? `${family.code} ${family.name}` : "-" },
-        ],
-      }),
-    ].join(""),
-    buildMfDetailCardSection({
-      icon: "fa-solid fa-link",
-      title: "Liaisons",
-      rows: [
-        { label: "Équipements liés", value: linkedEquipmentLabels || "-" },
-        { label: "Articles liés", value: linkedArticleLabels || "-" },
-      ],
-    }),
-  ]);
+  // ─── LIGNE 1 : Photo (gauche) + Identification (droite) ───────────────────
+  const row1 = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div class="mf-details-card" style="overflow:hidden;min-height:180px;display:flex;flex-direction:column;justify-content:center;background:#f0f4f8;">
+        ${primaryPhotoSrc
+      ? `<img src="${primaryPhotoSrc}" alt="${escapeHtml(primaryPhotoLabel)}" style="width:100%;height:100%;max-height:280px;object-fit:contain;object-position:center;display:block;background:#f0f4f8;">`
+      : `<div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-muted);">
+                   <i class="fa-regular fa-image" style="font-size:2rem;opacity:.35;"></i>
+                   <span style="font-size:.8rem;opacity:.45;">Aucune photo disponible</span>
+                 </div>`
+    }
+      </div>
+      ${buildMfDetailCard({
+      icon: "fa-solid fa-circle-info",
+      title: "Identification",
+      bodyHtml: buildMfDetailRows([
+        { label: "Code", value: record.code || "-" },
+        { label: "Nom", value: record.name || "-" },
+        { label: "Marque", value: record.brand || "-" },
+        { label: "N° de série", value: record.serialNumber || "-" },
+        { label: "Criticité", valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>` },
+        { label: "État", valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>` },
+      ]),
+    })}
+    </div>`;
+
+  // ─── LIGNE 2 : Organisation (gauche) + Liaisons (droite) ──────────────────
+  const row2 = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      ${buildMfDetailCard({
+    icon: "fa-solid fa-sitemap",
+    title: "Organisation",
+    bodyHtml: buildMfDetailRows([
+      { label: "Groupe", value: group ? `${group.code} — ${group.name}` : "-" },
+      { label: "Famille", value: family ? `${family.code} — ${family.name}` : "-" },
+    ]),
+  })}
+      ${buildMfDetailCard({
+    icon: "fa-solid fa-link",
+    title: "Liaisons",
+    bodyHtml: buildMfDetailRows([
+      { label: "Équipements liés", value: linkedEquipmentLabels || "-" },
+      { label: "Articles liés", value: linkedArticleLabels || "-" },
+    ]),
+  })}
+    </div>`;
+
+  const generalTab = row1 + row2;
 
   const technicalTab = techRows.length
-    ? buildMfDetailCardSection({
+    ? buildMfDetailCard({
       icon: "fa-solid fa-gears",
       title: "Caractéristiques techniques",
       count: techRows.length,
-      rows: techRows,
+      bodyHtml: buildMfDetailRows(techRows),
     })
     : buildMfDetailEmpty("Aucune caractéristique technique renseignée.", "fa-solid fa-circle-info");
 
@@ -7503,6 +7531,7 @@ function buildOrganeDetailsContent(record) {
   ])}
   `);
 }
+
 
 function renderOrganeItemsPage() {
   const directory = getOrganeDirectory();
@@ -11305,6 +11334,13 @@ function updateProfileAvatar() {
     "aria-label",
     `${localizeAdministrationText("Profil")} ${fullName}`,
   );
+
+  const greetingMain = document.querySelector(".greeting-main");
+  if (greetingMain) {
+    const languageKey = getAdministrationLanguageKey();
+    const text = administrationUiText[languageKey] || administrationUiText.fr;
+    greetingMain.textContent = `${text.topbar.greetingMain}, ${fullName}`;
+  }
 }
 
 function renderProfilePage() {
@@ -15729,6 +15765,21 @@ function openStockInventoryModal(inventoryId = "") {
   inventoryForm.addEventListener("input", function (event) {
     const target = event.target;
     if (!target || !target.closest("[data-stock-inventory-row]")) return;
+
+    if (target.matches("[data-stock-inventory-article]")) {
+      const row = target.closest("[data-stock-inventory-row]");
+      const articleId = String(target.value || "").trim();
+      const theoreticalInput = row.querySelector("[data-stock-inventory-theoretical]");
+      if (theoreticalInput) {
+        if (articleId) {
+          const totals = getStockTotalsForArticle(articleId);
+          theoreticalInput.value = Number(totals.currentQuantity) || 0;
+        } else {
+          theoreticalInput.value = 0;
+        }
+      }
+    }
+
     refreshInventorySummary(inventoryForm);
   });
 
@@ -15930,43 +15981,37 @@ function openStockRecordDetails(recordKey) {
       attrs: `onclick="printFicheStock('${escapeHtml(recordKey)}')"`,
     }],
   })}
-      ${buildMfDetailGrid([
-    [
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-boxes-stacked",
-        title: "Stock",
-        rows: [
-          {
-            label: "Article",
-            value: article ? `${article.code} — ${article.name}` : record.articleId || "-",
-          },
-          { label: "Quantité", value: record.currentQuantity },
-          { label: "PMP", value: `${formatStockNumber(record.pmp)} DA` },
-          { label: "Prix article", value: `${formatStockNumber(record.articlePrice ?? 0)} DA` },
-          {
-            label: "Prix total catalogue",
-            value: `${formatStockNumber((record.currentQuantity ?? 0) * (record.articlePrice ?? 0))} DA`,
-          },
-        ],
-      }),
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-chart-line",
-        title: "Seuils",
-        rows: [
-          { label: "Minimum", value: record.minStock },
-          { label: "Sécurité", value: record.safetyStock },
-          { label: "Réapprovisionnement", value: record.replenishmentQty },
-          { label: "Emplacement", value: record.locationLabel || "-" },
-          { label: "État", value: riskLabel },
-        ],
-      }),
-    ].join(""),
-    buildMfDetailCard({
-      icon: "fa-solid fa-note-sticky",
-      title: "Observations",
-      bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(record.observations || "Aucune observation")}</p></div></div>`,
-    }),
-  ])}
+      <div class="stock-detail-grid">
+  ${buildMfDetailCardSection({
+    icon: "fa-solid fa-boxes-stacked",
+    title: "Stock",
+    rows: [
+      { label: "Article", value: article ? `${article.code} • ${article.name}` : record.articleId || "-" },
+      { label: "Quantité", value: record.currentQuantity },
+      { label: "PMP", value: `${formatStockNumber(record.pmp)} DA` },
+      { label: "Prix article", value: `${formatStockNumber(record.articlePrice ?? 0)} DA` },
+      { label: "Prix total catalogue", value: `${formatStockNumber((record.currentQuantity ?? 0) * (record.articlePrice ?? 0))} DA` },
+    ],
+  })}
+
+  ${buildMfDetailCardSection({
+    icon: "fa-solid fa-chart-line",
+    title: "Seuils",
+    rows: [
+      { label: "Minimum", value: record.minStock },
+      { label: "Sécurité", value: record.safetyStock },
+      { label: "Rapprovisionnement", value: record.replenishmentQty },
+      { label: "Emplacement", value: record.locationLabel || "-" },
+      { label: "État", value: riskLabel },
+    ],
+  })}
+</div>
+
+${buildMfDetailCard({
+    icon: "fa-solid fa-note-sticky",
+    title: "Observations",
+    bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(record.observations || "Aucune observation")}</p></div></div>`,
+  })}
     `)}
     <div class="org-modal-actions">
       <button class="btn btn-outline" type="button" data-stock-closetrue>Fermer</button>
@@ -16046,7 +16091,19 @@ function openStockRecordEdit(recordKey) {
         </div>
         <div class="field-group field-group-wide">
           <label>Emplacement</label>
-          <input type="text" name="locationLabel" value="${escapeHtml(record.locationLabel || "")}" />
+          <div class="stock-location-picker">
+            <select name="locationLabel">
+              ${buildStockLocationOptions(record.locationLabel || "")}
+            </select>
+            <button
+              type="button"
+              class="stock-location-add-btn"
+              data-stock-create-location="true"
+              title="Créer un magasin"
+            >
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
         <div class="field-group field-group-wide">
           <label>Observations</label>
@@ -16150,7 +16207,19 @@ function openStockRecordCreate() {
         </div>
         <div class="field-group field-group-wide">
           <label>Emplacement</label>
-          <input type="text" name="locationLabel" value="${buildStockLocationLabel(stockDefaultLocation)}" />
+          <div class="stock-location-picker">
+            <select name="locationLabel">
+              ${buildStockLocationOptions()}
+            </select>
+            <button
+              type="button"
+              class="stock-location-add-btn"
+              data-stock-create-location="true"
+              title="Créer un magasin"
+            >
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
         <div class="field-group field-group-wide">
           <label>Observations</label>
@@ -16342,49 +16411,34 @@ function renderStockMovementDetails(movement) {
     title: getStockMovementTypeLabel(movement.type),
     badges: [{ label: String(movement.quantity || 0), className: "badge-info" }],
   })}
-      ${buildMfDetailGrid([
-    [
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-circle-info",
-        title: "Identification",
-        rows: [
-          { label: "Référence", value: movement.id || "-" },
-          {
-            label: "Article",
-            value: article
-              ? `${article.code} — ${article.name}`
-              : movement.articleId || "-",
-          },
-          { label: "Type", value: getStockMovementTypeLabel(movement.type) },
-          { label: "Quantité", value: movement.quantity || 0 },
-        ],
-      }),
-      buildMfDetailCardSection({
-        icon: "fa-solid fa-warehouse",
-        title: "Magasins",
-        rows: [
-          {
-            label: "Magasin source",
-            value: sourceLocation
-              ? `${sourceLocation.code} - ${sourceLocation.name}`
-              : "-",
-          },
-          {
-            label: "Magasin destination",
-            value: destinationLocation
-              ? `${destinationLocation.code} - ${destinationLocation.name}`
-              : "-",
-          },
-          { label: "Pièce jointe", value: movement.attachmentName || "Aucune pièce jointe" },
-        ],
-      }),
-    ].join(""),
-    buildMfDetailCard({
-      icon: "fa-solid fa-note-sticky",
-      title: "Observations",
-      bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(movement.observations || "Aucune observation")}</p></div></div>`,
-    }),
-  ])}
+      <div class="stock-detail-grid">
+  ${buildMfDetailCardSection({
+    icon: "fa-solid fa-circle-info",
+    title: "Identification",
+    rows: [
+      { label: "Référence", value: movement.id || "-" },
+      { label: "Article", value: article ? `${article.code} - ${article.name}` : movement.articleId || "-" },
+      { label: "Type", value: getStockMovementTypeLabel(movement.type) },
+      { label: "Quantité", value: movement.quantity ?? 0 },
+    ],
+  })}
+
+  ${buildMfDetailCardSection({
+    icon: "fa-solid fa-warehouse",
+    title: "Magasins",
+    rows: [
+      { label: "Magasin source", value: sourceLocation ? `${sourceLocation.code} - ${sourceLocation.name}` : "-" },
+      { label: "Magasin destination", value: destinationLocation ? `${destinationLocation.code} - ${destinationLocation.name}` : "-" },
+      { label: "Pièce jointe", value: movement.attachmentName || "Aucune pièce jointe" },
+    ],
+  })}
+</div>
+
+${buildMfDetailCard({
+    icon: "fa-solid fa-note-sticky",
+    title: "Observations",
+    bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(movement.observations || "Aucune observation")}</p></div></div>`,
+  })}
     `)}
     <div class="org-modal-actions">
       <button class="btn btn-outline" type="button" data-stock-close="true">Fermer</button>
@@ -16964,6 +17018,7 @@ function openStockInventoryDetails(inventoryId) {
       `;
 
   saveStockSelectedInventoryId(inventory.id);
+
   renderStockModal(
     `Inventaire ${escapeHtml(inventory.id)}`,
     "Détails et résultats de l'inventaire sélectionné.",
@@ -16983,41 +17038,37 @@ function openStockInventoryDetails(inventoryId) {
         attrs: `onclick="printInventaire('${escapeHtml(inventoryId)}')"`,
       }],
     })}
-        ${buildMfDetailGrid([
-      [
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-circle-info",
-          title: "Identification",
-          rows: [
-            { label: "Type", value: inventory.type || "-" },
-            { label: "Responsable", value: inventory.owner || "-" },
-            { label: "Statut", value: inventory.status || "-" },
-            {
-              label: "Créé le",
-              value: inventory.createdAt
-                ? formatStockDateTime(new Date(inventory.createdAt))
-                : "-",
-            },
-          ],
-        }),
-        buildMfDetailCardSection({
-          icon: "fa-solid fa-chart-pie",
-          title: "Résultats",
-          rows: [
-            { label: "Lignes", value: String(rows.length) },
-            { label: "Écarts ouverts", value: String(openCount) },
-            { label: "Surstocks", value: String(positiveCount) },
-            { label: "Manquants", value: String(negativeCount) },
-          ],
-        }),
-      ].join(""),
-      buildMfDetailCard({
-        icon: "fa-solid fa-note-sticky",
-        title: "Observations",
-        bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(inventory.observations || "Aucune observation.")}</p></div></div>`,
-      }),
-    ])}
+
+        <div class="stock-detail-grid">
+          ${buildMfDetailCardSection({
+      icon: "fa-solid fa-circle-info",
+      title: "Identification",
+      rows: [
+        { label: "Type", value: inventory.type || "-" },
+        { label: "Responsable", value: inventory.owner || "-" },
+        { label: "Statut", value: inventory.status || "-" },
+        {
+          label: "Créé le",
+          value: inventory.createdAt
+            ? formatStockDateTime(new Date(inventory.createdAt))
+            : "-",
+        },
+      ],
+    })}
+
+          ${buildMfDetailCardSection({
+      icon: "fa-solid fa-chart-pie",
+      title: "Résultats",
+      rows: [
+        { label: "Lignes", value: String(rows.length) },
+        { label: "Écarts ouverts", value: String(openCount) },
+        { label: "Surstocks", value: String(positiveCount) },
+        { label: "Manquants", value: String(negativeCount) },
+      ],
+    })}
+        </div>
       `)}
+
       <div class="mf-details-card" style="margin-top:14px">
         <div class="mf-details-card-header">
           <i class="fa-solid fa-table"></i>
@@ -17041,6 +17092,13 @@ function openStockInventoryDetails(inventoryId) {
           </table>
         </div>
       </div>
+
+      ${buildMfDetailCard({
+      icon: "fa-solid fa-note-sticky",
+      title: "Observations",
+      bodyHtml: `<div class="mf-details-rows"><div class="mf-details-row" style="display:block"><p style="margin:0;padding:12px 16px;font-size:13px;line-height:1.5">${escapeHtml(inventory.observations || "Aucune observation.")}</p></div></div>`,
+    })}
+
       <div class="org-modal-actions">
         <button class="btn btn-outline" type="button" data-stock-closetrue>Fermer</button>
       </div>
@@ -23025,6 +23083,13 @@ function openInterventionsDetails(recordType, recordId) {
 }
 
 function buildInterventionDiFormModal(record = null) {
+  const connectedUser = getConnectedUserProfile();
+  const defaultRequesterId = record?.requesterId || (connectedUser ? connectedUser.id : "");
+  const defaultRequesterObj = organizationUsers.find(u => u.id === defaultRequesterId);
+  const defaultRequesterLabel = defaultRequesterObj
+    ? `${defaultRequesterObj.name} — ${defaultRequesterObj.role}`
+    : (connectedUser ? `${connectedUser.username || connectedUser.code} — ${connectedUser.role}` : "Utilisateur connecté");
+
   const equipmentOptions = getEquipmentRecords("equipments")
     .map(
       (equipment) =>
@@ -23035,12 +23100,6 @@ function buildInterventionDiFormModal(record = null) {
     .map(
       (organe) =>
         `<option value="${organe.id}"${organe.id === (record?.organeId || "") ? " selected" : ""}>${escapeHtml(organe.code)} — ${escapeHtml(organe.name)}</option>`,
-    )
-    .join("");
-  const requesterOptions = organizationUsers
-    .map(
-      (user) =>
-        `<option value="${user.id}"${user.id === (record?.requesterId || "") ? " selected" : ""}>${escapeHtml(user.name)} — ${escapeHtml(user.role)}</option>`,
     )
     .join("");
 
@@ -23084,10 +23143,8 @@ function buildInterventionDiFormModal(record = null) {
             </div>
             <div class="field-group">
               <label for="intDiRequester">Demandeur</label>
-              <select id="intDiRequester" name="requesterId">
-                <option value="">Sélectionner</option>
-                ${requesterOptions}
-              </select>
+              <input type="hidden" name="requesterId" value="${escapeHtml(defaultRequesterId)}" />
+              <input id="intDiRequester" type="text" value="${escapeHtml(defaultRequesterLabel)}" disabled style="background-color: var(--surface-hover); color: var(--text-muted); cursor: not-allowed;" />
             </div>
             <div class="field-group">
               <label for="intDiType">Type</label>
@@ -27290,10 +27347,10 @@ function buildInterventionTransformOtModal(di) {
     : di.organeLabel || "-";
   const requesterLabel = requester ? requester.name : di.requesterLabel || "-";
 
-  const technicianOptions = organizationUsers
+  const technicianOptions = getPlanificationTechniciens()
     .map(
       (user) =>
-        `<option value="${user.id}">${escapeHtml(user.name)} - ${escapeHtml(user.role)}</option>`,
+        `<option value="${user.id}">${escapeHtml((user.firstName ? user.firstName + ' ' : '') + user.name)} - ${escapeHtml(user.role)}</option>`,
     )
     .join("");
 
@@ -28078,11 +28135,10 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
      UPDATE HEADER
   --------------------------------------------------------------- */
   function updateHeader() {
-    var tab = TAB_CONFIG[activeTab];
     var titleEl = root.title();
     var subtitleEl = root.subtitle();
-    if (titleEl) titleEl.textContent = tab.title;
-    if (subtitleEl) subtitleEl.textContent = tab.subtitle;
+    if (titleEl) titleEl.textContent = "Fournisseurs";
+    if (subtitleEl) subtitleEl.textContent = "Gestion des fournisseurs";
   }
 
   /* ---------------------------------------------------------------
@@ -28901,7 +28957,34 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     var currentSupplierId = supplierRef ? supplierRef.id : (entry && entry.supplier ? entry.supplier.id : (state.suppliers[0] ? state.suppliers[0].id : ""));
     var current = entry || {};
     var scoreNames = [["quality", "QualitÃ©"], ["delay", "DÃ©lais"], ["conformity", "ConformitÃ©"], ["sav", "SAV"], ["price", "Prix"], ["communication", "Communication"]];
-    var recoOptions = ["Fournisseur recommandÃ©", "Ã€ surveiller", "Ã€ remplacer"];
+    var nextNumber = isEdit ? current.number : nextRef("EVL-", state.suppliers.reduce(function (acc, s) { return acc.concat(s.evaluations || []); }, []), "number");
+
+    var connectedUserId = localStorage.getItem("maintflow.connectedUserId") || "";
+    var connectedUser = null;
+    try {
+      var adminRaw = localStorage.getItem("maintflow.administrationState");
+      if (adminRaw) {
+        var parsed = JSON.parse(adminRaw);
+        connectedUser = (parsed.users || []).find(function (u) { return u.id === connectedUserId; });
+      }
+    } catch (e) { }
+    var evaluatorName = connectedUser ? (connectedUser.name || connectedUser.email) : "Utilisateur actuel";
+    var evaluatorValue = isEdit ? (current.evaluator || evaluatorName) : evaluatorName;
+
+    openModal(
+      isEdit ? "Modifier Ã©valuation" : "CrÃ©er Ã©valuation",
+      "Ã‰valuation pÃ©riodique du fournisseur.",
+      '<form class="supplier-form-grid" id="evaluationForm">' +
+      '<div><label>NumÃ©ro</label><input name="number" value="' + escapeHtml(current.number || nextNumber) + '" readonly /></div>' +
+      '<div><label>Fournisseur</label><select name="supplierId">' + supplierOptions(currentSupplierId) + '</select></div>' +
+      '<div><label>PÃ©riode (DÃ©but)</label><input type="date" name="periodeStart" value="' + escapeHtml(current.periodeStart || "") + '" /></div>' +
+      '<div><label>PÃ©riode (Fin)</label><input type="date" name="periodeEnd" value="' + escapeHtml(current.periodeEnd || "") + '" /></div>' +
+      '<div><label>Ã‰valuateur</label><input name="evaluator" value="' + escapeHtml(evaluatorValue) + '" readonly /></div>' +
+      scoreNames.map(function (sn) { return '<div><label>' + escapeHtml(sn[1]) + ' (0-100)</label><input name="' + escapeHtml(sn[0]) + '" type="number" min="0" max="100" value="' + ((current.scores && current.scores[sn[0]]) || 0) + '" /></div>'; }).join("") +
+      '<div class="full"><label>Commentaires</label><textarea name="comments">' + escapeTextarea(current.comments || "") + '</textarea></div>' +
+      '</form>',
+      '<div class="supplier-form-footer"><button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button><button type="button" class="btn btn-primary" id="evaluationSaveBtn">Enregistrer</button></div>'
+    );
 
     var saveBtn = document.getElementById("evaluationSaveBtn");
     if (saveBtn) {
@@ -28915,17 +28998,22 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
         var scores = { quality: Number(fd.get("quality") || 0), delay: Number(fd.get("delay") || 0), conformity: Number(fd.get("conformity") || 0), sav: Number(fd.get("sav") || 0), price: Number(fd.get("price") || 0), communication: Number(fd.get("communication") || 0) };
         var values = Object.keys(scores).map(function (k) { return scores[k]; }).filter(function (v) { return v > 0; });
         var global = values.length ? values.reduce(function (s, v) { return s + v; }, 0) / values.length : 0;
+
+        var pStart = fd.get("periodeStart") || "";
+        var pEnd = fd.get("periodeEnd") || "";
+        var pText = (pStart && pEnd) ? (pStart + " au " + pEnd) : (pStart || pEnd || "");
+
         var payload = {
           id: isEdit ? current.id : "evl-" + Date.now(),
           number: fd.get("number"),
           supplierNumber: supplier.number,
-          periode: fd.get("periode"),
+          periodeStart: pStart,
+          periodeEnd: pEnd,
+          periode: pText,
           evaluator: fd.get("evaluator"),
           scores: scores,
           global: Number(global.toFixed(2)),
-          comments: fd.get("comments"),
-          correctiveActions: fd.get("correctiveActions"),
-          recommendation: fd.get("recommendation"),
+          comments: fd.get("comments")
         };
         if (!supplier.evaluations) supplier.evaluations = [];
         if (isEdit) {
