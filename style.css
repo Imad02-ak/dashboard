@@ -5640,12 +5640,11 @@ body.sidebar-collapsed .sidebar-toggle {
 .org-modal-panel:has(.equipment-form-wizard) .eq-wizard-panel.active .equipment-section-head {
   position: sticky;
   top: 0;
-  z-index: 3;
+  z-index: 0;
   background: #fff;
   padding: 18px 0 14px;
   margin: 0 0 12px;
-  border-bottom: 1px solid var(--border-light);
-  border-radius: 19px 19px 0 0;
+  border: none;
   isolation: isolate;
 }
 

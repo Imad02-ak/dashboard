@@ -8975,7 +8975,14 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Technicien exécutant": "Technician performing",
+    "Consignation électrique": "Electrical logging",
+    "Port des EPI requis": "Wearing of PPE required",
+    "Permis de travail signé": "Signed work permit",
+    "Zone balisée et sécurisée": "Marked and secure area",
+    "Outillage vérifié": "Verified tooling",
     "Tableau de bord": "Dashboard",
+    "Présence d'un chef d'équipe": "Presence of a team leader",
     Arborescence: "Asset tree",
     Organisation: "Organization",
     "\u00c9quipements": "Equipment",
@@ -25207,10 +25214,6 @@ function printDI(record) {
             <label>Niveau d'urgence</label>
             <span class="doc-status" style="${printGetBadgeStyle(record.urgency)}">${printEscT(record.urgency || '—')}</span>
           </div>
-          <div class="doc-field">
-            <label>Priorité</label>
-            <span>${printEsc(record.priority || '—')}</span>
-          </div>
         </div>
       </div>
 
@@ -25915,15 +25918,6 @@ function printPlanMaintenance(plan) {
               ${safetyItems.map(s => `<li>${printEsc(s)}</li>`).join('')}
              </ul>`
       : `<p style="color:#94a3b8;font-style:italic;font-size:9.5pt;">Aucune consigne définie.</p>`
-    }
-      </div>
-      <div class="doc-section" style="margin-top:0;">
-        <div class="doc-section-title">Documents associés</div>
-        ${docItems.length
-      ? `<ul style="padding-left:16px;margin:0;font-size:9.5pt;line-height:1.9;">
-              ${docItems.map(d => `<li>${printEsc(d)}</li>`).join('')}
-             </ul>`
-      : `<p style="color:#94a3b8;font-style:italic;font-size:9.5pt;">Aucun document associé.</p>`
     }
       </div>
     </div>
