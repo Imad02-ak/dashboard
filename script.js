@@ -9478,6 +9478,7 @@ const englishInterfaceTranslations = new Map(
     "Créez la première demande d'intervention depuis le bouton Nouvelle DI.": "Create the first service request from the New DI button.",
     "Les OT issus d'une DI validée apparaîtront ici": "The WOs from a validated WR will appear here.",
     "Le tableau gardera le même langage visuel que les pages Équipements et Organe.": "The table will keep the same visual language as the Equipment and Organ pages.",
+  
   }),
 );
 
@@ -9509,6 +9510,11 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+  "Taux service stock": "Stock service rate",
+    "Taux PM réalisées": "PM complition rates",
+    "dans délai": "on time",
+    "moy répar": "avg. repair",
+    "moy pannes": "avg. breakdowns",
     "mouvements actifs": "Active movements",
     "Achats - Bons de commande": "Purchaes - Purchase orders",
     "clôturés": "Closed",
@@ -12007,7 +12013,6 @@ function getAdministrationApprovalRoleOptions() {
       "BC envoyé": "PO sent",
       "Réception validée": "Receipt validated",
       "Taux PM réalisées": "PM completion rate",
-      "Taux service stock": "Stock service rate",
       "Quantité": "Quantity",
       "PMP": "WAC",
       "Prix article": "Item price",
@@ -12110,7 +12115,7 @@ function getAdministrationApprovalRoleOptions() {
       "Préventif": "Preventive",
       "moy pannes": "avg failures",
       "moy répar.": "avg repair",
-      "dans délais": "on time",
+      "dans délai": "on time",
       "dispo immé.": "avail. immed.",
       "En service": "In service",
       "Sans famille": "No family",
