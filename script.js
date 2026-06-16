@@ -834,9 +834,7 @@ function buildArticleTypeOptions(selectedType = "") {
 
 function buildArticleUnitMeasureOptions(selectedUnitMeasure = "") {
   const unitMeasures = [
-    "Pièce",
     "Lot",
-    "Boîte",
     "Kg",
     "g",
     "Litre",
@@ -1209,42 +1207,10 @@ function buildArticleFormContent(record, mode) {
               value="${escapeHtml(record?.articleThickness ?? '')}" />
           </div>
           <div class="field-group">
-            <label for="articleUnitWeight">${uiText('Poids unitaire (g / kg)')}</label>
+            <label for="articleUnitWeight">${uiText('Poids (g / kg)')}</label>
             <input id="articleUnitWeight" name="unitWeight" type="text"
               placeholder="${uiText('Ex: 1.2 kg')}"
               value="${escapeHtml(record?.unitWeight ?? '')}" />
-          </div>
-          <div class="field-group">
-            <label for="articleVolume">${uiText('Volume / Capacité (L, mL, m³)')}</label>
-            <input id="articleVolume" name="articleVolume" type="text"
-              placeholder="${uiText('Ex: 5 L')}"
-              value="${escapeHtml(record?.articleVolume ?? '')}" />
-          </div>
-          <div class="field-group">
-            <label for="articleShelfLife">${uiText('Durée de conservation (mois / années)')}</label>
-            <input id="articleShelfLife" name="shelfLife" type="text"
-              placeholder="${uiText('Ex: 24 mois')}"
-              value="${escapeHtml(record?.shelfLife ?? '')}" />
-          </div>
-          <div class="field-group">
-            <label for="articleExpiryDate">${uiText('Date de péremption')}</label>
-            <input id="articleExpiryDate" name="expiryDate" type="date"
-              value="${escapeHtml(record?.expiryDate ?? '')}" />
-          </div>
-          <div class="field-group field-group-wide">
-            <label for="articleStorageConditions">${uiText('Conditions de stockage')}</label>
-            <textarea id="articleStorageConditions" name="storageConditions" rows="2"
-              placeholder="${uiText('Ex: Température 5–25°C, humidité ≤60%, à l\'abri de la lumière')}">${escapeTextarea(record?.storageConditions || '')}</textarea>
-          </div>
-          <div class="field-group field-group-wide">
-            <label for="articleSpecialConditions">${uiText('Conditions particulières')}</label>
-            <textarea id="articleSpecialConditions" name="specialConditions" rows="2"
-              placeholder="${uiText('Ex: à l\'abri de la lumière, ventilé, hors gel...')}">${escapeTextarea(record?.specialConditions || '')}</textarea>
-          </div>
-          <div class="field-group field-group-wide">
-            <label for="articleHandlingConditions">${uiText('Conditions de manipulation')}</label>
-            <textarea id="articleHandlingConditions" name="handlingConditions" rows="2"
-              placeholder="${uiText('Ex: Port EPI obligatoire, ventilation requise...')}">${escapeTextarea(record?.handlingConditions || '')}</textarea>
           </div>
         </div>
 
@@ -5573,7 +5539,7 @@ function buildEquipmentFormContent(record, mode) {
               value="${escapeHtml(record?.speed ?? '')}" />
           </div>
           <div class="field-group">
-            <label for="equipmentCapacity">${uiText('Capacité / Débit (m³/h, L/min, kg/h...)')}</label>
+            <label for="equipmentCapacity">${uiText('Capacité / Débit (m³/h, Litre/min, kg/h...)')}</label>
             <input id="equipmentCapacity" name="capacity" type="text"
               placeholder="${uiText('Ex: 250 L/min')}"
               value="${escapeHtml(record?.capacity ?? '')}" />
@@ -5609,7 +5575,7 @@ function buildEquipmentFormContent(record, mode) {
               <option value="">${uiText('Sélectionner')}</option>
               <option value="Manuelle"${record?.controlType === 'Manuelle' ? ' selected' : ''}>${uiText('Manuelle')}</option>
               <option value="Automatique"${record?.controlType === 'Automatique' ? ' selected' : ''}>${uiText('Automatique')}</option>
-              <option value="API / Automate"${record?.controlType === 'API / Automate' ? ' selected' : ''}>${uiText('API / Automate')}</option>
+              <option value="API / Automate"${record?.controlType === 'Semi Automatique' ? ' selected' : ''}>${uiText('Semi Automatique')}</option>
             </select>
           </div>
         </div>
@@ -7366,18 +7332,6 @@ function buildOrganeFormContent(record, mode) {
             </select>
           </div>
           <div class="field-group">
-            <label for="organeStaticLoad">${uiText('Charge statique (kN)')}</label>
-            <input id="organeStaticLoad" name="staticLoad" type="text"
-              placeholder="${uiText('Ex: 12.5 kN')}"
-              value="${escapeHtml(record?.staticLoad ?? '')}" />
-          </div>
-          <div class="field-group">
-            <label for="organeDynamicLoad">${uiText('Charge dynamique (kN)')}</label>
-            <input id="organeDynamicLoad" name="dynamicLoad" type="text"
-              placeholder="${uiText('Ex: 8.2 kN')}"
-              value="${escapeHtml(record?.dynamicLoad ?? '')}" />
-          </div>
-          <div class="field-group">
             <label for="organeSpeed">${uiText('Vitesse (tr/min)')}</label>
             <input id="organeSpeed" name="speed" type="text"
               placeholder="${uiText('Ex: 3000 tr/min')}"
@@ -7388,30 +7342,6 @@ function buildOrganeFormContent(record, mode) {
             <input id="organeTemperature" name="temperature" type="text"
               placeholder="${uiText('Ex: -20 à +120°C')}"
               value="${escapeHtml(record?.temperature ?? '')}" />
-          </div>
-          <div class="field-group">
-            <label for="organelubrication">${uiText('Type de lubrification')}</label>
-            <select id="organelubrication" name="lubrication">
-              ${buildOrganeLubricationOptions(record?.lubrication || "")}
-            </select>
-          </div>
-          <div class="field-group">
-            <label for="organeLubricantRef">${uiText('Référence lubrifiant')}</label>
-            <input id="organeLubricantRef" name="lubricantRef" type="text"
-              placeholder="${uiText('Ex: Mobil Grease XHP 222')}"
-              value="${escapeHtml(record?.lubricantRef ?? '')}" />
-          </div>
-          <div class="field-group">
-            <label for="organeFrequency">${uiText('Fréquence de graissage')}</label>
-            <input id="organeFrequency" name="lubricationFrequency" type="text"
-              placeholder="${uiText('Ex: Toutes les 500h')}"
-              value="${escapeHtml(record?.lubricationFrequency ?? '')}" />
-          </div>
-          <div class="field-group">
-            <label for="organeQuantity">${uiText('Quantité de lubrifiant (g)')}</label>
-            <input id="organeQuantity" name="lubricantQuantity" type="text"
-              placeholder="${uiText('Ex: 15 g')}"
-              value="${escapeHtml(record?.lubricantQuantity ?? '')}" />
           </div>
         </div>
 
@@ -9063,6 +8993,7 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Semi Automatique":"Semi Automatic",
     "jours": "Days",
     "Saisissez les instructions pour le technicien...": "Enter the instructions for the technician...",
     "Fiche détaillée de la DI": "Detailed sheet of the WR",
