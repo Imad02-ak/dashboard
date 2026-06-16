@@ -1374,6 +1374,11 @@ function buildArticleDetailsContent(record) {
   const hasCustomFields = Array.isArray(record.customFields) && record.customFields.length > 0;
   const hasPhotos = Array.isArray(record.photos) && record.photos.length > 1;
 
+  // ─── PRIX formaté en DZD ───────────────────────────────────────────────────
+  const priceValue = record.price != null && record.price !== ""
+    ? `${Number(record.price).toLocaleString("fr-DZ")} DZD`
+    : "-";
+
   // ─── LIGNE 1 : Photo (gauche) + Identification (droite) ───────────────────
   const row1 = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
@@ -1395,7 +1400,7 @@ function buildArticleDetailsContent(record) {
         { label: "Type d'article", value: record.articleType || "-" },
         { label: "Unité de mesure", value: record.unitMeasure || "-" },
         { label: "Marque", value: record.brand || "-" },
-        { label: "Prix", value: record.price ? String(record.price) : "-" },
+        { label: "Prix d'achat", value: priceValue },
         { label: "Fournisseur", value: record.supplier || "-" },
       ]),
     })}
@@ -1430,7 +1435,7 @@ function buildArticleDetailsContent(record) {
     title: "Type complémentaire",
     bodyHtml: buildMfDetailRows([
       { label: "N° série", value: record.serialNumber || "-" },
-      { label: "Prix d'achat", value: record.price ? `${record.price}` : "-" },
+      { label: "Prix d'achat", value: priceValue },
       { label: "Date d'achat", value: record.purchaseDate || "-" },
       { label: "Mise en service", value: record.serviceDate || "-" },
       { label: "Garantie", value: record.warrantyDuration || "-" },
@@ -5729,6 +5734,11 @@ function buildEquipmentDetailsContent(record) {
     record.customFields.forEach((cf) => techRows.push({ label: cf.label, value: cf.value || "-" }));
   }
 
+  // ─── PRIX formaté en DZD ───────────────────────────────────────────────────
+  const priceValue = record.purchasePrice != null && record.purchasePrice !== ""
+    ? `${Number(record.purchasePrice).toLocaleString("fr-DZ")} DZD`
+    : "-";
+
   // ─── LIGNE 1 : Photo (gauche) + Identification (droite) ───────────────────
   const row1 = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
@@ -5749,6 +5759,7 @@ function buildEquipmentDetailsContent(record) {
         { label: "N° série", value: record.serialNumber || "-" },
         { label: "Nom", value: record.name || "-" },
         { label: "Marque", value: record.brand || "-" },
+        { label: "Prix", value: priceValue },
         { label: "Criticité", valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>` },
         { label: "État", valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>` },
       ]),
@@ -7295,7 +7306,7 @@ function buildOrganeFormContent(record, mode) {
           </div>
           <div class="field-group">
             <label for="organePurchasePrice">${uiText("Prix d'achat")}</label>
-            <input id="organePurchasePrice" name="purchasePrice" type="text"
+            <input id="organePurchasePrice" name="purchasePrice" type="number"
               value="${escapeHtml(record?.purchasePrice || '')}"
               placeholder="${uiText("Prix d'achat")}" />
           </div>
@@ -7536,6 +7547,11 @@ function buildOrganeDetailsContent(record) {
     });
   }
 
+  // ─── PRIX formaté en DZD ───────────────────────────────────────────────────
+  const priceValue = record.purchasePrice != null && record.purchasePrice !== ""
+    ? `${Number(record.purchasePrice).toLocaleString("fr-DZ")} DZD`
+    : "-";
+
   // ─── LIGNE 1 : Photo (gauche) + Identification (droite) ───────────────────
   const row1 = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
@@ -7556,6 +7572,7 @@ function buildOrganeDetailsContent(record) {
         { label: "Nom", value: record.name || "-" },
         { label: "Marque", value: record.brand || "-" },
         { label: "N° de série", value: record.serialNumber || "-" },
+        { label: "Prix d'achat", value: priceValue },
         { label: "Criticité", valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getCriticalityBadgeClass(record.criticality)}">${escapeHtml(record.criticality || "-")}</span></strong>` },
         { label: "État", valueHtml: `<strong class="mf-details-value"><span class="status-badge ${getStatusBadgeClass(record.status)}">${escapeHtml(record.status || "-")}</span></strong>` },
       ]),
@@ -7610,7 +7627,6 @@ function buildOrganeDetailsContent(record) {
   ])}
   `);
 }
-
 
 function renderOrganeItemsPage() {
   const directory = getOrganeDirectory();
@@ -9047,6 +9063,8 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "jours": "Days",
+    "Saisissez les instructions pour le technicien...": "Enter the instructions for the technician...",
     "Fiche détaillée de la DI": "Detailed sheet of the WR",
     "Détails du mouvement stock.": "Details of the stock movement.",
     "Vue détaillée de la fiche avec impression.": "Detailed view of the form with printing.",
@@ -28111,7 +28129,7 @@ function buildInterventionTransformOtModal(di) {
 
 </div>
 
-        <!-- ▌BLOC 2 — SECTION 2 scrollable ▌-->
+         <!-- ▌BLOC 2 — SECTION 2 scrollable ▌-->
         <div style="
           overflow-y: auto;
           scrollbar-width: none;
@@ -28126,73 +28144,74 @@ function buildInterventionTransformOtModal(di) {
             letter-spacing: 0.06em;
             color: var(--org-text-muted, #6b7280);
             font-weight: 600;
-          ">SECTION 2 — Champs à remplir pour l'OT</h4>
+          ">${uiText("SECTION 2 — Champs à remplir pour l'OT")}</h4>
 
           <div class="org-form-grid">
             <div class="field-group">
-              <label>Numéro OT</label>
-              <input type="text" value="Généré automatiquement (OT-XXX)" disabled />
+              <label>${uiText('Numéro OT')}</label>
+              <input type="text" value="${uiText('Généré automatiquement (OT-XXX)')}" disabled />
             </div>
             <div class="field-group">
-              <label for="otTypeMaintenance">Type maintenance</label>
+              <label for="otTypeMaintenance">${uiText('Type maintenance')}</label>
               <select id="otTypeMaintenance" name="typeMaintenance" required>
-                <option value="Corrective">Corrective</option>
-                <option value="Préventive">Préventive</option>
-                <option value="Prédictive">Prédictive</option>
+                <option value="Corrective">${uiText('Corrective')}</option>
+                <option value="Préventive">${uiText('Préventive')}</option>
+                <option value="Prédictive">${uiText('Prédictive')}</option>
+                <option value="Réglementaire">${uiText('Réglementaire')}</option>
               </select>
             </div>
             <div class="field-group">
-              <label for="otPlannedDate">Date planifiée <span style="color:var(--org-danger);">*</span></label>
+              <label for="otPlannedDate">${uiText('Date planifiée')} <span style="color:var(--org-danger);">*</span></label>
               <input id="otPlannedDate" name="plannedDate" type="date" required />
             </div>
             <div class="field-group">
-              <label for="otDuration">Durée estimée (heures)</label>
-              <input id="otDuration" name="durationEstimated" type="number" step="0.5" min="0" placeholder="Ex: 2" />
+              <label for="otDuration">${uiText('Durée estimée (heures)')}</label>
+              <input id="otDuration" name="durationEstimated" type="number" step="0.5" min="0" placeholder="${uiText('Ex: 2')}" />
             </div>
             <div class="field-group">
-              <label for="otTechnician">Technicien assigné</label>
+              <label for="otTechnician">${uiText('Technicien assigné')}</label>
               <select id="otTechnician" name="technicianId">
-                <option value="">Sélectionner</option>
+                <option value="">${uiText('Sélectionner')}</option>
                 ${technicianOptions}
               </select>
             </div>
             <div class="field-group">
-              <label for="otPriority">Priorité</label>
+              <label for="otPriority">${uiText('Priorité')}</label>
               <select id="otPriority" name="priority">
-                <option value="Faible"${di.urgency === "Faible" ? " selected" : ""}>Faible</option>
-                <option value="Moyenne"${!di.urgency || di.urgency === "Moyenne" ? " selected" : ""}>Moyenne</option>
-                <option value="Haute"${di.urgency === "Haute" ? " selected" : ""}>Haute</option>
-                <option value="Critique"${di.urgency === "Critique" ? " selected" : ""}>Critique</option>
+                <option value="Faible"${di.urgency === "Faible" ? " selected" : ""}>${uiText('Faible')}</option>
+                <option value="Moyenne"${!di.urgency || di.urgency === "Moyenne" ? " selected" : ""}>${uiText('Moyenne')}</option>
+                <option value="Haute"${di.urgency === "Haute" ? " selected" : ""}>${uiText('Haute')}</option>
+                <option value="Critique"${di.urgency === "Critique" ? " selected" : ""}>${uiText('Critique')}</option>
               </select>
             </div>
             <div class="field-group field-group-wide">
-              <label for="otInstructions">Instructions techniques</label>
-              <textarea id="otInstructions" name="instructions" rows="3" placeholder="Saisissez les instructions pour le technicien..."></textarea>
+              <label for="otInstructions">${uiText('Instructions techniques')}</label>
+              <textarea id="otInstructions" name="instructions" rows="3" placeholder="${uiText('Saisissez les instructions pour le technicien...')}"></textarea>
             </div>
             <div class="field-group field-group-wide">
-              <label>Checklist sécurité</label>
+              <label>${uiText('Checklist sécurité')}</label>
               <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:0.5rem;padding:0.5rem;background:var(--org-bg-alt);border-radius:6px;">
                 <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
-                  <input type="checkbox" name="safetyChecklist" value="Consignation électrique" /> Consignation électrique
+                  <input type="checkbox" name="safetyChecklist" value="Consignation électrique" /> ${uiText('Consignation électrique')}
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
-                  <input type="checkbox" name="safetyChecklist" value="EPI requis" /> EPI requis
+                  <input type="checkbox" name="safetyChecklist" value="EPI requis" /> ${uiText('EPI requis')}
                 </label>
                 <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
-                  <input type="checkbox" name="safetyChecklist" value="Permis de travail" /> Permis de travail
+                  <input type="checkbox" name="safetyChecklist" value="Permis de travail" /> ${uiText('Permis de travail')}
                 </label>
               </div>
             </div>
             <div class="field-group field-group-wide">
-              <label>Articles prévus</label>
+              <label>${uiText('Articles prévus')}</label>
               <div id="otArticleLinesContainer" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.75rem;"></div>
               <button type="button" class="btn btn-outline btn-sm" id="otAddArticleBtn" data-options="${escapeHtml(articleOptions)}">
-                <i class="fa-solid fa-plus"></i> Ajouter un article
+                <i class="fa-solid fa-plus"></i> ${uiText('Ajouter un article')}
               </button>
             </div>
             <div class="field-group">
-              <label>Statut</label>
-              <input type="text" value="Planifié" disabled />
+              <label>${uiText('Statut')}</label>
+              <input type="text" value="${uiText('Planifié')}" disabled />
             </div>
           </div>
         </div>
