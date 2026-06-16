@@ -1,4 +1,4 @@
-const StorageManager = {
+﻿const StorageManager = {
   get(key, defaultValue = null) {
     try {
       const value = localStorage.getItem(key);
@@ -8975,6 +8975,13 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Coût main d'oeuvre": "Labor cost",
+    "Sous-traitance": "subcontracting",
+    "Coût total intervention": "Total intervention cost",
+    "Coût articles consommés": "Cost items consumed",
+    "Coût de sous-traitance (DZD)": "Subcontracting cost (DZD)",
+    "Taux horaire de la ressource (DZD)": "Hourly rate of the resource (DZD)",
+    "Quotidienne": "Daily",
     "Technicien exécutant": "Technician performing",
     "Consignation électrique": "Electrical logging",
     "Port des EPI requis": "Wearing of PPE required",
@@ -9240,7 +9247,7 @@ const englishInterfaceTranslations = new Map(
     DI: "WR",
     OT: "WO",
     BT: "WT",
-    DA: "PR",
+    /*DA: "PR",*/
     BC: "PO",
     REC: "Receipt",
     "Bloqués": "Blocked",
@@ -9312,7 +9319,10 @@ const englishInterfaceTranslations = new Map(
     "Le bouton Nouvelle famille organe ouvre le formulaire de création.": "The button New organ family opens the creation form.",
     "Créez la première fiche organe après avoir défini les groupes et familles.": "Create the first organ record after defining the groups and families.",
     "Le bouton Nouvel organe ouvre le formulaire complet.": "The New Organ button opens the complete form.",
-
+    "Transformées": "Transformed",
+    "À valider": "To be validated",
+    "Prêtes pour OT": "Ready for WO",
+    "Décrivez le besoin d'intervention": "Describe the need for intervention",
   }),
 );
 
@@ -10186,11 +10196,25 @@ const englishInterfacePhraseTranslations = new Map(
     "Interventions par mois": "Work orders by month",
     "6 derniers mois": "6 last months",
     "Équipements associés": "associated equipment",
+    "Coût main d'œuvre": "Labor cost",
+    "Sous-traitance": "subcontracting",
+    "Coût total intervention": "Total intervention cost",
+    "Coût articles consommés": "Cost items consumed",
+    "Coût de sous-traitance (DZD)": "Subcontracting cost (DZD)",
+    "Taux horaire de la ressource (DZD)": "Hourly rate of the resource (DZD)",
+    "DZD": "DZD",
+    "Décrivez le besoin d'intervention": "Describe the need for intervention",
+    "Planification, assignation technicien et suivi de l'exécution jusqu'à la clôture.": "Planning, assigning technicians and monitoring from execution to closing.",
+    "À démarrer": "To start",
+    "Sur le terrain": "In the field",
+    "Fiche détaillée de l'OT": "Detailed sheet of the WO",
   }),
 );
 
 const englishInterfaceWordTranslations = new Map(
   Object.entries({
+
+    "DZD": "DZD",
     "\u00e0": "to",
     afin: "to",
     ainsi: "thus",
@@ -10288,7 +10312,7 @@ const englishInterfaceWordTranslations = new Map(
     votre: "your",
     vous: "you",
     "\u00eatre": "be",
-    da: "PR",
+    /* da: "PR",*/
     di: "WR",
     ot: "WO",
     bt: "Wt",
@@ -11737,7 +11761,7 @@ function getAdministrationApprovalRoleOptions() {
     return window.MaintFlowAuth.ROLE_CATALOG.map((role) => ({
       value: role,
       label: window.MaintFlowAuth.toLegacyRole(role) || role,
-
+      "DZD": "DZD",
       "Consommable": "Consumable",
       "Outil": "Tool",
       "EPI": "PPE",
@@ -11909,6 +11933,12 @@ function getAdministrationApprovalRoleOptions() {
       "Intervention mise à jour": "Work order updated",
       "Mouvement stock": "Stock movement",
       "Entrée stock": "Stock entry",
+      "Coût main d'œuvre": "Labor cost",
+      "Sous-traitance": "subcontracting",
+      "Coût total intervention": "Total intervention cost",
+      "Coût articles consommés": "Cost items consumed",
+      "Coût de sous-traitance (DZD)": "Subcontracting cost (DZD)",
+      "Taux horaire de la ressource (DZD)": "Hourly rate of the resource (DZD)",
     }));
   }
 
@@ -13555,7 +13585,7 @@ function dashboardGetArticleLinesCost(lines = []) {
 }
 
 function dashboardMonthKeys(count = 6) {
-  const formatter = new Intl.DateTimeFormat(getAdministrationLocale(), {
+  const formatterDzd = new Intl.DateTimeFormat(getAdministrationLocale(), {
     month: "short",
   });
   return Array.from({ length: count }, (_, index) => {
@@ -13564,7 +13594,7 @@ function dashboardMonthKeys(count = 6) {
     date.setMonth(date.getMonth() - (count - 1 - index));
     return {
       key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`,
-      label: formatter.format(date),
+      label: formatterDzd.format(date),
     };
   });
 }
@@ -23217,6 +23247,7 @@ function renderInterventionsModal() {
       return;
     }
     overlayRootEl.innerHTML = buildInterventionTransformBtModal(ot);
+    bindInterventionsModalHandlers();
     return;
   }
 
@@ -23227,6 +23258,7 @@ function renderInterventionsModal() {
       return;
     }
     overlayRootEl.innerHTML = buildInterventionTransformOtModal(diRecord);
+    bindInterventionsModalHandlers();
     return;
   }
 
@@ -23455,10 +23487,10 @@ function bindInterventionsModalHandlers() {
       line.style.gap = "0.5rem";
       line.style.marginBottom = "0.5rem";
       line.innerHTML = `
-        <select name="articleIds[]" style="flex:1;" required class="bt-article-select">
-          <option value="" data-pmp="0">Sélectionner un article</option>
-          ${btAddArticleBtn.dataset.options}
-        </select>
+        <select name="articleIds" style="flex:1" required class="bt-article-select">
+    <option value="" data-pmp="0">Sélectionner un article</option>
+    ${btAddArticleBtn.dataset.options}
+  </select>
         <input type="number" name="articleQtys[]" min="1" value="1" required style="width:80px;" class="bt-article-qty" />
         <button type="button" class="org-icon-btn danger" onclick="this.parentElement.remove(); window.dispatchEvent(new Event('bt-cost-update'));" title="Supprimer">
           <i class="fa-solid fa-trash-can"></i>
@@ -23486,21 +23518,23 @@ function bindInterventionsModalHandlers() {
   const btStartDate = overlayRootEl.querySelector("#btStartDate");
   const btDurationReal = overlayRootEl.querySelector("#btDurationReal");
 
+  if (btDurationReal) {
+    btDurationReal.addEventListener("input", () => window.dispatchEvent(new Event("bt-cost-update")));
+  }
+
   if (btEndDate && btStartDate && btDurationReal) {
-    btEndDate.addEventListener("change", () => {
+    function syncBtDuration() {
       const start = new Date(btStartDate.value);
       const end = new Date(btEndDate.value);
       if (!isNaN(start) && !isNaN(end) && end > start) {
         const hours = Math.round(((end - start) / 3600000) * 10) / 10;
-        btDurationReal.value = hours + "h";
-      } else {
-        btDurationReal.value = "0h";
+        btDurationReal.value = hours;
       }
       window.dispatchEvent(new Event("bt-cost-update"));
-    });
-    btStartDate.addEventListener("change", () => {
-      window.dispatchEvent(new Event("bt-cost-update"));
-    });
+    }
+    btEndDate.addEventListener("change", syncBtDuration);
+    btEndDate.addEventListener("input", syncBtDuration);
+    btStartDate.addEventListener("change", syncBtDuration);
   }
 
   window.addEventListener("bt-cost-update", () => {
@@ -23517,35 +23551,29 @@ function bindInterventionsModalHandlers() {
       const qty = line.querySelector(".bt-article-qty");
       const opt = select.options[select.selectedIndex];
       if (opt && opt.value) {
+        // ✅ Version corrigée
         const pmp = Number(opt.dataset.pmp) || 0;
-        const q = Number(qty.value) || 0;
-        totalArticles += pmp * q;
+        const articlePrice = Number(opt.dataset.price) || 0;  // ← LIT data-price
+        const unitCost = articlePrice > 0 ? articlePrice : pmp; // prix article en priorité, PMP en fallback
+        const q = Number(qty.value || 0);
+        totalArticles += unitCost * q;
       }
     });
 
     const tauxHoraireVal = Number(overlayRootEl.querySelector("#btTauxHoraire")?.value) || 0;
     const coutSousTraitanceVal = Number(overlayRootEl.querySelector("#btCoutSousTraitance")?.value) || 0;
 
-    const startInput = overlayRootEl.querySelector("#btStartDate")?.value;
-    const endInput = overlayRootEl.querySelector("#btEndDate")?.value;
-    let durationHours = 0;
-    if (startInput && endInput) {
-      const start = new Date(startInput);
-      const end = new Date(endInput);
-      if (!isNaN(start) && !isNaN(end) && end > start) {
-        durationHours = Math.round(((end - start) / 3600000) * 10) / 10;
-      }
-    }
+    const durationHours = Number(overlayRootEl.querySelector("#btDurationReal")?.value) || 0;
 
     const coutMOVal = tauxHoraireVal * durationHours;
     const totalGlobal = totalArticles + coutMOVal + coutSousTraitanceVal;
 
-    const formatter = new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" });
+    const formatterDzd = new Intl.NumberFormat(typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ', { style: 'currency', currency: 'DZD' });
 
-    costArticlesEl.textContent = formatter.format(totalArticles);
-    if (costMOEl) costMOEl.textContent = formatter.format(coutMOVal);
-    if (costSTEl) costSTEl.textContent = formatter.format(coutSousTraitanceVal);
-    costTotalEl.textContent = formatter.format(totalGlobal);
+    costArticlesEl.textContent = formatterDzd.format(totalArticles);
+    if (costMOEl) costMOEl.textContent = formatterDzd.format(coutMOVal);
+    if (costSTEl) costSTEl.textContent = formatterDzd.format(coutSousTraitanceVal);
+    costTotalEl.textContent = formatterDzd.format(totalGlobal);
   });
 
   const transformBtForm = overlayRootEl.querySelector(
@@ -23574,9 +23602,9 @@ function bindInterventionsModalHandlers() {
 
       const start = new Date(formData.get("startDate"));
       const end = new Date(formData.get("endDate"));
-      let durationHoursReal = 0;
-      let durationHours = "0h";
-      if (!isNaN(start) && !isNaN(end) && end > start) {
+      let durationHoursReal = Number(formData.get("durationReal")) || 0;
+      let durationHours = durationHoursReal > 0 ? durationHoursReal + "h" : "0h";
+      if (durationHoursReal === 0 && !isNaN(start) && !isNaN(end) && end > start) {
         durationHoursReal = Math.round(((end - start) / 3600000) * 10) / 10;
         durationHours = durationHoursReal + "h";
       }
@@ -23591,8 +23619,11 @@ function bindInterventionsModalHandlers() {
       const articles = articleIds
         .map((id, index) => {
           const qty = Number(articleQtys[index]) || 1;
-          const pmp = Number(getPrimaryStockRecord(id)?.pmp || 0);
-          coutArticles += pmp * qty;
+          const stockRecord = getPrimaryStockRecord(id);
+          const articlePrice = Number(stockRecord?.articlePrice) || 0;
+          const pmp = Number(stockRecord?.pmp) || 0;
+          const unitCost = articlePrice > 0 ? articlePrice : pmp;
+          coutArticles += unitCost * qty;
           return {
             articleId: id,
             qty: qty,
@@ -24371,7 +24402,10 @@ function renderBtSection(directory) {
       </tr>
     `;
 
-  const formatterDzd = new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" });
+  const formatterDzd = new Intl.NumberFormat(
+    typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ',
+    { style: 'currency', currency: 'DZD' }
+  );
   let sumCost = 0;
   let countCost = 0;
   let costCorrectif = 0;
@@ -25284,7 +25318,7 @@ function printOT(record) {
     const equipment = equipDir.equipments.find(e => e.id === record.equipmentId) || null;
     const organeDir = getOrganeDirectory();
     const organ = organeDir.organes.find(o => o.id === record.organeId) || null;
-
+    const articles = getArticleDirectory().articles
     const technicianNames = (record.technicianIds || [])
       .map(id => getOrganizationUser(id))
       .filter(Boolean)
@@ -25303,12 +25337,15 @@ function printOT(record) {
     const priorityStyle = printGetBadgeStyle(record.priority);
 
     // Tableau articles prévus
-    const articlesRows = (record.articles && record.articles.length)
-      ? record.articles.map(line => {
-        const art = getArticleRecord('articles', line.articleId);
-        const label = art ? `${art.code} — ${art.name}` : (line.articleId || '—');
-        const pmp = art ? (getPrimaryStockRecord(line.articleId)?.pmp || 0) : 0;
-        const total = pmp * (line.qty || 0);
+    const articlesRows = record.articles && record.articles.length
+      ? record.articles.map((line) => {
+        const art = getArticleRecord(articles, line.articleId);
+        const label = art ? `${art.code} – ${art.name}` : line.articleId;
+        const stockPmp = getPrimaryStockRecord(line.articleId)?.pmp;
+        const pmp = (stockPmp !== undefined && stockPmp !== null)
+          ? stockPmp
+          : (Number(line.unitPrice ?? line.price ?? art?.price ?? 0) || 0);
+        const total = pmp * (line.qty ?? 0);
         return `
             <tr>
               <td>${printEsc(label)}</td>
@@ -25328,9 +25365,12 @@ function printOT(record) {
           </div>`).join('')
       : `<div style="font-size:9pt;color:#8fa0b0;font-style:italic;padding:6px 0;">Aucune consigne de sécurité renseignée.</div>`;
 
-    const articlesTotal = (record.articles || []).reduce((sum, line) => {
-      const art = getArticleRecord('articles', line.articleId);
-      const pmp = art ? (getPrimaryStockRecord(line.articleId)?.pmp ?? 0) : 0;
+    const articlesTotal = record.articles?.reduce((sum, line) => {
+      const art = getArticleRecord(articles, line.articleId);
+      const stockPmp = getPrimaryStockRecord(line.articleId)?.pmp;
+      const pmp = (stockPmp !== undefined && stockPmp !== null)
+        ? stockPmp
+        : (Number(line.unitPrice ?? line.price ?? art?.price ?? 0) || 0);
       return sum + pmp * (line.qty ?? 0);
     }, 0);
     const body = `
@@ -27166,19 +27206,19 @@ function renderInterventionRecordDetails(recordType, record) {
       },
       {
         label: "Coût articles",
-        value: record.coutArticles !== undefined ? new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" }).format(record.coutArticles ?? 0) : "-"
+        value: record.coutArticles !== undefined ? new Intl.NumberFormat(typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ', { style: 'currency', currency: 'DZD' }).format(record.coutArticles ?? 0) : "-"
       },
       {
         label: "Coût main d'œuvre",
-        value: record.coutMO !== undefined ? new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" }).format(record.coutMO ?? 0) : "-"
+        value: record.coutMO !== undefined ? new Intl.NumberFormat(typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ', { style: 'currency', currency: 'DZD' }).format(record.coutMO ?? 0) : "-"
       },
       {
         label: "Sous-traitance",
-        value: record.coutSousTraitance !== undefined ? new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" }).format(record.coutSousTraitance ?? 0) : "-"
+        value: record.coutSousTraitance !== undefined ? new Intl.NumberFormat(typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ', { style: 'currency', currency: 'DZD' }).format(record.coutSousTraitance ?? 0) : "-"
       },
       {
         label: "Coût total",
-        value: record.coutTotal !== undefined ? new Intl.NumberFormat("fr-DZ", { style: "currency", currency: "DZD" }).format(record.coutTotal ?? 0) : "-"
+        value: record.coutTotal !== undefined ? new Intl.NumberFormat(typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ', { style: 'currency', currency: 'DZD' }).format(record.coutTotal ?? 0) : "-"
       },
       {
         label: "Signature technicien",
@@ -27357,118 +27397,228 @@ function buildInterventionTransformOtModal(di) {
     .join("");
 
   const articleOptions = getArticleRecords("articles")
-    .map(
-      (a) =>
-        `<option value="${a.id}">${escapeHtml(a.code)} - ${escapeHtml(a.name)}</option>`,
-    )
+    .map((a) => {
+      const stockRecord = getPrimaryStockRecord(a.id);
+      const pmp = stockRecord?.pmp ?? 0;
+      const articlePrice = stockRecord?.articlePrice ?? 0;
+      return `<option value="${a.id}" data-pmp="${pmp}" data-price="${articlePrice}">${escapeHtml(a.code)} - ${escapeHtml(a.name)}</option>`;
+    })
     .join("");
 
   return `
     <div class="org-modal open" role="presentation">
-      <div class="org-modal-backdrop" data-int-close="true"></div>
-      <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intTransformTitle" style="max-width: 800px;">
-        <div class="org-modal-head">
-          <div>
-            <div class="org-modal-kicker">Transformer en OT</div>
-            <h3 id="intTransformTitle">Créer un OT depuis ${escapeHtml(di.ref || "DI")}</h3>
-            <p>Vérifiez les informations de la DI et complétez les détails de l'OT.</p>
-          </div>
-          <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-        <form class="org-form" data-int-transform-ot-form data-di-id="${di.id}">
-          <div class="org-form-section" style="padding: 1.5rem;">
-            <h4 class="org-form-section-title" style="margin-top: 0;">SECTION 1 — Informations de la DI</h4>
-            <div class="org-detail-list" style="margin-bottom: 0;">
-              <div class="org-detail-item"><span>Numéro DI lié</span><strong>${escapeHtml(di.ref || "-")}</strong></div>
-              <div class="org-detail-item"><span>Titre</span><strong>${escapeHtml(di.title || "-")}</strong></div>
-              <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(equipmentLabel)}</strong></div>
-              <div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(organLabel)}</strong></div>
-              <div class="org-detail-item"><span>Type demande</span><strong>${escapeHtml(di.requestType || "-")}</strong></div>
-              <div class="org-detail-item"><span>Urgence</span><strong>${escapeHtml(di.urgency || "-")}</strong></div>
-              <div class="org-detail-item"><span>Demandeur</span><strong>${escapeHtml(requesterLabel)}</strong></div>
-              <div class="org-detail-item"><span>Description</span><strong>${escapeHtml(di.description || "-")}</strong></div>
-            </div>
-          </div>
+  <div class="org-modal-backdrop" data-int-close="true"></div>
+  <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intTransformTitle"
+    style="
+      max-width: 1100px;
+      width: 95vw;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+      overflow: hidden;
+    ">
 
-          <div class="org-form-section" style="padding: 1.5rem; border-top: 1px solid var(--org-border);">
-            <h4 class="org-form-section-title" style="margin-top: 0;">SECTION 2 — Champs à remplir pour l'OT</h4>
-            <div class="org-form-grid">
-              <div class="field-group">
-                <label>Numéro OT</label>
-                <input type="text" value="Généré automatiquement (OT-XXX)" disabled />
-              </div>
-              <div class="field-group">
-                <label for="otTypeMaintenance">Type maintenance</label>
-                <select id="otTypeMaintenance" name="typeMaintenance" required>
-                  <option value="Corrective">Corrective</option>
-                  <option value="Préventive">Préventive</option>
-                  <option value="Prédictive">Prédictive</option>
-                  <option value="Réglementaire">Réglementaire</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="otPlannedDate">Date planifiée <span style="color:var(--org-danger);">*</span></label>
-                <input id="otPlannedDate" name="plannedDate" type="date" required />
-              </div>
-              <div class="field-group">
-                <label for="otDuration">Durée estimée (heures)</label>
-                <input id="otDuration" name="durationEstimated" type="number" step="0.5" min="0" placeholder="Ex: 2" />
-              </div>
-              <div class="field-group">
-                <label for="otTechnician">Technicien assigné</label>
-                <select id="otTechnician" name="technicianId">
-                  <option value="">Sélectionner</option>
-                  ${technicianOptions}
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="otPriority">Priorité</label>
-                <select id="otPriority" name="priority">
-                  <option value="Faible"${di.urgency === "Faible" ? " selected" : ""}>Faible</option>
-                  <option value="Moyenne"${!di.urgency || di.urgency === "Moyenne" ? " selected" : ""}>Moyenne</option>
-                  <option value="Haute"${di.urgency === "Haute" ? " selected" : ""}>Haute</option>
-                  <option value="Critique"${di.urgency === "Critique" ? " selected" : ""}>Critique</option>
-                </select>
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="otInstructions">Instructions techniques</label>
-                <textarea id="otInstructions" name="instructions" rows="3" placeholder="Saisissez les instructions pour le technicien..."></textarea>
-              </div>
-              <div class="field-group field-group-wide">
-                <label>Checklist sécurité</label>
-                <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-top:0.5rem; padding: 0.5rem; background: var(--org-bg-alt); border-radius: 6px;">
-                  <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" name="safetyChecklist" value="Consignation électrique" /> Consignation électrique</label>
-                  <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" name="safetyChecklist" value="EPI requis" /> EPI requis</label>
-                  <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" name="safetyChecklist" value="Permis de travail" /> Permis de travail</label>
-                </div>
-              </div>
-              <div class="field-group field-group-wide">
-                <label>Articles prévus</label>
-                <div id="otArticleLinesContainer" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.75rem;">
-                </div>
-                <button type="button" class="btn btn-outline btn-sm" id="otAddArticleBtn" data-options="${escapeHtml(articleOptions)}">
-                  <i class="fa-solid fa-plus"></i> Ajouter un article
-                </button>
-              </div>
-              <div class="field-group">
-                <label>Statut</label>
-                <input type="text" value="Planifié" disabled />
-              </div>
-            </div>
-          </div>
-
-          <div class="org-modal-actions">
-            <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
-            <button class="btn btn-primary" type="submit">
-              <i class="fa-solid fa-arrow-right"></i>
-              <span>Confirmer et créer OT</span>
-            </button>
-          </div>
-        </form>
+    <!-- ══ HEADER FIXE ══ -->
+    <div class="org-modal-head" style="flex-shrink:0;">
+      <div>
+        <div class="org-modal-kicker">Transformer en OT</div>
+        <h3 id="intTransformTitle">Créer un OT depuis ${escapeHtml(di.ref || "DI")}</h3>
+        <p>Vérifiez les informations de la DI et complétez les détails de l'OT.</p>
       </div>
+      <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
+
+    <!-- ══ FORM ══ -->
+    <form class="org-form" data-int-transform-ot-form data-di-id="${di.id}"
+      style="
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      ">
+
+      <!-- ══ DEUX BLOCS CÔTE À CÔTE ══ -->
+      <div style="
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      ">
+
+       <!-- ▌BLOC 1 — SECTION 1 scrollable ▌-->
+<div style="
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 1.5rem;
+  border-right: 1px solid var(--org-border, #e5e7eb);
+">
+
+  <h4 style="
+    margin: 0 0 1rem 0;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--org-text-muted, #6b7280);
+    font-weight: 600;
+  ">SECTION 1 — Informations de la DI</h4>
+
+  <!-- Ligne 1 : DI lié | Type demande -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+    <div>
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Numéro DI lié</label>
+      <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;font-weight:600;color:var(--org-text,#111827);">${escapeHtml(di.ref) || '-'}</div>
+    </div>
+    <div>
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Type demande</label>
+      <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(di.requestType) || '-'}</div>
+    </div>
+  </div>
+
+  <!-- Ligne 2 : Urgence | Demandeur -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+    <div>
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Urgence</label>
+      <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(di.urgency) || '-'}</div>
+    </div>
+    <div>
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Demandeur</label>
+      <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(requesterLabel)}</div>
+    </div>
+  </div>
+
+  <!-- Ligne 3 : Équipement | Organe -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+    <div>
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Équipement</label>
+      <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(equipmentLabel)}</div>
+    </div>
+    <div>
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Organe</label>
+      <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(organLabel)}</div>
+    </div>
+  </div>
+
+  <!-- Ligne 4 : Titre (pleine largeur) -->
+  <div style="margin-bottom:1rem;">
+    <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Titre</label>
+    <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(di.title) || '-'}</div>
+  </div>
+
+  <!-- Ligne 5 : Description (pleine largeur, hauteur auto) -->
+  <div>
+    <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Description</label>
+    <div style="padding:0.75rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);min-height:5rem;line-height:1.6;white-space:pre-wrap;">${escapeHtml(di.description) || '-'}</div>
+  </div>
+
+</div>
+
+        <!-- ▌BLOC 2 — SECTION 2 scrollable ▌-->
+        <div style="
+          overflow-y: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          padding: 1.25rem 1.5rem;
+        ">
+
+          <h4 style="
+            margin: 0 0 0.75rem 0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--org-text-muted, #6b7280);
+            font-weight: 600;
+          ">SECTION 2 — Champs à remplir pour l'OT</h4>
+
+          <div class="org-form-grid">
+            <div class="field-group">
+              <label>Numéro OT</label>
+              <input type="text" value="Généré automatiquement (OT-XXX)" disabled />
+            </div>
+            <div class="field-group">
+              <label for="otTypeMaintenance">Type maintenance</label>
+              <select id="otTypeMaintenance" name="typeMaintenance" required>
+                <option value="Corrective">Corrective</option>
+                <option value="Préventive">Préventive</option>
+                <option value="Prédictive">Prédictive</option>
+                <option value="Réglementaire">Réglementaire</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="otPlannedDate">Date planifiée <span style="color:var(--org-danger);">*</span></label>
+              <input id="otPlannedDate" name="plannedDate" type="date" required />
+            </div>
+            <div class="field-group">
+              <label for="otDuration">Durée estimée (heures)</label>
+              <input id="otDuration" name="durationEstimated" type="number" step="0.5" min="0" placeholder="Ex: 2" />
+            </div>
+            <div class="field-group">
+              <label for="otTechnician">Technicien assigné</label>
+              <select id="otTechnician" name="technicianId">
+                <option value="">Sélectionner</option>
+                ${technicianOptions}
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="otPriority">Priorité</label>
+              <select id="otPriority" name="priority">
+                <option value="Faible"${di.urgency === "Faible" ? " selected" : ""}>Faible</option>
+                <option value="Moyenne"${!di.urgency || di.urgency === "Moyenne" ? " selected" : ""}>Moyenne</option>
+                <option value="Haute"${di.urgency === "Haute" ? " selected" : ""}>Haute</option>
+                <option value="Critique"${di.urgency === "Critique" ? " selected" : ""}>Critique</option>
+              </select>
+            </div>
+            <div class="field-group field-group-wide">
+              <label for="otInstructions">Instructions techniques</label>
+              <textarea id="otInstructions" name="instructions" rows="3" placeholder="Saisissez les instructions pour le technicien..."></textarea>
+            </div>
+            <div class="field-group field-group-wide">
+              <label>Checklist sécurité</label>
+              <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:0.5rem;padding:0.5rem;background:var(--org-bg-alt);border-radius:6px;">
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                  <input type="checkbox" name="safetyChecklist" value="Consignation électrique" /> Consignation électrique
+                </label>
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                  <input type="checkbox" name="safetyChecklist" value="EPI requis" /> EPI requis
+                </label>
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                  <input type="checkbox" name="safetyChecklist" value="Permis de travail" /> Permis de travail
+                </label>
+              </div>
+            </div>
+            <div class="field-group field-group-wide">
+              <label>Articles prévus</label>
+              <div id="otArticleLinesContainer" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.75rem;"></div>
+              <button type="button" class="btn btn-outline btn-sm" id="otAddArticleBtn" data-options="${escapeHtml(articleOptions)}">
+                <i class="fa-solid fa-plus"></i> Ajouter un article
+              </button>
+            </div>
+            <div class="field-group">
+              <label>Statut</label>
+              <input type="text" value="Planifié" disabled />
+            </div>
+          </div>
+        </div>
+
+      </div><!-- fin grid 2 colonnes -->
+
+      <!-- ══ BOUTONS FIXES ══ -->
+      <div class="org-modal-actions" style="flex-shrink:0; border-top:1px solid var(--org-border,#e5e7eb);">
+        <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
+        <button class="btn btn-primary" type="submit">
+          <i class="fa-solid fa-arrow-right"></i>
+          <span>Confirmer et créer OT</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
   `;
 }
 
@@ -27486,10 +27636,12 @@ function buildInterventionTransformBtModal(ot) {
     : ot.organeLabel || "-";
 
   const articleOptions = getArticleRecords("articles")
-    .map(
-      (a) =>
-        `<option value="${a.id}" data-pmp="${getPrimaryStockRecord(a.id)?.pmp || 0}">${escapeHtml(a.code)} - ${escapeHtml(a.name)}</option>`,
-    )
+    .map((a) => {
+      const stockRecord = getPrimaryStockRecord(a.id);
+      const pmp = stockRecord?.pmp ?? 0;
+      const articlePrice = stockRecord?.articlePrice ?? 0;
+      return `<option value="${a.id}" data-pmp="${pmp}" data-price="${articlePrice}">${escapeHtml(a.code)} - ${escapeHtml(a.name)}</option>`;
+    })
     .join("");
   const formattedArticles =
     ot.articles && ot.articles.length
@@ -27498,132 +27650,247 @@ function buildInterventionTransformBtModal(ot) {
 
   return `
     <div class="org-modal open" role="presentation">
-      <div class="org-modal-backdrop" data-int-close="true"></div>
-      <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intTransformBtTitle" style="max-width: 800px;">
-        <div class="org-modal-head">
-          <div>
-            <div class="org-modal-kicker">Créer BT</div>
-            <h3 id="intTransformBtTitle">Créer un BT depuis ${escapeHtml(ot.ref || "OT")}</h3>
-            <p>Vérifiez les informations de l'OT et complétez les détails du Bon de Travail.</p>
-          </div>
-          <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-        <form class="org-form" data-int-transform-bt-form data-ot-id="${ot.id}">
-          <div class="org-form-section" style="padding: 1.5rem;">
-            <h4 class="org-form-section-title" style="margin-top: 0;">SECTION 1 — Informations de l'OT</h4>
-            <div class="org-detail-list" style="margin-bottom: 0;">
-              <div class="org-detail-item"><span>Numéro OT lié</span><strong>${escapeHtml(ot.ref || "-")}</strong></div>
-              <div class="org-detail-item"><span>Titre / Réf DI</span><strong>${escapeHtml(ot.diRef || "-")}</strong></div>
-              <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(equipmentLabel)}</strong></div>
-              <div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(organLabel)}</strong></div>
-              <div class="org-detail-item"><span>Type maintenance</span><strong>${escapeHtml(ot.typeMaintenance || "-")}</strong></div>
-              <div class="org-detail-item"><span>Technicien assigné</span><strong>${escapeHtml(ot.technicianLabel || "-")}</strong></div>
-              <div class="org-detail-item"><span>Date planifiée</span><strong>${escapeHtml(ot.plannedDate || "-")}</strong></div>
-              <div class="org-detail-item"><span>Durée estimée</span><strong>${ot.durationEstimated ? ot.durationEstimated + " h" : "-"}</strong></div>
-              <div class="org-detail-item" style="grid-column: 1 / -1;"><span>Instructions techniques</span><strong>${escapeHtml(ot.instructions || "-")}</strong></div>
-              <div class="org-detail-item" style="grid-column: 1 / -1;"><span>Articles prévus</span><strong>${formattedArticles}</strong></div>
-            </div>
-          </div>
+  <div class="org-modal-backdrop" data-int-close="true"></div>
+  <div class="org-modal-panel interventions-modal-panel" role="dialog" aria-modal="true" aria-labelledby="intTransformBtTitle"
+    style="
+      max-width: 1100px;
+      width: 95vw;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+      overflow: hidden;
+    ">
 
-          <div class="org-form-section" style="padding: 1.5rem; border-top: 1px solid var(--org-border);">
-            <h4 class="org-form-section-title" style="margin-top: 0;">SECTION 2 — Champs à remplir pour le BT</h4>
-            <div class="org-form-grid">
-              <div class="field-group">
-                <label>Numéro BT</label>
-                <input type="text" value="Généré automatiquement (BT-XXX)" disabled />
-              </div>
-              <div class="field-group">
-                <label for="btStartDate">Date de début</label>
-                <input id="btStartDate" name="startDate" type="datetime-local" value="${new Date().toISOString().slice(0, 16)}" readonly />
-              </div>
-              <div class="field-group">
-                <label for="btEndDate">Date de fin <span style="color:var(--org-danger);">*</span></label>
-                <input id="btEndDate" name="endDate" type="datetime-local" required />
-              </div>
-              <div class="field-group">
-                <label for="btDurationReal">Durée réelle</label>
-                <input id="btDurationReal" type="text" value="0h" readonly />
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="btWorks">Travaux réalisés <span style="color:var(--org-danger);">*</span></label>
-                <textarea id="btWorks" name="works" rows="3" required placeholder="Détaillez les actions menées..."></textarea>
-              </div>
-              <div class="field-group">
-                <label for="btCause">Cause de la panne</label>
-                <select id="btCause" name="cause">
-                  <option value="">Sélectionner</option>
-                  <option value="Usure normale">Usure normale</option>
-                  <option value="Défaut lubrification">Défaut lubrification</option>
-                  <option value="Surcharge">Surcharge</option>
-                  <option value="Défaut matière">Défaut matière</option>
-                  <option value="Autre">Autre</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label>Statut</label>
-                <input type="text" value="Clôturé" disabled />
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="btAnomalies">Anomalies détectées</label>
-                <textarea id="btAnomalies" name="anomalies" rows="2" placeholder="Ex: Fuite mineure constatée sur joint secondaire..."></textarea>
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="btObservations">Observations</label>
-                <textarea id="btObservations" name="observations" rows="2" placeholder="Remarques éventuelles..."></textarea>
-              </div>
-              <div class="field-group field-group-wide">
-                <label>Photos après intervention</label>
-                <input type="file" accept="image/*" multiple />
-              </div>
-              <div class="field-group field-group-wide">
-                <label>Articles consommés</label>
-                <div id="btArticleLinesContainer" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.75rem;">
-                </div>
-                <button type="button" class="btn btn-outline btn-sm" id="btAddArticleBtn" data-options="${escapeHtml(articleOptions)}">
-                  <i class="fa-solid fa-plus"></i> Ajouter un article consommé
-                </button>
-              </div>
-              <div class="field-group">
-                <label for="btTauxHoraire">Taux horaire de la ressource (DZD)</label>
-                <input id="btTauxHoraire" name="tauxHoraire" type="number" step="0.01" min="0" value="0" />
-              </div>
-              <div class="field-group">
-                <label for="btCoutSousTraitance">Coût de sous-traitance (DZD)</label>
-                <input id="btCoutSousTraitance" name="coutSousTraitance" type="number" step="0.01" min="0" value="0" />
-              </div>
-            </div>
-            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--org-bg-alt); border-radius: 6px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                <span>Coût articles consommés :</span>
-                <strong id="btCostArticles">0,00 DZD</strong>
-              </div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                <span>Coût main d'œuvre :</span>
-                <strong id="btCostMO">0,00 DZD</strong>
-              </div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                <span>Sous-traitance :</span>
-                <strong id="btCostST">0,00 DZD</strong>
-              </div>
-              <div style="display: flex; justify-content: space-between; font-size: 1.1em; font-weight: bold; border-top: 1px solid var(--org-border); padding-top: 0.5rem;">
-                <span>Coût total intervention :</span>
-                <strong id="btCostTotal">0,00 DZD</strong>
-              </div>
-            </div>
-          </div>
-
-          <div class="org-modal-actions">
-            <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
-            <button class="btn btn-primary" type="submit">
-              <i class="fa-solid fa-check"></i>
-              <span>Confirmer et créer BT</span>
-            </button>
-          </div>
-        </form>
+    <!-- ══ HEADER FIXE ══ -->
+    <div class="org-modal-head" style="flex-shrink:0;">
+      <div>
+        <div class="org-modal-kicker">Créer BT</div>
+        <h3 id="intTransformBtTitle">Créer un BT depuis ${escapeHtml(ot.ref || "OT")}</h3>
+        <p>Vérifiez les informations de l'OT et complétez les détails du Bon de Travail.</p>
       </div>
+      <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
+
+    <!-- ══ FORM ══ -->
+    <form class="org-form" data-int-transform-bt-form data-ot-id="${ot.id}"
+      style="
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      ">
+
+      <!-- ══ DEUX BLOCS CÔTE À CÔTE ══ -->
+      <div style="
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      ">
+
+        <!-- ▌BLOC 1 — SECTION 1 scrollable ▌-->
+        <div style="
+          overflow-y: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          padding: 1.5rem;
+          border-right: 1px solid var(--org-border, #e5e7eb);
+        ">
+
+          <h4 style="
+            margin: 0 0 1rem 0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--org-text-muted, #6b7280);
+            font-weight: 600;
+          ">SECTION 1 — Informations de l'OT</h4>
+
+          <!-- Ligne 1 : OT lié | Titre / Réf DI -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+            <div>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Numéro OT lié</label>
+              <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;font-weight:600;color:var(--org-text,#111827);">${escapeHtml(ot.ref || '-')}</div>
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Titre / Réf DI</label>
+              <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(ot.diRef || '-')}</div>
+            </div>
+          </div>
+
+          <!-- Ligne 2 : Équipement | Organe -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+            <div>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Équipement</label>
+              <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(equipmentLabel)}</div>
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Organe</label>
+              <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(organLabel)}</div>
+            </div>
+          </div>
+
+          <!-- Ligne 3 : Type maintenance | Technicien -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+            <div>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Type maintenance</label>
+              <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(ot.typeMaintenance || '-')}</div>
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Technicien assigné</label>
+              <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(ot.technicianLabel || '-')}</div>
+            </div>
+          </div>
+
+          <!-- Ligne 4 : Date planifiée | Durée estimée -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+            <div>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Date planifiée</label>
+              <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(ot.plannedDate || '-')}</div>
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Durée estimée</label>
+              <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${ot.durationEstimated ? ot.durationEstimated + ' h' : '-'}</div>
+            </div>
+          </div>
+
+          <!-- Ligne 5 : Instructions (pleine largeur) -->
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Instructions techniques</label>
+            <div style="padding:0.75rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);min-height:4rem;line-height:1.6;white-space:pre-wrap;">${escapeHtml(ot.instructions || '-')}</div>
+          </div>
+
+          <!-- Ligne 6 : Articles prévus (pleine largeur) -->
+          <div>
+            <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Articles prévus</label>
+            <div style="padding:0.75rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);min-height:3rem;line-height:1.8;white-space:pre-wrap;">${formattedArticles}</div>
+          </div>
+
+        </div>
+
+        <!-- ▌BLOC 2 — SECTION 2 scrollable ▌-->
+        <div style="
+          overflow-y: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          padding: 1.5rem;
+        ">
+
+          <h4 style="
+            margin: 0 0 1rem 0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--org-text-muted, #6b7280);
+            font-weight: 600;
+          ">SECTION 2 — Champs à remplir pour le BT</h4>
+
+          <div class="org-form-grid">
+            <div class="field-group">
+              <label>Numéro BT</label>
+              <input type="text" value="Généré automatiquement (BT-XXX)" disabled />
+            </div>
+            <div class="field-group">
+              <label for="btStartDate">Date de début</label>
+              <input id="btStartDate" name="startDate" type="datetime-local" value="${new Date().toISOString().slice(0, 16)}" readonly />
+            </div>
+            <div class="field-group">
+              <label for="btEndDate">Date de fin <span style="color:var(--org-danger);">*</span></label>
+              <input id="btEndDate" name="endDate" type="datetime-local" required />
+            </div>
+            <div class="field-group">
+              <label for="btDurationReal">Durée réelle</label>
+              <input id="btDurationReal" type="text" value="0h" readonly />
+            </div>
+            <div class="field-group field-group-wide">
+              <label for="btWorks">Travaux réalisés <span style="color:var(--org-danger);">*</span></label>
+              <textarea id="btWorks" name="works" rows="3" required placeholder="Détaillez les actions menées..."></textarea>
+            </div>
+            <div class="field-group">
+              <label for="btCause">Cause de la panne</label>
+              <select id="btCause" name="cause">
+                <option value="">Sélectionner</option>
+                <option value="Usure normale">Usure normale</option>
+                <option value="Défaut lubrification">Défaut lubrification</option>
+                <option value="Surcharge">Surcharge</option>
+                <option value="Défaut matière">Défaut matière</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Statut</label>
+              <input type="text" value="Clôturé" disabled />
+            </div>
+            <div class="field-group field-group-wide">
+              <label for="btAnomalies">Anomalies détectées</label>
+              <textarea id="btAnomalies" name="anomalies" rows="2" placeholder="Ex: Fuite mineure constatée sur joint secondaire..."></textarea>
+            </div>
+            <div class="field-group field-group-wide">
+              <label for="btObservations">Observations</label>
+              <textarea id="btObservations" name="observations" rows="2" placeholder="Remarques éventuelles..."></textarea>
+            </div>
+            <div class="field-group field-group-wide">
+              <label>Photos après intervention</label>
+              <input type="file" accept="image/*" multiple />
+            </div>
+            <div class="field-group field-group-wide">
+              <label>Articles consommés</label>
+              <div id="btArticleLinesContainer" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.75rem;"></div>
+              <button type="button" class="btn btn-outline btn-sm" id="btAddArticleBtn" data-options="${escapeHtml(articleOptions)}">
+                <i class="fa-solid fa-plus"></i> Ajouter un article consommé
+              </button>
+            </div>
+            <div class="field-group">
+              <label for="btTauxHoraire">Taux horaire de la ressource (DZD)</label>
+              <input id="btTauxHoraire" name="tauxHoraire" type="number" step="0.01" min="0" value="0" />
+            </div>
+            <div class="field-group">
+              <label for="btCoutSousTraitance">Coût de sous-traitance (DZD)</label>
+              <input id="btCoutSousTraitance" name="coutSousTraitance" type="number" step="0.01" min="0" value="0" />
+            </div>
+          </div>
+
+          <!-- Récapitulatif des coûts -->
+          <div style="margin-top:1.5rem; padding:1rem; background:var(--org-bg-alt); border-radius:6px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+              <span>Coût articles consommés :</span>
+              <strong id="btCostArticles">0,00 DZD</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+              <span>Coût main d'œuvre :</span>
+              <strong id="btCostMO">0,00 DZD</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+              <span>Sous-traitance :</span>
+              <strong id="btCostST">0,00 DZD</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:1.1em; font-weight:bold; border-top:1px solid var(--org-border); padding-top:0.5rem;">
+              <span>Coût total intervention :</span>
+              <strong id="btCostTotal">0,00 DZD</strong>
+            </div>
+          </div>
+
+        </div>
+
+      </div><!-- fin grid 2 colonnes -->
+
+      <!-- ══ BOUTONS FIXES ══ -->
+      <div class="org-modal-actions" style="flex-shrink:0; border-top:1px solid var(--org-border,#e5e7eb);">
+        <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
+        <button class="btn btn-primary" type="submit">
+          <i class="fa-solid fa-check"></i>
+          <span>Confirmer et créer BT</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
   `;
 }
 
