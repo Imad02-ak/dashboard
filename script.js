@@ -817,7 +817,6 @@ function buildArticleFamilyOptions(
 
 function buildArticleTypeOptions(selectedType = "") {
   const types = [
-    { value: "consommable", label: "Consommable" },
     { value: "piece-rechange", label: "Pièce de rechange" },
     { value: "outil", label: "Outil" },
     { value: "epi", label: "EPI" },
@@ -840,7 +839,7 @@ function buildArticleUnitMeasureOptions(selectedUnitMeasure = "") {
     "Boîte",
     "Kg",
     "g",
-    "L",
+    "Litre",
     "m",
     "cm",
     "mm",
@@ -4196,8 +4195,6 @@ function buildStatusOptions(selectedStatus = "") {
     "En service",
     "En maintenance",
     "En panne",
-    "Hors service",
-    "Réforme",
   ];
   return [
     '<option value="">Sélectionner l\'état</option>',
@@ -9056,6 +9053,12 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Modèle":"Model",
+    "EPI":"PPE",
+    "Outil":"Tool",
+    "En service": "In service",
+    "La création se fait via la fenêtre modale du bouton Nouveau plan.": "The creation is done via the modal window of the New Plan button.",
+    "Créez un premier plan de maintenance pour alimenter la liste et le calendrier.": "Create a first maintenance plan to populate the list and calendar.",
     "Saisir un relevé": "Enter a reading",
     "Le style a été resserré pour un usage plus lisible: compteur, dernier relevé, seuils et historique visibles ensemble.": "The style has been streamlined for improved readability: the counter, latest reading, thresholds, and history are displayed together.",
     "Les bons de travail remplis par les techniciens s'afficheront ici.": "WT filled by technicians will appear here",
@@ -29185,9 +29188,9 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
         '</tr>';
     }).join("");
     return '<div class="supplier-section">' +
-      '<div class="supplier-section-head"><div><h3>Ã‰valuation fournisseur</h3><p>Historique des Ã©valuations et note globale automatique.</p></div></div>' +
+      '<div class="supplier-section-head"><div><h3>Évaluation fournisseur</h3><p>Historique des Ã©valuations et note globale automatique.</p></div></div>' +
       '<div class="supplier-table-wrap"><table class="supplier-table"><thead><tr>' +
-      '<th>NumÃ©ro</th><th>Fournisseur</th><th>Ã‰valuateur</th><th>Note globale</th><th>Recommandation</th><th>Actions</th>' +
+      '<th>NumÃ©ro</th><th>Fournisseur</th><th>Évaluateur</th><th>Note globale</th><th>Recommandation</th><th>Actions</th>' +
       '</tr></thead><tbody>' + (rows || '<tr><td colspan="6"><div class="supplier-empty-state">Aucune Ã©valuation.</div></td></tr>') + '</tbody></table></div></div>';
   }
 
@@ -29746,14 +29749,14 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     var current = entry || {};
 
     openModal(
-      isEdit ? "Modifier garantie" : "CrÃ©er garantie",
-      "Garantie liÃ©e Ã  un Ã©quipement avec calcul automatique de la date de fin.",
+      isEdit ? "Modifier garantie" : "Créer garantie",
+      "Garantie liée Ã  un équipement avec calcul automatique de la date de fin.",
       '<form class="supplier-form-grid" id="warrantyForm" novalidate>' +
-      '<div><label>Ã‰quipement *</label><select name="equipmentId" required>' + getEquipmentOptionsHtml(isEdit ? (current.equipmentId || "") : "") + '</select></div>' +
+      '<div><label>Équipement *</label><select name="equipmentId" required>' + getEquipmentOptionsHtml(isEdit ? (current.equipmentId || "") : "") + '</select></div>' +
       '<div><label>Fournisseur *</label><select name="supplierId" required>' + supplierOptions(currentSupplierId) + '</select></div>' +
-      '<div><label>Date dÃ©but *</label><input name="debut" type="date" value="' + (current.debut || "") + '" required /></div>' +
-      '<div><label>DurÃ©e (mois) *</label><input name="durationMonths" type="number" value="' + (current.durationMonths || "") + '" required min="1" /></div>' +
-      '<div><label>Date fin (calculÃ©e auto)</label><input name="endDate" type="date" value="' + (current.endDate || "") + '" readonly style="background:#f5f5f5;" /></div>' +
+      '<div><label>Date début *</label><input name="debut" type="date" value="' + (current.debut || "") + '" required /></div>' +
+      '<div><label>Durée (mois) *</label><input name="durationMonths" type="number" value="' + (current.durationMonths || "") + '" required min="1" /></div>' +
+      '<div><label>Date fin (calculée auto)</label><input name="endDate" type="date" value="' + (current.endDate || "") + '" readonly style="background:#f5f5f5;" /></div>' +
       '<div class="full"><label>Conditions</label><textarea name="conditions" rows="3">' + escapeTextarea(current.conditions || "") + '</textarea></div>' +
       '<div><label>Facture / Bon de garantie</label><input name="documents" value="' + escapeHtml(current.documents || "") + '" placeholder="Noms des fichiers" /></div>' +
       '</form>',
@@ -29790,9 +29793,9 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
 
         // Validations
         var errors = [];
-        if (!fd.get("equipmentId")) errors.push("Ã‰quipement obligatoire.");
+        if (!fd.get("equipmentId")) errors.push("Équipement obligatoire.");
         if (!fd.get("supplierId")) errors.push("Fournisseur obligatoire.");
-        if (!fd.get("debut")) errors.push("Date dÃ©but obligatoire.");
+        if (!fd.get("debut")) errors.push("Date début obligatoire.");
         if (!fd.get("durationMonths") || Number(fd.get("durationMonths")) <= 0) errors.push("La durÃ©e doit Ãªtre positive.");
 
         if (errors.length) {
