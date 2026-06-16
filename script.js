@@ -843,6 +843,7 @@ function buildArticleUnitMeasureOptions(selectedUnitMeasure = "") {
     "L",
     "m",
     "cm",
+    "mm",
     "m²",
     "m³",
     "U",
@@ -9478,7 +9479,7 @@ const englishInterfaceTranslations = new Map(
     "Créez la première demande d'intervention depuis le bouton Nouvelle DI.": "Create the first service request from the New DI button.",
     "Les OT issus d'une DI validée apparaîtront ici": "The WOs from a validated WR will appear here.",
     "Le tableau gardera le même langage visuel que les pages Équipements et Organe.": "The table will keep the same visual language as the Equipment and Organ pages.",
-  
+  "Groupe equipment":"Equipment group",
   }),
 );
 
@@ -9512,6 +9513,7 @@ const englishInterfacePhraseTranslations = new Map(
   Object.entries({
   "Taux service stock": "Stock service rate",
     "Taux PM réalisées": "PM complition rates",
+    
     "dans délai": "on time",
     "moy répar": "avg. repair",
     "moy pannes": "avg. breakdowns",
@@ -10335,13 +10337,13 @@ const englishInterfacePhraseTranslations = new Map(
     "Référentiel organisation": "Organization directory",
     "Sous-pages organes": "organs subpages",
     "Référentiel des groupes, familles et organes.":
-      "Directory of groups, families and organs.",
+    "Directory of groups, families and organs.",
     "familles ·": "families ·",
     "organes": "organs",
     "Planifié": "Scheduled",
     "En cours": "In progress",
     "Clôturé": "Closed",
-    "Terminé": "Completed",
+    "Terminés": "Completed",
     "Rejeté": "Rejected",
     "Normal": "Normal",
     "Alerte": "Alert",
@@ -10394,12 +10396,13 @@ const englishInterfacePhraseTranslations = new Map(
     "Répartition financière": "Financial distribution",
     "Correctif vs Préventif": "Corrective vs Preventive",
     "Coût moyen par BT": "Average cost per WT",
-
+"Groupe equipment":"Equipment group",
   }),
 );
 
 const englishInterfaceWordTranslations = new Map(
   Object.entries({
+    "Groupe equipment":"Equipment group",
     "validées": "Approved",
     "affichés": "Displayed",
     "Transformé": "Transformed",
