@@ -2865,7 +2865,7 @@ function buildUnitsFormContent(record, mode) {
         </div>
         <div class="field-group">
           <label for="unitName">Nom</label>
-          <input id="unitName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom de l’unité" required />
+          <input id="unitName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="${uiText("Nom de l'unité")}" required />
         </div>
         <div class="field-group field-group-wide">
           <label for="unitLocations">Localisations</label>
@@ -2873,7 +2873,7 @@ function buildUnitsFormContent(record, mode) {
         </div>
         <div class="field-group">
           <label for="unitPhone">Numéro téléphone</label>
-          <input id="unitPhone" name="phone" type="tel" value="${escapeHtml(record?.phone || "")}" placeholder="Téléphone de l’unité" />
+          <input id="unitPhone" name="phone" type="tel" value="${escapeHtml(record?.phone || "")}" placeholder="${uiText("Téléphone de l'unité")}" />
         </div>
         <div class="field-group">
           <label for="unitResponsible">Nom de responsable</label>
@@ -8976,6 +8976,9 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Nom de l'unité": "Name of the unit", 
+    "Téléphone de l'unité": "Unit phone",
+    "Unités": "Units",
     "Saisie terrain, articles consommés, signatures et validation finale.": "Field entry, items consumed, signatures, and final validation.",
     "Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.": "Management of purchase requests, including approval, prioritization based on urgency level, and conversion into purchase orders.",
     "fournisseurs actifs": "Active suppliers",
@@ -9034,11 +9037,11 @@ const englishInterfaceTranslations = new Map(
     "Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.": "Management of purchase requests, including approval, prioritization based on urgency level, and conversion into purchase orders.",
     "Achats - Demandes d'achat": "Purchases - Purchase request",
     "fournisseurs actifs": "Active suppliers",
-    "Aucune Ã©valuation.": "No evaluation",
-    "Ã‰valuateur": "Evaluator",
-    "NumÃ©ro": "Number",
+    "Aucune évaluation.": "No evaluation",
+    "Évaluateur": "Evaluator",
+    "Numéro": "Number",
     "Historique des Ã©valuations et note globale automatique.": "Evaluation history and automatic overall rating",
-    "Ã‰valuation fournisseur": "Supplier evaluation",
+    "Évaluation fournisseur": "Supplier evaluation",
     "Chaque ligne dispose des actions voir, modifier et supprimer.": "Each record provides View, Edit, and Delete actions.",
     "Accès de consultation sans modification ni validation": "View access only, without modification or validation",
     "Suit le cycle achat et les échanges avec les fournisseurs": "Monitors the procurement cycle and interactions with suppliers",
@@ -9108,11 +9111,11 @@ const englishInterfaceTranslations = new Map(
     "Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.": "Management of purchase requests, including approval, prioritization based on urgency level, and conversion into purchase orders.",
     "Achats - Demandes d'achat": "Purchases - Purchase request",
     "fournisseurs actifs": "Active suppliers",
-    "Aucune Ã©valuation.": "No evaluation",
-    "Ã‰valuateur": "Evaluator",
+    "Aucune Évaluation.": "No evaluation",
+    "Évaluateur": "Evaluator",
     "NumÃ©ro": "Number",
-    "Historique des Ã©valuations et note globale automatique.": "Evaluation history and automatic overall rating",
-    "Ã‰valuation fournisseur": "Supplier evaluation",
+    "Historique des évaluations et note globale automatique.": "Evaluation history and automatic overall rating",
+    "Évaluation fournisseur": "Supplier evaluation",
     "Chaque ligne dispose des actions voir, modifier et supprimer.": "Each record provides View, Edit, and Delete actions.",
     "Accès de consultation sans modification ni validation": "View access only, without modification or validation",
     "Suit le cycle achat et les échanges avec les fournisseurs": "Monitors the procurement cycle and interactions with suppliers",
@@ -9198,7 +9201,7 @@ const englishInterfaceTranslations = new Map(
     Division: "Division",
     D\u00e9partement: "Department",
     Service: "Service",
-    Unit\u00e9: "Unit",
+    /*Unit\u00e9: "Unit",*/
     Responsable: "Manager",
     Utilisateur: "User",
     Utilisateurs: "Users",
@@ -9513,7 +9516,7 @@ const englishInterfacePhraseTranslations = new Map(
   Object.entries({
     "Taux service stock": "Stock service rate",
     "Taux PM réalisées": "PM complition rates",
-
+    "nom de l'unité": "unit name",
     "dans délai": "on time",
     "moy répar": "avg. repair",
     "moy pannes": "avg. breakdowns",
@@ -10163,7 +10166,6 @@ const englishInterfacePhraseTranslations = new Map(
       "Stock — Item record and location",
     "Récapitulatif du stock": "Stock summary",
     "Quantité en stock": "Quantity in stock",
-    "unité(s)": "unit(s)",
     "Statut stock": "Stock status",
     "Prix Moyen Pondéré (PMP)": "Weighted Average Cost (WAC)",
     "Valeur totale (PMP)": "Total value (WAC)",
@@ -10331,8 +10333,8 @@ const englishInterfacePhraseTranslations = new Map(
       "The New unit button opens the creation form.",
     "Chaque unité conserve son code, ses coordonnées et son responsable avec email synchronisé automatiquement.":
       "Each unit keeps its code, contact details and manager with automatically synchronized email.",
-    "unités": "units",
     "Unités actives": "Active units",
+    "nom de l'unités": "Unit Name",
     "Email chargé automatiquement": "Email loaded automatically",
     "Référentiel organisation": "Organization directory",
     "Sous-pages organes": "organs subpages",
@@ -10397,6 +10399,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Correctif vs Préventif": "Corrective vs Preventive",
     "Coût moyen par BT": "Average cost per WT",
     "Groupe equipment": "Equipment group",
+    "Nom de l'unité": "Unit Name",
   }),
 );
 
@@ -10829,8 +10832,8 @@ const englishInterfaceWordTranslations = new Map(
     transformer: "convert",
     travaux: "work",
     type: "type",
-    unit\u00e9: "unit",
-    unit\u00e9s: "units",
+    /*unit\u00e9: "unit",
+    unit\u00e9s: "units",*/
     urgence: "urgency",
     usure: "wear",
     utilisateur: "user",
