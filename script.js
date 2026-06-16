@@ -993,299 +993,342 @@ function buildArticleFormContent(record, mode) {
   return `
     <form class="org-form equipment-form equipment-form-wizard" data-art-form="article">
 
-      <!-- Indicateur de progression -->
-      <div class="eq-wizard-progress" data-wizard-progress>
-        <div class="eq-wizard-steps">
-          ${['Identification', 'Liaisons métier', "Type complémentaire", 'Caractéristiques techniques', 'Pièces jointes']
-      .map((label, i) => `
-              <div class="eq-wizard-step ${i === 0 ? 'active' : ''}" data-wizard-step-dot="${i}">
-                <div class="eq-wizard-step-bubble">${i + 1}</div>
-                <span class="eq-wizard-step-label">${label}</span>
-              </div>
-              ${i < 4 ? '<div class="eq-wizard-step-line"></div>' : ''}
-            `).join('')}
+  <!-- Indicateur de progression -->
+  <div class="eq-wizard-progress" data-wizard-progress>
+    <div class="eq-wizard-steps">
+      ${[
+      uiText('Identification'),
+      uiText('Liaisons métier'),
+      uiText('Type complémentaire'),
+      uiText('Caractéristiques techniques'),
+      uiText('Pièces jointes')
+    ].map((label, i) => `
+        <div class="eq-wizard-step ${i === 0 ? 'active' : ''}" data-wizard-step-dot="${i}">
+          <div class="eq-wizard-step-bubble">${i + 1}</div>
+          <span class="eq-wizard-step-label">${label}</span>
         </div>
-        <div class="eq-wizard-step-title" data-wizard-step-title>Étape 1 / 5 — Identification</div>
-      </div>
+      `).join('<div class="eq-wizard-step-line"></div>')}
+    </div>
+    <div class="eq-wizard-step-title" data-wizard-step-title>
+      ${uiText('Étape')} 1 / 5 — ${uiText('Identification')}
+    </div>
+  </div>
 
-      <div class="eq-wizard-panels">
+  <div class="eq-wizard-panels">
 
-        <!-- PANEL 1 — Identification -->
-        <div class="eq-wizard-panel active" data-wizard-panel="0">
-          <section class="equipment-section-card">
-            <div class="equipment-section-head">
-              <div>
-                <div class="equipment-section-kicker">Identification</div>
-                <h4>Informations de base de l'article</h4>
-                <p>Code, nom, type, unité de mesure, marque, prix et classification.</p>
-              </div>
-            </div>
-            <div class="org-form-grid">
-              <div class="field-group">
-                <label for="articleCode">Code article</label>
-                <input id="articleCode" type="text" value="${escapeHtml(codePreview)}" disabled />
-              </div>
-              <div class="field-group">
-                <label for="articleName">Nom</label>
-                <input id="articleName" name="name" type="text" value="${escapeHtml(record?.name || '')}" placeholder="Nom de l'article" required />
-              </div>
-              <div class="field-group">
-                <label for="articleUnitMeasure">Unité de mesure</label>
-                <select id="articleUnitMeasure" name="unitMeasure" required>
-                  ${buildArticleUnitMeasureOptions(selectedUnitMeasure)}
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="articleType">Type d'article</label>
-                <select id="articleType" name="articleType">
-                  ${buildArticleTypeOptions(selectedType)}
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="articleGroup">Groupe</label>
-                <select id="articleGroup" name="groupId">
-                  ${buildArticleGroupOptions(selectedGroup)}
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="articleFamily">Famille</label>
-                <select id="articleFamily" name="familyId">
-                  ${buildArticleFamilyOptions(selectedFamily, selectedGroup)}
-                </select>
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="articleDesignations">Désignation</label>
-                <textarea id="articleDesignations" name="designations" rows="3" placeholder="Désignation / description">${escapeTextarea(record?.designations)}</textarea>
-              </div>
-            </div>
-          </section>
+    <!-- PANEL 1 : Identification -->
+    <div class="eq-wizard-panel active" data-wizard-panel="0">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">${uiText('Identification')}</div>
+            <h4>${uiText('Informations de base de l\'article')}</h4>
+            <p>${uiText('Code, nom, type, unité de mesure, marque, prix et classification.')}</p>
+          </div>
+        </div>
+        <div class="org-form-grid">
+          <div class="field-group">
+            <label for="articleCode">${uiText('Code article')}</label>
+            <input id="articleCode" type="text" value="${escapeHtml(codePreview)}" disabled />
+          </div>
+          <div class="field-group">
+            <label for="articleName">${uiText('Nom')}</label>
+            <input id="articleName" name="name" type="text"
+              value="${escapeHtml(record?.name || '')}"
+              placeholder="${uiText("Nom de l'article")}" required />
+          </div>
+          <div class="field-group">
+            <label for="articleUnitMeasure">${uiText('Unité de mesure')}</label>
+            <select id="articleUnitMeasure" name="unitMeasure" required>
+              ${buildArticleUnitMeasureOptions(selectedUnitMeasure)}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="articleType">${uiText("Type d'article")}</label>
+            <select id="articleType" name="articleType">
+              ${buildArticleTypeOptions(selectedType)}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="articleGroup">${uiText('Groupe')}</label>
+            <select id="articleGroup" name="groupId">
+              ${buildArticleGroupOptions(selectedGroup)}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="articleFamily">${uiText('Famille')}</label>
+            <select id="articleFamily" name="familyId">
+              ${buildArticleFamilyOptions(selectedFamily, selectedGroup)}
+            </select>
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="articleDesignations">${uiText('Désignation')}</label>
+            <textarea id="articleDesignations" name="designations" rows="3"
+              placeholder="${uiText('Désignation / description')}">${escapeTextarea(record?.designations || '')}</textarea>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- PANEL 2 : Liaisons métier -->
+    <div class="eq-wizard-panel" data-wizard-panel="1">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">${uiText('Liaisons métier')}</div>
+            <h4>${uiText('Substituts, organes et équipements associés')}</h4>
+            <p>${uiText("Associez les articles de remplacement, les organes et équipements liés à cet article.")}</p>
+          </div>
+        </div>
+        <div class="org-form-grid">
+          <div class="field-group field-group-wide">
+            <label for="articleSubstitutes">${uiText('Articles substituts')}</label>
+            <select id="articleSubstitutes" name="substituteIds" multiple size="4">
+              ${buildArticleSubstituteOptions(selectedSubstitutes, record?.id)}
+            </select>
+            <div class="org-field-hint">${uiText('Sélectionnez un ou plusieurs articles de remplacement en cas de rupture.')}</div>
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="articleLinkedOrganes">${uiText('Organes liés')}</label>
+            <select id="articleLinkedOrganes" name="linkedOrganeIds" multiple size="5">
+              ${buildOrganeMultiOptions(linkedOrganeIds)}
+            </select>
+            <div class="org-field-hint">${uiText('Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.')}</div>
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="articleLinkedEquipments">${uiText('Équipements liés')}</label>
+            <select id="articleLinkedEquipments" name="linkedEquipmentIds" multiple size="5">
+              ${buildAssociatedEquipmentOptions(linkedEquipmentIds)}
+            </select>
+            <div class="org-field-hint">${uiText('Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.')}</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- PANEL 3 : Type complémentaire -->
+    <div class="eq-wizard-panel" data-wizard-panel="2">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">${uiText('Type complémentaire')}</div>
+            <h4>${uiText('Informations techniques et achats')}</h4>
+            <p>${uiText("Marque, fournisseur, traçabilité et historique d'achat.")}</p>
+          </div>
+        </div>
+        <div class="org-form-grid">
+          <div class="field-group">
+            <label for="articleBrand">${uiText('Marque')}</label>
+            <input id="articleBrand" name="brand" type="text"
+              value="${escapeHtml(record?.brand || '')}"
+              placeholder="${uiText('Marque')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleModel">${uiText('Modèle')}</label>
+            <input id="articleModel" name="model" type="text"
+              value="${escapeHtml(record?.model || '')}"
+              placeholder="${uiText("Modèle de l'article")}" />
+          </div>
+          <div class="field-group">
+            <label for="articleSupplier">${uiText('Fournisseur principal')}</label>
+            <select id="articleSupplier" name="supplier">
+              ${buildArticleSupplierOptions(record?.supplier)}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="articleSerialNumber">${uiText('N° série / Référence fabricant')}</label>
+            <input id="articleSerialNumber" name="serialNumber" type="text"
+              value="${escapeHtml(record?.serialNumber || '')}"
+              placeholder="${uiText('Référence ou N° de série')}" />
+          </div>
+          <div class="field-group">
+            <label for="articlePrice">${uiText("Prix d'achat")}</label>
+            <input id="articlePrice" name="price" type="number" step="0.01"
+              value="${escapeHtml(record?.price || '')}"
+              placeholder="${uiText('Prix')}" />
+          </div>
+          <div class="field-group">
+            <label for="articlePurchaseDate">${uiText("Date d'achat")}</label>
+            <input id="articlePurchaseDate" name="purchaseDate" type="date"
+              value="${escapeHtml(record?.purchaseDate || '')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleServiceDate">${uiText('Date de mise en service')}</label>
+            <input id="articleServiceDate" name="serviceDate" type="date"
+              value="${escapeHtml(record?.serviceDate || '')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleWarranty">${uiText('Durée de garantie')}</label>
+            <input id="articleWarranty" name="warrantyDuration" type="text"
+              value="${escapeHtml(record?.warrantyDuration || '')}"
+              placeholder="${uiText('Ex: 12 mois')}" />
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- PANEL 4 : Caractéristiques techniques -->
+    <div class="eq-wizard-panel" data-wizard-panel="3">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">${uiText('Caractéristiques techniques')}</div>
+            <h4>${uiText('Dimensions, stockage et conditions particulières')}</h4>
+            <p>${uiText('Renseignez les dimensions physiques, les conditions de conservation et de manipulation.')}</p>
+          </div>
+        </div>
+        <div class="org-form-grid">
+          <div class="field-group">
+            <label for="articleInnerDiameter">${uiText('Diamètre intérieur (mm)')}</label>
+            <input id="articleInnerDiameter" name="innerDiameter" type="text"
+              placeholder="${uiText('Ex: 25')}"
+              value="${escapeHtml(record?.innerDiameter ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleOuterDiameter">${uiText('Diamètre extérieur (mm)')}</label>
+            <input id="articleOuterDiameter" name="outerDiameter" type="text"
+              placeholder="${uiText('Ex: 52')}"
+              value="${escapeHtml(record?.outerDiameter ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleLength">${uiText('Longueur (mm / m)')}</label>
+            <input id="articleLength" name="articleLength" type="text"
+              placeholder="${uiText('Ex: 200 mm')}"
+              value="${escapeHtml(record?.articleLength ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleWidth">${uiText('Largeur (mm)')}</label>
+            <input id="articleWidth" name="articleWidth" type="text"
+              placeholder="${uiText('Ex: 50 mm')}"
+              value="${escapeHtml(record?.articleWidth ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleThickness">${uiText('Épaisseur / Hauteur (mm)')}</label>
+            <input id="articleThickness" name="articleThickness" type="text"
+              placeholder="${uiText('Ex: 15 mm')}"
+              value="${escapeHtml(record?.articleThickness ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleUnitWeight">${uiText('Poids unitaire (g / kg)')}</label>
+            <input id="articleUnitWeight" name="unitWeight" type="text"
+              placeholder="${uiText('Ex: 1.2 kg')}"
+              value="${escapeHtml(record?.unitWeight ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleVolume">${uiText('Volume / Capacité (L, mL, m³)')}</label>
+            <input id="articleVolume" name="articleVolume" type="text"
+              placeholder="${uiText('Ex: 5 L')}"
+              value="${escapeHtml(record?.articleVolume ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleShelfLife">${uiText('Durée de conservation (mois / années)')}</label>
+            <input id="articleShelfLife" name="shelfLife" type="text"
+              placeholder="${uiText('Ex: 24 mois')}"
+              value="${escapeHtml(record?.shelfLife ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="articleExpiryDate">${uiText('Date de péremption')}</label>
+            <input id="articleExpiryDate" name="expiryDate" type="date"
+              value="${escapeHtml(record?.expiryDate ?? '')}" />
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="articleStorageConditions">${uiText('Conditions de stockage')}</label>
+            <textarea id="articleStorageConditions" name="storageConditions" rows="2"
+              placeholder="${uiText('Ex: Température 5–25°C, humidité ≤60%, à l\'abri de la lumière')}">${escapeTextarea(record?.storageConditions || '')}</textarea>
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="articleSpecialConditions">${uiText('Conditions particulières')}</label>
+            <textarea id="articleSpecialConditions" name="specialConditions" rows="2"
+              placeholder="${uiText('Ex: à l\'abri de la lumière, ventilé, hors gel...')}">${escapeTextarea(record?.specialConditions || '')}</textarea>
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="articleHandlingConditions">${uiText('Conditions de manipulation')}</label>
+            <textarea id="articleHandlingConditions" name="handlingConditions" rows="2"
+              placeholder="${uiText('Ex: Port EPI obligatoire, ventilation requise...')}">${escapeTextarea(record?.handlingConditions || '')}</textarea>
+          </div>
         </div>
 
-        <!-- PANEL 1 – Liaisons métier (doit venir EN PREMIER) -->
-<div class="eq-wizard-panel" data-wizard-panel="1">
-  <section class="equipment-section-card">
-    <div class="equipment-section-head">
-      <div>
-        <div class="equipment-section-kicker">Liaisons métier</div>
-        <h4>Substituts, organes et équipements associés</h4>
-        <p>Associez les articles de remplacement, les organes et équipements liés à cet article.</p>
-      </div>
-    </div>
-    <div class="org-form-grid">
-      <div class="field-group field-group-wide">
-        <label for="articleSubstitutes">Articles substituts</label>
-        <select id="articleSubstitutes" name="substituteIds" multiple size="4">
-          ${buildArticleSubstituteOptions(selectedSubstitutes, record?.id)}
-        </select>
-        <div class="org-field-hint">Sélectionnez un ou plusieurs articles de remplacement en cas de rupture.</div>
-      </div>
-      <div class="field-group field-group-wide">
-        <label for="articleLinkedOrganes">Organes liés</label>
-        <select id="articleLinkedOrganes" name="linkedOrganeIds" multiple size="5">
-          ${buildOrganeMultiOptions(linkedOrganeIds)}
-        </select>
-        <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.</div>
-      </div>
-      <div class="field-group field-group-wide">
-        <label for="articleLinkedEquipments">Équipements liés</label>
-        <select id="articleLinkedEquipments" name="linkedEquipmentIds" multiple size="5">
-          ${buildAssociatedEquipmentOptions(linkedEquipmentIds)}
-        </select>
-        <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.</div>
-      </div>
-    </div>
-  </section>
-</div>
-
-<!-- PANEL 2 – Type complémentaire (doit venir EN SECOND) -->
-<div class="eq-wizard-panel" data-wizard-panel="2">
-  <section class="equipment-section-card">
-    <div class="equipment-section-head">
-      <div>
-        <div class="equipment-section-kicker">Type complémentaire</div>
-        <h4>Informations techniques et achats</h4>
-        <p>Marque, fournisseur, traçabilité et historique d'achat.</p>
-      </div>
-    </div>
-    <div class="org-form-grid">
-      <div class="field-group">
-        <label for="articleBrand">Marque</label>
-        <input id="articleBrand" name="brand" type="text"
-          value="${escapeHtml(record?.brand || '')}" placeholder="Marque" />
-      </div>
-      <div class="field-group">
-  <label for="articleModel">Modèle</label>
-  <input id="articleModel" name="model" type="text"
-    value="${escapeHtml(record?.model || '')}"
-    placeholder="Modèle de l'article" />
-</div>
-      <div class="field-group">
-        <label for="articleSupplier">Fournisseur principal</label>
-        <select id="articleSupplier" name="supplier">
-          ${buildArticleSupplierOptions(record?.supplier)}
-        </select>
-      </div>
-      <div class="field-group">
-        <label for="articleSerialNumber">N° série / Référence fabricant</label>
-        <input id="articleSerialNumber" name="serialNumber" type="text"
-          value="${escapeHtml(record?.serialNumber || '')}"
-          placeholder="Référence ou N° de série" />
-      </div>
-      <div class="field-group">
-        <label for="articlePrice">Prix d'achat</label>
-        <input id="articlePrice" name="price" type="number" step="0.01"
-          value="${escapeHtml(record?.price || '')}" placeholder="Prix" />
-      </div>
-      <div class="field-group">
-        <label for="articlePurchaseDate">Date d'achat</label>
-        <input id="articlePurchaseDate" name="purchaseDate" type="date"
-          value="${escapeHtml(record?.purchaseDate || '')}" />
-      </div>
-      <div class="field-group">
-        <label for="articleServiceDate">Date de mise en service</label>
-        <input id="articleServiceDate" name="serviceDate" type="date"
-          value="${escapeHtml(record?.serviceDate || '')}" />
-      </div>
-      <div class="field-group">
-        <label for="articleWarranty">Durée de garantie</label>
-        <input id="articleWarranty" name="warrantyDuration" type="text"
-          value="${escapeHtml(record?.warrantyDuration || '')}"
-          placeholder="Ex : 12 mois" />
-      </div>
-    </div>
-  </section>
-</div>
-
-        <!-- PANEL 3 — Caractéristiques techniques -->
-        <div class="eq-wizard-panel" data-wizard-panel="3">
-          <section class="equipment-section-card">
-            <div class="equipment-section-head">
-              <div>
-                <div class="equipment-section-kicker">Caractéristiques techniques</div>
-                <h4>Dimensions, stockage et conditions particulières</h4>
-                <p>Renseignez les dimensions physiques, les conditions de conservation et de manipulation.</p>
-              </div>
-            </div>
-            <div class="org-form-grid">
-              <div class="field-group">
-                <label for="articleInnerDiameter">Diamètre intérieur (mm)</label>
-                <input id="articleInnerDiameter" name="innerDiameter" type="text" placeholder="Ex : 25" value="${escapeHtml(record?.innerDiameter ?? '')}" />
-              </div>
-              <div class="field-group">
-                <label for="articleOuterDiameter">Diamètre extérieur (mm)</label>
-                <input id="articleOuterDiameter" name="outerDiameter" type="text" placeholder="Ex : 52" value="${escapeHtml(record?.outerDiameter ?? '')}" />
-              </div>
-              <div class="field-group">
-                <label for="articleLength">Longueur (mm / m)</label>
-                <input id="articleLength" name="articleLength" type="text" placeholder="Ex : 200 mm" value="${escapeHtml(record?.articleLength ?? '')}" />
-              </div>
-              <div class="field-group">
-                <label for="articleWidth">Largeur (mm)</label>
-                <input id="articleWidth" name="articleWidth" type="text" placeholder="Ex : 50 mm" value="${escapeHtml(record?.articleWidth ?? '')}" />
-              </div>
-              <div class="field-group">
-                <label for="articleThickness">Épaisseur / Hauteur (mm)</label>
-                <input id="articleThickness" name="articleThickness" type="text" placeholder="Ex : 15 mm" value="${escapeHtml(record?.articleThickness ?? '')}" />
-              </div>
-              <div class="field-group">
-                <label for="articleUnitWeight">Poids unitaire (g / kg)</label>
-                <input id="articleUnitWeight" name="unitWeight" type="text" placeholder="Ex : 1.2 kg" value="${escapeHtml(record?.unitWeight ?? '')}" />
-              </div>
-              <div class="field-group">
-                <label for="articleVolume">Volume / Capacité (L, mL, m³)</label>
-                <input id="articleVolume" name="articleVolume" type="text" placeholder="Ex : 5 L" value="${escapeHtml(record?.articleVolume ?? '')}" />
-              </div>
-              <div class="field-group">
-                <label for="articleShelfLife">Durée de conservation (mois / années)</label>
-                <input id="articleShelfLife" name="shelfLife" type="text" placeholder="Ex : 24 mois" value="${escapeHtml(record?.shelfLife ?? '')}" />
-              </div>
-              <div class="field-group">
-                <label for="articleExpiryDate">Date de péremption</label>
-                <input id="articleExpiryDate" name="expiryDate" type="date" value="${escapeHtml(record?.expiryDate ?? '')}" />
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="articleStorageConditions">Conditions de stockage</label>
-                <textarea id="articleStorageConditions" name="storageConditions" rows="2" placeholder="Ex : Température 5–25°C, humidité < 60%, à l'abri de la lumière">${escapeTextarea(record?.storageConditions)}</textarea>
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="articleSpecialConditions">Conditions particulières</label>
-                <textarea id="articleSpecialConditions" name="specialConditions" rows="2" placeholder="Ex : À l'abri de la lumière, ventilé, hors gel...">${escapeTextarea(record?.specialConditions)}</textarea>
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="articleHandlingConditions">Conditions de manipulation</label>
-                <textarea id="articleHandlingConditions" name="handlingConditions" rows="2" placeholder="Ex : Port EPI obligatoire, ventilation requise...">${escapeTextarea(record?.handlingConditions)}</textarea>
-              </div>
-            </div>
-
-            <!-- Champs personnalisés dynamiques -->
-            <div style="margin-top:16px">
-              <div class="equipment-custom-fields" data-custom-fields-container>
-                ${Array.isArray(record?.customFields) && record.customFields.length > 0
+        <!-- Champs personnalisés dynamiques -->
+        <div style="margin-top:16px">
+          <div class="equipment-custom-fields" data-custom-fields-container>
+            ${Array.isArray(record?.customFields) && record.customFields.length > 0
       ? record.customFields.map((cf, i) => `
-                    <div class="equipment-custom-field-row" data-custom-field-row>
-                      <div class="field-group">
-                        <label>Libellé</label>
-                        <input type="text" name="customFieldLabel" value="${escapeHtml(cf.label ?? '')}" placeholder="Ex : Indice IP, Classe isolation..." />
-                      </div>
-                      <div class="field-group">
-                        <label>Valeur</label>
-                        <input type="text" name="customFieldValue" value="${escapeHtml(cf.value ?? '')}" placeholder="Ex : IP54, Classe F..." />
-                      </div>
-                      <button type="button" class="equipment-custom-field-remove org-icon-btn danger" data-remove-custom-field title="Supprimer ce champ">
-                        <i class="fa-regular fa-trash-can"></i>
-                      </button>
-                    </div>`).join('')
-      : ''}
-              </div>
-              <div class="equipment-custom-fields-footer">
-                <button type="button" class="btn btn-ghost equipment-add-custom-field" data-add-custom-field>
-                  <i class="fa-solid fa-plus"></i> Ajouter une caractéristique
-                </button>
-              </div>
-            </div>
-          </section>
+                <div class="equipment-custom-field-row" data-custom-field-row>
+                  <div class="field-group">
+                    <label>${uiText('Libellé')}</label>
+                    <input type="text" name="customFieldLabel"
+                      value="${escapeHtml(cf.label ?? '')}"
+                      placeholder="${uiText('Ex: Indice IP, Classe isolation...')}" />
+                  </div>
+                  <div class="field-group">
+                    <label>${uiText('Valeur')}</label>
+                    <input type="text" name="customFieldValue"
+                      value="${escapeHtml(cf.value ?? '')}"
+                      placeholder="${uiText('Ex: IP54, Classe F...')}" />
+                  </div>
+                  <button type="button"
+                    class="equipment-custom-field-remove org-icon-btn danger"
+                    data-remove-custom-field
+                    title="${uiText('Supprimer ce champ')}">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </div>
+              `).join('')
+      : ''
+    }
+          </div>
+          <div class="equipment-custom-fields-footer">
+            <button type="button" class="btn btn-ghost equipment-add-custom-field" data-add-custom-field>
+              <i class="fa-solid fa-plus"></i>
+              ${uiText('Ajouter une caractéristique')}
+            </button>
+          </div>
         </div>
+      </section>
+    </div>
 
-        <!-- PANEL 4 — Pièces jointes -->
-        <div class="eq-wizard-panel" data-wizard-panel="4">
-          <section class="equipment-section-card">
-            <div class="equipment-section-head">
-              <div>
-                <div class="equipment-section-kicker">Pièces jointes</div>
-                <h4>Photos associées</h4>
-                <p>Vous pouvez ajouter plusieurs photos pour enrichir la fiche article.</p>
-              </div>
-            </div>
-            <div class="equipment-upload-grid">
-              <div class="field-group field-group-wide">
-                <label for="articlePhotos">Photos</label>
-                <input id="articlePhotos" name="photos" type="file" accept="image/*" multiple />
-                <div class="org-field-hint">Plusieurs images peuvent être ajoutées à la fiche.</div>
-              </div>
-            </div>
-            ${record ? `<div class="field-group field-group-wide">${buildArticleAttachmentsPreview(record, 'edit')}</div>` : ''}
-          </section>
+    <!-- PANEL 5 : Pièces jointes -->
+    <div class="eq-wizard-panel" data-wizard-panel="4">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">${uiText('Pièces jointes')}</div>
+            <h4>${uiText('Photos associées')}</h4>
+            <p>${uiText('Vous pouvez ajouter plusieurs photos pour enrichir la fiche article.')}</p>
+          </div>
         </div>
-
-      </div><!-- fin eq-wizard-panels -->
-
-      <!-- Navigation wizard -->
-      <div class="eq-wizard-nav" data-wizard-nav>
-        <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
-          <i class="fa-solid fa-arrow-left"></i> Précédent
-        </button>
-        <div class="eq-wizard-nav-right">
-          <button type="button" class="btn btn-primary eq-wizard-next" data-wizard-next>
-            Suivant <i class="fa-solid fa-arrow-right"></i>
-          </button>
-          <button type="submit" class="btn btn-primary eq-wizard-submit" data-wizard-submit style="display:none">
-            <i class="fa-solid fa-check"></i> ${mode === 'edit' ? 'Enregistrer' : 'Créer l\'article'}
-          </button>
+        <div class="equipment-upload-grid">
+          <div class="field-group field-group-wide">
+            <label for="articlePhotos">${uiText('Photos')}</label>
+            <input id="articlePhotos" name="photos" type="file" accept="image/*" multiple />
+            <div class="org-field-hint">${uiText('Plusieurs images peuvent être ajoutées à la fiche.')}</div>
+          </div>
+          ${record ? `<div class="field-group field-group-wide">${buildArticleAttachmentsPreview(record, mode === "edit")}</div>` : ""}
         </div>
-      </div>
+      </section>
+    </div>
 
-      <input type="hidden" name="recordId" value="${escapeHtml(record?.id ?? '')}" />
-    </form>
+  </div><!-- fin eq-wizard-panels -->
+
+  <!-- Navigation wizard -->
+  <div class="eq-wizard-nav" data-wizard-nav>
+    <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
+      <i class="fa-solid fa-arrow-left"></i> ${uiText('Précédent')}
+    </button>
+    <div class="eq-wizard-nav-right">
+      <button type="button" class="btn btn-primary eq-wizard-next" data-wizard-next>
+        ${uiText('Suivant')} <i class="fa-solid fa-arrow-right"></i>
+      </button>
+      <button type="submit" class="btn btn-primary eq-wizard-submit" data-wizard-submit style="display:none">
+        <i class="fa-solid fa-check"></i>
+        ${mode === 'edit' ? uiText('Enregistrer') : uiText("Créer l'article")}
+      </button>
+    </div>
+  </div>
+
+  <input type="hidden" name="recordId" value="${escapeHtml(record?.id ?? '')}">
+
+</form>
   `;
 }
 
@@ -5313,15 +5356,14 @@ function buildEquipmentFormContent(record, mode) {
   return `
 <form class="org-form equipment-form equipment-form-wizard" data-eq-form="equipment">
 
-  <!-- Indicateur de progression -->
   <div class="eq-wizard-progress" data-wizard-progress>
     <div class="eq-wizard-steps">
       ${[
-      'Type général',
-      'Liaisons métier',
-      'Type complémentaire',
-      'Caractéristiques techniques',
-      'Pièces jointes'
+      uiText('Type général'),
+      uiText('Liaisons métier'),
+      uiText('Type complémentaire'),
+      uiText('Caractéristiques techniques'),
+      uiText('Pièces jointes')
     ].map((label, i) => `
         <div class="eq-wizard-step ${i === 0 ? 'active' : ''}" data-wizard-step-dot="${i}">
           <div class="eq-wizard-step-bubble">${i + 1}</div>
@@ -5330,11 +5372,10 @@ function buildEquipmentFormContent(record, mode) {
       `).join('<div class="eq-wizard-step-line"></div>')}
     </div>
     <div class="eq-wizard-step-title" data-wizard-step-title>
-      Étape 1 / 5 — Type général
+      ${uiText('Étape')} 1 / 5 — ${uiText('Type général')}
     </div>
   </div>
 
-  <!-- Les 5 sections — une seule visible à la fois -->
   <div class="eq-wizard-panels">
 
     <!-- PANEL 1 : Type général -->
@@ -5342,44 +5383,46 @@ function buildEquipmentFormContent(record, mode) {
       <section class="equipment-section-card">
         <div class="equipment-section-head">
           <div>
-            <div class="equipment-section-kicker">Type général</div>
-            <h4>Identification et statut</h4>
-            <p>Les champs principaux définissent le rattachement et le statut de l'équipement.</p>
+            <div class="equipment-section-kicker">${uiText('Type général')}</div>
+            <h4>${uiText('Identification et statut')}</h4>
+            <p>${uiText('Les champs principaux définissent le rattachement et le statut de l\'équipement.')}</p>
           </div>
         </div>
         <div class="org-form-grid">
-            <div class="field-group">
-              <label for="equipmentCode">Code équipement</label>
-              <input id="equipmentCode" type="text" value="${escapeHtml(codePreview)}" disabled />
-            </div>
-            <div class="field-group">
-              <label for="equipmentName">Nom</label>
-              <input id="equipmentName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom de l’équipement" required />
-            </div>
-            <div class="field-group">
-              <label for="equipmentGroup">Groupe équipement</label>
-              <select id="equipmentGroup" name="groupId" required data-equipment-group-select>
-                ${buildEquipmentGroupOptions(selectedGroupId)}
-              </select>
-            </div>
-            <div class="field-group">
-              <label for="equipmentFamily">Famille équipement</label>
-              <select id="equipmentFamily" name="familyId" required data-equipment-family-select>
-                ${buildEquipmentFamilyOptions(record?.familyId || "", selectedGroupId)}
-              </select>
-            </div>
-            <div class="field-group">
-              <label for="equipmentCriticality">Criticité</label>
-              <select id="equipmentCriticality" name="criticality" required>
-                ${buildCriticalityOptions(record?.criticality || "")}
-              </select>
-            </div>
-            <div class="field-group">
-              <label for="equipmentStatus">État</label>
-              <select id="equipmentStatus" name="status" required>
-                ${buildStatusOptions(record?.status || "")}
-              </select>
-            </div>
+          <div class="field-group">
+            <label for="equipmentCode">${uiText('Code équipement')}</label>
+            <input id="equipmentCode" type="text" value="${escapeHtml(codePreview)}" disabled />
+          </div>
+          <div class="field-group">
+            <label for="equipmentName">${uiText('Nom')}</label>
+            <input id="equipmentName" name="name" type="text"
+              value="${escapeHtml(record?.name || '')}"
+              placeholder="${uiText("Nom de l'équipement")}" required />
+          </div>
+          <div class="field-group">
+            <label for="equipmentGroup">${uiText('Groupe équipement')}</label>
+            <select id="equipmentGroup" name="groupId" required data-equipment-group-select>
+              ${buildEquipmentGroupOptions(selectedGroupId)}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="equipmentFamily">${uiText('Famille équipement')}</label>
+            <select id="equipmentFamily" name="familyId" required data-equipment-family-select>
+              ${buildEquipmentFamilyOptions(record?.familyId || "", selectedGroupId)}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="equipmentCriticality">${uiText('Criticité')}</label>
+            <select id="equipmentCriticality" name="criticality" required>
+              ${buildCriticalityOptions(record?.criticality || "")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="equipmentStatus">${uiText('État')}</label>
+            <select id="equipmentStatus" name="status" required>
+              ${buildStatusOptions(record?.status || "")}
+            </select>
+          </div>
         </div>
       </section>
     </div>
@@ -5389,26 +5432,26 @@ function buildEquipmentFormContent(record, mode) {
       <section class="equipment-section-card">
         <div class="equipment-section-head">
           <div>
-            <div class="equipment-section-kicker">Liaisons métier</div>
-            <h4>Organes et articles associés</h4>
-            <p>Associez les organes et articles déjà créés à cet équipement.</p>
+            <div class="equipment-section-kicker">${uiText('Liaisons métier')}</div>
+            <h4>${uiText('Organes et articles associés')}</h4>
+            <p>${uiText('Associez les organes et articles déjà créés à cet équipement.')}</p>
           </div>
         </div>
         <div class="org-form-grid">
-            <div class="field-group field-group-wide">
-              <label for="equipmentLinkedOrganes">Organes liés</label>
-              <select id="equipmentLinkedOrganes" name="linkedOrganeIds" multiple size="5">
-                ${buildOrganeMultiOptions(linkedOrganeIds)}
-              </select>
-              <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.</div>
-            </div>
-            <div class="field-group field-group-wide">
-              <label for="equipmentLinkedArticles">Articles liés</label>
-              <select id="equipmentLinkedArticles" name="linkedArticleIds" multiple size="5">
-                ${buildArticleMultiOptions(linkedArticleIds)}
-              </select>
-              <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.</div>
-            </div>
+          <div class="field-group field-group-wide">
+            <label for="equipmentLinkedOrganes">${uiText('Organes liés')}</label>
+            <select id="equipmentLinkedOrganes" name="linkedOrganeIds" multiple size="5">
+              ${buildOrganeMultiOptions(linkedOrganeIds)}
+            </select>
+            <div class="org-field-hint">${uiText('Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.')}</div>
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="equipmentLinkedArticles">${uiText('Articles liés')}</label>
+            <select id="equipmentLinkedArticles" name="linkedArticleIds" multiple size="5">
+              ${buildArticleMultiOptions(linkedArticleIds)}
+            </select>
+            <div class="org-field-hint">${uiText('Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.')}</div>
+          </div>
         </div>
       </section>
     </div>
@@ -5418,48 +5461,58 @@ function buildEquipmentFormContent(record, mode) {
       <section class="equipment-section-card">
         <div class="equipment-section-head">
           <div>
-            <div class="equipment-section-kicker">Type complémentaire</div>
-            <h4>Informations techniques et achats</h4>
-            <p>Les champs complémentaires décrivent le suivi fournisseur, la traçabilité et l'historique d'achat.</p>
+            <div class="equipment-section-kicker">${uiText('Type complémentaire')}</div>
+            <h4>${uiText('Informations techniques et achats')}</h4>
+            <p>${uiText("Les champs complémentaires décrivent le suivi fournisseur, la traçabilité et l'historique d'achat.")}</p>
           </div>
         </div>
         <div class="org-form-grid">
-            <div class="field-group">
-              <label for="equipmentBrand">Marque</label>
-              <input id="equipmentBrand" name="brand" type="text" value="${escapeHtml(record?.brand || "")}" placeholder="Marque" />
-            </div>
-            <div class="field-group">
-  <label for="equipmentModel">Modèle</label>
-  <input id="equipmentModel" name="model" type="text"
-    value="${escapeHtml(record?.model || '')}"
-    placeholder="Modèle de l'équipement" />
-</div>
-            <div class="field-group">
-  <label for="equipmentSupplier">Fournisseur</label>
-  <select id="equipmentSupplier" name="supplier">
-    ${buildEquipmentSupplierOptions(record?.supplier)}
-  </select>
-</div>
-            <div class="field-group">
-              <label for="equipmentSerialNumber">N° série</label>
-              <input id="equipmentSerialNumber" name="serialNumber" type="text" value="${escapeHtml(record?.serialNumber || "")}" placeholder="Numéro de série" />
-            </div>
-            <div class="field-group">
-              <label for="equipmentPurchasePrice">Prix d'achat</label>
-              <input id="equipmentPurchasePrice" name="purchasePrice" type="text" value="${escapeHtml(record?.purchasePrice || "")}" placeholder="Prix d’achat" />
-            </div>
-            <div class="field-group">
-              <label for="equipmentPurchaseDate">Date d'achat</label>
-              <input id="equipmentPurchaseDate" name="purchaseDate" type="date" value="${escapeHtml(record?.purchaseDate || "")}" />
-            </div>
-            <div class="field-group">
-              <label for="equipmentServiceDate">Date de mise en service</label>
-              <input id="equipmentServiceDate" name="serviceDate" type="date" value="${escapeHtml(record?.serviceDate || "")}" />
-            </div>
-            <div class="field-group">
-              <label for="equipmentWarranty">Durée de garantie</label>
-              <input id="equipmentWarranty" name="warrantyDuration" type="text" value="${escapeHtml(record?.warrantyDuration || "")}" placeholder="Durée de garantie" />
-            </div>
+          <div class="field-group">
+            <label for="equipmentBrand">${uiText('Marque')}</label>
+            <input id="equipmentBrand" name="brand" type="text"
+              value="${escapeHtml(record?.brand || '')}"
+              placeholder="${uiText('Marque')}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentModel">${uiText('Modèle')}</label>
+            <input id="equipmentModel" name="model" type="text"
+              value="${escapeHtml(record?.model || '')}"
+              placeholder="${uiText("Modèle de l'équipement")}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentSupplier">${uiText('Fournisseur')}</label>
+            <select id="equipmentSupplier" name="supplier">
+              ${buildEquipmentSupplierOptions(record?.supplier)}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="equipmentSerialNumber">${uiText('N° série')}</label>
+            <input id="equipmentSerialNumber" name="serialNumber" type="text"
+              value="${escapeHtml(record?.serialNumber || '')}"
+              placeholder="${uiText('Numéro de série')}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentPurchasePrice">${uiText("Prix d'achat")}</label>
+            <input id="equipmentPurchasePrice" name="purchasePrice" type="text"
+              value="${escapeHtml(record?.purchasePrice || '')}"
+              placeholder="${uiText("Prix d'achat")}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentPurchaseDate">${uiText("Date d'achat")}</label>
+            <input id="equipmentPurchaseDate" name="purchaseDate" type="date"
+              value="${escapeHtml(record?.purchaseDate || '')}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentServiceDate">${uiText('Date de mise en service')}</label>
+            <input id="equipmentServiceDate" name="serviceDate" type="date"
+              value="${escapeHtml(record?.serviceDate || '')}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentWarranty">${uiText('Durée de garantie')}</label>
+            <input id="equipmentWarranty" name="warrantyDuration" type="text"
+              value="${escapeHtml(record?.warrantyDuration || '')}"
+              placeholder="${uiText('Durée de garantie')}" />
+          </div>
         </div>
       </section>
     </div>
@@ -5469,146 +5522,130 @@ function buildEquipmentFormContent(record, mode) {
       <section class="equipment-section-card">
         <div class="equipment-section-head">
           <div>
-            <div class="equipment-section-kicker">Caractéristiques techniques</div>
-            <h4>Données techniques de l'équipement</h4>
-            <p>Type d'énergie, puissance, dimensions et paramètres de fonctionnement.</p>
+            <div class="equipment-section-kicker">${uiText('Caractéristiques techniques')}</div>
+            <h4>${uiText("Données techniques de l'équipement")}</h4>
+            <p>${uiText("Type d'énergie, puissance, dimensions et paramètres de fonctionnement.")}</p>
           </div>
         </div>
         <div class="org-form-grid">
-            <!-- Type d'énergie -->
-            <div class="field-group">
-              <label for="equipmentEnergyType">Type d'énergie</label>
-              <select id="equipmentEnergyType" name="energyType" data-energy-type-select>
-                <option value="">Sélectionner le type d'énergie</option>
-                <option value="Électrique"${record?.energyType === 'Électrique' ? ' selected' : ''}>Électrique</option>
-                <option value="Pneumatique"${record?.energyType === 'Pneumatique' ? ' selected' : ''}>Pneumatique</option>
-                <option value="Hydraulique"${record?.energyType === 'Hydraulique' ? ' selected' : ''}>Hydraulique</option>
-                <option value="Thermique"${record?.energyType === 'Thermique' ? ' selected' : ''}>Thermique</option>
-                <option value="Manuel"${record?.energyType === 'Manuel' ? ' selected' : ''}>Manuel</option>
-              </select>
+          <div class="field-group">
+            <label for="equipmentEnergyType">${uiText("Type d'énergie")}</label>
+            <select id="equipmentEnergyType" name="energyType" data-energy-type-select>
+              <option value="">${uiText("Sélectionner le type d'énergie")}</option>
+              <option value="Électrique"${record?.energyType === 'Électrique' ? ' selected' : ''}>${uiText('Électrique')}</option>
+              <option value="Pneumatique"${record?.energyType === 'Pneumatique' ? ' selected' : ''}>${uiText('Pneumatique')}</option>
+              <option value="Hydraulique"${record?.energyType === 'Hydraulique' ? ' selected' : ''}>${uiText('Hydraulique')}</option>
+              <option value="Thermique"${record?.energyType === 'Thermique' ? ' selected' : ''}>${uiText('Thermique')}</option>
+              <option value="Manuel"${record?.energyType === 'Manuel' ? ' selected' : ''}>${uiText('Manuel')}</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="equipmentPower">${uiText('Puissance (kW / CV)')}</label>
+            <input id="equipmentPower" name="power" type="text"
+              placeholder="${uiText('Ex: 7.5 kW ou 10 CV')}"
+              value="${escapeHtml(record?.power ?? '')}" />
+          </div>
+          <div class="field-group" data-field-electric>
+            <label for="equipmentVoltage">${uiText('Tension (V)')}</label>
+            <input id="equipmentVoltage" name="voltage" type="text"
+              placeholder="${uiText('Ex: 400V / 230V')}"
+              value="${escapeHtml(record?.voltage ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentFrequency">${uiText('Fréquence (Hz)')}</label>
+            <select id="equipmentFrequency" name="frequency">
+              <option value="">${uiText('Sélectionner')}</option>
+              <option value="50 Hz"${record?.frequency === '50 Hz' ? ' selected' : ''}>50 Hz</option>
+              <option value="60 Hz"${record?.frequency === '60 Hz' ? ' selected' : ''}>60 Hz</option>
+            </select>
+          </div>
+          <div class="field-group" data-field-hydraulic-pneumatic>
+            <label for="equipmentPressure">${uiText('Pression de service (bar)')}</label>
+            <input id="equipmentPressure" name="pressure" type="text"
+              placeholder="${uiText('Ex: 6 bar')}"
+              value="${escapeHtml(record?.pressure ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentSpeed">${uiText('Vitesse nominale (tr/min)')}</label>
+            <input id="equipmentSpeed" name="speed" type="text"
+              placeholder="${uiText('Ex: 1450 tr/min')}"
+              value="${escapeHtml(record?.speed ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentCapacity">${uiText('Capacité / Débit (m³/h, L/min, kg/h...)')}</label>
+            <input id="equipmentCapacity" name="capacity" type="text"
+              placeholder="${uiText('Ex: 250 L/min')}"
+              value="${escapeHtml(record?.capacity ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentDimensions">${uiText('Dimensions (L × l × h)')}</label>
+            <input id="equipmentDimensions" name="dimensions" type="text"
+              placeholder="${uiText('Ex: 1200 × 600 × 900 mm')}"
+              value="${escapeHtml(record?.dimensions ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="equipmentWeight">${uiText('Poids (kg)')}</label>
+            <input id="equipmentWeight" name="weight" type="number"
+              placeholder="${uiText('Ex: 85')}"
+              value="${escapeHtml(record?.weight ?? '')}" />
+          </div>
+          <div class="field-group field-group-wide">
+            <label>${uiText('Température de fonctionnement (°C)')}</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input id="equipmentTempMin" name="tempMin" type="number"
+                placeholder="${uiText('Min ex: -10')}"
+                style="flex:1" value="${escapeHtml(record?.tempMin ?? '')}" />
+              <span style="font-size:13px;color:#888">°C &nbsp;à&nbsp;</span>
+              <input id="equipmentTempMax" name="tempMax" type="number"
+                placeholder="${uiText('Max ex: +80')}"
+                style="flex:1" value="${escapeHtml(record?.tempMax ?? '')}" />
+              <span style="font-size:13px;color:#888">°C</span>
             </div>
-
-            <!-- Puissance -->
-            <div class="field-group">
-              <label for="equipmentPower">Puissance (kW / CV)</label>
-              <input id="equipmentPower" name="power" type="text" placeholder="Ex: 7.5 kW ou 10 CV" value="${escapeHtml(record?.power ?? '')}">
-            </div>
-
-            <!-- Tension — affiché uniquement si Électrique (data-field-electric) -->
-            <div class="field-group" data-field-electric>
-              <label for="equipmentVoltage">Tension (V)</label>
-              <input id="equipmentVoltage" name="voltage" type="text" placeholder="Ex: 400V / 230V" value="${escapeHtml(record?.voltage ?? '')}">
-            </div>
-
-            <!-- Fréquence -->
-            <div class="field-group">
-              <label for="equipmentFrequency">Fréquence (Hz)</label>
-              <select id="equipmentFrequency" name="frequency">
-                <option value="">Sélectionner</option>
-                <option value="50 Hz"${record?.frequency === '50 Hz' ? ' selected' : ''}>50 Hz</option>
-                <option value="60 Hz"${record?.frequency === '60 Hz' ? ' selected' : ''}>60 Hz</option>
-              </select>
-            </div>
-
-            <!-- Pression — affiché si Hydraulique ou Pneumatique (data-field-hydraulic-pneumatic) -->
-            <div class="field-group" data-field-hydraulic-pneumatic>
-              <label for="equipmentPressure">Pression de service (bar)</label>
-              <input id="equipmentPressure" name="pressure" type="text" placeholder="Ex: 6 bar" value="${escapeHtml(record?.pressure ?? '')}">
-            </div>
-
-            <!-- Vitesse nominale -->
-            <div class="field-group">
-              <label for="equipmentSpeed">Vitesse nominale (tr/min)</label>
-              <input id="equipmentSpeed" name="speed" type="text" placeholder="Ex: 1450 tr/min" value="${escapeHtml(record?.speed ?? '')}">
-            </div>
-
-            <!-- Capacité / Débit -->
-            <div class="field-group">
-              <label for="equipmentCapacity">Capacité / Débit (m³/h, L/min, kg/h...)</label>
-              <input id="equipmentCapacity" name="capacity" type="text" placeholder="Ex: 250 L/min" value="${escapeHtml(record?.capacity ?? '')}">
-            </div>
-
-            <!-- Dimensions -->
-            <div class="field-group">
-              <label for="equipmentDimensions">Dimensions (L × l × h)</label>
-              <input id="equipmentDimensions" name="dimensions" type="text" placeholder="Ex: 1200 × 600 × 900 mm" value="${escapeHtml(record?.dimensions ?? '')}">
-            </div>
-
-            <!-- Poids -->
-            <div class="field-group">
-              <label for="equipmentWeight">Poids (kg)</label>
-              <input id="equipmentWeight" name="weight" type="number" placeholder="Ex: 85" value="${escapeHtml(record?.weight ?? '')}">
-            </div>
-
-            <!-- Température de fonctionnement -->
-            <div class="field-group field-group-wide">
-              <label>Température de fonctionnement (°C)</label>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <input id="equipmentTempMin" name="tempMin" type="number" placeholder="Min ex: -10" style="flex:1" value="${escapeHtml(record?.tempMin ?? '')}">
-                <span style="font-size:13px;color:#888">°C &nbsp;à&nbsp;</span>
-                <input id="equipmentTempMax" name="tempMax" type="number" placeholder="Max ex: +80" style="flex:1" value="${escapeHtml(record?.tempMax ?? '')}">
-                <span style="font-size:13px;color:#888">°C</span>
-              </div>
-            </div>
-
-            <!-- Type de commande -->
-            <div class="field-group field-group-wide">
-              <label for="equipmentControlType">Type de commande</label>
-              <select id="equipmentControlType" name="controlType">
-                <option value="">Sélectionner</option>
-                <option value="Manuelle"${record?.controlType === 'Manuelle' ? ' selected' : ''}>Manuelle</option>
-                <option value="Automatique"${record?.controlType === 'Automatique' ? ' selected' : ''}>Automatique</option>
-                <option value="API / Automate"${record?.controlType === 'API / Automate' ? ' selected' : ''}>API / Automate</option>
-              </select>
-            </div>
-
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="equipmentControlType">${uiText('Type de commande')}</label>
+            <select id="equipmentControlType" name="controlType">
+              <option value="">${uiText('Sélectionner')}</option>
+              <option value="Manuelle"${record?.controlType === 'Manuelle' ? ' selected' : ''}>${uiText('Manuelle')}</option>
+              <option value="Automatique"${record?.controlType === 'Automatique' ? ' selected' : ''}>${uiText('Automatique')}</option>
+              <option value="API / Automate"${record?.controlType === 'API / Automate' ? ' selected' : ''}>${uiText('API / Automate')}</option>
+            </select>
+          </div>
         </div>
-          <!-- Champs personnalisés dynamiques -->
-          <div class="equipment-custom-fields" data-custom-fields-container>
-            ${Array.isArray(record?.customFields) && record.customFields.length > 0
+
+        <div class="equipment-custom-fields" data-custom-fields-container>
+          ${Array.isArray(record?.customFields) && record.customFields.length > 0
       ? record.customFields.map((cf, i) => `
-                    <div class="equipment-custom-field-row" data-custom-field-row>
-                      <div class="field-group">
-                        <label>Libellé</label>
-                        <input 
-                          type="text" 
-                          name="customFieldLabel" 
-                          value="${escapeHtml(cf.label ?? '')}" 
-                          placeholder="Ex: Débit nominal, Indice IP, Classe isolation..."
-                        >
-                      </div>
-                      <div class="field-group">
-                        <label>Valeur</label>
-                        <input 
-                          type="text" 
-                          name="customFieldValue" 
-                          value="${escapeHtml(cf.value ?? '')}" 
-                          placeholder="Ex: 250 L/min, IP54, Classe F..."
-                        >
-                      </div>
-                      <button 
-                        type="button" 
-                        class="equipment-custom-field-remove org-icon-btn danger" 
-                        data-remove-custom-field 
-                        title="Supprimer ce champ"
-                      >
-                        <i class="fa-regular fa-trash-can"></i>
-                      </button>
-                    </div>
-                  `).join('')
+              <div class="equipment-custom-field-row" data-custom-field-row>
+                <div class="field-group">
+                  <label>${uiText('Libellé')}</label>
+                  <input type="text" name="customFieldLabel"
+                    value="${escapeHtml(cf.label ?? '')}"
+                    placeholder="${uiText('Ex: Débit nominal, Indice IP, Classe isolation...')}" />
+                </div>
+                <div class="field-group">
+                  <label>${uiText('Valeur')}</label>
+                  <input type="text" name="customFieldValue"
+                    value="${escapeHtml(cf.value ?? '')}"
+                    placeholder="${uiText('Ex: 250 L/min, IP54, Classe F...')}" />
+                </div>
+                <button type="button"
+                  class="equipment-custom-field-remove org-icon-btn danger"
+                  data-remove-custom-field
+                  title="${uiText('Supprimer ce champ')}">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
+            `).join('')
       : ''
     }
-          </div>
-          <div class="equipment-custom-fields-footer">
-            <button 
-              type="button" 
-              class="btn btn-ghost equipment-add-custom-field" 
-              data-add-custom-field
-            >
-              <i class="fa-solid fa-plus"></i>
-              Ajouter une caractéristique
-            </button>
-          </div>
+        </div>
+        <div class="equipment-custom-fields-footer">
+          <button type="button" class="btn btn-ghost equipment-add-custom-field" data-add-custom-field>
+            <i class="fa-solid fa-plus"></i>
+            ${uiText('Ajouter une caractéristique')}
+          </button>
+        </div>
       </section>
     </div>
 
@@ -5617,47 +5654,45 @@ function buildEquipmentFormContent(record, mode) {
       <section class="equipment-section-card">
         <div class="equipment-section-head">
           <div>
-            <div class="equipment-section-kicker">Pièces jointes</div>
-            <h4>Photos et documents associés</h4>
-            <p>Vous pouvez ajouter plusieurs photos et documents pour enrichir la fiche.</p>
+            <div class="equipment-section-kicker">${uiText('Pièces jointes')}</div>
+            <h4>${uiText('Photos et documents associés')}</h4>
+            <p>${uiText('Vous pouvez ajouter plusieurs photos et documents pour enrichir la fiche.')}</p>
           </div>
         </div>
         <div class="equipment-upload-grid">
-            <div class="field-group field-group-wide">
-              <label for="equipmentPhotos">Photos</label>
-              <input id="equipmentPhotos" name="photos" type="file" accept="image/*" multiple />
-              <div class="org-field-hint">Plusieurs images peuvent être ajoutées à la fiche.</div>
-            </div>
-            <div class="field-group field-group-wide">
-              <label for="equipmentDocuments">Documents associés</label>
-              <input id="equipmentDocuments" name="documents" type="file" multiple />
-              <div class="org-field-hint">PDF, images ou autres fichiers utiles au suivi de l’équipement.</div>
-            </div>
-            ${record ? `<div class="field-group field-group-wide">${buildEquipmentAttachmentsPreview(record, mode === "edit")}</div>` : ""}
+          <div class="field-group field-group-wide">
+            <label for="equipmentPhotos">${uiText('Photos')}</label>
+            <input id="equipmentPhotos" name="photos" type="file" accept="image/*" multiple />
+            <div class="org-field-hint">${uiText('Plusieurs images peuvent être ajoutées à la fiche.')}</div>
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="equipmentDocuments">${uiText('Documents associés')}</label>
+            <input id="equipmentDocuments" name="documents" type="file" multiple />
+            <div class="org-field-hint">${uiText("PDF, images ou autres fichiers utiles au suivi de l'équipement.")}</div>
+          </div>
+          ${record ? `<div class="field-group field-group-wide">${buildEquipmentAttachmentsPreview(record, mode === "edit")}</div>` : ""}
         </div>
       </section>
     </div>
+
   </div><!-- fin eq-wizard-panels -->
 
   <!-- Navigation wizard -->
   <div class="eq-wizard-nav" data-wizard-nav>
     <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
-      <i class="fa-solid fa-arrow-left"></i> Précédent
+      <i class="fa-solid fa-arrow-left"></i> ${uiText('Précédent')}
     </button>
     <div class="eq-wizard-nav-right">
       <button type="button" class="btn btn-primary eq-wizard-next" data-wizard-next>
-        Suivant <i class="fa-solid fa-arrow-right"></i>
+        ${uiText('Suivant')} <i class="fa-solid fa-arrow-right"></i>
       </button>
       <button type="submit" class="btn btn-primary eq-wizard-submit" data-wizard-submit style="display:none">
         <i class="fa-solid fa-check"></i>
-        ${mode === 'edit' ? 'Enregistrer' : "Créer l'équipement"}
+        ${mode === 'edit' ? uiText('Enregistrer') : uiText("Créer l'équipement")}
       </button>
     </div>
   </div>
 
-  
-
-  <!-- Champ caché recordId pour l'édition -->
   <input type="hidden" name="recordId" value="${escapeHtml(record?.id ?? '')}">
 
 </form>
@@ -7124,297 +7159,342 @@ function buildOrganeFormContent(record, mode) {
 
   return `
     <form class="org-form equipment-form equipment-form-wizard" data-og-form="organe">
-      <div class="eq-wizard-progress" data-wizard-progress>
-        <div class="eq-wizard-steps">
-          ${[
-      "Type général",
-      "Liaisons métier",
-      "Type complémentaire",
-      "Caractéristiques techniques",
-      "Pièces jointes",
-    ]
-      .map(
-        (label, i) => `
-                <div class="eq-wizard-step ${i === 0 ? "active" : ""}" data-wizard-step-dot="${i}">
-                  <div class="eq-wizard-step-bubble">${i + 1}</div>
-                  <span class="eq-wizard-step-label">${label}</span>
-                </div>
-              `,
-      )
-      .join('<div class="eq-wizard-step-line"></div>')}
+
+  <div class="eq-wizard-progress" data-wizard-progress>
+    <div class="eq-wizard-steps">
+      ${[
+      uiText('Type général'),
+      uiText('Liaisons métier'),
+      uiText('Type complémentaire'),
+      uiText('Caractéristiques techniques'),
+      uiText('Pièces jointes')
+    ].map((label, i) => `
+        <div class="eq-wizard-step ${i === 0 ? 'active' : ''}" data-wizard-step-dot="${i}">
+          <div class="eq-wizard-step-bubble">${i + 1}</div>
+          <span class="eq-wizard-step-label">${label}</span>
         </div>
-        <div class="eq-wizard-step-title" data-wizard-step-title>
-          Étape 1 / 5 — Type général
+      `).join('<div class="eq-wizard-step-line"></div>')}
+    </div>
+    <div class="eq-wizard-step-title" data-wizard-step-title>
+      ${uiText('Étape')} 1 / 5 — ${uiText('Type général')}
+    </div>
+  </div>
+
+  <div class="eq-wizard-panels">
+
+    <!-- PANEL 1 : Type général -->
+    <div class="eq-wizard-panel active" data-wizard-panel="0">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">${uiText('Type général')}</div>
+            <h4>${uiText('Identification et statut')}</h4>
+            <p>${uiText("Nom d'organe, groupe/famille, criticité et état.")}</p>
+          </div>
         </div>
-      </div>
-      <div class="eq-wizard-panels">
-        <div class="eq-wizard-panel active" data-wizard-panel="0">
-          <section class="equipment-section-card">
-          <div class="equipment-section-head">
-            <div>
-              <div class="equipment-section-kicker">Type général</div>
-              <h4>Identification et statut</h4>
-              <p>Nom d'organe, groupe/famille, criticité et état.</p>
-            </div>
+        <div class="org-form-grid">
+          <div class="field-group">
+            <label for="organeCode">${uiText('Code organe')}</label>
+            <input id="organeCode" type="text" value="${escapeHtml(codePreview)}" disabled />
           </div>
-          <div class="org-form-grid">
-            <div class="field-group">
-              <label for="organeCode">Code organe</label>
-              <input id="organeCode" type="text" value="${escapeHtml(codePreview)}" disabled />
-            </div>
-            <div class="field-group">
-              <label for="organeName">Nom organe</label>
-              <input id="organeName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom de l'organe" required />
-            </div>
-            <div class="field-group">
-              <label for="organeGroup">Groupe organe</label>
-              <select id="organeGroup" name="groupId" required data-organe-group-select>
-                ${buildOrganeGroupOptions(selectedGroupId)}
-              </select>
-            </div>
-            <div class="field-group">
-              <label for="organeFamily">Famille organe</label>
-              <select id="organeFamily" name="familyId" required>
-                ${buildOrganeFamilyOptions(record?.familyId || "", selectedGroupId)}
-              </select>
-            </div>
-            <div class="field-group">
-              <label for="organeCriticality">Criticité</label>
-              <select id="organeCriticality" name="criticality" required>
-                ${buildCriticalityOptions(record?.criticality || "")}
-              </select>
-            </div>
-            <div class="field-group">
-              <label for="organeStatus">État</label>
-              <select id="organeStatus" name="status" required>
-                ${buildStatusOptions(record?.status || "")}
-              </select>
-            </div>
+          <div class="field-group">
+            <label for="organeName">${uiText('Nom organe')}</label>
+            <input id="organeName" name="name" type="text"
+              value="${escapeHtml(record?.name || '')}"
+              placeholder="${uiText("Nom de l'organe")}" required />
           </div>
-          </section>
+          <div class="field-group">
+            <label for="organeGroup">${uiText('Groupe organe')}</label>
+            <select id="organeGroup" name="groupId" required data-organe-group-select>
+              ${buildOrganeGroupOptions(selectedGroupId)}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="organeFamily">${uiText('Famille organe')}</label>
+            <select id="organeFamily" name="familyId" required>
+              ${buildOrganeFamilyOptions(record?.familyId || "", selectedGroupId)}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="organeCriticality">${uiText('Criticité')}</label>
+            <select id="organeCriticality" name="criticality" required>
+              ${buildCriticalityOptions(record?.criticality || "")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="organeStatus">${uiText('État')}</label>
+            <select id="organeStatus" name="status" required>
+              ${buildStatusOptions(record?.status || "")}
+            </select>
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="organeDesignations">${uiText('Désignations')}</label>
+            <textarea id="organeDesignations" name="designations" rows="3"
+              placeholder="${uiText('Désignation / description')}">${escapeTextarea(record?.designations || '')}</textarea>
+          </div>
         </div>
-        <div class="eq-wizard-panel" data-wizard-panel="1">
-          <section class="equipment-section-card">
-          <div class="equipment-section-head">
-            <div>
-              <div class="equipment-section-kicker">Liaisons métier</div>
-              <h4>Équipements et articles associés</h4>
-              <p>Associez les équipements et les articles de stock utilisés par cet organe.</p>
-            </div>
+      </section>
+    </div>
+
+    <!-- PANEL 2 : Liaisons métier -->
+    <div class="eq-wizard-panel" data-wizard-panel="1">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">${uiText('Liaisons métier')}</div>
+            <h4>${uiText('Équipements et articles associés')}</h4>
+            <p>${uiText("Associez les équipements et articles déjà créés à cet organe.")}</p>
           </div>
-          <div class="org-form-grid">
-            <div class="field-group field-group-wide">
-              <label for="organeLinkedEquipments">Équipements liés</label>
-              <select id="organeLinkedEquipments" name="linkedEquipmentIds" multiple size="5">
-                ${buildAssociatedEquipmentOptions(linkedEquipmentIds)}
-              </select>
-              <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.</div>
-            </div>
-            <div class="field-group field-group-wide">
-              <label for="organeLinkedArticles">Articles liés</label>
-              <select id="organeLinkedArticles" name="linkedArticleIds" multiple size="5">
-                ${buildArticleMultiOptions(linkedArticleIds)}
-              </select>
-              <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.</div>
-            </div>
-          </div>
-          </section>
         </div>
-        <div class="eq-wizard-panel" data-wizard-panel="2">
-          <section class="equipment-section-card">
-          <div class="equipment-section-head">
-            <div>
-              <div class="equipment-section-kicker">Type complémentaire</div>
-              <h4>Informations techniques et achats</h4>
-              <p>Marque, fournisseur, traçabilité et historique d'achat.</p>
-            </div>
+        <div class="org-form-grid">
+          <div class="field-group field-group-wide">
+            <label for="organeLinkedEquipments">${uiText('Équipements liés')}</label>
+            <select id="organeLinkedEquipments" name="linkedEquipmentIds" multiple size="5">
+              ${buildAssociatedEquipmentOptions(linkedEquipmentIds)}
+            </select>
+            <div class="org-field-hint">${uiText('Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.')}</div>
           </div>
-          <div class="org-form-grid">
-            <div class="field-group">
-              <label for="organeBrand">Marque</label>
-              <input id="organeBrand" name="brand" type="text" value="${escapeHtml(record?.brand || "")}" placeholder="Marque" />
-            </div>
-            <div class="field-group">
-  <label for="organeModel">Modèle</label>
-  <input id="organeModel" name="model" type="text"
-    value="${escapeHtml(record?.model || '')}"
-    placeholder="Modèle de l'organe" />
-</div>
-           <div class="field-group">
-  <label for="organeSupplier">Fournisseur</label>
-  <select id="organeSupplier" name="supplier">
-    ${buildEquipmentSupplierOptions(record?.supplier)}
-  </select>
-</div>
-            <div class="field-group">
-              <label for="organeSerialNumber">N° série</label>
-              <input id="organeSerialNumber" name="serialNumber" type="text" value="${escapeHtml(record?.serialNumber || "")}" placeholder="Numéro de série" />
-            </div>
-            <div class="field-group">
-              <label for="organePurchasePrice">Prix d'achat</label>
-              <input id="organePurchasePrice" name="purchasePrice" type="text" value="${escapeHtml(record?.purchasePrice || "")}" placeholder="Prix d’achat" />
-            </div>
-            <div class="field-group">
-              <label for="organePurchaseDate">Date d'achat</label>
-              <input id="organePurchaseDate" name="purchaseDate" type="date" value="${escapeHtml(record?.purchaseDate || "")}" />
-            </div>
-            <div class="field-group">
-              <label for="organeServiceDate">Date de mise en service</label>
-              <input id="organeServiceDate" name="serviceDate" type="date" value="${escapeHtml(record?.serviceDate || "")}" />
-            </div>
-            <div class="field-group">
-              <label for="organeWarranty">Durée de garantie</label>
-              <input id="organeWarranty" name="warrantyDuration" type="text" value="${escapeHtml(record?.warrantyDuration || "")}" placeholder="Durée de garantie" />
-            </div>
+          <div class="field-group field-group-wide">
+            <label for="organeLinkedArticles">${uiText('Articles liés')}</label>
+            <select id="organeLinkedArticles" name="linkedArticleIds" multiple size="5">
+              ${buildArticleMultiOptions(linkedArticleIds)}
+            </select>
+            <div class="org-field-hint">${uiText('Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.')}</div>
           </div>
-          </section>
         </div>
-        <div class="eq-wizard-panel" data-wizard-panel="3">
-          <section class="equipment-section-card">
-            <div class="equipment-section-head">
-              <div>
-                <div class="equipment-section-kicker">Caractéristiques techniques</div>
-                <h4>Données techniques de l'organe</h4>
-                <p>Dimensions, matériau, charges admissibles et conditions de fonctionnement.</p>
-              </div>
-            </div>
-            <div class="org-form-grid">
-              <div class="field-group">
-                <label for="organeInnerDiameter">Diamètre intérieur (mm)</label>
-                <input id="organeInnerDiameter" name="innerDiameter" type="text" value="${escapeHtml(record?.innerDiameter || "")}" placeholder="Ex: 35" />
-              </div>
-              <div class="field-group">
-                <label for="organeOuterDiameter">Diamètre extérieur (mm)</label>
-                <input id="organeOuterDiameter" name="outerDiameter" type="text" value="${escapeHtml(record?.outerDiameter || "")}" placeholder="Ex: 72" />
-              </div>
-              <div class="field-group">
-                <label for="organeMainDimension">Largeur / Longueur (mm)</label>
-                <input id="organeMainDimension" name="mainDimension" type="text" value="${escapeHtml(record?.mainDimension || "")}" placeholder="Ex: 27 ou 1200" />
-              </div>
-              <div class="field-group">
-                <label for="organeMaterial">Matériau</label>
-                <select id="organeMaterial" name="material">
-                  ${buildOrganeMaterialOptions(record?.material || "")}
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="organeStaticLoad">Charge statique</label>
-                <input id="organeStaticLoad" name="staticLoad" type="text" value="${escapeHtml(record?.staticLoad || "")}" placeholder="Ex: 12 kN" />
-              </div>
-              <div class="field-group">
-                <label for="organeDynamicLoad">Charge dynamique</label>
-                <input id="organeDynamicLoad" name="dynamicLoad" type="text" value="${escapeHtml(record?.dynamicLoad || "")}" placeholder="Ex: 8.5 kN" />
-              </div>
-              <div class="field-group">
-                <label for="organeMaxSpeed">Vitesse maximale admissible (tr/min)</label>
-                <input id="organeMaxSpeed" name="maxSpeed" type="text" value="${escapeHtml(record?.maxSpeed || "")}" placeholder="Ex: 1450" />
-              </div>
-              <div class="field-group">
-                <label for="organeTempMin">Température minimum</label>
-                <input id="organeTempMin" name="tempMin" type="text" value="${escapeHtml(record?.tempMin || "")}" placeholder="Ex: -10°C" />
-              </div>
-              <div class="field-group">
-                <label for="organeTempMax">Température maximum</label>
-                <input id="organeTempMax" name="tempMax" type="text" value="${escapeHtml(record?.tempMax || "")}" placeholder="Ex: 120°C" />
-              </div>
-              <div class="field-group">
-                <label for="organeLubricationType">Type de lubrification</label>
-                <select id="organeLubricationType" name="lubricationType">
-                  ${buildOrganeLubricationOptions(record?.lubricationType || "")}
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="organePressureRating">Pression admissible (bar)</label>
-                <input id="organePressureRating" name="pressureRating" type="text" value="${escapeHtml(record?.pressureRating || "")}" placeholder="Ex: 10" />
-              </div>
-              <div class="field-group">
-                <label for="organeEstimatedLife">Durée de vie estimée</label>
-                <input id="organeEstimatedLife" name="estimatedLife" type="text" value="${escapeHtml(record?.estimatedLife || "")}" placeholder="Ex: 20000 h" />
-              </div>
-              <div class="field-group">
-                <label for="organePrecisionClass">Précision / Classe</label>
-                <input id="organePrecisionClass" name="precisionClass" type="text" value="${escapeHtml(record?.precisionClass || "")}" placeholder="Ex: ABEC 5, ISO P6, IT7" />
-              </div>
-              <div class="field-group">
-                <label for="organeNominalTorque">Couple nominal (Nm)</label>
-                <input id="organeNominalTorque" name="nominalTorque" type="text" value="${escapeHtml(record?.nominalTorque || "")}" placeholder="Ex: 65" />
-              </div>
-              <div class="field-group">
-                <label for="organeManufacturerStandard">Norme constructeur</label>
-                <input id="organeManufacturerStandard" name="manufacturerStandard" type="text" value="${escapeHtml(record?.manufacturerStandard || "")}" placeholder="Ex: ISO 281" />
-              </div>
-              <div class="field-group field-group-wide">
-                <label for="organeFluidCompatibility">Compatibilité fluide</label>
-                <input id="organeFluidCompatibility" name="fluidCompatibility" type="text" value="${escapeHtml(record?.fluidCompatibility || "")}" placeholder="Ex: Huile, eau, air, produits chimiques" />
-              </div>
-            </div>
-            <div class="equipment-custom-fields" data-custom-fields-container>
-              ${Array.isArray(record?.customFields) && record.customFields.length > 0
+      </section>
+    </div>
+
+    <!-- PANEL 3 : Type complémentaire -->
+    <div class="eq-wizard-panel" data-wizard-panel="2">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">${uiText('Type complémentaire')}</div>
+            <h4>${uiText('Informations techniques et achats')}</h4>
+            <p>${uiText("Les champs complémentaires décrivent le suivi fournisseur, la traçabilité et l'historique d'achat.")}</p>
+          </div>
+        </div>
+        <div class="org-form-grid">
+          <div class="field-group">
+            <label for="organeBrand">${uiText('Marque')}</label>
+            <input id="organeBrand" name="brand" type="text"
+              value="${escapeHtml(record?.brand || '')}"
+              placeholder="${uiText('Marque')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeModel">${uiText('Modèle')}</label>
+            <input id="organeModel" name="model" type="text"
+              value="${escapeHtml(record?.model || '')}"
+              placeholder="${uiText("Modèle de l'organe")}" />
+          </div>
+          <div class="field-group">
+            <label for="organeSupplier">${uiText('Fournisseur')}</label>
+            <select id="organeSupplier" name="supplier">
+              ${buildEquipmentSupplierOptions(record?.supplier)}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="organeSerialNumber">${uiText('N° série')}</label>
+            <input id="organeSerialNumber" name="serialNumber" type="text"
+              value="${escapeHtml(record?.serialNumber || '')}"
+              placeholder="${uiText('Numéro de série')}" />
+          </div>
+          <div class="field-group">
+            <label for="organePurchasePrice">${uiText("Prix d'achat")}</label>
+            <input id="organePurchasePrice" name="purchasePrice" type="text"
+              value="${escapeHtml(record?.purchasePrice || '')}"
+              placeholder="${uiText("Prix d'achat")}" />
+          </div>
+          <div class="field-group">
+            <label for="organePurchaseDate">${uiText("Date d'achat")}</label>
+            <input id="organePurchaseDate" name="purchaseDate" type="date"
+              value="${escapeHtml(record?.purchaseDate || '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeServiceDate">${uiText('Date de mise en service')}</label>
+            <input id="organeServiceDate" name="serviceDate" type="date"
+              value="${escapeHtml(record?.serviceDate || '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeWarranty">${uiText('Durée de garantie')}</label>
+            <input id="organeWarranty" name="warrantyDuration" type="text"
+              value="${escapeHtml(record?.warrantyDuration || '')}"
+              placeholder="${uiText('Durée de garantie')}" />
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- PANEL 4 : Caractéristiques techniques -->
+    <div class="eq-wizard-panel" data-wizard-panel="3">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">${uiText('Caractéristiques techniques')}</div>
+            <h4>${uiText("Dimensions et données techniques de l'organe")}</h4>
+            <p>${uiText('Diamètres, matériau, lubrification et dimensions principales.')}</p>
+          </div>
+        </div>
+        <div class="org-form-grid">
+          <div class="field-group">
+            <label for="organeInnerDiameter">${uiText('Diamètre intérieur (mm)')}</label>
+            <input id="organeInnerDiameter" name="innerDiameter" type="text"
+              placeholder="${uiText('Ex: 25')}"
+              value="${escapeHtml(record?.innerDiameter ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeOuterDiameter">${uiText('Diamètre extérieur (mm)')}</label>
+            <input id="organeOuterDiameter" name="outerDiameter" type="text"
+              placeholder="${uiText('Ex: 52')}"
+              value="${escapeHtml(record?.outerDiameter ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeMainDimension">${uiText('Dimension principale (mm)')}</label>
+            <input id="organeMainDimension" name="mainDimension" type="text"
+              placeholder="${uiText('Ex: 200 mm')}"
+              value="${escapeHtml(record?.mainDimension ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeMaterial">${uiText('Matériau')}</label>
+            <select id="organeMaterial" name="material">
+              ${buildOrganeMaterialOptions(record?.material || "")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="organeStaticLoad">${uiText('Charge statique (kN)')}</label>
+            <input id="organeStaticLoad" name="staticLoad" type="text"
+              placeholder="${uiText('Ex: 12.5 kN')}"
+              value="${escapeHtml(record?.staticLoad ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeDynamicLoad">${uiText('Charge dynamique (kN)')}</label>
+            <input id="organeDynamicLoad" name="dynamicLoad" type="text"
+              placeholder="${uiText('Ex: 8.2 kN')}"
+              value="${escapeHtml(record?.dynamicLoad ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeSpeed">${uiText('Vitesse (tr/min)')}</label>
+            <input id="organeSpeed" name="speed" type="text"
+              placeholder="${uiText('Ex: 3000 tr/min')}"
+              value="${escapeHtml(record?.speed ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeTemperature">${uiText('Température de service (°C)')}</label>
+            <input id="organeTemperature" name="temperature" type="text"
+              placeholder="${uiText('Ex: -20 à +120°C')}"
+              value="${escapeHtml(record?.temperature ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organelubrication">${uiText('Type de lubrification')}</label>
+            <select id="organelubrication" name="lubrication">
+              ${buildOrganeLubricationOptions(record?.lubrication || "")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="organeLubricantRef">${uiText('Référence lubrifiant')}</label>
+            <input id="organeLubricantRef" name="lubricantRef" type="text"
+              placeholder="${uiText('Ex: Mobil Grease XHP 222')}"
+              value="${escapeHtml(record?.lubricantRef ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeFrequency">${uiText('Fréquence de graissage')}</label>
+            <input id="organeFrequency" name="lubricationFrequency" type="text"
+              placeholder="${uiText('Ex: Toutes les 500h')}"
+              value="${escapeHtml(record?.lubricationFrequency ?? '')}" />
+          </div>
+          <div class="field-group">
+            <label for="organeQuantity">${uiText('Quantité de lubrifiant (g)')}</label>
+            <input id="organeQuantity" name="lubricantQuantity" type="text"
+              placeholder="${uiText('Ex: 15 g')}"
+              value="${escapeHtml(record?.lubricantQuantity ?? '')}" />
+          </div>
+        </div>
+
+        <!-- Champs personnalisés dynamiques -->
+        <div class="equipment-custom-fields" data-custom-fields-container>
+          ${Array.isArray(record?.customFields) && record.customFields.length > 0
       ? record.customFields.map((cf, i) => `
-                  <div class="equipment-custom-field-row" data-custom-field-row>
-                    <div class="field-group">
-                      <label>Libellé</label>
-                      <input type="text" name="customFieldLabel" value="${escapeHtml(cf.label ?? "")}" placeholder="Ex: Débit nominal, Indice IP..." />
-                    </div>
-                    <div class="field-group">
-                      <label>Valeur</label>
-                      <input type="text" name="customFieldValue" value="${escapeHtml(cf.value ?? "")}" placeholder="Ex: 250 L/min, IP54..." />
-                    </div>
-                    <button type="button" class="equipment-custom-field-remove org-icon-btn danger" data-remove-custom-field title="Supprimer ce champ">
-                      <i class="fa-regular fa-trash-can"></i>
-                    </button>
-                  </div>`).join("")
-      : ""}
-            </div>
-            <div class="equipment-custom-fields-footer">
-              <button type="button" class="btn btn-ghost equipment-add-custom-field" data-add-custom-field>
-                <i class="fa-solid fa-plus"></i> Ajouter une caractéristique
-              </button>
-            </div>
-          </section>
+              <div class="equipment-custom-field-row" data-custom-field-row>
+                <div class="field-group">
+                  <label>${uiText('Libellé')}</label>
+                  <input type="text" name="customFieldLabel"
+                    value="${escapeHtml(cf.label ?? '')}"
+                    placeholder="${uiText('Ex: Débit nominal, Indice IP, Classe isolation...')}" />
+                </div>
+                <div class="field-group">
+                  <label>${uiText('Valeur')}</label>
+                  <input type="text" name="customFieldValue"
+                    value="${escapeHtml(cf.value ?? '')}"
+                    placeholder="${uiText('Ex: 250 L/min, IP54, Classe F...')}" />
+                </div>
+                <button type="button"
+                  class="equipment-custom-field-remove org-icon-btn danger"
+                  data-remove-custom-field
+                  title="${uiText('Supprimer ce champ')}">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
+            `).join('')
+      : ''
+    }
         </div>
-
-        <div class="eq-wizard-panel" data-wizard-panel="4">
-          <section class="equipment-section-card">
-          <div class="equipment-section-head">
-            <div>
-              <div class="equipment-section-kicker">Pièces jointes</div>
-              <h4>Photos et documents associés</h4>
-              <p>Ajoutez les fichiers de référence de l'organe.</p>
-            </div>
-          </div>
-          <div class="equipment-upload-grid">
-            <div class="field-group field-group-wide">
-              <label for="organePhotos">Photos</label>
-              <input id="organePhotos" name="photos" type="file" accept="image/*" multiple />
-            </div>
-            <div class="field-group field-group-wide">
-              <label for="organeDocuments">Documents associés</label>
-              <input id="organeDocuments" name="documents" type="file" multiple />
-            </div>
-            ${record ? `<div class="field-group field-group-wide">${buildEquipmentAttachmentsPreview(record, mode === "edit")}</div>` : ""}
-          </div>
-          </section>
-        </div>
-      </div>
-
-     <!-- Navigation wizard -->
-      <div class="eq-wizard-nav" data-wizard-nav>
-        <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
-          <i class="fa-solid fa-arrow-left"></i> Précédent
-        </button>
-        <div class="eq-wizard-nav-right">
-          <button type="button" class="btn btn-primary eq-wizard-next" data-wizard-next>
-            Suivant <i class="fa-solid fa-arrow-right"></i>
-          </button>
-          <button type="submit" class="btn btn-primary eq-wizard-submit" data-wizard-submit style="display:none">
-            <i class="fa-solid fa-check"></i> ${mode === 'edit' ? 'Enregistrer' : "Créer l'organe"}
+        <div class="equipment-custom-fields-footer">
+          <button type="button" class="btn btn-ghost equipment-add-custom-field" data-add-custom-field>
+            <i class="fa-solid fa-plus"></i>
+            ${uiText('Ajouter une caractéristique')}
           </button>
         </div>
-      </div>
+      </section>
+    </div>
 
-      <input type="hidden" name="recordId" value="${escapeHtml(record?.id || '')}">
-    </form>
+    <!-- PANEL 5 : Pièces jointes -->
+    <div class="eq-wizard-panel" data-wizard-panel="4">
+      <section class="equipment-section-card">
+        <div class="equipment-section-head">
+          <div>
+            <div class="equipment-section-kicker">${uiText('Pièces jointes')}</div>
+            <h4>${uiText('Photos et documents associés')}</h4>
+            <p>${uiText('Vous pouvez ajouter plusieurs photos et documents pour enrichir la fiche.')}</p>
+          </div>
+        </div>
+        <div class="equipment-upload-grid">
+          <div class="field-group field-group-wide">
+            <label for="organePhotos">${uiText('Photos')}</label>
+            <input id="organePhotos" name="photos" type="file" accept="image/*" multiple />
+            <div class="org-field-hint">${uiText('Plusieurs images peuvent être ajoutées à la fiche.')}</div>
+          </div>
+          <div class="field-group field-group-wide">
+            <label for="organeDocuments">${uiText('Documents associés')}</label>
+            <input id="organeDocuments" name="documents" type="file" multiple />
+            <div class="org-field-hint">${uiText("PDF, images ou autres fichiers utiles au suivi de l'organe.")}</div>
+          </div>
+          ${record ? `<div class="field-group field-group-wide">${buildEquipmentAttachmentsPreview(record, mode === "edit")}</div>` : ""}
+        </div>
+      </section>
+    </div>
+
+  </div><!-- fin eq-wizard-panels -->
+
+  <!-- Navigation wizard -->
+  <div class="eq-wizard-nav" data-wizard-nav>
+    <button type="button" class="btn btn-ghost eq-wizard-prev" data-wizard-prev style="display:none">
+      <i class="fa-solid fa-arrow-left"></i> ${uiText('Précédent')}
+    </button>
+    <div class="eq-wizard-nav-right">
+      <button type="button" class="btn btn-primary eq-wizard-next" data-wizard-next>
+        ${uiText('Suivant')} <i class="fa-solid fa-arrow-right"></i>
+      </button>
+      <button type="submit" class="btn btn-primary eq-wizard-submit" data-wizard-submit style="display:none">
+        <i class="fa-solid fa-check"></i>
+        ${mode === 'edit' ? uiText('Enregistrer') : uiText("Créer l'organe")}
+      </button>
+    </div>
+  </div>
+
+  <input type="hidden" name="recordId" value="${escapeHtml(record?.id ?? '')}">
+
+</form>
   `;
 }
 
@@ -8976,6 +9056,247 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Saisir un relevé": "Enter a reading",
+    "Le style a été resserré pour un usage plus lisible: compteur, dernier relevé, seuils et historique visibles ensemble.": "The style has been streamlined for improved readability: the counter, latest reading, thresholds, and history are displayed together.",
+    "Les bons de travail remplis par les techniciens s'afficheront ici.": "WT filled by technicians will appear here",
+    "Les OT issus d'une DI validée apparaîtront ici.": "WO generated from approved WR will appear here",
+    "Réf": "REF",
+    "Commentaire optionnel": "Optional comment",
+    "Zone, atelier, ligne...": "Zone, workshop, line...",
+    "Décrivez le besoin d'intervention...": "Describe the need of work request...",
+    "Nouvelle DA": "New PR",
+    "Prix unitaire (article)": "Unit price (Item)",
+    "Urgente": "Urgent",
+    "Normale": "Normal",
+    // ── Options fournisseur ────────────────────────────────────────
+    "Mécanique": "Mechanical",
+    "Électrique": "Electrical",
+    "Hydraulique": "Hydraulic",
+    "Lubrifiants": "Lubricants",
+    "EPI Sécurité": "PPE Safety",
+    "Fabricant": "Manufacturer",
+    "Distributeur": "Distributor",
+    "Prestataire de service": "Service provider",
+    "Sous-traitant": "Subcontractor",
+    "Actif": "Active",
+    "Suspendu": "Suspended",
+    "Blacklist": "Blacklisted",
+    "Comptant": "Cash",
+    "30 jours": "30 days",
+    "60 jours": "60 days",
+    // ── Options contrat ───────────────────────────────────────────
+    "Contrat cadre": "Framework contract",
+    "Contrat de maintenance": "Maintenance contract",
+    "Accord de partenariat": "Partnership agreement",
+    "En cours": "In progress",
+    "Expiré": "Expired",
+    "Résilié": "Terminated",
+    "En renouvellement": "Under renewal",
+    // ── Options catalogue ─────────────────────────────────────────
+    "En stock fournisseur": "In supplier stock",
+    "Sur commande": "On order",
+    "Délai spécial": "Special lead time",
+    // ── Fournisseur forms ──────────────────────────────────────────
+    "Formulaire de création et de modification de la fiche fournisseur.": "Supplier creation and editing form.",
+    "Créer fournisseur": "Create supplier",
+    "Modifier fournisseur": "Edit supplier",
+    "Code fournisseur": "Supplier code",
+    "Domaine d'activité": "Business domain",
+    "Raison sociale": "Company name",
+    "Nom commercial": "Trade name",
+    "Type fournisseur": "Supplier type",
+    "Adresse complète": "Full address",
+    "Téléphone principal": "Main phone",
+    "Téléphone secondaire": "Secondary phone",
+    "Site web": "Website",
+    "Rôle contact": "Contact role",
+    "Email contact": "Contact email",
+    "RC": "Trade register",
+    "NIF": "Tax ID",
+    "NIS": "Statistical ID",
+    "Article d'imposition": "Tax article",
+    "RIB": "Bank account",
+    "Délai livraison (jours)": "Delivery lead time (days)",
+    "Conditions de paiement": "Payment terms",
+    "Remise (%)": "Discount (%)",
+    "Fiche contrat avec alertes expiration et responsable de suivi.": "Contract record with expiry alerts and follow-up manager.",
+    "Créer contrat": "Create contract",
+    "Modifier contrat": "Edit contract",
+    "Type contrat": "Contract type",
+    "Objet du contrat": "Contract subject",
+    "Date début": "Start date",
+    "Date fin": "End date",
+    "Valeur du contrat": "Contract value",
+    "Alerte expiration (jours)": "Expiry alert (days)",
+    "Noms des fichiers séparés par des virgules": "File names separated by commas",
+    "Responsable du suivi": "Follow-up manager",
+    "Équipements couverts": "Covered equipment",
+    "Garantie liée à un équipement avec calcul automatique de la date de fin.": "Warranty linked to equipment with automatic end date calculation.",
+    "Créer garantie": "Create warranty",
+    "Modifier garantie": "Edit warranty",
+    "Durée (mois)": "Duration (months)",
+    "Date fin (calculée auto)": "End date (auto-calculated)",
+    "Facture / Bon de garantie": "Invoice / Warranty certificate",
+    "Noms des fichiers": "File names",
+    "Formulaire de ligne catalogue fournisseur.": "Supplier catalogue line form.",
+    "Créer ligne catalogue": "Create catalogue entry",
+    "Modifier ligne catalogue": "Edit catalogue entry",
+    "Référence fournisseur": "Supplier reference",
+    "Désignation fournisseur": "Supplier designation",
+    "Prix unitaire HT": "Unit price (excl. VAT)",
+    "MOQ": "MOQ",
+    "Délai livraison spécifique": "Specific lead time",
+    "Remise": "Discount",
+    "Disponibilité": "Availability",
+    "Évaluation périodique du fournisseur.": "Periodic supplier evaluation.",
+    "Créer évaluation": "Create evaluation",
+    "Modifier évaluation": "Edit evaluation",
+    "Période Début": "Period start",
+    "Période Fin": "Period end",
+    "Évaluateur": "Evaluator",
+    // ── Article form ──────────────────────────────────────────────
+    "Code article": "Item code",
+    "Nom de l'article": "Item name",
+    "Informations de base de l'article": "Basic item information",
+    "Code, nom, type, unité de mesure, marque, prix et classification.": "Code, name, type, unit of measure, brand, price and classification.",
+    "Unité de mesure": "Unit of measure",
+    "Type d'article": "Item type",
+    "Désignation": "Designation",
+    "Désignation / description": "Designation / description",
+    "Substituts, organes et équipements associés": "Substitutes, Organs and associated equipment",
+    "Associez les articles de remplacement, les organes et équipements liés à cet article.": "Link replacement items, Organs and equipment to this article.",
+    "Articles substituts": "Substitute items",
+    "Sélectionnez un ou plusieurs articles de remplacement en cas de rupture.": "Select one or more replacement items in case of stockout.",
+    "Marque, fournisseur, traçabilité et historique d'achat.": "Brand, supplier, traceability and purchase history.",
+    "Fournisseur principal": "Main supplier",
+    "N° série / Référence fabricant": "Serial no. / Manufacturer ref.",
+    "Référence ou N° de série": "Reference or serial number",
+    "Prix": "Price",
+    "Modèle de l'article": "Item model",
+    "Ex: 12 mois": "E.g. 12 months",
+    "Dimensions, stockage et conditions particulières": "Dimensions, storage and special conditions",
+    "Renseignez les dimensions physiques, les conditions de conservation et de manipulation.": "Enter physical dimensions, storage and handling conditions.",
+    "Longueur (mm / m)": "Length (mm / m)",
+    "Largeur (mm)": "Width (mm)",
+    "Épaisseur / Hauteur (mm)": "Thickness / Height (mm)",
+    "Poids unitaire (g / kg)": "Unit weight (g / kg)",
+    "Volume / Capacité (L, mL, m³)": "Volume / Capacity (L, mL, m³)",
+    "Durée de conservation (mois / années)": "Shelf life (months / years)",
+    "Date de péremption": "Expiry date",
+    "Conditions de stockage": "Storage conditions",
+    "Ex: Température 5–25°C, humidité ≤60%, à l'abri de la lumière": "E.g. Temperature 5–25°C, humidity ≤60%, keep away from light",
+    "Conditions particulières": "Special conditions",
+    "Ex: à l'abri de la lumière, ventilé, hors gel...": "E.g. keep away from light, ventilated, frost-free...",
+    "Conditions de manipulation": "Handling conditions",
+    "Ex: Port EPI obligatoire, ventilation requise...": "E.g. PPE required, ventilation needed...",
+    "Ex: Indice IP, Classe isolation...": "E.g. IP rating, Insulation class...",
+    "Ex: IP54, Classe F...": "E.g. IP54, Class F...",
+    "Photos associées": "Associated photos",
+    "Vous pouvez ajouter plusieurs photos pour enrichir la fiche article.": "You can add multiple photos to enrich the item record.",
+    "Créer l'article": "Create item",
+    "Ex: 1.2 kg": "E.g. 1.2 kg",
+    "Ex: 5 L": "E.g. 5 L",
+    "Ex: 24 mois": "E.g. 24 months",
+    "Ex: 50 mm": "E.g. 50 mm",
+    "Ex: 15 mm": "E.g. 15 mm",
+    "Nom de l'organe": "Organ name",
+    "Nom organe": "Organ name",
+    "Code organe": "Organ code",
+    "Groupe organe": "Organ group",
+    "Famille organe": "Organ family",
+    "Nom d'organe, groupe/famille, criticité et état.": "Organ name, group/family, criticality and status.",
+    "Équipements et articles associés": "Associated equipment and items",
+    "Associez les équipements et articles déjà créés à cet organe.": "Link the already created equipment and items to this Organ.",
+    "Équipements liés": "Linked equipment",
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs équipements.": "Hold Ctrl or Cmd to select multiple equipment.",
+    "Modèle de l'organe": "Organ model",
+    "Dimensions et données techniques de l'organe": "Organ dimensions and technical data",
+    "Diamètres, matériau, lubrification et dimensions principales.": "Diameters, material, lubrication and main dimensions.",
+    "Diamètre intérieur (mm)": "Inner diameter (mm)",
+    "Diamètre extérieur (mm)": "Outer diameter (mm)",
+    "Dimension principale (mm)": "Main dimension (mm)",
+    "Matériau": "Material",
+    "Charge statique (kN)": "Static load (kN)",
+    "Charge dynamique (kN)": "Dynamic load (kN)",
+    "Vitesse (tr/min)": "Speed (rpm)",
+    "Température de service (°C)": "Service temperature (°C)",
+    "Type de lubrification": "Lubrication type",
+    "Référence lubrifiant": "Lubricant reference",
+    "Fréquence de graissage": "Greasing frequency",
+    "Quantité de lubrifiant (g)": "Lubricant quantity (g)",
+    "Ex: 25": "E.g. 25",
+    "Ex: 52": "E.g. 52",
+    "Ex: 200 mm": "E.g. 200 mm",
+    "Ex: 12.5 kN": "E.g. 12.5 kN",
+    "Ex: 8.2 kN": "E.g. 8.2 kN",
+    "Ex: 3000 tr/min": "E.g. 3000 rpm",
+    "Ex: -20 à +120°C": "E.g. -20 to +120°C",
+    "Ex: Mobil Grease XHP 222": "E.g. Mobil Grease XHP 222",
+    "Ex: Toutes les 500h": "E.g. Every 500h",
+    "Ex: 15 g": "E.g. 15 g",
+    "PDF, images ou autres fichiers utiles au suivi de l'organe.": "PDF, images or other files useful for organ tracking.",
+    "Créer l'organe": "Create organ",
+    "Nom de l'équipement": "Equipment name",
+    "Marque": "Brand",
+    "Modèle de l'équipement": "Equipment model",
+    "Numéro de série": "Serial number",
+    "Prix d'achat": "Purchase price",
+    "Durée de garantie": "Warranty duration",
+    "Ex: 7.5 kW ou 10 CV": "E.g. 7.5 kW or 10 HP",
+    "Ex: 400V / 230V": "E.g. 400V / 230V",
+    "Ex: 6 bar": "E.g. 6 bar",
+    "Ex: 1450 tr/min": "E.g. 1450 rpm",
+    "Ex: 250 L/min": "E.g. 250 L/min",
+    "Ex: 1200 × 600 × 900 mm": "E.g. 1200 × 600 × 900 mm",
+    "Ex: 85": "E.g. 85",
+    "Min ex: -10": "Min e.g. -10",
+    "Max ex: +80": "Max e.g. +80",
+    "Ex: Débit nominal, Indice IP, Classe isolation...": "E.g. Flow rate, IP index, Insulation class...",
+    "Ex: 250 L/min, IP54, Classe F...": "E.g. 250 L/min, IP54, Class F...",
+    "Type général": "General type",
+    "Liaisons métier": "Business links",
+    "Type complémentaire": "Complementary type",
+    "Caractéristiques techniques": "Technical specifications",
+    "Pièces jointes": "Attachments",
+    "Identification et statut": "Identification and status",
+    "Code équipement": "Equipment code",
+    "Groupe équipement": "Equipment group",
+    "Famille équipement": "Equipment family",
+    "Criticité": "Criticality",
+    "Organes liés": "Linked Organs",
+    "Articles liés": "Linked items",
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.": "Hold Ctrl or Cmd to select multiple Organs.",
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.": "Hold Ctrl or Cmd to select multiple items.",
+    "Date d'achat": "Purchase date",
+    "Date de mise en service": "Commissioning date",
+    "Type d'énergie": "Energy type",
+    "Sélectionner le type d'énergie": "Select energy type",
+    "Électrique": "Electric",
+    "Pneumatique": "Pneumatic",
+    "Hydraulique": "Hydraulic",
+    "Thermique": "Thermal",
+    "Manuel": "Manual",
+    "Puissance (kW / CV)": "Power (kW / HP)",
+    "Tension (V)": "Voltage (V)",
+    "Fréquence (Hz)": "Frequency (Hz)",
+    "Pression de service (bar)": "Service pressure (bar)",
+    "Vitesse nominale (tr/min)": "Nominal speed (rpm)",
+    "Capacité / Débit (m³/h, L/min, kg/h...)": "Capacity / Flow rate (m³/h, L/min, kg/h...)",
+    "Dimensions (L × l × h)": "Dimensions (L × W × H)",
+    "Poids (kg)": "Weight (kg)",
+    "Température de fonctionnement (°C)": "Operating temperature (°C)",
+    "Type de commande": "Control type",
+    "Manuelle": "Manual control",
+    "Automatique": "Automatic",
+    "Libellé": "Label",
+    "Valeur": "Value",
+    "Supprimer ce champ": "Delete this field",
+    "Ajouter une caractéristique": "Add a characteristic",
+    "Précédent": "Previous",
+    "Suivant": "Next",
+    "Créer l'équipement": "Create equipment",
+    "Étape": "Step",
+    "nom de l'équipment": "Equipment name",
     "Nom de l'unité": "Name of the unit",
     "Téléphone de l'unité": "Unit phone",
     "Unités": "Units",
@@ -9373,7 +9694,7 @@ const englishInterfaceTranslations = new Map(
     "Nouvel \u00e9quipement": "New equipment",
     "Nouvel equipment": "New equipment",
     "Nouvel organe": "New Organ",
-    "Nouvel component": "New organ",
+    "Nouvel Organ": "New organ",
     "Nouvelle famille": "New family",
     "Nouvelle famille \u00e9quipement": "New equipment family",
     "Nouvelle famille organe": "New organ family",
@@ -9390,7 +9711,7 @@ const englishInterfaceTranslations = new Map(
     "Familles reli\u00e9es \u00e0 un groupe": "Families linked to a group",
     "Rattachements actifs": "Active assignments",
     "Articles r\u00e9f\u00e9renc\u00e9s": "Referenced items",
-    "Components r\u00e9f\u00e9renc\u00e9s": "Referenced organs",
+    "Organs r\u00e9f\u00e9renc\u00e9s": "Referenced organs",
     "Organes r\u00e9f\u00e9renc\u00e9s": "Referenced organs",
     "Le formulaire est d\u00e9coup\u00e9 entre les champs principaux et les informations compl\u00e9mentaires pour simplifier la saisie.":
       "The form is split between main fields and additional information to simplify data entry.",
@@ -9514,7 +9835,46 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+    "Urgente": "Urgent",
+    "Normale": "Normal",
+    "Prix unitaire (Article)": "Unit price (Item)",
+    "Prix total estimé": "Total estimated price",
+    "Formulaire DA avec numéro/date/demandeur automatiques.": "New PR form with automatic number/date/requester",
+    "Nouvelle demande d'achat": "New purchase request",
+    "Liste des DA": "List of PR",
+    "Articles complets": "Complete items",
+    "Articles totaux": "Total items",
+    "Nom de la famille article": "Item family name",
+    "Famille article": "Item family",
+    "Groupe article": "Item group",
+    "Nom du groupe article": "Item group name",
+    "Nouveau groupe article": "New item group",
+    "Formulaire complet de création d'organe avec pièces jointes.": "Complete organ creation form with attachments.",
+    "Code famille": "Family code",
+    "Nouvelle famille organe": "New organ family",
+    "Nom de la famille organe": "Organ Family name",
+    "Nom du groupe organe": "Organ group name",
+    "Nouveau groupe organe": "New organ group",
 
+    "Nom de la famille équipement": "Equipment family name",
+    "groupes disponibles": "availbale groups",
+    "Nom du groupe équipement": "Equipment group name",
+    "Code groupe": "Group code",
+    "Description facultative": "Optionary description",
+    "Téléphone de l'unité": "Unit's phone number ",
+    "Localisation principale ou zones": "Primary location or zones",
+    "Nom de l'unité": "Unit name",
+    "Code unité": "Unit code",
+    "Les départements supportent plusieurs unités.": "Departments support multiple units",
+    "Créez un département et rattachez-le à une ou plusieurs unités.": "Create a department and attach it to one or multiple units",
+    "Créez la première unité pour commencer à structurer l’organisation.": "Create the first unit to start structuring the organization",
+    "Le logo peut être ajouté après la création de l’entreprise.": "The logo can be added after the creation of the company",
+    "Les informations sont affichées depuis la création de l’entreprise. Le code reste figé.": "The information is displayed from the company's inception onward. The code remains unchanged.",
+    "Créer le niveau suivant pour continuer": "Create the next level to continue",
+    "Budget achats par mois": "Monthly purchase budget",
+    "Planning semaine": "Week schedule",
+    "Aucune alerte active": "No active alert",
+    "Alertes actives": " Active alerts",
     "Articles complets": "Complete items",
     "Articles totaux": "Total items",
     "Nom de la famille article": "Item family name",
@@ -10442,6 +10802,7 @@ const englishInterfacePhraseTranslations = new Map(
 
 const englishInterfaceWordTranslations = new Map(
   Object.entries({
+    "DA": "PR",
     "Correctif": "Corrective",
     "Groupe equipment": "Equipment group",
     "validées": "Approved",
@@ -21004,9 +21365,7 @@ function renderAchatsDemandsPage(state, activeSubpageKey) {
       <div>
         <div class="org-section-kicker">Achats</div>
         <h2>Demandes d'achat (DA)</h2>
-        <p>Gestion des demandes d'achat avec validation,
-priorisation par niveau d'urgence et
-transformation en bons de commande.</p>
+        <p>${uiText("Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.")}</p>
       </div>
       <div class="org-section-pills">
         <span class="status-badge badge-info">${activeDemandes.length} DA</span>
@@ -29089,40 +29448,74 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     var state = loadState();
     var current = isEdit ? entry : {};
     var nextNumber = isEdit ? current.number : nextRef("FRN-", state.suppliers, "number");
-    var domaineOptions = ["Mécanique", "Électrique", "Hydraulique", "Lubrifiants", "EPI / Sécurité", "Autre"];
-    var typeOptions = ["Fabricant", "Distributeur", "Prestataire de service", "Sous-traitant"];
-    var statusOptions = ["Actif", "Suspendu", "Blacklisté"];
-    var paymentOptions = ["Comptant", "30 jours", "60 jours", "Autre"];
+    var domaineOptions = [
+      uiText('Mécanique'),
+      uiText('Électrique'),
+      uiText('Hydraulique'),
+      uiText('Lubrifiants'),
+      uiText('EPI Sécurité'),
+      uiText('Autre')
+    ];
+
+    var typeOptions = [
+      uiText('Fabricant'),
+      uiText('Distributeur'),
+      uiText('Prestataire de service'),
+      uiText('Sous-traitant')
+    ];
+
+    var statusOptions = [
+      uiText('Actif'),
+      uiText('Suspendu'),
+      uiText('Blacklist')
+    ];
+
+    var paymentOptions = [
+      uiText('Comptant'),
+      uiText('30 jours'),
+      uiText('60 jours'),
+      uiText('Autre')
+    ];
 
     openModal(
-      isEdit ? "Modifier fournisseur" : "Créer fournisseur",
-      "Formulaire de création et de modification de la fiche fournisseur.",
-      '<form class="supplier-form-grid" id="supplierForm">' +
-      '<div><label>Code fournisseur</label><input name="number" value="' + escapeHtml(nextNumber) + '" readonly /></div>' +
-      '<div><label>Domaine d\'activité</label><select name="domaine">' + domaineOptions.map(function (o) { return '<option' + (current.domaine === o ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
-      '<div><label>Raison sociale</label><input name="raisonSociale" value="' + escapeHtml(current.raisonSociale || "") + '" /></div>' +
-      '<div><label>Nom commercial</label><input name="nomCommercial" value="' + escapeHtml(current.nomCommercial || "") + '" /></div>' +
-      '<div><label>Type fournisseur</label><select name="type">' + typeOptions.map(function (o) { return '<option' + (current.type === o ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
-      '<div class="full"><label>Adresse compléte</label><input name="adresse" value="' + escapeHtml(current.adresse || "") + '" /></div>' +
-      '<div><label>Téléphone principal</label><input name="tel1" value="' + escapeHtml(current.tel1 || "") + '" /></div>' +
-      '<div><label>Téléphone secondaire</label><input name="tel2" value="' + escapeHtml(current.tel2 || "") + '" /></div>' +
-      '<div><label>Email</label><input name="email" value="' + escapeHtml(current.email || "") + '" /></div>' +
-      '<div><label>Site web</label><input name="website" value="' + escapeHtml(current.website || "") + '" /></div>' +
-      '<div><label>Poste / Fonction</label><input name="contactRole" value="' + escapeHtml(current.contact && current.contact.role || "") + '" /></div>' +
-      '<div><label>Email direct</label><input name="contactEmail" value="' + escapeHtml(current.contact && current.contact.email || "") + '" /></div>' +
-      '<div><label>Numéro RC</label><input name="rc" value="' + escapeHtml(current.legal && current.legal.rc || "") + '" /></div>' +
-      '<div><label>NIF</label><input name="nif" value="' + escapeHtml(current.legal && current.legal.nif || "") + '" /></div>' +
-      '<div><label>NIS</label><input name="nis" value="' + escapeHtml(current.legal && current.legal.nis || "") + '" /></div>' +
-      '<div><label>Article d\'imposition</label><input name="articleImposition" value="' + escapeHtml(current.legal && current.legal.articleImposition || "") + '" /></div>' +
-      '<div class="full"><label>RIB / CoordonnÃ©es bancaires</label><input name="rib" value="' + escapeHtml(current.legal && current.legal.rib || "") + '" /></div>' +
-      '<div><label>Délai de livraison moyen (jours)</label><input name="deliveryDays" type="number" value="' + (current.deliveryDays || "") + '" /></div>' +
-      '<div><label>Conditions de paiement</label><select name="paymentTerm">' + paymentOptions.map(function (o) { return '<option' + (current.paymentTerm === o ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
-      '<div><label>Devise</label><input name="currency" value="' + escapeHtml(current.currency || "DZD") + '" /></div>' +
-      '<div><label>Remise habituelle %</label><input name="discount" type="number" step="0.01" value="' + (current.discount || 0) + '" /></div>' +
-      '<div class="full"><label>Statut</label><select name="status">' + statusOptions.map(function (o) { return '<option' + (current.status === o ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
-      '<div class="full"><label>Observations</label><textarea name="observations">' + escapeTextarea(current.observations || "") + '</textarea></div>' +
-      '</form>',
-      '<div class="supplier-form-footer"><button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button><button type="button" class="btn btn-primary" id="supplierSaveBtn">Enregistrer</button></div>'
+      isEdit ? uiText('Modifier fournisseur') : uiText('Créer fournisseur'),
+      uiText('Formulaire de création et de modification de la fiche fournisseur.'),
+      `<form class="supplier-form-grid" id="supplierForm">
+    <div><label>${uiText('Code fournisseur')}</label><input name="number" value="${escapeHtml(nextNumber)}" readonly /></div>
+    <div><label>${uiText("Domaine d'activité")}</label>
+      <select name="domaine">${domaineOptions.map(o => `<option${current.domaine === o ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>
+    </div>
+    <div><label>${uiText('Raison sociale')}</label><input name="raisonSociale" value="${escapeHtml(current.raisonSociale)}" /></div>
+    <div><label>${uiText('Nom commercial')}</label><input name="nomCommercial" value="${escapeHtml(current.nomCommercial)}" /></div>
+    <div><label>${uiText('Type fournisseur')}</label>
+      <select name="type">${typeOptions.map(o => `<option${current.type === o ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>
+    </div>
+    <div class="full"><label>${uiText('Adresse complète')}</label><input name="adresse" value="${escapeHtml(current.adresse)}" /></div>
+    <div><label>${uiText('Téléphone principal')}</label><input name="tel1" value="${escapeHtml(current.tel1)}" /></div>
+    <div><label>${uiText('Téléphone secondaire')}</label><input name="tel2" value="${escapeHtml(current.tel2)}" /></div>
+    <div><label>${uiText('Email')}</label><input name="email" value="${escapeHtml(current.email)}" /></div>
+    <div><label>${uiText('Site web')}</label><input name="website" value="${escapeHtml(current.website)}" /></div>
+    <div><label>${uiText('Rôle contact')}</label><input name="contactRole" value="${escapeHtml(current.contactRole)}" /></div>
+    <div><label>${uiText('Email contact')}</label><input name="contactEmail" value="${escapeHtml(current.contactEmail)}" /></div>
+    <div><label>${uiText('RC')}</label><input name="rc" value="${escapeHtml(current.rc)}" /></div>
+    <div><label>${uiText('NIF')}</label><input name="nif" value="${escapeHtml(current.nif)}" /></div>
+    <div><label>${uiText('NIS')}</label><input name="nis" value="${escapeHtml(current.nis)}" /></div>
+    <div><label>${uiText("Article d'imposition")}</label><input name="articleImposition" value="${escapeHtml(current.articleImposition)}" /></div>
+    <div><label>${uiText('RIB')}</label><input name="rib" value="${escapeHtml(current.rib)}" /></div>
+    <div><label>${uiText('Délai livraison (jours)')}</label><input name="deliveryDays" type="number" value="${current.deliveryDays}" /></div>
+    <div><label>${uiText('Conditions de paiement')}</label>
+      <select name="paymentTerm">${paymentOptions.map(o => `<option${current.paymentTerm === o ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>
+    </div>
+    <div><label>${uiText('Remise (%)')}</label><input name="discount" type="number" step="0.01" value="${current.discount || 0}" /></div>
+    <div class="full"><label>${uiText('Statut')}</label>
+      <select name="status">${statusOptions.map(o => `<option${current.status === o ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>
+    </div>
+    <div class="full"><label>${uiText('Observations')}</label><textarea name="observations">${escapeTextarea(current.observations)}</textarea></div>
+  </form>`,
+      `<div class="supplier-form-footer">
+    <button type="button" class="btn btn-outline" data-modal-cancel>${uiText('Annuler')}</button>
+    <button type="button" class="btn btn-primary" id="supplierSaveBtn">${uiText('Enregistrer')}</button>
+  </div>`
     );
 
     var saveBtn = document.getElementById("supplierSaveBtn");
@@ -29476,18 +29869,24 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     var evaluatorValue = isEdit ? (current.evaluator || evaluatorName) : evaluatorName;
 
     openModal(
-      isEdit ? "Modifier Ã©valuation" : "CrÃ©er Ã©valuation",
-      "Ã‰valuation pÃ©riodique du fournisseur.",
-      '<form class="supplier-form-grid" id="evaluationForm">' +
-      '<div><label>NumÃ©ro</label><input name="number" value="' + escapeHtml(current.number || nextNumber) + '" readonly /></div>' +
-      '<div><label>Fournisseur</label><select name="supplierId">' + supplierOptions(currentSupplierId) + '</select></div>' +
-      '<div><label>PÃ©riode (DÃ©but)</label><input type="date" name="periodeStart" value="' + escapeHtml(current.periodeStart || "") + '" /></div>' +
-      '<div><label>PÃ©riode (Fin)</label><input type="date" name="periodeEnd" value="' + escapeHtml(current.periodeEnd || "") + '" /></div>' +
-      '<div><label>Ã‰valuateur</label><input name="evaluator" value="' + escapeHtml(evaluatorValue) + '" readonly /></div>' +
-      scoreNames.map(function (sn) { return '<div><label>' + escapeHtml(sn[1]) + ' (0-100)</label><input name="' + escapeHtml(sn[0]) + '" type="number" min="0" max="100" value="' + ((current.scores && current.scores[sn[0]]) || 0) + '" /></div>'; }).join("") +
-      '<div class="full"><label>Commentaires</label><textarea name="comments">' + escapeTextarea(current.comments || "") + '</textarea></div>' +
-      '</form>',
-      '<div class="supplier-form-footer"><button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button><button type="button" class="btn btn-primary" id="evaluationSaveBtn">Enregistrer</button></div>'
+      isEdit ? uiText('Modifier évaluation') : uiText('Créer évaluation'),
+      uiText('Évaluation périodique du fournisseur.'),
+      `<form class="supplier-form-grid" id="evaluationForm">
+    <div><label>${uiText('Numéro')}</label><input name="number" value="${escapeHtml(current.number || nextNumber)}" readonly /></div>
+    <div><label>${uiText('Fournisseur')}</label><select name="supplierId">${supplierOptions(currentSupplierId)}</select></div>
+    <div><label>${uiText('Période Début')}</label><input type="date" name="periodeStart" value="${escapeHtml(current.periodeStart)}" /></div>
+    <div><label>${uiText('Période Fin')}</label><input type="date" name="periodeEnd" value="${escapeHtml(current.periodeEnd)}" /></div>
+    <div><label>${uiText('Évaluateur')}</label><input name="evaluator" value="${escapeHtml(evaluatorValue)}" readonly /></div>
+    ${scoreNames.map(sn => `
+      <div><label>${escapeHtml(sn[1])} (0-100)</label>
+        <input name="${escapeHtml(sn[0])}" type="number" min="0" max="100" value="${current.scores ? current.scores[sn[0]] : 0}" />
+      </div>`).join('')}
+    <div class="full"><label>${uiText('Commentaires')}</label><textarea name="comments">${escapeTextarea(current.comments)}</textarea></div>
+  </form>`,
+      `<div class="supplier-form-footer">
+    <button type="button" class="btn btn-outline" data-modal-cancel>${uiText('Annuler')}</button>
+    <button type="button" class="btn btn-primary" id="evaluationSaveBtn">${uiText('Enregistrer')}</button>
+  </div>`
     );
 
     var saveBtn = document.getElementById("evaluationSaveBtn");
