@@ -979,7 +979,7 @@ function buildArticleFamilyFormContent(record, mode) {
 }
 
 function buildArticleFormContent(record, mode) {
-  const codePreview = record?.code || generateOrganizationCode('ART', getArticleRecords('articles'));
+  const codePreview = record?.code ?? '';
   const selectedGroup = record?.groupId;
   const selectedFamily = record?.familyId;
   const selectedType = record?.articleType;
@@ -1028,17 +1028,18 @@ function buildArticleFormContent(record, mode) {
         <div class="org-form-grid">
           <div class="field-group">
             <label for="articleCode">${uiText('Code article')}</label>
-            <input id="articleCode" type="text" value="${escapeHtml(codePreview)}" disabled />
+           <input id="articleCode" name="code" type="text" value="${escapeHtml(codePreview)}" 
+       placeholder="Ex: ART-001" required>
           </div>
           <div class="field-group">
             <label for="articleName">${uiText('Nom')}</label>
             <input id="articleName" name="name" type="text"
               value="${escapeHtml(record?.name || '')}"
-              placeholder="${uiText("Nom de l'article")}" required />
+              placeholder="${uiText("Nom de l'article")}" />
           </div>
           <div class="field-group">
             <label for="articleUnitMeasure">${uiText('Unité de mesure')}</label>
-            <select id="articleUnitMeasure" name="unitMeasure" required>
+            <select id="articleUnitMeasure" name="unitMeasure">
               ${buildArticleUnitMeasureOptions(selectedUnitMeasure)}
             </select>
           </div>
@@ -2193,8 +2194,7 @@ function attachArticlePageHandlers(pageKey) {
 
     const next = {
       id: existing?.id || `article-${Date.now()}`,
-      code:
-        existing?.code || generateOrganizationCode("ART", directory.articles),
+      code: String(form.querySelector('input[name="code"]')?.value || '').trim() || existing?.code || '',
       name,
       unitMeasure: String(
         form.querySelector("select[name='unitMeasure']")?.value || "",
@@ -5343,9 +5343,7 @@ function buildEquipmentSupplierOptions(selectedSupplier) {
 }
 
 function buildEquipmentFormContent(record, mode) {
-  const codePreview =
-    record?.code ||
-    generateOrganizationCode("EQP", getEquipmentRecords("equipments"));
+  const codePreview = record?.code ?? '';
   const selectedGroupId = record?.groupId || "";
   const linkedOrganeIds = Array.isArray(record?.linkedOrganeIds) ? record.linkedOrganeIds : [];
   const linkedArticleIds = Array.isArray(record?.linkedArticleIds) ? record.linkedArticleIds : [];
@@ -5388,7 +5386,8 @@ function buildEquipmentFormContent(record, mode) {
         <div class="org-form-grid">
           <div class="field-group">
             <label for="equipmentCode">${uiText('Code équipement')}</label>
-            <input id="equipmentCode" type="text" value="${escapeHtml(codePreview)}" disabled />
+            <input id="equipmentCode" name="code" type="text" value="${escapeHtml(codePreview)}" 
+       placeholder="Ex: EQP-001" required>
           </div>
           <div class="field-group">
             <label for="equipmentName">${uiText('Nom')}</label>
@@ -5398,25 +5397,25 @@ function buildEquipmentFormContent(record, mode) {
           </div>
           <div class="field-group">
             <label for="equipmentGroup">${uiText('Groupe équipement')}</label>
-            <select id="equipmentGroup" name="groupId" required data-equipment-group-select>
+            <select id="equipmentGroup" name="groupId" data-equipment-group-select>
               ${buildEquipmentGroupOptions(selectedGroupId)}
             </select>
           </div>
           <div class="field-group">
             <label for="equipmentFamily">${uiText('Famille équipement')}</label>
-            <select id="equipmentFamily" name="familyId" required data-equipment-family-select>
+            <select id="equipmentFamily" name="familyId" data-equipment-family-select>
               ${buildEquipmentFamilyOptions(record?.familyId || "", selectedGroupId)}
             </select>
           </div>
           <div class="field-group">
             <label for="equipmentCriticality">${uiText('Criticité')}</label>
-            <select id="equipmentCriticality" name="criticality" required>
+            <select id="equipmentCriticality" name="criticality" >
               ${buildCriticalityOptions(record?.criticality || "")}
             </select>
           </div>
           <div class="field-group">
             <label for="equipmentStatus">${uiText('État')}</label>
-            <select id="equipmentStatus" name="status" required>
+            <select id="equipmentStatus" name="status">
               ${buildStatusOptions(record?.status || "")}
             </select>
           </div>
@@ -6396,9 +6395,7 @@ function attachEquipmentPageHandlers(pageKey) {
 
     const nextEquipment = {
       id: existingRecord?.id || `equipment-${Date.now()}`,
-      code:
-        existingRecord?.code ||
-        generateOrganizationCode("EQP", directory.equipments),
+      code: String(form.querySelector('input[name="code"]')?.value || '').trim() || existingRecord?.code || '',
       name,
       groupId,
       familyId,
@@ -7147,9 +7144,7 @@ function renderOrganeFamiliesPage() {
 }
 
 function buildOrganeFormContent(record, mode) {
-  const codePreview =
-    record?.code ||
-    generateOrganizationCode("ORG", getOrganeRecords("organes"));
+  const codePreview = record?.code ?? '';
   const selectedGroupId = record?.groupId || "";
   const linkedArticleIds = Array.isArray(record?.linkedArticleIds) ? record.linkedArticleIds : [];
   const linkedEquipmentIds = Array.isArray(record?.linkedEquipmentIds) ? record.linkedEquipmentIds : [];
@@ -7192,7 +7187,8 @@ function buildOrganeFormContent(record, mode) {
         <div class="org-form-grid">
           <div class="field-group">
             <label for="organeCode">${uiText('Code organe')}</label>
-            <input id="organeCode" type="text" value="${escapeHtml(codePreview)}" disabled />
+            <input id="organeCode" name="code" type="text" value="${escapeHtml(codePreview)}" 
+       placeholder="Ex: ORG-001" required>
           </div>
           <div class="field-group">
             <label for="organeName">${uiText('Nom organe')}</label>
@@ -7202,25 +7198,25 @@ function buildOrganeFormContent(record, mode) {
           </div>
           <div class="field-group">
             <label for="organeGroup">${uiText('Groupe organe')}</label>
-            <select id="organeGroup" name="groupId" required data-organe-group-select>
+            <select id="organeGroup" name="groupId" data-organe-group-select>
               ${buildOrganeGroupOptions(selectedGroupId)}
             </select>
           </div>
           <div class="field-group">
             <label for="organeFamily">${uiText('Famille organe')}</label>
-            <select id="organeFamily" name="familyId" required>
+            <select id="organeFamily" name="familyId">
               ${buildOrganeFamilyOptions(record?.familyId || "", selectedGroupId)}
             </select>
           </div>
           <div class="field-group">
             <label for="organeCriticality">${uiText('Criticité')}</label>
-            <select id="organeCriticality" name="criticality" required>
+            <select id="organeCriticality" name="criticality">
               ${buildCriticalityOptions(record?.criticality || "")}
             </select>
           </div>
           <div class="field-group">
             <label for="organeStatus">${uiText('État')}</label>
-            <select id="organeStatus" name="status" required>
+            <select id="organeStatus" name="status">
               ${buildStatusOptions(record?.status || "")}
             </select>
           </div>
@@ -8033,9 +8029,7 @@ function attachOrganePageHandlers(pageKey) {
 
     const nextOrgane = {
       id: existingRecord?.id || `organe-${Date.now()}`,
-      code:
-        existingRecord?.code ||
-        generateOrganizationCode("ORG", directory.organes),
+      code: String(form.querySelector('input[name="code"]')?.value || '').trim() || existingRecord?.code || '',
       name,
       groupId,
       familyId,
@@ -9053,9 +9047,13 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
-    "Modèle":"Model",
-    "EPI":"PPE",
-    "Outil":"Tool",
+    "Fiche détaillée de la DI": "Detailed sheet of the WR",
+    "Détails du mouvement stock.": "Details of the stock movement.",
+    "Vue détaillée de la fiche avec impression.": "Detailed view of the form with printing.",
+    "en service": "In service",
+    "Modèle": "Model",
+    "EPI": "PPE",
+    "Outil": "Tool",
     "En service": "In service",
     "La création se fait via la fenêtre modale du bouton Nouveau plan.": "The creation is done via the modal window of the New Plan button.",
     "Créez un premier plan de maintenance pour alimenter la liste et le calendrier.": "Create a first maintenance plan to populate the list and calendar.",
@@ -11194,7 +11192,6 @@ const englishInterfaceWordTranslations = new Map(
     sauvegarde: "backup",
     s\u00e9curit\u00e9: "safety",
     s\u00e9lectionner: "select",
-    service: "department",
     seuil: "threshold",
     seuils: "thresholds",
     signature: "signature",
@@ -14269,18 +14266,17 @@ function dashboardBuildPieSegments(items, colors) {
 }
 
 function dashboardBuildMaintenanceTypePie(rows) {
-  const labels = ["Corrective", "Préventive", "Prédictive", "Réglementaire"];
+  const labels = ["Corrective", "Préventive", "Prédictive"];
   const counts = Object.fromEntries(labels.map((label) => [label, 0]));
   rows.forEach((row) => {
     const type = String(row.type || "Corrective").toLowerCase();
     if (type.includes("préd") || type.includes("prÃ©d")) counts["Prédictive"] += 1;
     else if (type.includes("prév") || type.includes("prÃ©v")) counts["Préventive"] += 1;
-    else if (type.includes("rég") || type.includes("rÃ©g")) counts["Réglementaire"] += 1;
     else counts.Corrective += 1;
   });
   return dashboardBuildPieSegments(
     labels.map((label) => ({ label, value: counts[label] })),
-    ["#dc2626", "#16a34a", "#0d6e8a", "#94a3b8"],
+    ["#dc2626", "#16a34a", "#0d6e8a"],
   );
 }
 
@@ -28143,7 +28139,6 @@ function buildInterventionTransformOtModal(di) {
                 <option value="Corrective">Corrective</option>
                 <option value="Préventive">Préventive</option>
                 <option value="Prédictive">Prédictive</option>
-                <option value="Réglementaire">Réglementaire</option>
               </select>
             </div>
             <div class="field-group">
