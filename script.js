@@ -8976,7 +8976,7 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
-    "Nom de l'unité": "Name of the unit", 
+    "Nom de l'unité": "Name of the unit",
     "Téléphone de l'unité": "Unit phone",
     "Unités": "Units",
     "Saisie terrain, articles consommés, signatures et validation finale.": "Field entry, items consumed, signatures, and final validation.",
@@ -9514,8 +9514,45 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+
+    "Articles complets": "Complete items",
+    "Articles totaux": "Total items",
+    "Nom de la famille article": "Item family name",
+    "Famille article": "Item family",
+    "Groupe article": "Item group",
+    "Nom du groupe article": "Item group name",
+    "Nouveau groupe article": "New item group",
+    "Formulaire complet de création d'organe avec pièces jointes.": "Complete organ creation form with attachments.",
+    "Code famille": "Family code",
+    "Nouvelle famille organe": "New organ family",
+    "Nom de la famille organe": "Organ Family name",
+    "Nom du groupe organe": "Organ group name",
+    "Nouveau groupe organe": "New organ group",
+    "Étape 1 / 5 — Type général": "Step 1/5 - General type",
+    "Nom de la famille équipement": "Equipment family name",
+    "groupes disponibles": "availbale groups",
+    "Nom du groupe équipement": "Equipment group name",
+    "Code groupe": "Group code",
+    "Description facultative": "Optionary description",
+    "Téléphone de l'unité": "Unit's phone number ",
+    "Localisation principale ou zones": "Primary location or zones",
+    "Nom de l'unité": "Unit name",
+    "Code unité": "Unit code",
+    "Les départements supportent plusieurs unités.": "Departments support multiple units",
+    "Créez un département et rattachez-le à une ou plusieurs unités.": "Create a department and attach it to one or multiple units",
+    "Créez la première unité pour commencer à structurer l’organisation.": "Create the first unit to start structuring the organization",
+    "Le logo peut être ajouté après la création de l’entreprise.": "The logo can be added after the creation of the company",
+    "Les informations sont affichées depuis la création de l’entreprise. Le code reste figé.": "The information is displayed from the company's inception onward. The code remains unchanged.",
+    "Créer le niveau suivant pour continuer": "Create the next level to continue",
+    "Budget achats par mois": "Monthly purchase budget",
+    "Planning semaine": "Week schedule",
+    "Aucune alerte active": "No active alert",
+    "Alertes actives": " Active alerts",
+    "dans délais": "on time",
+    "Aucune zone disponible.": "No available zone",
+    "dispo immé.": "Immed. Avail.",
     "Taux service stock": "Stock service rate",
-    "Taux PM réalisées": "PM complition rates",
+    "Taux PM réalisées": "PM completion rates",
     "nom de l'unité": "unit name",
     "dans délai": "on time",
     "moy répar": "avg. repair",
@@ -10405,6 +10442,7 @@ const englishInterfacePhraseTranslations = new Map(
 
 const englishInterfaceWordTranslations = new Map(
   Object.entries({
+    "Correctif": "Corrective",
     "Groupe equipment": "Equipment group",
     "validées": "Approved",
     "affichés": "Displayed",
