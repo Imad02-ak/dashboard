@@ -8975,7 +8975,8 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
-     "Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.": "Management of purchase requests, including approval, prioritization based on urgency level, and conversion into purchase orders.",
+    "Saisie terrain, articles consommés, signatures et validation finale.": "Field entry, items consumed, signatures, and final validation.",
+    "Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.": "Management of purchase requests, including approval, prioritization based on urgency level, and conversion into purchase orders.",
     "fournisseurs actifs": "Active suppliers",
     "Notation périodique, commentaires et recommandations.": "Periodic notations, commentaries and recommendations",
     "Aucun fournisseur disponible.": "No available supplier",
@@ -9037,7 +9038,7 @@ const englishInterfaceTranslations = new Map(
     "NumÃ©ro": "Number",
     "Historique des Ã©valuations et note globale automatique.": "Evaluation history and automatic overall rating",
     "Ã‰valuation fournisseur": "Supplier evaluation",
-    "Chaque ligne dispose des actions voir, modifier et supprimer.":"Each record provides View, Edit, and Delete actions.",
+    "Chaque ligne dispose des actions voir, modifier et supprimer.": "Each record provides View, Edit, and Delete actions.",
     "Accès de consultation sans modification ni validation": "View access only, without modification or validation",
     "Suit le cycle achat et les échanges avec les fournisseurs": "Monitors the procurement cycle and interactions with suppliers",
     "Opérations terrain": "Field operations",
@@ -9049,7 +9050,7 @@ const englishInterfaceTranslations = new Map(
     "Couverture complète": "Complete coverage",
     "Liste des utilisateurs actifs, refusés ou suspendus, avec rattachements et dernière connexion": "List of active, denied, or suspended users, including their assignments and last login",
     "Demandes d'accès à valider": "Access request pending approval",
-    "Validations administrateur requises": "Required admin validations","Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.": "Management of purchase requests, including approval, prioritization based on urgency level, and conversion into purchase orders.",
+    "Validations administrateur requises": "Required admin validations", "Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.": "Management of purchase requests, including approval, prioritization based on urgency level, and conversion into purchase orders.",
     "fournisseurs actifs": "Active suppliers",
     "Notation périodique, commentaires et recommandations.": "Periodic notations, commentaries and recommendations",
     "Aucun fournisseur disponible.": "No available supplier",
@@ -9111,7 +9112,7 @@ const englishInterfaceTranslations = new Map(
     "NumÃ©ro": "Number",
     "Historique des Ã©valuations et note globale automatique.": "Evaluation history and automatic overall rating",
     "Ã‰valuation fournisseur": "Supplier evaluation",
-    "Chaque ligne dispose des actions voir, modifier et supprimer.":"Each record provides View, Edit, and Delete actions.",
+    "Chaque ligne dispose des actions voir, modifier et supprimer.": "Each record provides View, Edit, and Delete actions.",
     "Accès de consultation sans modification ni validation": "View access only, without modification or validation",
     "Suit le cycle achat et les échanges avec les fournisseurs": "Monitors the procurement cycle and interactions with suppliers",
     "Opérations terrain": "Field operations",
@@ -9123,7 +9124,7 @@ const englishInterfaceTranslations = new Map(
     "Couverture complète": "Complete coverage",
     "Liste des utilisateurs actifs, refusés ou suspendus, avec rattachements et dernière connexion": "List of active, denied, or suspended users, including their assignments and last login",
     "Demandes d'accès à valider": "Access request pending approval",
-    "Validations administrateur requises": "Required admin validations", 
+    "Validations administrateur requises": "Required admin validations",
     "Coût main d'oeuvre": "Labor cost",
     "Sous-traitance": "subcontracting",
     "Coût total intervention": "Total intervention cost",
@@ -9472,6 +9473,11 @@ const englishInterfaceTranslations = new Map(
     "À valider": "To be validated",
     "Prêtes pour OT": "Ready for WO",
     "Décrivez le besoin d'intervention": "Describe the need for intervention",
+    "La clôture BT déclenchera les sorties de stock automatiques.": "The WT fence will trigger automatic stock withdrawals.",
+    "La fenêtre popup reprend le formulaire métier et les liens vers les autres modules.": "The popup window displays the business form and links to other modules.",
+    "Créez la première demande d'intervention depuis le bouton Nouvelle DI.": "Create the first service request from the New DI button.",
+    "Les OT issus d'une DI validée apparaîtront ici": "The WOs from a validated WR will appear here.",
+    "Le tableau gardera le même langage visuel que les pages Équipements et Organe.": "The table will keep the same visual language as the Equipment and Organ pages.",
   }),
 );
 
@@ -9503,7 +9509,12 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
-     "Enregistrez une réception à partir d'un BC existant.": "Save a receipt from an existing PO",
+    "mouvements actifs": "Active movements",
+    "Achats - Bons de commande": "Purchaes - Purchase orders",
+    "clôturés": "Closed",
+    "BT validés": "Validated WT",
+    "Vue consolidée": "consolidated view",
+    "Enregistrez une réception à partir d'un BC existant.": "Save a receipt from an existing PO",
     "Créez votre première DA pour lancer le flux achat": "Create your first purchase request to initiate the procurement workflow",
     "Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.": "Management of purchase requests, including approval, prioritization based on urgency level, and conversion into purchase orders.",
     "fournisseurs actifs": "Active suppliers",
@@ -9639,7 +9650,7 @@ const englishInterfacePhraseTranslations = new Map(
       "Receive goods linked to a purchase order with quality control, quantity discrepancies and document traceability.",
     "Consultation des DA, BC et r\u00e9ceptions avec filtres par article, fournisseur, type document, statut, date et montant.":
       "View purchase requests, orders and receipts filtered by item, supplier, document type, status, date and amount.",
-    "Demande d'intervention (DI)": "work request (WR)",
+    "Demande d'intervention (DI)": "Work request (WR)",
     "Ordres de travail (OT)": "Work orders (WO)",
     "Bons de travail (BT)": "Work Tickets (WT)",
     "Historique des interventions": "Intervention history",
@@ -10356,7 +10367,7 @@ const englishInterfacePhraseTranslations = new Map(
     "6 derniers mois": "6 last months",
     "Équipements associés": "associated equipment",
     "Coût main d'œuvre": "Labor cost",
-    "Sous-traitance": "subcontracting",
+    "Sous-traitance": "Subcontracting",
     "Coût total intervention": "Total intervention cost",
     "Coût articles consommés": "Cost items consumed",
     "Coût de sous-traitance (DZD)": "Subcontracting cost (DZD)",
@@ -10367,12 +10378,26 @@ const englishInterfacePhraseTranslations = new Map(
     "À démarrer": "To start",
     "Sur le terrain": "In the field",
     "Fiche détaillée de l'OT": "Detailed sheet of the WO",
+    "Terrain": "Field",
+    "Finalisés": "Finalized",
+    "Validés": "Validated",
+    "Bons saisis": "Recorded Tickets",
+    "Coût total tous BT": "Total cost all WT",
+    "Cumul des BT affichés": "Roll up of displayed WT",
+    "Sur 0 BT évalués": "On 0 BT evaluated",
+    "Répartition financière": "Financial distribution",
+    "Correctif vs Préventif": "Corrective vs Preventive",
+    "Coût moyen par BT": "Average cost per WT",
+
   }),
 );
 
 const englishInterfaceWordTranslations = new Map(
   Object.entries({
-     "Enregistrez une réception à partir d'un BC existant.": "Save a receipt from an existing PO",
+    "validées": "Approved",
+    "affichés": "Displayed",
+    "Transformé": "Transformed",
+    "Enregistrez une réception à partir d'un BC existant.": "Save a receipt from an existing PO",
     "Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.": "Management of purchase requests, including approval, prioritization based on urgency level, and conversion into purchase orders.",
     "Aucun fournisseur disponible.": "No available supplier",
     "DZD": "DZD",
