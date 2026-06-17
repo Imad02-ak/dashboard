@@ -8993,6 +8993,7 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Renseignez l'article, l'emplacement et les seuils de suivi.":"Populate the article, location, and tracking thresholds.",
     "Semi Automatique":"Semi Automatic",
     "jours": "Days",
     "Saisissez les instructions pour le technicien...": "Enter the instructions for the technician...",
@@ -9785,6 +9786,7 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+    "jours": "Days",
     "Urgente": "Urgent",
     "Normale": "Normal",
     "Prix unitaire (Article)": "Unit price (Item)",
