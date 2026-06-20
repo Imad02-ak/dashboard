@@ -611,7 +611,7 @@ const stockSubpages = {
     inventaire: {
       label: "Inventaire",
       title: "Inventaire",
-      body: "Création d’inventaires et feuille de comptage terrain.",
+      body: "Création d'inventaires et feuille de comptage terrain.",
     },
     historique: {
       label: "Historique",
@@ -2001,11 +2001,11 @@ function attachArticlePageHandlers(pageKey) {
   attachAttachmentRemovalHandlers(form);
   // Activer la navigation wizard
   initializeWizardForm(form, [
-    'Identification',
-    'Liaisons métier',
-    'Type complémentaire',
-    'Caractéristiques techniques',
-    'Pièces jointes'
+    uiText('Identification'),
+    uiText('Liaisons métier'),
+    uiText('Type complémentaire'),
+    uiText('Caractéristiques techniques'),
+    uiText('Pièces jointes')
   ]);
   // Champs personnalisés dynamiques
   const customContainer = form.querySelector('[data-custom-fields-container]');
@@ -2315,7 +2315,7 @@ function renderEnterprisePage() {
             </label>
             <input id="enterpriseLogoInput" type="file" accept="image/*" ${enterpriseEditMode ? "" : "disabled"} />
           </div>
-          <div class="enterprise-hint">Le logo peut être ajouté après la création de l’entreprise.</div>
+          <div class="enterprise-hint">Le logo peut être ajouté après la création de l'entreprise.</div>
         </div>
 
         <div class="enterprise-form">
@@ -2776,7 +2776,7 @@ function renderUnitsManagementPage() {
           ${buildOrganizationEmptyState(
       "fa-building",
       "Aucune unité enregistrée",
-      "Créez la première unité pour commencer à structurer l’organisation.",
+      "Créez la première unité pour commencer à structurer l'organisation.",
       "Le bouton Nouvelle unité ouvre le formulaire de création.",
     )}
         </td>
@@ -2847,7 +2847,7 @@ function renderUnitsManagementPage() {
   renderOrganizationModal(
     activeRecord ? `Détails de ${activeRecord.name}` : "Nouvelle unité",
     activeRecord
-      ? "Toutes les informations de l’unité sélectionnée."
+      ? "Toutes les informations de l'unité sélectionnée."
       : "Saisissez les informations de la nouvelle unité.",
     organizationModalState &&
       organizationModalState.mode === "details" &&
@@ -3680,7 +3680,7 @@ function renderOrganizationPage(subpageKey) {
           <div>
             <div class="enterprise-kicker">Fiche entreprise</div>
             <h2>${profile.name || "Entreprise non renseignée"}</h2>
-            <p>Les informations sont affichées depuis la création de l’entreprise. Le code reste figé.</p>
+            <p>Les informations sont affichées depuis la création de l'entreprise. Le code reste figé.</p>
           </div>
           <div class="enterprise-state ${enterpriseEditMode ? "edit" : "locked"}">
             <i class="fa-solid ${enterpriseEditMode ? "fa-unlock" : "fa-lock"}"></i>
@@ -3700,7 +3700,7 @@ function renderOrganizationPage(subpageKey) {
               </label>
               <input id="enterpriseLogoInput" type="file" accept="image/*" ${enterpriseEditMode ? "" : "disabled"} />
             </div>
-            <div class="enterprise-hint">Le logo peut être ajouté après la création de l’entreprise.</div>
+            <div class="enterprise-hint">Le logo peut être ajouté après la création de l'entreprise.</div>
           </div>
 
           <div class="enterprise-form">
@@ -4755,9 +4755,7 @@ function initializeWizardForm(form, stepLabels) {
       }
     });
 
-    if (stepTitle) {
-      stepTitle.textContent = `Étape ${index + 1} / ${total} — ${stepLabels[index]}`;
-    }
+    if (stepTitle) stepTitle.textContent = `${uiText('Étape')} ${index + 1} / ${total} — ${stepLabels[index]}`;
 
     if (prevBtn) prevBtn.style.display = index === 0 ? "none" : "";
     if (nextBtn) nextBtn.style.display = index === total - 1 ? "none" : "";
@@ -5026,7 +5024,7 @@ function renderGroupEquipmentPage() {
               <th>Code</th>
               <th>Nom</th>
               <th>Désignations</th>
-              <th>Divisions</th>
+              <th>Départements</th>
               <th>Liens</th>
               <th>Actions</th>
             </tr>
@@ -5202,7 +5200,7 @@ function renderFamilyEquipmentPage() {
       <div>
         <div class="org-section-kicker">Référentiel équipement</div>
         <h2>Familles équipement</h2>
-        <p>Chaque famille dépend d’un groupe et prépare la création des fiches équipements.</p>
+        <p>Chaque famille dépend d'un groupe et prépare la création des fiches équipements.</p>
       </div>
       <div class="org-section-pills">
         <span class="status-badge badge-info">${directory.families.length} familles</span>
@@ -5541,7 +5539,7 @@ function buildEquipmentFormContent(record, mode) {
           <div class="field-group">
             <label for="equipmentCapacity">${uiText('Capacité / Débit (m³/h, Litre/min, kg/h...)')}</label>
             <input id="equipmentCapacity" name="capacity" type="text"
-              placeholder="${uiText('Ex: 250 L/min')}"
+              placeholder="${uiText('Ex: 250 Litre/min')}"
               value="${escapeHtml(record?.capacity ?? '')}" />
           </div>
           <div class="field-group">
@@ -5924,7 +5922,7 @@ function renderEquipmentManagementPage() {
   renderEquipmentModal(
     activeRecord ? `Détails de ${activeRecord.name}` : "Nouvel équipement",
     activeRecord
-      ? "Toutes les informations de l’équipement sélectionné."
+      ? "Toutes les informations de l'équipement sélectionné."
       : "Saisissez les informations du nouvel équipement.",
     equipmentModalState &&
       equipmentModalState.mode === "details" &&
@@ -6098,11 +6096,11 @@ function attachEquipmentPageHandlers(pageKey) {
   const submitBtn = form.querySelector('[data-wizard-submit]');
 
   const stepLabels = [
-    'Type général',
-    'Liaisons métier',
-    'Type complémentaire',
-    'Caractéristiques techniques',
-    'Pièces jointes'
+    uiText('Type général'),
+    uiText('Liaisons métier'),
+    uiText('Type complémentaire'),
+    uiText('Caractéristiques techniques'),
+    uiText('Pièces jointes')
   ];
 
   let currentStep = 0;
@@ -7812,11 +7810,11 @@ function attachOrganePageHandlers(pageKey) {
 
   attachAttachmentRemovalHandlers(form);
   initializeWizardForm(form, [
-    "Type général",
-    "Liaisons métier",
-    "Type complémentaire",
-    "Caractéristiques techniques",
-    "Pièces jointes",
+    uiText('Type général'),
+    uiText('Liaisons métier'),
+    uiText('Type complémentaire'),
+    uiText('Caractéristiques techniques'),
+    uiText('Pièces jointes')
   ]);
 
   // Champs personnalisés dynamiques — organe
@@ -8931,10 +8929,10 @@ function localizeAdministrationText(value, state = null) {
         : "Entrées, sorties et transferts de stock avec traçabilité complète.",
     ],
     [
-      "Création d’inventaires et feuille de comptage terrain.",
+      "Création d'inventaires et feuille de comptage terrain.",
       languageKey === "en"
         ? "Inventory creation and field counting sheet."
-        : "Création d’inventaires et feuille de comptage terrain.",
+        : "Création d'inventaires et feuille de comptage terrain.",
     ],
     [
       "Consultation des mouvements filtrée par article, type, date ou utilisateur.",
@@ -8993,8 +8991,54 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
-    "Renseignez l'article, l'emplacement et les seuils de suivi.":"Populate the article, location, and tracking thresholds.",
-    "Semi Automatique":"Semi Automatic",
+    "Création et mise à jour du référentiel des plans de maintenance.":"Creating and updating the maintenance plan repository.",
+    "Technicien non attribué":"Technician not assigned",
+    "Ressources de remplacement": "alternative resources",
+    "Inventaire disponible": "available inventory",
+    "Toutes les informations de l'organe sélectionné.": "All information for the selected organ.",
+    "Toutes les informations de la famille organe sélectionnée.": "All information from the selected organ family",
+    "Toutes les informations du groupe organe sélectionné.": "All information for the selected organ group.",
+    "Capacité / Débit (m³/h, Litre/min, kg/h...)": "Capacity / Flow rate (m 3/h, Liter/min, kg/h...)",
+    "Étape": "Step",
+    "Type général": "General type",
+    "Liaisons métier": "Connections",
+    "Type complémentaire": "Additional info",
+    "Caractéristiques techniques": "Technical specs",
+    "Pièces jointes": "Attachments",
+    "Toutes les informations de la famille sélectionnée.": "All information for the selected family.",
+    "Toutes les informations du groupe sélectionné.": "All informations for the selected group.",
+    "Unités rattachées": "attached units",
+    "Unités liées": "linked units",
+    "Multiples unités possibles": "Multiple possible units",
+    // ── Dashboard Activité récente ─────────────────────────────────
+    "DA créée": "PR created",
+    "BC envoyé": "PO sent",
+    "Réception validée": "Receipt validated",
+    "Panne déclarée": "Failure reported",
+    "Intervention terminée": "Work order completed",
+    "Intervention mise à jour": "Work order updated",
+    "Mouvement stock": "Stock movement",
+    "Entrée stock": "Stock entry",
+    "Intervention": "Work order",
+    "DA": "PR",
+    "BC": "PO",
+    "Réception": "Receipt",
+    "Stock": "Stock",
+
+    // ── Dashboard sections ─────────────────────────────────────────
+    "Cumul du mois en cours": "Current month total",
+    "Aucune donnée de coût": "No cost data",
+    "Prochaines interventions": "Upcoming work orders",
+    "Aucune intervention planifiée.": "No scheduled work order.",
+    "Aucune activité récente.": "No recent activity.",
+    "Aucune zone disponible.": "No area available.",
+    "6 derniers mois": "Last 6 months",
+    "Alloué": "Allocated",
+    "Engagé": "Committed",
+    "Aucune intervention enregistrée.": "No work order recorded.",
+    "Aucun fournisseur enregistré.": "No supplier registered.",
+    "Renseignez l'article, l'emplacement et les seuils de suivi.": "Populate the article, location, and tracking thresholds.",
+    "Semi Automatique": "Semi Automatic",
     "jours": "Days",
     "Saisissez les instructions pour le technicien...": "Enter the instructions for the technician...",
     "Fiche détaillée de la DI": "Detailed sheet of the WR",
@@ -9418,8 +9462,8 @@ const englishInterfaceTranslations = new Map(
     "Présence d'un chef d'équipe": "Presence of a team leader",
     Arborescence: "Asset tree",
     Organisation: "Organization",
-    "\u00c9quipements": "Equipment",
-    Equipements: "Equipment",
+    "\u00c9quipements": "Equipments",
+    Equipements: "Equipments",
     Organe: "Organ",
     Organes: "Organs",
     Articles: "Items",
@@ -9460,7 +9504,7 @@ const englishInterfaceTranslations = new Map(
     Adresse: "Address",
     Type: "Type",
     Statut: "Status",
-    "\u00c9tat": "Condition",
+    "\u00c9tat": "State",
     Date: "Date",
     Quantit\u00e9: "Quantity",
     Prix: "Price",
@@ -9691,7 +9735,7 @@ const englishInterfaceTranslations = new Map(
     "Délai moyen": "mean time",
     "BC en cours": "PO in progress",
     "Cumul du mois en cours": "Monthly roll-up",
-    "Toutes les informations de l’unité sélectionnée.": "All information for the selected unit.",
+    "Toutes les informations de l'unité sélectionnée.": "All information for the selected unit.",
     "Toutes les informations du département sélectionné.": "All information for the selected department.",
     "Groupes actifs": "active groups",
     "Départements liés": "Linked departments",
@@ -9715,7 +9759,7 @@ const englishInterfaceTranslations = new Map(
     "Type complémentaire": "complementary type",
     "Caractéristiques techniques": "technical characteristics",
     "Pièces jointes": "attachments",
-    "Les champs principaux définissent le rattachement et le statut de l'équipement.": "Master fields define the equipment’s attachment and status.",
+    "Les champs principaux définissent le rattachement et le statut de l'équipement.": "Master fields define the equipments attachment and status.",
     "Associez les organes et articles déjà créés à cet équipement.": "Associate the organs and items already created with this equipment.",
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles.": "Hold down Ctrl or Cmd to select multiple articles.",
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs organes.": "Hold down Ctrl or Cmd to select multiple organs.",
@@ -9723,7 +9767,7 @@ const englishInterfaceTranslations = new Map(
     "Type d'énergie, puissance, dimensions et paramètres de fonctionnement.": "Type of energy, power, dimensions and operating parameters.",
     "Vous pouvez ajouter plusieurs photos et documents pour enrichir la fiche.": "You can add several photos and documents to enrich the file.",
     "Plusieurs images peuvent être ajoutées à la fiche.": "Several images can be added to the form.",
-    "PDF, images ou autres fichiers utiles au suivi de l’équipement.": "PDF, images or other files useful for monitoring equipment.",
+    "PDF, images ou autres fichiers utiles au suivi de l'équipement.": "PDF, images or other files useful for monitoring equipment.",
     "Type d'énergie": "energy type",
     "Fréquence (Hz)": "Frequency (Hz)",
     "Capacité / Débit (m³/h, L/min, kg/h...)": "Capacity / Flow rate (m 3/h, L/min, kg/h...)",
@@ -9733,7 +9777,7 @@ const englishInterfaceTranslations = new Map(
     "Puissance (kW / CV)": "Power (kW / HP)",
     "Vitesse nominale (tr/min)": "Rated speed (RPM)",
     "Dimensions (L × l × h)": "Dimensions (L×W×H)",
-    "Toutes les informations de l’équipement sélectionné.": "All information for the selected equipment.",
+    "Toutes les informations de l'équipement sélectionné.": "All information for the selected equipment.",
     "Chaque groupe organe peut être associé à plusieurs équipements.": "Each organ group can be associated with several pieces of equipment.",
     "Référentiel de premier niveau": "Top-Level Repository",
     "Association multi-équipements": "Association multi-équipements",
@@ -9786,6 +9830,7 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+    "Étape": "Step",
     "jours": "Days",
     "Urgente": "Urgent",
     "Normale": "Normal",
@@ -9819,9 +9864,9 @@ const englishInterfacePhraseTranslations = new Map(
     "Code unité": "Unit code",
     "Les départements supportent plusieurs unités.": "Departments support multiple units",
     "Créez un département et rattachez-le à une ou plusieurs unités.": "Create a department and attach it to one or multiple units",
-    "Créez la première unité pour commencer à structurer l’organisation.": "Create the first unit to start structuring the organization",
-    "Le logo peut être ajouté après la création de l’entreprise.": "The logo can be added after the creation of the company",
-    "Les informations sont affichées depuis la création de l’entreprise. Le code reste figé.": "The information is displayed from the company's inception onward. The code remains unchanged.",
+    "Créez la première unité pour commencer à structurer l'organisation.": "Create the first unit to start structuring the organization",
+    "Le logo peut être ajouté après la création de l'entreprise.": "The logo can be added after the creation of the company",
+    "Les informations sont affichées depuis la création de l'entreprise. Le code reste figé.": "The information is displayed from the company's inception onward. The code remains unchanged.",
     "Créer le niveau suivant pour continuer": "Create the next level to continue",
     "Budget achats par mois": "Monthly purchase budget",
     "Planning semaine": "Week schedule",
@@ -9852,9 +9897,9 @@ const englishInterfacePhraseTranslations = new Map(
     "Code unité": "Unit code",
     "Les départements supportent plusieurs unités.": "Departments support multiple units",
     "Créez un département et rattachez-le à une ou plusieurs unités.": "Create a department and attach it to one or multiple units",
-    "Créez la première unité pour commencer à structurer l’organisation.": "Create the first unit to start structuring the organization",
-    "Le logo peut être ajouté après la création de l’entreprise.": "The logo can be added after the creation of the company",
-    "Les informations sont affichées depuis la création de l’entreprise. Le code reste figé.": "The information is displayed from the company's inception onward. The code remains unchanged.",
+    "Créez la première unité pour commencer à structurer l'organisation.": "Create the first unit to start structuring the organization",
+    "Le logo peut être ajouté après la création de l'entreprise.": "The logo can be added after the creation of the company",
+    "Les informations sont affichées depuis la création de l'entreprise. Le code reste figé.": "The information is displayed from the company's inception onward. The code remains unchanged.",
     "Créer le niveau suivant pour continuer": "Create the next level to continue",
     "Budget achats par mois": "Monthly purchase budget",
     "Planning semaine": "Week schedule",
@@ -10996,7 +11041,7 @@ const englishInterfaceWordTranslations = new Map(
     entr\u00e9es: "entries",
     entreprise: "company",
     \u00e9quipement: "equipment",
-    \u00e9quipements: "equipment",
+    \u00e9quipements: "equipments",
     estim\u00e9e: "estimated",
     \u00e9tat: "condition",
     \u00e9valuation: "evaluation",
@@ -12439,7 +12484,7 @@ function getAdministrationApprovalRoleOptions() {
       "Vue des OT planifiés, en cours et en retard sur plusieurs horizons.": "View of scheduled, in-progress, and overdue WOs across multiple horizons.",
       "Paramétrage du stock, emplacements et valorisation des articles.": "Stock settings, locations, and item valuation.",
       "Entrées, sorties et transferts de stock avec traçabilité complète.": "Stock entries, issues, and transfers with complete traceability.",
-      "Création d’inventaires et feuille de comptage terrain.": "Creation of inventories and field count sheets.",
+      "Création d'inventaires et feuille de comptage terrain.": "Creation of inventories and field count sheets.",
       "Consultation des mouvements filtrée par article, type, date ou utilisateur.": "View of movements filtered by item, type, date, or user.",
       "JSON export base, full import and reset options by module.": "JSON export base, full import and reset options by module.",
       "Planification, assignation technicien et suivi de l'exécution": "Planning, technician assignment, and execution tracking",
@@ -12450,7 +12495,7 @@ function getAdministrationApprovalRoleOptions() {
       "Réglementaire": "Regulatory",
       "Prédictive": "Predictive",
       "Disponibilité équipements par zone": "Equipment availability by area",
-      "équipements": "equipment",
+      "équipements": "equipments",
       "Aucune zone disponible.": "No area available.",
       "Statut des interventions": "Work order status",
       "Types de maintenance": "Maintenance types",
@@ -14284,49 +14329,60 @@ function dashboardBuildWeekPlanning(directory) {
 }
 
 function dashboardBuildActivity(rows, achatsState, stockDirectory, interventionDirectory) {
-  const interventionHistory = (interventionDirectory.history || []).map((entry) => ({
-    title: entry.action || "Intervention",
-    meta: `${entry.recordRef || entry.recordType || "Intervention"} · ${dashboardFormatDate(entry.createdAt)}`,
-    icon: "fa-screwdriver-wrench",
-    date: entry.createdAt,
-    tone: "brand",
-  }));
-  const stockActivity = (stockDirectory.movements || []).map((entry) => ({
-    title: entry.type === "exit" ? "Mouvement stock" : "Entrée stock",
-    meta: `${entry.articleLabel || entry.linkedDocument || "Stock"} · ${dashboardFormatDate(entry.createdAt)}`,
-    icon: "fa-boxes-stacked",
-    date: entry.createdAt,
-    tone: "warning",
-  }));
+  const interventionHistory = interventionDirectory.history
+    .map(entry => ({
+      title: uiText(entry.action || 'Intervention'),
+      meta: `${entry.recordRef} — ${entry.recordType || uiText('Intervention')} — ${dashboardFormatDate(entry.createdAt)}`,
+      icon: 'fa-screwdriver-wrench',
+      date: entry.createdAt,
+      tone: 'brand',
+    }));
+
+  const stockActivity = stockDirectory.movements
+    .map(entry => ({
+      title: uiText(entry.type === 'exit' ? 'Mouvement stock' : 'Entrée stock'),
+      meta: `${entry.articleLabel} — ${entry.linkedDocument || uiText('Stock')} — ${dashboardFormatDate(entry.createdAt)}`,
+      icon: 'fa-boxes-stacked',
+      date: entry.createdAt,
+      tone: 'warning',
+    }));
+
   const achatsActivity = [
-    ...(achatsState.demandes || []).map((entry) => ({
-      title: "DA créée",
-      meta: `${entry.number || "DA"} · ${dashboardFormatDate(entry.createdAt || entry.date)}`,
-      icon: "fa-file-circle-plus",
+    ...achatsState.demandes.map(entry => ({
+      title: uiText('DA créée'),
+      meta: `${entry.number} — ${uiText('DA')} — ${dashboardFormatDate(entry.createdAt || entry.date)}`,
+      icon: 'fa-file-circle-plus',
       date: entry.createdAt || entry.date,
-      tone: "info",
+      tone: 'info',
     })),
-    ...(achatsState.bons || []).map((entry) => ({
-      title: "BC envoyé",
-      meta: `${entry.number || "BC"} · ${dashboardFormatDate(entry.createdAt || entry.date)}`,
-      icon: "fa-paper-plane",
+    ...achatsState.bons.map(entry => ({
+      title: uiText('BC envoyé'),
+      meta: `${entry.number} — ${uiText('BC')} — ${dashboardFormatDate(entry.createdAt || entry.date)}`,
+      icon: 'fa-paper-plane',
       date: entry.createdAt || entry.date,
-      tone: "success",
+      tone: 'success',
     })),
-    ...(achatsState.receptions || []).map((entry) => ({
-      title: "Réception validée",
-      meta: `${entry.number || "Réception"} · ${dashboardFormatDate(entry.createdAt || entry.date)}`,
-      icon: "fa-clipboard-check",
+    ...achatsState.receptions.map(entry => ({
+      title: uiText('Réception validée'),
+      meta: `${entry.number} — ${uiText('Réception')} — ${dashboardFormatDate(entry.createdAt || entry.date)}`,
+      icon: 'fa-clipboard-check',
       date: entry.createdAt || entry.date,
-      tone: "success",
+      tone: 'success',
     })),
   ];
-  const recentRows = rows.slice(0, 4).map((row) => ({
-    title: row.source === "DI" ? "Panne déclarée" : row.status.includes("Term") ? "Intervention terminée" : "Intervention mise à jour",
-    meta: `${row.ref} · ${row.equipment}`,
-    icon: "fa-clock-rotate-left",
+
+  const recentRows = rows.slice(0, 4).map(row => ({
+    title: uiText(
+      row.source === 'DI'
+        ? 'Panne déclarée'
+        : row.status?.includes('Termin')
+          ? 'Intervention terminée'
+          : 'Intervention mise à jour'
+    ),
+    meta: `${row.ref} — ${row.equipment}`,
+    icon: 'fa-clock-rotate-left',
     date: row.date,
-    tone: row.priorityClass === "badge-danger" ? "danger" : "brand",
+    tone: row.priorityClass === 'badge-danger' ? 'danger' : 'brand',
   }));
 
   return [...interventionHistory, ...stockActivity, ...achatsActivity, ...recentRows]
@@ -14540,7 +14596,7 @@ function renderDashboardPage() {
         </div>
         <div class="card-body" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem;">
           <h2 style="font-size: 2.2rem; margin: 0; color: var(--org-brand);">${dashboardFormatMoney(monthCostAll)}</h2>
-          <span class="muted" style="margin-top: 0.5rem;">Cumul du mois en cours</span>
+          <span class="muted" style="margin-top: 0.5rem;">${uiText('Cumul du mois en cours')}</span>
         </div>
       </div>
       <div class="card dashboard-pie-card">
@@ -14577,7 +14633,7 @@ function renderDashboardPage() {
       <div class="card dashboard-chart-card">
         <div class="card-head">
           <div class="card-title"><i class="fa-solid fa-chart-column"></i> Interventions par mois</div>
-          <span class="status-badge badge-info">6 derniers mois</span>
+          <span class="status-badge badge-info">${uiText('6 derniers mois')}</span>
         </div>
         <div class="dashboard-stacked-chart">
           ${monthlyInterventions.data
@@ -14620,7 +14676,7 @@ function renderDashboardPage() {
               `,
         )
         .join("")
-      : `<div class="dashboard-empty">Aucune zone disponible.</div>`}
+      : `<div class="dashboard-empty">${uiText('Aucune zone disponible.')}</div>`}
         </div>
       </div>
     </section>
@@ -14794,7 +14850,7 @@ function renderDashboardPage() {
       .join("")}
           </div>
           <div class="dashboard-next-list">
-            <div class="card-mini-title">Prochaines interventions</div>
+            <div class="card-mini-title">${uiText('Prochaines interventions')}</div>
             ${upcomingWork.length
       ? upcomingWork
         .map(
@@ -14810,7 +14866,7 @@ function renderDashboardPage() {
                 `,
         )
         .join("")
-      : `<div class="dashboard-empty">Aucune intervention planifiée.</div>`}
+      : `<div class="dashboard-empty">${uiText('Aucune intervention planifiée.')}</div>`}
           </div>
         </div>
       </div>
@@ -14836,7 +14892,7 @@ function renderDashboardPage() {
                 `,
         )
         .join("")
-      : `<li class="dashboard-empty">Aucune activité récente.</li>`}
+      : `<li class="dashboard-empty">${uiText('Aucune activité récente.')}</li>`}
           </ul>
         </div>
       </div>
@@ -14866,8 +14922,8 @@ function renderDashboardPage() {
       .join("")}
         </div>
         <div class="dashboard-chart-legend">
-          <span><i class="legend-dot info"></i>Alloué</span>
-          <span><i class="legend-dot success"></i>Engagé</span>
+          <span><i class="legend-dot info"></i>${uiText('Alloué')}</span>
+          <span><i class="legend-dot success"></i>${uiText('Engagé')}</span>
         </div>
       </div>
 
@@ -15385,7 +15441,7 @@ function cancelStockMovement(movementId) {
       quantity > (Number(sourceRecord.currentQuantity) || 0)
     ) {
       uiAlert(
-        "Impossible d’annuler cette entrée: stock local insuffisant.",
+        "Impossible d'annuler cette entrée: stock local insuffisant.",
       );
       return false;
     }
@@ -15926,7 +15982,7 @@ function refreshInventoryRow(row) {
     discrepancy !== 0 &&
     !observationsInput.value.trim()
   ) {
-    observationsInput.placeholder = "Justifier l’écart...";
+    observationsInput.placeholder = "Justifier l'écart...";
   }
 
   return discrepancy;
@@ -28577,8 +28633,8 @@ function showArboContextMenu(x, y, arboId) {
       );
       openArboEquipmentDetails(
         record,
-        record ? `Détails de ${record.name}` : "Détails de l’équipement",
-        "Toutes les informations de l’équipement sélectionné.",
+        record ? `Détails de ${record.name}` : "Détails de l'équipement",
+        "Toutes les informations de l'équipement sélectionné.",
         record ? buildEquipmentDetailsContent(record) : "",
       );
       return;
@@ -28619,8 +28675,8 @@ function showArboContextMenu(x, y, arboId) {
       );
       openArboOrganeDetails(
         record,
-        record ? `Détails de ${record.name}` : "Détails de l’organe",
-        "Toutes les informations de l’organe sélectionné.",
+        record ? `Détails de ${record.name}` : "Détails de l'organe",
+        "Toutes les informations de l'organe sélectionné.",
         record ? buildOrganeDetailsContent(record) : "",
       );
       return;
@@ -28661,8 +28717,8 @@ function showArboContextMenu(x, y, arboId) {
       );
       openArboArticleDetails(
         record,
-        record ? `Détails de ${record.name}` : "Détails de l’article",
-        "Toutes les informations de l’article sélectionné.",
+        record ? `Détails de ${record.name}` : "Détails de l'article",
+        "Toutes les informations de l'article sélectionné.",
         record ? buildArticleDetailsContent(record) : "",
       );
       return;
