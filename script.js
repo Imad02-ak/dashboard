@@ -8991,8 +8991,112 @@ function localizeAdministrationText(value, state = null) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
-    "Création et mise à jour du référentiel des plans de maintenance.":"Creating and updating the maintenance plan repository.",
-    "Technicien non attribué":"Technician not assigned",
+    "Unité": "Unit",
+    'Référence': 'Reference',
+    'Nom du compteur': 'Counter name',
+    'Valeur initiale': 'Initial value',
+    'Valeur actuelle': 'Current value',
+    'Seuil action (génère OT)': 'Action threshold (generates WO)',
+    'Plan lié': 'Linked plan',
+    'Plan de maintenance lié': 'Linked maintenance plan',
+    'En panne': 'Broken down',
+
+    // Compteur — types
+    'Horaire': 'Hourly',
+    'Kilométrique': 'Kilometric',
+    'Cyclique': 'Cyclic',
+    'Pression': 'Pressure',
+    'Température': 'Temperature',
+    'Vibration': 'Vibration',
+
+    // Compteur — placeholders
+    'Ex: Heures moteur pompe P1': 'Ex: Pump P1 motor hours',
+    'Ex: 450': 'Ex: 450',
+    'Ex: 500': 'Ex: 500',
+
+    // Compteur — titres modal
+    'Nouveau compteur': 'New counter',
+    'Fiche complète du compteur et ses seuils.': 'Complete counter sheet and thresholds.',
+    "Création et mise à jour d'un compteur de maintenance.": 'Creating and updating a maintenance counter.',
+    "Vue complète du référentiel, des seuils et de la gamme opératoire.": "Complete view of the reference frame, thresholds and operating range.",
+    "ajouter": "ADD",
+    "Ajouter une consigne personnalisée...": "Add Custom Instruction...",
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles": "Hold Ctrl (or Cmd) to select multiple articles",
+    "Rechercher un article...": "Search for an Item...",
+    "Articles nécessaires": "needed items",
+    'Par calendrier': 'By calendar',
+    'Par durée de fonctionnement': 'By operating duration',
+    'Par date fixe': 'By fixed date',
+    'Par événement': 'By event',
+    'Par état détecté': 'By detected condition',
+    "Sur demande d'intervention": 'On work request',
+    'Par compteur': 'By meter',
+    'Par relevé vibratoire': 'By vibration reading',
+    'Par analyse thermique': 'By thermal analysis',
+    'Par analyse huile': 'By oil analysis',
+    'Quotidienne': 'Daily',
+    'Hebdomadaire': 'Weekly',
+    'Mensuelle': 'Monthly',
+    'Trimestrielle': 'Quarterly',   // ← ajouter
+    'Semestrielle': 'Semi-annual',  // ← ajouter
+    'Annuelle': 'Annual',           // ← ajouter
+    // ===== PLAN DE MAINTENANCE - FORMULAIRE CRÉATION =====
+    'Nouveau plan': 'New plan',
+    'Nouveau plan de maintenance': 'New maintenance plan',
+    'Créer le plan': 'Create plan',
+    'Modifier le plan': 'Edit plan',
+    'Code plan': 'Plan code',
+    'Nom du plan': 'Plan name',
+    'Type de plan': 'Plan type',
+    'Type de maintenance': 'Maintenance type',
+    'Préventif': 'Preventive',
+    'Préventif systématique': 'Systematic preventive',
+    'Préventif conditionnel': 'Conditional preventive',
+    'Prédictif': 'Predictive',
+    'Curatif': 'Corrective',
+    'Déclencheur': 'Trigger',
+    'Type de déclenchement': 'Trigger type',
+    'Déclenchement systématique': 'Scheduled trigger',
+    'Déclenchement compteur': 'Meter trigger',
+    'Déclenchement automatique basé sur l\'usage': 'Automatic usage-based trigger',
+    'Fréquence (jours)': 'Frequency (days)',
+    'Fréquence': 'Frequency',
+    'Intervalle (jours)': 'Interval (days)',
+    'Prochaine échéance': 'Next due date',
+    'Date de début': 'Start date',
+    'Date de fin': 'End date',
+    'Durée estimée (h)': 'Estimated duration (h)',
+    'Priorité': 'Priority',
+    'Haute': 'High',
+    'Moyenne': 'Medium',
+    'Basse': 'Low',
+    'Équipement lié': 'Linked equipment',
+    'Organe lié': 'Linked organ',
+    'Compteur lié': 'Linked meter',
+    'Technicien assigné': 'Assigned technician',
+    'Gamme opératoire': 'Operating procedure',
+    'Gamme opératoire complète': 'Complete operating procedure',
+    'Instructions technicien': 'Technician instructions',
+    'EPI requis': 'Required PPE',
+    'Permis de travail': 'Work permit',
+    'Consignation électrique': 'Electrical lockout',
+    'Checklist sécurité': 'Safety checklist',
+    'Ressources de remplacement': 'Alternative resources',
+    'Seuil alerte': 'Alert threshold',
+    'Seuil action': 'Action threshold',
+    'Valeur seuil': 'Threshold value',
+    'Statut du plan': 'Plan status',
+    'Plan actif': 'Active plan',
+    'Plan inactif': 'Inactive plan',
+    'Identification du plan': 'Plan identification',
+    'Planification / déclenchement': 'Planning / trigger',
+    'Saisir les informations du nouveau plan de maintenance.': 'Enter the information for the new maintenance plan.',
+    'Saisir les informations du plan de maintenance.': 'Enter the maintenance plan information.',
+    'Création et mise à jour du référentiel des plans de maintenance.': 'Creating and updating the maintenance plan repository.',
+    'Créez un premier plan de maintenance pour alimenter la liste et le calendrier.': 'Create a first maintenance plan to populate the list and calendar.',
+    'La création se fait via la fenêtre modale du bouton Nouveau plan.': 'The creation is done via the modal window of the New Plan button.',
+    "Création et mise à jour du référentiel des plans de maintenance.": "Creating and updating the maintenance plan repository.",
+    "Technicien non attribué": "Technician not assigned",
     "Ressources de remplacement": "alternative resources",
     "Inventaire disponible": "available inventory",
     "Toutes les informations de l'organe sélectionné.": "All information for the selected organ.",
@@ -9830,6 +9934,22 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+    'Nouveau compteur': 'New counter',
+    'Fiche complète du compteur et ses seuils.': 'Complete counter sheet and thresholds.',
+    "Création et mise à jour d'un compteur de maintenance.": 'Creating and updating a maintenance counter.',
+    // ===== PLAN DE MAINTENANCE =====
+    'Nouveau plan de maintenance': 'New maintenance plan',
+    'Liste des plans': 'Plan list',
+    'Plans actifs': 'Active plans',
+    'Plans en attente': 'Pending plans',
+    'Aucun plan de maintenance enregistré.': 'No maintenance plan recorded.',
+    'Aucun plan trouvé.': 'No plan found.',
+    'Plan créé avec succès.': 'Plan created successfully.',
+    'Plan modifié avec succès.': 'Plan updated successfully.',
+    'Plan supprimé.': 'Plan deleted.',
+    'Flux de déclenchement': 'Trigger workflow',
+    'Plan actif ➜ échéance atteinte ➜ OT généré automatiquement ➜ notification ➜ assignation technicien ➜ visible dans le calendrier.': 'Active plan - due date reached - WO generated automatically - notification - technician assignment - visible in the calendar.',
+    'Relevé saisi ➜ seuil action atteint ➜ OT généré ➜ compteur remis à zéro après clôture BT ➜ prochain déclenchement recalculé.': 'Reading entered - action threshold reached - WO generated - meter reset after WRP closure - next trigger recalculated.',
     "Étape": "Step",
     "jours": "Days",
     "Urgente": "Urgent",
@@ -18717,109 +18837,115 @@ function openPlanificationCounterModal(mode, counterId = null) {
 
   const bodyHtml = isDetails ? `
     <div class="org-detail-list">
-      <div class="org-detail-item"><span>Référence</span><strong>${escapeHtml(initialRef)}</strong></div>
-      <div class="org-detail-item"><span>Nom</span><strong>${escapeHtml(counter?.name || '-')}</strong></div>
-      <div class="org-detail-item"><span>Type</span><strong>${escapeHtml(counter?.type || '-')}</strong></div>
-      <div class="org-detail-item"><span>Unité</span><strong>${escapeHtml(counter?.unit || '-')}</strong></div>
-      <div class="org-detail-item"><span>Valeur actuelle</span><strong>${escapeHtml(String(counter?.currentValue ?? 0))} ${escapeHtml(counter?.unit || '')}</strong></div>
-      <div class="org-detail-item"><span>Valeur initiale</span><strong>${escapeHtml(String(counter?.initialValue ?? 0))}</strong></div>
-      <div class="org-detail-item"><span>Seuil alerte</span><strong>${escapeHtml(String(counter?.alertThreshold || '-'))}</strong></div>
-      <div class="org-detail-item"><span>Seuil action</span><strong>${escapeHtml(String(counter?.actionThreshold || '-'))}</strong></div>
-      <div class="org-detail-item"><span>Équipement</span><strong>${escapeHtml(
+      <div class="org-detail-item"><span>${uiText('Référence')}</span><strong>${escapeHtml(initialRef)}</strong></div>
+      <div class="org-detail-item"><span>${uiText('Nom')}</span><strong>${escapeHtml(counter?.name || '-')}</strong></div>
+      <div class="org-detail-item"><span>${uiText('Type')}</span><strong>${uiText(counter?.type || '-')}</strong></div>
+      <div class="org-detail-item"><span>${uiText('Unité')}</span><strong>${escapeHtml(counter?.unit || '-')}</strong></div>
+      <div class="org-detail-item"><span>${uiText('Valeur actuelle')}</span><strong>${escapeHtml(String(counter?.currentValue ?? 0))} ${escapeHtml(counter?.unit || '')}</strong></div>
+      <div class="org-detail-item"><span>${uiText('Valeur initiale')}</span><strong>${escapeHtml(String(counter?.initialValue ?? 0))}</strong></div>
+      <div class="org-detail-item"><span>${uiText('Seuil alerte')}</span><strong>${escapeHtml(String(counter?.alertThreshold || '-'))}</strong></div>
+      <div class="org-detail-item"><span>${uiText('Seuil action')}</span><strong>${escapeHtml(String(counter?.actionThreshold || '-'))}</strong></div>
+      <div class="org-detail-item"><span>${uiText('Équipement lié')}</span><strong>${escapeHtml(
     (() => { const e = getEquipmentRecords('equipments').find(e => e.id === counter?.equipmentId); return e ? e.code + ' — ' + e.name : '-'; })()
   )}</strong></div>
-      <div class="org-detail-item"><span>Organe</span><strong>${escapeHtml(
+      <div class="org-detail-item"><span>${uiText('Organe lié')}</span><strong>${escapeHtml(
     (() => { const o = getOrganeRecords('organes').find(o => o.id === counter?.organId); return o ? o.code + ' — ' + o.name : '-'; })()
   )}</strong></div>
-      <div class="org-detail-item"><span>Plan lié</span><strong>${escapeHtml(
+      <div class="org-detail-item"><span>${uiText('Plan lié')}</span><strong>${escapeHtml(
     (() => { const p = state.plans.find(p => p.id === counter?.planId); return p ? p.ref + ' · ' + p.title : '-'; })()
   )}</strong></div>
-      <div class="org-detail-item"><span>Statut</span><strong>${escapeHtml(counter?.status || '-')}</strong></div>
+      <div class="org-detail-item"><span>${uiText('Statut')}</span><strong>${uiText(counter?.status || '-')}</strong></div>
     </div>
     <div class="org-modal-actions">
-      <button class="btn btn-outline" type="button" data-plan-modal-close>Fermer</button>
-      <button class="btn btn-primary" type="button" data-counter-edit-from-details>Modifier</button>
+      <button class="btn btn-outline" type="button" data-plan-modal-close>${uiText('Fermer')}</button>
+      <button class="btn btn-primary" type="button" data-counter-edit-from-details>${uiText('Modifier')}</button>
     </div>
   ` : `
     <form class="org-form-grid planning-modal-form" data-counter-form>
       <div class="field-group">
-        <label>Référence</label>
+        <label>${uiText('Référence')}</label>
         <input type="text" value="${escapeHtml(initialRef)}" disabled />
       </div>
       <div class="field-group">
-        <label for="counterName">Nom du compteur</label>
+        <label for="counterName">${uiText('Nom du compteur')}</label>
         <input id="counterName" name="name" type="text"
           value="${escapeHtml(counter?.name || '')}"
-          placeholder="Ex: Heures moteur pompe P1" required />
+          placeholder="${uiText('Ex: Heures moteur pompe P1')}" required />
       </div>
       <div class="field-group">
-        <label for="counterType">Type</label>
+        <label for="counterType">${uiText('Type')}</label>
         <select id="counterType" name="type">
           ${['Horaire', 'Kilométrique', 'Cyclique', 'Pression', 'Température', 'Vibration', 'Autre']
-    .map(t => `<option${counter?.type === t ? ' selected' : ''}>${t}</option>`)
+    .map(t => `<option value="${escapeHtml(t)}"${counter?.type === t ? ' selected' : ''}>${uiText(t)}</option>`)
     .join('')}
         </select>
       </div>
       <div class="field-group">
-        <label for="counterUnit">Unité</label>
+        <label for="counterUnit">${uiText('Unité')}</label>
         <select id="counterUnit" name="unit">
-          ${['h', 'km', 'cycles', 'bar', '°C', 'mm/s', 'tours', 'L', 'm³', 'Autre']
-    .map(u => `<option${counter?.unit === u ? ' selected' : ''}>${u}</option>`)
+          ${['h', 'km', 'cycles', 'bar', '°C', 'mm/s', 'tours', 'Litre', 'm³', 'Autre']
+    .map(u => `<option value="${escapeHtml(u)}"${counter?.unit === u ? ' selected' : ''}>${escapeHtml(u)}</option>`)
     .join('')}
         </select>
       </div>
       <div class="field-group">
-        <label for="counterInitial">Valeur initiale</label>
+        <label for="counterInitial">${uiText('Valeur initiale')}</label>
         <input id="counterInitial" name="initialValue" type="number" min="0" step="0.01"
           value="${escapeHtml(String(counter?.initialValue ?? 0))}" />
       </div>
       <div class="field-group">
-        <label for="counterCurrent">Valeur actuelle</label>
+        <label for="counterCurrent">${uiText('Valeur actuelle')}</label>
         <input id="counterCurrent" name="currentValue" type="number" min="0" step="0.01"
           value="${escapeHtml(String(counter?.currentValue ?? 0))}" />
       </div>
       <div class="field-group">
-        <label for="counterAlert">Seuil alerte</label>
+        <label for="counterAlert">${uiText('Seuil alerte')}</label>
         <input id="counterAlert" name="alertThreshold" type="number" min="0" step="1"
           value="${escapeHtml(String(counter?.alertThreshold || ''))}"
-          placeholder="Ex: 450" />
+          placeholder="${uiText('Ex: 450')}" />
       </div>
       <div class="field-group">
-        <label for="counterAction">Seuil action (génère OT)</label>
+        <label for="counterAction">${uiText('Seuil action (génère OT)')}</label>
         <input id="counterAction" name="actionThreshold" type="number" min="0" step="1"
           value="${escapeHtml(String(counter?.actionThreshold || ''))}"
-          placeholder="Ex: 500" />
+          placeholder="${uiText('Ex: 500')}" />
       </div>
       <div class="field-group">
-        <label for="counterEquipment">Équipement lié</label>
+        <label for="counterEquipment">${uiText('Équipement lié')}</label>
         <select id="counterEquipment" name="equipmentId">${equipmentOptions}</select>
       </div>
       <div class="field-group">
-        <label for="counterOrgane">Organe lié</label>
+        <label for="counterOrgane">${uiText('Organe lié')}</label>
         <select id="counterOrgane" name="organId">${organeOptions}</select>
       </div>
       <div class="field-group field-group-wide">
-        <label for="counterPlan">Plan de maintenance lié</label>
+        <label for="counterPlan">${uiText('Plan de maintenance lié')}</label>
         <select id="counterPlan" name="planId">${planOptions}</select>
       </div>
       <div class="field-group">
-        <label for="counterStatus">Statut</label>
+        <label for="counterStatus">${uiText('Statut')}</label>
         <select id="counterStatus" name="status">
-          <option${(counter?.status || 'Actif') === 'Actif' ? ' selected' : ''}>Actif</option>
-          <option${counter?.status === 'Inactif' ? ' selected' : ''}>Inactif</option>
-          <option${counter?.status === 'En panne' ? ' selected' : ''}>En panne</option>
+          <option value="Actif"${(counter?.status || 'Actif') === 'Actif' ? ' selected' : ''}>${uiText('Actif')}</option>
+          <option value="Inactif"${counter?.status === 'Inactif' ? ' selected' : ''}>${uiText('Inactif')}</option>
+          <option value="En panne"${counter?.status === 'En panne' ? ' selected' : ''}>${uiText('En panne')}</option>
         </select>
       </div>
       <div class="org-modal-actions">
-        <button class="btn btn-outline" type="button" data-plan-modal-close>Annuler</button>
-        <button class="btn btn-primary" type="submit">${isEdit ? 'Enregistrer' : 'Créer'}</button>
+        <button class="btn btn-outline" type="button" data-plan-modal-close>${uiText('Annuler')}</button>
+        <button class="btn btn-primary" type="submit">${isEdit ? uiText('Enregistrer') : uiText('Créer')}</button>
       </div>
     </form>
   `;
 
   renderPlanificationModal(
-    isDetails ? `Détails ${initialRef}` : isEdit ? `Modifier ${initialRef}` : `Nouveau compteur ${initialRef}`,
-    isDetails ? "Fiche complète du compteur et ses seuils." : "Création et mise à jour d'un compteur de maintenance.",
+    isDetails
+      ? `${uiText('Détails')} ${initialRef}`
+      : isEdit
+        ? `${uiText('Modifier')} ${initialRef}`
+        : `${uiText('Nouveau compteur')} ${initialRef}`,
+    isDetails
+      ? uiText("Fiche complète du compteur et ses seuils.")
+      : uiText("Création et mise à jour d'un compteur de maintenance."),
     bodyHtml
   );
 
@@ -18888,7 +19014,10 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
   const actionCounters = counters.filter(
     (counter) => counter.currentValue >= counter.actionThreshold,
   );
-
+  // Réinitialiser le flag pour permettre le re-binding après re-render
+  if (pageContentEl) {
+    delete pageContentEl.dataset.counterHandlersBound;
+  }
   pageContentEl.className = "organization-page planning-page";
   pageContentEl.innerHTML = `
     ${buildPlanificationTabs(activeSubpageKey)}
@@ -19056,7 +19185,6 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
     });
   }
   if (pageContentEl && !pageContentEl.dataset.counterHandlersBound) {
-    // APRÈS (correct)
     pageContentEl.addEventListener('click', function (event) {
       const btn = event.target.closest('[data-counter-action]');
       if (!btn || !pageContentEl.contains(btn)) return;
@@ -19085,6 +19213,7 @@ function renderPlanificationCountersPage(state, activeSubpageKey) {
         renderPlanificationCountersPage(s, 'compteurs');
       }
     });
+    pageContentEl.dataset.counterHandlersBound = 'true'; // ← AJOUTER CETTE LIGNE
   }
 }
 
@@ -20012,10 +20141,10 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
   ]
     .map(
       (frequency) =>
-        "<option" +
+        "<option value=\"" + escapeHtml(frequency) + "\"" +
         (frequency === selectedFrequency ? " selected" : "") +
         ">" +
-        escapeHtml(frequency) +
+        uiText(frequency) +
         "</option>",
     )
     .join("");
@@ -20196,48 +20325,50 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
     `
     : `
       <form class="org-form-grid planning-modal-form" data-plan-form>
-        <div class="field-group"><label for="planRef">Numéro</label><input id="planRef" type="text" value="${escapeHtml(initialRef)}" disabled /></div>
-        <div class="field-group"><label for="planTitle">Titre</label><input id="planTitle" name="title" type="text" value="${escapeHtml(plan?.title || preset.title || "")}" required /></div>
-        <div class="field-group"><label for="planMaintenanceType">Type maintenance</label><select id="planMaintenanceType" name="maintenanceType"><option${(plan?.maintenanceType || preset.maintenanceType) === "Préventive" ? " selected" : ""}>Préventive</option><option${(plan?.maintenanceType || preset.maintenanceType) === "Prédictive" ? " selected" : ""}>Prédictive</option><option${(plan?.maintenanceType || preset.maintenanceType) === "Réglementaire" ? " selected" : ""}>Réglementaire</option></select></div>
-        <div class="field-group"><label for="planEquipment">Équipement</label><select id="planEquipment" name="equipmentId" required>${equipmentOptions}</select></div>
-        <div class="field-group"><label for="planOrgan">Organe</label><select id="planOrgan" name="organId"><option value="">-- Aucun --</option>${organeOptions}</select></div>
-        <div class="field-group"><label for="planTechnician">Technicien par défaut</label><select id="planTechnician" name="technicianId">
-          <option value="">— Non assigné —</option>
+        <div class="field-group"><label for="planRef">${uiText('Code plan')}</label><input id="planRef" type="text" value="${escapeHtml(initialRef)}" disabled /></div>
+        <div class="field-group"><label for="planTitle">${uiText('Nom du plan')}</label><input id="planTitle" name="title" type="text" value="${escapeHtml(plan?.title || preset.title || "")}" required /></div>
+        <div class="field-group"><label for="planMaintenanceType">${uiText('Type de maintenance')}</label><select id="planMaintenanceType" name="maintenanceType"><option${(plan?.maintenanceType || preset.maintenanceType) === "Préventive" ? " selected" : ""}>${uiText('Préventive')}</option><option${(plan?.maintenanceType || preset.maintenanceType) === "Prédictive" ? " selected" : ""}>${uiText('Prédictive')}</option></select></div>
+        <div class="field-group"><label for="planEquipment">${uiText('Équipement lié')}</label><select id="planEquipment" name="equipmentId" required>${equipmentOptions}</select></div>
+        <div class="field-group"><label for="planOrgan">${uiText('Organe lié')}</label><select id="planOrgan" name="organId"><option value="">-- ${uiText('Aucun')} --</option>${organeOptions}</select></div>
+        <div class="field-group"><label for="planTechnician">${uiText('Technicien assigné')}</label><select id="planTechnician" name="technicianId">
+          <option value="">— ${uiText('Technicien non attribué')} —</option>
           ${getPlanificationTechniciens().map(t =>
       `<option value="${escapeHtml(t.id)}"${t.id === selectedTechnicianId ? " selected" : ""}>
               ${escapeHtml((t.firstName ? t.firstName + ' ' : '') + t.name)} · ${escapeHtml(t.role)}
             </option>`
-    ).join("") || '<option disabled>Aucun technicien — créez des utilisateurs dans Administration</option>'}
+    ).join("") || `<option disabled>${uiText('Aucun technicien — créez des utilisateurs dans Administration')}</option>`}
         </select></div>
-        <div class="field-group"><label for="planFrequency">Fréquence</label><select id="planFrequency" name="frequency">${frequencyOptions}</select></div>
-        <div class="field-group"><label for="planDuration">Durée estimée (h)</label><input id="planDuration" name="durationHours" type="number" min="0" step="0.5" value="${escapeHtml(plan?.durationHours || preset.durationHours || 1)}" /></div>
+        <div class="field-group"><label for="planFrequency">${uiText('Fréquence')}</label><select id="planFrequency" name="frequency">${frequencyOptions}</select></div>
+        <div class="field-group"><label for="planDuration">${uiText('Durée estimée (h)')}</label><input id="planDuration" name="durationHours" type="number" min="0" step="0.5" value="${escapeHtml(plan?.durationHours || preset.durationHours || 1)}" /></div>
         <div class="field-group">
-          <label for="planTrigger">Déclenchement</label>
+          <label for="planTrigger">${uiText('Déclencheur')}</label>
           <select id="planTrigger" name="triggerLabel">
-            ${getPlanificationTriggerOptions(plan?.planType || preset.planType || "Systématique")
-      .map(t => `<option${(plan?.triggerLabel || preset.triggerLabel) === t ? " selected" : ""}>${escapeHtml(t)}</option>`)
+            
+          ${getPlanificationTriggerOptions(plan?.planType || preset.planType || "Systématique")
+      .map(t => `<option value="${escapeHtml(t)}"${(plan?.triggerLabel || preset.triggerLabel) === t ? " selected" : ""}>${uiText(t)}</option>`)
       .join("")}
           </select>
         </div>
         <div class="field-group">
-          <label for="planStartDate">Date de début</label>
+          <label for="planStartDate">${uiText('Date de début')}</label>
           <input id="planStartDate" name="startDate" type="date"
             value="${plan?.startDate || preset.startDate || new Date().toISOString().slice(0, 10)}" />
         </div>
         <div class="field-group">
-          <label for="planNextDue">Prochaine échéance <span style="color:var(--color-text-muted);font-size:0.8em">(calculée auto)</span></label>
+          <label for="planNextDue">${uiText('Prochaine échéance')} <span style="color:var(--color-text-muted);font-size:0.8em">(${uiText('calculée auto')})</span></label>
           <input id="planNextDue" name="nextDueDate" type="datetime-local"
             value="${plan?.nextDueDate ? new Date(plan.nextDueDate).toISOString().slice(0, 16)
       : computeNextDueDate(plan?.startDate || preset.startDate || new Date().toISOString(), plan?.frequency || preset.frequency || 'Mensuelle')}"
             readonly style="background:var(--color-surface-offset);cursor:not-allowed" />
         </div>
-        <div class="field-group"><label for="planAlert">Seuil alerte</label><input id="planAlert" name="alertThreshold" type="text" value="${escapeHtml(plan?.alertThreshold || preset.alertThreshold || "")}" /></div>
-        <div class="field-group"><label for="planAction">Seuil action</label><input id="planAction" name="actionThreshold" type="text" value="${escapeHtml(plan?.actionThreshold || preset.actionThreshold || "")}" /></div>
-        <div class="field-group field-group-wide"><label for="planTasks">Gamme opératoire</label><textarea id="planTasks" name="tasks" rows="5">${escapeHtml((plan?.tasks || preset.tasks || []).join("\n"))}</textarea></div>
+        <div class="field-group"><label for="planAlert">${uiText('Seuil alerte')}</label><input id="planAlert" name="alertThreshold" type="text" value="${escapeHtml(plan?.alertThreshold || preset.alertThreshold || "")}" /></div>
+        <div class="field-group"><label for="planAction">${uiText('Seuil action')}</label><input id="planAction" name="actionThreshold" type="text" value="${escapeHtml(plan?.actionThreshold || preset.actionThreshold || "")}" /></div>
+        <div class="field-group field-group-wide"><label for="planTasks">${uiText('Gamme opératoire')}</label><textarea id="planTasks" name="tasks" rows="5">${escapeHtml((plan?.tasks || preset.tasks || []).join("\n"))}</textarea></div>
+
 
         <div class="field-group field-group-wide">
-          <label for="planArticles">Articles nécessaires</label>
-          <input type="text" id="planArticlesSearch" placeholder="Rechercher un article..."
+          <label for="planArticles">${uiText('Articles nécessaires')}</label>
+          <input type="text" id="planArticlesSearch" placeholder="${uiText('Rechercher un article...')}"
             oninput="Array.from(document.getElementById('planArticles').options).forEach(o=>o.style.display=o.text.toLowerCase().includes(this.value.toLowerCase())?'':'none')"
             style="width:100%;padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm) var(--radius-sm) 0 0;font-size:var(--text-sm);border-bottom:none;" />
           <select id="planArticles" name="articleIds" multiple size="6"
@@ -20246,17 +20377,18 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
       const selected = Array.isArray(plan?.articleIds) ? plan.articleIds
         : Array.isArray(preset?.articleIds) ? preset.articleIds : [];
       const arts = getArticleRecords('articles').sort((a, b) => a.code.localeCompare(b.code));
-      if (!arts.length) return '<option disabled>Aucun article dans le catalogue</option>';
+      if (!arts.length) return `<option disabled>${uiText('Aucun article dans le catalogue')}</option>`;
       return arts.map(a =>
         `<option value="${escapeHtml(a.id)}"${selected.includes(a.id) ? ' selected' : ''}>${escapeHtml(a.code)} — ${escapeHtml(a.name)}${a.unitMeasure ? ' (' + escapeHtml(a.unitMeasure) + ')' : ''}</option>`
       ).join('');
     })()}
           </select>
-          <small style="color:var(--color-text-muted);">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs articles</small>
+          <small style="color:var(--color-text-muted);">${uiText('Maintenez Ctrl ou Cmd pour sélectionner plusieurs articles')}</small>
         </div>
 
+
         <div class="field-group field-group-wide">
-          <label>Checklist sécurité</label>
+          <label>${uiText('Checklist sécurité')}</label>
           <div id="planSafetyList" style="border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:10px;display:flex;flex-direction:column;gap:6px;">
             ${(() => {
       const defaults = ['Consignation électrique', 'Port des EPI requis', 'Permis de travail signé', 'Zone balisée et sécurisée', 'Outillage vérifié', "Présence d'un chef d'équipe"];
@@ -20265,30 +20397,32 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
       return all.map(item =>
         `<label style="display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer;">
                   <input type="checkbox" name="safetyItem" value="${escapeHtml(item)}"${saved.includes(item) ? ' checked' : ''} style="width:15px;height:15px;accent-color:var(--color-primary);">
-                  <span style="font-size:var(--text-sm);">${escapeHtml(item)}</span>
+                  <span style="font-size:var(--text-sm);">${uiText(item)}</span>
                 </label>`
       ).join('');
     })()}
           </div>
           <div style="display:flex;gap:8px;margin-top:6px;">
-            <input type="text" id="planSafetyNew" placeholder="Ajouter une consigne personnalisée..."
+            <input type="text" id="planSafetyNew" placeholder="${uiText('Ajouter une consigne personnalisée...')}"
               style="flex:1;padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:var(--text-sm);" />
             <button type="button" class="btn btn-outline" id="planSafetyAddBtn">
-              <i class="fa-solid fa-plus"></i> Ajouter
+              <i class="fa-solid fa-plus"></i> ${uiText('Ajouter')}
             </button>
           </div>
         </div>
 
+
         <div class="field-group field-group-wide">
-  <label for="planDocuments">Documents associés</label>
+  <label for="planDocuments">${uiText('Documents associés')}</label>
   <input type="file" id="planDocuments" name="documents" multiple
     accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg" />
 </div>
 
-        <div class="field-group"><label for="planStatus">Statut</label><select id="planStatus" name="status"><option${(plan?.status || preset.status || "Actif") === "Actif" ? " selected" : ""}>Actif</option><option${(plan?.status || preset.status) === "Inactif" ? " selected" : ""}>Inactif</option></select></div>
+
+        <div class="field-group"><label for="planStatus">${uiText('Statut du plan')}</label><select id="planStatus" name="status"><option${(plan?.status || preset.status || "Actif") === "Actif" ? " selected" : ""}>${uiText('Actif')}</option><option${(plan?.status || preset.status) === "Inactif" ? " selected" : ""}>${uiText('Inactif')}</option></select></div>
         <div class="org-modal-actions">
-          <button class="btn btn-outline" type="button" data-plan-modal-close>Annuler</button>
-          <button class="btn btn-primary" type="submit">${isEdit ? "Enregistrer" : isCreate ? "Créer" : "Valider"}</button>
+          <button class="btn btn-outline" type="button" data-plan-modal-close>${uiText('Annuler')}</button>
+          <button class="btn btn-primary" type="submit">${isEdit ? uiText('Modifier le plan') : isCreate ? uiText('Créer le plan') : uiText('Valider')}</button>
         </div>
       </form>
     `;
@@ -20390,7 +20524,7 @@ function renderPlanificationPlanModal(mode, planId = null, preset = {}) {
       const options = getPlanificationTriggerOptions(planType);
       if (triggerSelect) {
         triggerSelect.innerHTML = options
-          .map(t => `<option>${escapeHtml(t)}</option>`)
+          .map(t => `<option value="${escapeHtml(t)}">${uiText(t)}</option>`)
           .join('');
       }
     }
@@ -20771,9 +20905,32 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
           return `<option value="${c.id}">${icon} ${escapeHtml(c.ref)} — ${escapeHtml(c.name)}</option>`;
         }).join("")}
                 </select>
-                <button class="org-icon-btn" type="button" data-counter-id="${counters[0]?.id}" data-counter-action="edit" data-counter-btn-edit title="Modifier"><i class="fa-regular fa-pen-to-square"></i></button>
-                <button class="org-icon-btn danger" type="button" data-counter-id="${counters[0]?.id}" data-counter-action="reset" data-counter-btn-reset title="Remettre à zéro"><i class="fa-solid fa-rotate-left"></i></button>
-                <button class="org-icon-btn danger" type="button" data-counter-id="${counters[0]?.id}" data-counter-action="delete" data-counter-btn-delete title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
+               <button class="org-icon-btn" type="button"
+  data-counter-id="${counters[0]?.id ?? ''}"
+  data-counter-action="edit"
+  data-counter-btn-edit
+  title="Modifier"
+  ${counters.length === 0 ? 'disabled' : ''}>
+  <i class="fa-regular fa-pen-to-square"></i>
+</button>
+
+<button class="org-icon-btn danger" type="button"
+  data-counter-id="${counters[0]?.id ?? ''}"
+  data-counter-action="reset"
+  data-counter-btn-reset
+  title="Remettre à zéro"
+  ${counters.length === 0 ? 'disabled' : ''}>
+  <i class="fa-solid fa-rotate-left"></i>
+</button>
+
+<button class="org-icon-btn danger" type="button"
+  data-counter-id="${counters[0]?.id ?? ''}"
+  data-counter-action="delete"
+  data-counter-btn-delete
+  title="Supprimer"
+  ${counters.length === 0 ? 'disabled' : ''}>
+  <i class="fa-regular fa-trash-can"></i>
+</button>
               </div>
             </div>
             <div class="card-body" data-counter-detail-main>
@@ -20931,6 +21088,37 @@ function renderPlanificationPageClean(subpageKey = "plans-maintenance") {
         savePlanificationData(nextState);
         renderPlanificationPageClean("compteurs");
       });
+    // ✅ Handler boutons Modifier / Réinitialiser / Supprimer
+    pageContentEl.addEventListener('click', function (event) {
+      const btn = event.target.closest('[data-counter-action]');
+      if (!btn) return;
+
+      const action = btn.dataset.counterAction;
+      const counterId = btn.dataset.counterId;
+      if (!counterId || counterId === 'undefined') return;
+
+      if (action === 'edit') {
+        openPlanificationCounterModal('edit', counterId);
+
+      } else if (action === 'reset') {
+        if (!uiConfirm('Remettre la valeur du compteur à zéro ?')) return;
+        const s = loadPlanificationData();
+        const c = s.counters.find(c => c.id === counterId);
+        if (c) {
+          c.currentValue = 0;
+          c.lastUpdate = new Date().toISOString();
+          savePlanificationData(s);
+          renderPlanificationPageClean('compteurs');
+        }
+
+      } else if (action === 'delete') {
+        if (!uiConfirm('Supprimer ce compteur définitivement ?')) return;
+        const s = loadPlanificationData();
+        s.counters = s.counters.filter(c => c.id !== counterId);
+        savePlanificationData(s);
+        renderPlanificationPageClean('compteurs');
+      }
+    });
   } else {
     const dueSoonCount = dueSoon;
     const calendarEvents = (state.scheduledOrders || []).length;
