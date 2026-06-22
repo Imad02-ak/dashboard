@@ -8989,8 +8989,120 @@ function localizeAdministrationText(value, state = null) {
   return output;
 }
 
+function translateHistoryAction(event) {
+  const ref = event.recordRef ?? '';
+  const linked = event.linkedRef ?? event.message?.split(' → ')[1] ?? event.message?.split(' en ')[1] ?? '';
+
+  const actionMap = {
+    'di_created': `${ref} — ${uiText('DI créée')}`,
+    'di_validated': `${ref} — ${uiText('DI validée')}`,
+    'di_to_ot': `${ref} — ${uiText('DI transformée en OT')} → ${linked}`,
+    'ot_to_bt': `${ref} — ${uiText('OT transformé en BT')} → ${linked}`,
+    'bt_closed': `${ref} — ${uiText('BT clôturé')}`,
+    'bt_validated': `${ref} — ${uiText('BT validé')}`,
+
+    // Anciennes clés FR (compatibilité anciens enregistrements)
+    'DI transformée en OT': `${ref} — ${uiText('DI transformée en OT')} → ${linked}`,
+    'OT transformé en BT': `${ref} — ${uiText('OT transformé en BT')} → ${linked}`,
+    'DI validée': `${ref} — ${uiText('DI validée')}`,
+    'BT clôturé': `${ref} — ${uiText('BT clôturé')}`,
+    'Transformée en OT': `${ref} — ${uiText('DI transformée en OT')} → ${linked}`,
+    'Transformé en BT': `${ref} — ${uiText('OT transformé en BT')} → ${linked}`,
+  };
+
+  return actionMap[event.action]
+    ?? uiText(event.message)
+    ?? event.message
+    ?? event.action
+    ?? '-';
+}
+
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Transformée en BC": "Transformed to PO",
+    "Observations générales": "general observations",
+    "Sélectionnez une demande d'achat validée.": "Select a validated purchase request.",
+    "Demande d'achat liée": "Linked Purchase Request",
+    "Formulaire BC avec calcul automatique des montants.": "BC form with automatic calculation of amounts.",
+    "Consultation de la demande d'achat.": "Viewing the purchase request.",
+    "Général": "General",
+    "Ouvert": "Open",
+    "Fermé": "Closed",
+    "Détails et résultats de l'inventaire sélectionné.": "Details and results of the selected inventory.",
+    "Justifier l'écart...": "justify the discrepancy...",
+    "Tournant": "cycle counting",
+    "Général": "general",
+    "Créer l'inventaire": "Create Inventory",
+    "Saisie terrain": "Field entry",
+    "Saisissez un nouvel inventaire depuis une fenêtre modale.": "Enter new inventory from a modal window.",
+    "Magasin d'entrée": "Warehouse of entry",
+    "Choisissez le type de mouvement puis complétez les champs associés.": "Choose the type of movement and complete the associated fields.",
+    "Prix unitaire": "unit price",
+    "Création d'inventaires et feuille de comptage terrain.": "Creation of inventories and field metering sheet.",
+    "Les mouvements de type transferts s'afficheront ici.": "Transfer-type movements will be displayed here.",
+    'DI créée': 'WR created',
+    'DI validée': 'WR approved',
+    'DI transformée en OT': 'WR converted to WO',
+    'OT transformé en BT': 'WO converted to WT',
+    'BT clôturé': 'WT closed',
+    'BT validé': 'WT approved',
+    'Transformer en OT': 'Convert to WO',
+    'Créer BT': 'Create WT',
+    'Planifié': 'Scheduled',
+    'Clôturé': 'Closed',
+    'Validé': 'Approved',
+    'En cours': 'In progress',
+    'Créé par': 'Created by',
+    'Transformé en BT': 'Converted to WT',
+    'Transformé en OT': 'Converted to WO',
+    'DI transformée en OT': 'WR converted to WO',
+    'OT transformé en BT': 'WO converted to WT',
+    'DI validée': 'WR approved',
+    'BT clôturé': 'WT closed',
+    "Réinitialisez les filtres ou effacez l'historique pour repartir de zéro.": "Reset filters or clear history to start from scratch.",
+    "Aucun événement ou intervention ne correspond aux filtres sélectionnés.": "No events or actions match the filters you selected.",
+    'Sur': 'On',
+    'BT évalués': 'WT evaluated',
+    "Coût total": "total cost",
+    "Coût articles": "Cost items",
+    "Fiche détaillée du BT": "Detailed sheet of the BT",
+    'Créer BT': 'Create WO',
+    'Créer un BT depuis': 'Create a WO from',
+    "Vérifiez les informations de l'OT et complétez les détails du Bon de Travail.": "Check the WO information and complete the Work Order details.",
+    "SECTION 1 — Informations de l'OT": "SECTION 1 — Work Order Information",
+    'Numéro OT lié': 'Linked WO number',
+    'Titre / Réf DI': 'Title / WR ref',
+    'Date planifiée': 'Planned date',
+    'Durée estimée': 'Estimated duration',
+    'Instructions techniques': 'Technical instructions',
+    'Articles prévus': 'Planned articles',
+    'SECTION 2 — Champs à remplir pour le BT': 'SECTION 2 — Fields to fill for the WO',
+    'Numéro BT': 'WO number',
+    'Généré automatiquement (BT-XXX)': 'Auto-generated (WO-XXX)',
+    'Date de début': 'Start date',
+    'Date de fin': 'End date',
+    'Durée réelle': 'Actual duration',
+    'Travaux réalisés': 'Work performed',
+    'Détaillez les actions menées...': 'Detail the actions taken...',
+    'Cause de la panne': 'Failure cause',
+    'Usure normale': 'Normal wear',
+    'Défaut lubrification': 'Lubrication fault',
+    'Surcharge': 'Overload',
+    'Défaut matière': 'Material defect',
+    'Clôturé': 'Closed',
+    'Anomalies détectées': 'Detected anomalies',
+    'Ex: Fuite mineure constatée sur joint secondaire...': 'Ex: Minor leak detected on secondary seal...',
+    'Remarques éventuelles...': 'Optional remarks...',
+    'Photos après intervention': 'Post-intervention photos',
+    'Articles consommés': 'Consumed articles',
+    'Ajouter un article consommé': 'Add consumed article',
+    "Taux horaire de la ressource (DZD)": "Resource hourly rate (DZD)",
+    'Coût de sous-traitance (DZD)': 'Subcontracting cost (DZD)',
+    'Coût articles consommés': 'Consumed articles cost',
+    "Coût main d'œuvre": 'Labor cost',
+    'Coût total intervention': 'Total intervention cost',
+    'Confirmer et créer BT': 'Confirm and create WO',
+    "Articles prévus": "budgeted items",
     "Unité": "Unit",
     'Référence': 'Reference',
     'Nom du compteur': 'Counter name',
@@ -16102,7 +16214,7 @@ function refreshInventoryRow(row) {
     discrepancy !== 0 &&
     !observationsInput.value.trim()
   ) {
-    observationsInput.placeholder = "Justifier l'écart...";
+    observationsInput.placeholder = uiText("Justifier l'écart...");
   }
 
   return discrepancy;
@@ -17221,55 +17333,91 @@ ${buildMfDetailCard({
 }
 
 function renderStockMovementEdit(movement) {
-  const article = getArticleRecord("articles", movement.articleId);
+  const connectedUser = getConnectedUserProfile();
+  const connectedUserName = connectedUser
+    ? getAdministrationUserFullName(connectedUser)
+    : movement.user || "Utilisateur connecté";
+
   const bodyHtml = `
     <form class="org-form stock-form" data-stock-movement-edit-form data-stock-movement-id="${escapeHtml(movement.id)}">
       <div class="org-form-grid">
-        <div class="field-group field-group-wide">
-          <label>Type de mouvement</label>
-          <select name="type" disabled>
-            <option value="${movement.type}" selected>${getStockMovementTypeLabel(movement.type)}</option>
-          </select>
-        </div>
-        <div class="field-group field-group-wide">
-          <label>Article</label>
-          <select name="articleId" disabled>
-            ${buildStockArticleOptions(movement.articleId)}
-          </select>
-        </div>
         <div class="field-group">
-          <label>Quantité</label>
-          <input type="number" name="quantity" value="${escapeHtml(movement.quantity || 0)}" disabled />
+          <label>${uiText('Code mouvement')}</label>
+          <input type="text" name="id" value="${escapeHtml(movement.id)}" readonly />
         </div>
+
         <div class="field-group field-group-wide">
-          <label>Document lié</label>
+          <label>${uiText('Type de mouvement')}</label>
+          <select name="type" data-stock-edit-movement-type>
+            <option value="entry"${movement.type === "entry" ? " selected" : ""}>${uiText('Entrée')}</option>
+            <option value="exit"${movement.type === "exit" ? " selected" : ""}>${uiText('Sortie')}</option>
+            <option value="transfer"${movement.type === "transfer" ? " selected" : ""}>${uiText('Transfert')}</option>
+          </select>
+        </div>
+
+        <div class="field-group field-group-wide">
+          <label>${uiText('Article')}</label>
+          <select name="articleId" required>${buildStockArticleOptions(movement.articleId)}</select>
+        </div>
+
+        <div class="field-group">
+          <label>${uiText('Quantité')}</label>
+          <input type="number" name="quantity" min="1" step="1" value="${escapeHtml(String(movement.quantity || 1))}" required />
+        </div>
+
+        <div class="field-group" data-stock-entry-only="true"${movement.type !== "entry" ? ' hidden' : ''}>
+          <label>${uiText('Prix unitaire')}</label>
+          <input type="number" name="unitPrice" min="0" step="0.01" value="${escapeHtml(String(movement.unitPrice || ""))}" />
+        </div>
+
+        <div class="field-group" data-stock-source-location="true">
+  <label data-location-source-label>${uiText('Magasin de sortie')}</label>
+          <div class="stock-location-picker">
+            <select name="source">${buildStockLocationOptions(movement.source || "")}</select>
+          </div>
+        </div>
+
+        <div class="field-group" data-stock-destination-location="true">
+  <label data-location-dest-label>Magasin d'entrée</label>
+          <div class="stock-location-picker">
+            <select name="destination">${buildStockLocationOptions(movement.destination || "")}</select>
+          </div>
+        </div>
+
+        <div class="field-group field-group-wide">
+          <label>${uiText('Document lié')}</label>
           <input type="text" name="linkedDocument" value="${escapeHtml(movement.linkedDocument || "")}" />
         </div>
+
         <div class="field-group field-group-wide">
-          <label>Emplacement</label>
-          <input type="text" name="location" value="${escapeHtml(movement.location || movement.source || movement.destination || "")}" />
-        </div>
-        <div class="field-group field-group-wide">
-          <label>Utilisateur</label>
-          <input type="text" name="user" value="${escapeHtml(movement.user || "Utilisateur connecté")}" />
-        </div>
-        <div class="field-group field-group-wide">
-          <label>Observations</label>
+          <label>${uiText('Observations')}</label>
           <textarea name="observations" rows="4">${escapeTextarea(movement.observations || "")}</textarea>
         </div>
       </div>
       <div class="org-modal-actions">
-        <button class="btn btn-outline" type="button" data-stock-close="true">Annuler</button>
-        <button class="btn btn-primary" type="submit">Enregistrer</button>
+        <button class="btn btn-outline" type="button" data-stock-close="true">${uiText('Annuler')}</button>
+        <button class="btn btn-primary" type="submit">${uiText('Enregistrer')}</button>
       </div>
     </form>
   `;
 
   renderStockModal(
-    `Modifier ${movement.id}`,
-    `Modifier les informations de ${getStockMovementTypeLabel(movement.type).toLowerCase()}.`,
+    `${uiText('Modifier')} ${movement.id}`,
+    `${uiText('Modifier les informations du mouvement.')}`,
     bodyHtml,
   );
+
+  const typeSelect = overlayRootEl?.querySelector("[data-stock-edit-movement-type]");
+  const updateVisibility = () => {
+    const movementType = String(typeSelect?.value || "entry");
+    overlayRootEl?.querySelectorAll("[data-stock-entry-only='true']").forEach((el) => {
+      el.hidden = movementType !== "entry";
+    });
+  };
+  if (typeSelect) {
+    typeSelect.addEventListener("change", updateVisibility);
+    updateVisibility();
+  }
 
   overlayRootEl
     ?.querySelector("[data-stock-movement-edit-form]")
@@ -17284,16 +17432,20 @@ function renderStockMovementEdit(movement) {
 
       directory.movements[movementIndex] = {
         ...directory.movements[movementIndex],
+        type: String(formData.get("type") || movement.type),
+        articleId: String(formData.get("articleId") || movement.articleId),
+        quantity: Number(formData.get("quantity") || movement.quantity),
+        unitPrice: Number(formData.get("unitPrice") || 0),
+        source: String(formData.get("source") || "").trim(),
+        destination: String(formData.get("destination") || "").trim(),
         linkedDocument: String(formData.get("linkedDocument") || "").trim(),
-        location: String(formData.get("location") || "").trim(),
-        user: String(formData.get("user") || "").trim(),
         observations: String(formData.get("observations") || "").trim(),
       };
 
       saveStockDirectory(directory);
       if (overlayRootEl) overlayRootEl.innerHTML = "";
       renderStockPage(getCurrentStockSubpage());
-      showStockToast("Mouvement mis à jour.");
+      showStockToast(uiText("Mouvement mis à jour."));
     });
 }
 
@@ -17302,18 +17454,16 @@ function openStockMovementDetails(movement) {
 }
 
 function openStockMovementEdit(movement) {
-  renderStockMovementEdit(movement);
+  renderStockMovementCreateModal(movement);
 }
 
-function renderStockMovementCreateModal() {
+function renderStockMovementCreateModal(existingMovement = null) {
+  const isEdit = existingMovement !== null;
   const articleOptions = buildStockArticleOptions(
-    getArticleRecords("articles")[0]?.id || "",
+    isEdit ? existingMovement.articleId : (getArticleRecords("articles")[0]?.id || ""),
   );
-  const nextNumber = String(getStockDirectory().movements.length + 1).padStart(
-    3,
-    "0",
-  );
-  const defaultId = `MVT-${nextNumber}`;
+  const nextNumber = String(getStockDirectory().movements.length + 1).padStart(3, "0");
+  const defaultId = isEdit ? existingMovement.id : `MVT-${nextNumber}`;
   const nowLabel = formatStockDateTime(new Date());
   const connectedUser = getConnectedUserProfile();
   const connectedUserName = connectedUser
@@ -17323,6 +17473,7 @@ function renderStockMovementCreateModal() {
   const bodyHtml = `
     <form class="org-form stock-form" data-stock-movement-create-form>
       <div class="org-form-grid">
+
         <div class="field-group">
           <label>Code mouvement</label>
           <input type="text" name="id" value="${escapeHtml(defaultId)}" readonly />
@@ -17336,70 +17487,34 @@ function renderStockMovementCreateModal() {
             <option value="transfer">Transfert</option>
           </select>
         </div>
+
         <div class="field-group field-group-wide">
           <label>Article</label>
-          <select name="articleId" required>${articleOptions}</select>
+          <select name="articleId" data-stock-article-select required>${articleOptions}</select>
         </div>
+
         <div class="field-group">
           <label>Quantité</label>
-          <input type="number" name="quantity" min="1" step="1" required />
+          <input type="number" name="quantity" min="1" step="1" value="${isEdit ? escapeHtml(String(existingMovement.quantity || '')) : ''}" required />
         </div>
+
         <div class="field-group" data-stock-entry-only="true">
-          <label>Prix unitaire</label>
-          <input type="number" name="unitPrice" min="0" step="0.01" />
+          <label>${uiText('Prix unitaire')} <small style="color:var(--text-muted);font-weight:400">(${uiText('depuis fiche article')})</small></label>
+          <input type="number" name="unitPrice" min="0" step="0.01" data-stock-unit-price readonly style="background:var(--color-surface-offset,#f3f0ec);cursor:not-allowed" />
         </div>
-       <div class="field-group field-group-wide">
-  <label>Pièce jointe</label>
-  <input
-    type="file"
-    name="attachment"
-    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-  />
-</div>
 
-<div class="field-group">
-  <label>Magasin source</label>
+        <div class="field-group field-group-wide">
+          <label>${uiText('Pièce jointe')}</label>
+          <input type="file" name="attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" />
+        </div>
 
-  <div class="stock-location-picker">
-    <select name="source">
-      ${buildStockLocationOptions()}
-    </select>
-
-    <button
-      type="button"
-      class="stock-location-add-btn"
-      data-stock-create-location="true"
-      title="Créer un magasin"
-    >
-      <i class="fa-solid fa-plus"></i>
-    </button>
-  </div>
-</div>
-
-<div class="field-group">
-  <label>Magasin destination</label>
-
-  <div class="stock-location-picker">
-    <select name="destination">
-      ${buildStockLocationOptions()}
-    </select>
-
-    <button
-      type="button"
-      class="stock-location-add-btn"
-      data-stock-create-location="true"
-      title="Créer un magasin"
-    >
-      <i class="fa-solid fa-plus"></i>
-    </button>
-  </div>
-</div>
-
+        <div class="field-group" id="stock-location-wrapper"></div>
 
         <div class="field-group field-group-wide">
           <label>Observations</label>
-          <textarea name="observations" rows="4"></textarea>
+          <textarea name="observations" rows="4">${isEdit ? escapeTextarea(existingMovement.observations || '') : ''}</textarea>
         </div>
+
       </div>
       <div class="org-modal-actions">
         <button class="btn btn-outline" type="button" data-stock-close="true">Annuler</button>
@@ -17414,76 +17529,106 @@ function renderStockMovementCreateModal() {
     bodyHtml,
   );
 
-  const typeSelect = overlayRootEl?.querySelector(
-    "[data-stock-create-movement-type]",
-  );
+  const typeSelect = overlayRootEl?.querySelector("[data-stock-create-movement-type]");
+
   const updateVisibility = () => {
     const movementType = String(typeSelect?.value || "entry");
-    overlayRootEl
-      ?.querySelectorAll("[data-stock-entry-only='true']")
-      .forEach((element) => {
-        element.hidden = movementType !== "entry";
-      });
-    overlayRootEl
-      ?.querySelectorAll("[data-stock-exit-only='true']")
-      .forEach((element) => {
-        element.hidden = movementType !== "exit";
-      });
-    overlayRootEl
-      ?.querySelectorAll("[data-stock-transfer-only='true']")
-      .forEach((element) => {
-        element.hidden = movementType !== "transfer";
-      });
-    overlayRootEl
-      ?.querySelectorAll("[data-stock-entry-or-exit='true']")
-      .forEach((element) => {
-        element.hidden = !(movementType === "entry" || movementType === "exit");
-      });
-    overlayRootEl
-      ?.querySelectorAll("[data-stock-source-location='true']")
-      .forEach((element) => {
-        element.hidden = !(
-          movementType === "exit" || movementType === "transfer"
-        );
-      });
-    overlayRootEl
-      ?.querySelectorAll("[data-stock-destination-location='true']")
-      .forEach((element) => {
-        element.hidden = !(
-          movementType === "entry" || movementType === "transfer"
-        );
-      });
+
+    overlayRootEl?.querySelectorAll("[data-stock-entry-only='true']")
+      .forEach((el) => { el.hidden = movementType !== "entry"; });
+
+    overlayRootEl?.querySelectorAll("[data-stock-exit-only='true']")
+      .forEach((el) => { el.hidden = movementType !== "exit"; });
+
+    overlayRootEl?.querySelectorAll("[data-stock-transfer-only='true']")
+      .forEach((el) => { el.hidden = movementType !== "transfer"; });
+
+    overlayRootEl?.querySelectorAll("[data-stock-entry-or-exit='true']")
+      .forEach((el) => { el.hidden = !(movementType === "entry" || movementType === "exit"); });
+
+    overlayRootEl?.querySelectorAll("[data-stock-source-location='true']")
+      .forEach((el) => { el.hidden = !(movementType === "exit" || movementType === "transfer"); });
+
+    overlayRootEl?.querySelectorAll("[data-stock-destination-location='true']")
+      .forEach((el) => { el.hidden = !(movementType === "entry" || movementType === "transfer"); });
 
     const linkedInput = overlayRootEl?.querySelector("[name='linkedDocument']");
     if (linkedInput) {
-      if (movementType === "entry")
-        linkedInput.placeholder = "BC (bon de commande / réception)";
-      else if (movementType === "exit")
-        linkedInput.placeholder = "BT (bon de sortie)";
+      if (movementType === "entry") linkedInput.placeholder = "BC (bon de commande / réception)";
+      else if (movementType === "exit") linkedInput.placeholder = "BT (bon de sortie)";
       else linkedInput.placeholder = "";
+    }
+
+    const wrapper = overlayRootEl?.querySelector("#stock-location-wrapper");
+    if (wrapper) {
+      if (movementType === "entry") {
+        wrapper.innerHTML = `
+          <label>${uiText("Magasin d'entrée")}</label>
+          <div class="stock-location-picker">
+            <select name="destination">${buildStockLocationOptions()}</select>
+            <button type="button" class="stock-location-add-btn" data-stock-create-location="true" title="${uiText('Créer un magasin')}">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>`;
+      } else if (movementType === "exit") {
+        wrapper.innerHTML = `
+          <label>${uiText("Magasin de sortie")}</label>
+          <div class="stock-location-picker">
+            <select name="source">${buildStockLocationOptions()}</select>
+            <button type="button" class="stock-location-add-btn" data-stock-create-location="true" title="${uiText('Créer un magasin')}">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>`;
+      } else if (movementType === "transfer") {
+        wrapper.innerHTML = `
+          <label>${uiText("De magasin")}</label>
+          <div class="stock-location-picker">
+            <select name="source">${buildStockLocationOptions()}</select>
+            <button type="button" class="stock-location-add-btn" data-stock-create-location="true" title="${uiText('Créer un magasin')}">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+          <label style="margin-top:var(--space-4)">${uiText("À magasin")}</label>
+          <div class="stock-location-picker">
+            <select name="destination">${buildStockLocationOptions()}</select>
+            <button type="button" class="stock-location-add-btn" data-stock-create-location="true" title="${uiText('Créer un magasin')}">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>`;
+      }
+
+      wrapper.querySelectorAll("[data-stock-create-location='true']").forEach((btn) => {
+        btn.addEventListener("click", () => openStockLocationCreateModal());
+      });
     }
   };
 
   function buildStockLocationOptions(selected = "") {
     const directory = getStockDirectory();
-
     return (directory.locations || [])
-      .map(
-        (location) => `
-        <option value="${location.id}"
-          ${location.id === selected ? "selected" : ""}>
+      .map((location) => `
+        <option value="${location.id}" ${location.id === selected ? "selected" : ""}>
           ${location.code} - ${location.name}
         </option>
-      `,
-      )
+      `)
       .join("");
   }
 
   typeSelect?.addEventListener("change", updateVisibility);
   updateVisibility();
 
-  overlayRootEl
-    ?.querySelectorAll("[data-stock-create-location='true']")
+  const articleSelect = overlayRootEl?.querySelector("[data-stock-article-select]");
+  const unitPriceInput = overlayRootEl?.querySelector("[data-stock-unit-price]");
+  const fillUnitPrice = () => {
+    if (!articleSelect || !unitPriceInput) return;
+    const art = getArticleRecord("articles", articleSelect.value);
+    const price = Number(art?.price ?? art?.unitPrice ?? 0);
+    unitPriceInput.value = price > 0 ? price : "";
+  };
+  articleSelect?.addEventListener("change", fillUnitPrice);
+  fillUnitPrice();
+
+  overlayRootEl?.querySelectorAll("[data-stock-create-location='true']")
     .forEach((button) => {
       button.addEventListener("click", function () {
         openStockLocationCreateModal();
@@ -17511,45 +17656,23 @@ function renderStockMovementCreateModal() {
         type,
         articleId,
         quantity,
-
         observations: String(formData.get("observations") || "").trim(),
-
         attachmentName: attachment && attachment.name ? attachment.name : "",
-
         createdAt,
       };
 
       if (type === "entry") {
-        const source =
-          String(formData.get("source") || "").trim() ||
-          buildStockLocationLabel(stockDefaultLocation);
+        const source = String(formData.get("source") || "").trim() || buildStockLocationLabel(stockDefaultLocation);
         const unitPrice = Number(formData.get("unitPrice") || 0);
-        const destinationRaw =
-          String(formData.get("destination") || "").trim();
+        const destinationRaw = String(formData.get("destination") || "").trim();
         const aggregate = getStockTotalsForArticle(articleId);
-        const nextPmp = calculateStockPmp(
-          aggregate.currentQuantity,
-          aggregate.pmp,
-          quantity,
-          unitPrice,
-        );
-
+        const nextPmp = calculateStockPmp(aggregate.currentQuantity, aggregate.pmp, quantity, unitPrice);
         const allRecordsForArticle = getStockRecordsForArticle(articleId);
         const existingRecord =
-          (destinationRaw
-            ? allRecordsForArticle.find(
-              (record) => record.locationLabel === destinationRaw,
-            )
-            : null) ||
-          allRecordsForArticle[0] ||
-          null;
-
-        const destination = existingRecord
-          ? existingRecord.locationLabel
-          : destinationRaw || buildStockLocationLabel(stockDefaultLocation);
-
+          (destinationRaw ? allRecordsForArticle.find((record) => record.locationLabel === destinationRaw) : null) ||
+          allRecordsForArticle[0] || null;
+        const destination = existingRecord ? existingRecord.locationLabel : destinationRaw || buildStockLocationLabel(stockDefaultLocation);
         const previousQuantity = Number(existingRecord?.currentQuantity ?? 0);
-
         upsertStockRecord(articleId, stockDefaultLocation, {
           currentQuantity: previousQuantity + quantity,
           pmp: nextPmp,
@@ -17559,38 +17682,24 @@ function renderStockMovementCreateModal() {
         });
         updateAllStockRecordsForArticle(articleId, { pmp: nextPmp });
         syncArticleQuantity(articleId, aggregate.currentQuantity + quantity);
-
         movement.unitPrice = unitPrice;
         movement.source = source;
         movement.location = destination;
         movement.destination = destination;
         movement.pmp = nextPmp;
         movement.resultingQuantity = aggregate.currentQuantity + quantity;
-        movement.resultingValue =
-          (aggregate.currentQuantity + quantity) * nextPmp;
+        movement.resultingValue = (aggregate.currentQuantity + quantity) * nextPmp;
       }
 
       else if (type === "exit") {
-        const destination =
-          String(formData.get("destination") || "").trim() ||
-          buildStockLocationLabel(stockDefaultLocation);
-        const source =
-          String(formData.get("source") || "").trim() ||
-          buildStockLocationLabel(stockDefaultLocation);
+        const destination = String(formData.get("destination") || "").trim() || buildStockLocationLabel(stockDefaultLocation);
+        const source = String(formData.get("source") || "").trim() || buildStockLocationLabel(stockDefaultLocation);
         const aggregate = getStockTotalsForArticle(articleId);
         const sourceRecord =
-          getStockRecordsForArticle(articleId).find(
-            (record) => record.locationLabel === source,
-          ) ||
-          getStockRecordsForArticle(articleId)[0] ||
-          null;
-        if (
-          !sourceRecord ||
-          quantity > (Number(sourceRecord.currentQuantity) || 0)
-        )
-          return;
-        const nextQuantity =
-          (Number(sourceRecord.currentQuantity) || 0) - quantity;
+          getStockRecordsForArticle(articleId).find((record) => record.locationLabel === source) ||
+          getStockRecordsForArticle(articleId)[0] || null;
+        if (!sourceRecord || quantity > (Number(sourceRecord.currentQuantity) || 0)) return;
+        const nextQuantity = (Number(sourceRecord.currentQuantity) || 0) - quantity;
         if (nextQuantity <= 0) {
           removeStockRecord(articleId, sourceRecord.locationKey);
         } else {
@@ -17607,34 +17716,21 @@ function renderStockMovementCreateModal() {
         movement.destination = destination;
         movement.pmp = aggregate.pmp;
         movement.resultingQuantity = aggregate.currentQuantity - quantity;
-        movement.resultingValue =
-          (aggregate.currentQuantity - quantity) * aggregate.pmp;
-      } else if (type === "transfer") {
-        const source =
-          String(formData.get("source") || "").trim() ||
-          buildStockLocationLabel(stockDefaultLocation);
-        const destination =
-          String(formData.get("destination") || "").trim() ||
-          buildStockLocationLabel(stockDefaultLocation);
+        movement.resultingValue = (aggregate.currentQuantity - quantity) * aggregate.pmp;
+      }
+
+      else if (type === "transfer") {
+        const source = String(formData.get("source") || "").trim() || buildStockLocationLabel(stockDefaultLocation);
+        const destination = String(formData.get("destination") || "").trim() || buildStockLocationLabel(stockDefaultLocation);
         const aggregate = getStockTotalsForArticle(articleId);
         const sourceRecord =
-          getStockRecordsForArticle(articleId).find(
-            (record) => record.locationLabel === source,
-          ) ||
-          getStockRecordsForArticle(articleId)[0] ||
-          null;
-        if (
-          !sourceRecord ||
-          quantity > (Number(sourceRecord.currentQuantity) || 0)
-        )
-          uiAlert(
-            "Impossible d'effectuer le transfert : la quantité demandée dépasse le stock disponible.",
-            "error"
-          );
-        return;
-        return;
-        const nextQuantity =
-          (Number(sourceRecord.currentQuantity) || 0) - quantity;
+          getStockRecordsForArticle(articleId).find((record) => record.locationLabel === source) ||
+          getStockRecordsForArticle(articleId)[0] || null;
+        if (!sourceRecord || quantity > (Number(sourceRecord.currentQuantity) || 0)) {
+          uiAlert("Impossible d'effectuer le transfert : la quantité demandée dépasse le stock disponible.", "error");
+          return;
+        }
+        const nextQuantity = (Number(sourceRecord.currentQuantity) || 0) - quantity;
         if (nextQuantity <= 0) {
           removeStockRecord(articleId, sourceRecord.locationKey);
         } else {
@@ -17648,22 +17744,10 @@ function renderStockMovementCreateModal() {
         }
         upsertStockRecord(
           articleId,
-          {
-            warehouse: stockDefaultLocation.warehouse,
-            aisle: stockDefaultLocation.aisle,
-            shelf: stockDefaultLocation.shelf,
-            bin: stockDefaultLocation.bin,
-          },
-          {
-            currentQuantity: quantity,
-            pmp: aggregate.pmp,
-            locationLabel: destination,
-            locationKey: destination,
-            updatedAt: createdAt,
-          },
+          { warehouse: stockDefaultLocation.warehouse, aisle: stockDefaultLocation.aisle, shelf: stockDefaultLocation.shelf, bin: stockDefaultLocation.bin },
+          { currentQuantity: quantity, pmp: aggregate.pmp, locationLabel: destination, locationKey: destination, updatedAt: createdAt },
         );
         syncArticleQuantity(articleId, aggregate.currentQuantity);
-
         movement.source = source;
         movement.destination = destination;
         movement.pmp = aggregate.pmp;
@@ -18016,7 +18100,7 @@ function buildStockInventoryContent() {
   const inventoryOptions = inventories
     .map(
       (inventory) =>
-        `<option value="${escapeHtml(inventory.id)}"${inventory.id === selectedInventory.id ? " selected" : ""}>${escapeHtml(inventory.id)} — ${escapeHtml(inventory.type)} (${escapeHtml(inventory.status)})</option>`,
+        `<option value="${escapeHtml(inventory.id)}"${inventory.id === selectedInventory.id ? " selected" : ""}>${escapeHtml(inventory.id)} — ${uiText(inventory.type)} (${uiText(inventory.status)})</option>`,
     )
     .join("");
 
@@ -18188,37 +18272,37 @@ function buildStockHistoryContent() {
           <div class="card-title"><i class="fa-solid fa-filter"></i> Filtres de consultation</div>
           <span class="status-badge badge-gray">Lecture seule</span>
         </div>
-        <div class="card-body">
+                <div class="card-body">
           <div class="stock-filter-grid">
             <div class="field-group">
-              <label>Par article</label>
+              <label>${uiText('Par article')}</label>
               <select data-stock-history-filter="articleId">${articleOptions}</select>
             </div>
             <div class="field-group">
-              <label>Par type de mouvement</label>
+              <label>${uiText('Par type de mouvement')}</label>
               <select data-stock-history-filter="type">
-                <option value="">Tous les types</option>
-                <option value="entry"${stockHistoryFilterState.type === "entry" ? " selected" : ""}>Entrée</option>
-                <option value="exit"${stockHistoryFilterState.type === "exit" ? " selected" : ""}>Sortie</option>
-                <option value="transfer"${stockHistoryFilterState.type === "transfer" ? " selected" : ""}>Transfert</option>
-                <option value="inventory"${stockHistoryFilterState.type === "inventory" ? " selected" : ""}>Inventaire</option>
+                <option value="">${uiText('Tous les types')}</option>
+                <option value="entry"${stockHistoryFilterState.type === "entry" ? " selected" : ""}>${uiText('Entrée')}</option>
+                <option value="exit"${stockHistoryFilterState.type === "exit" ? " selected" : ""}>${uiText('Sortie')}</option>
+                <option value="transfer"${stockHistoryFilterState.type === "transfer" ? " selected" : ""}>${uiText('Transfert')}</option>
+                <option value="inventory"${stockHistoryFilterState.type === "inventory" ? " selected" : ""}>${uiText('Inventaire')}</option>
               </select>
             </div>
             <div class="field-group">
-              <label>Date du</label>
+              <label>${uiText('Par utilisateur')}</label>
+              <select data-stock-history-filter="user">${userOptions}</select>
+            </div>
+            <div class="field-group">
+              <label>${uiText('Date du')}</label>
               <input type="date" value="${stockHistoryFilterState.from}" data-stock-history-filter="from" />
             </div>
             <div class="field-group">
-              <label>Au</label>
+              <label>${uiText('Au')}</label>
               <input type="date" value="${stockHistoryFilterState.to}" data-stock-history-filter="to" />
             </div>
             <div class="field-group">
-              <label>Par utilisateur</label>
-              <select data-stock-history-filter="user">${userOptions}</select>
-            </div>
-            <div class="field-group field-group-wide">
-              <label>Par document lié</label>
-              <input type="text" placeholder="BT / BC / inventaire..." data-stock-history-filter="linkedDocument" value="${escapeHtml(stockHistoryFilterState.linkedDocument || "")}" />
+              <label>${uiText('Par document lié')}</label>
+              <input type="text" placeholder="${uiText('BT / BC / inventaire...')}" data-stock-history-filter="linkedDocument" value="${escapeHtml(stockHistoryFilterState.linkedDocument || "")}" />
             </div>
           </div>
         </div>
@@ -18227,9 +18311,10 @@ function buildStockHistoryContent() {
       <div class="card stock-card">
         <div class="card-head">
           <div class="card-title"><i class="fa-solid fa-list"></i> Tous les mouvements tracés</div>
-          <div class="stock-history-actions">
+                    <div class="stock-history-actions">
             <button class="btn btn-outline" type="button" disabled><i class="fa-solid fa-file-excel"></i><span>Excel</span></button>
             <button class="btn btn-outline" type="button" disabled><i class="fa-solid fa-file-pdf"></i><span>PDF</span></button>
+            <button class="btn btn-danger" type="button" data-clear-stock-history><i class="fa-solid fa-trash"></i><span>${uiText('Effacer historique')}</span></button>
           </div>
         </div>
         <div class="card-body">
@@ -19739,6 +19824,28 @@ function attachStockLifecycleHandlers(activeSubpageKey) {
           control.dispatchEvent(new Event("input", { bubbles: true }));
         });
       });
+  }
+
+  const clearHistoryBtn = pageContentEl.querySelector("[data-clear-stock-history]");
+  if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener("click", function () {
+      const confirmed = window.confirm(
+        uiText("Êtes-vous sûr de vouloir effacer tout l'historique des mouvements ? Cette action est irréversible.")
+      );
+      if (!confirmed) return;
+      const directory = getStockDirectory();
+      directory.movements = [];
+      saveStockDirectory(directory);
+      stockHistoryFilterState = {
+        articleId: "",
+        type: "",
+        from: "",
+        to: "",
+        user: "",
+        linkedDocument: "",
+      };
+      renderStockPage(getCurrentStockSubpage());
+    });
   }
 
   const stockResultsSelector = pageContentEl.querySelector(
@@ -21745,7 +21852,7 @@ function renderAchatsReceptionsPage(state, activeSubpageKey) {
               <td>${escapeHtml(rec.articleLabel || "-")}</td>
               <td>${formatStockNumber(rec.receivedQty || 0)}</td>
               <td>${formatStockNumber(rec.missingQty || 0)}</td>
-              <td><span class="status-badge ${getAchatsStatusBadgeClass(rec.status)}">${escapeHtml(rec.status || "-")}</span></td>
+              <td><span class="status-badge ${rec.receptionState === 'Conforme' ? 'badge-success' : rec.receptionState ? 'badge-danger' : 'badge-gray'}">${escapeHtml(rec.receptionState || "-")}</span></td>
               <td>${buildAchatsListActions("receptions", rec.id)}</td>
             </tr>
           `,
@@ -21867,7 +21974,7 @@ function buildAchatsHistoryRows(state) {
     date: item.createdAt,
     article: item.articleLabel || "-",
     supplier: item.supplierName || "-",
-    status: item.status || "-",
+    status: item.receptionState || "-",
     amount: 0,
   }));
 
@@ -21952,7 +22059,7 @@ function renderAchatsHistoryPage(state, activeSubpageKey) {
               <td class="muted">${formatAchatsDate(row.date)}</td>
               <td>${escapeHtml(row.article)}</td>
               <td>${escapeHtml(row.supplier)}</td>
-              <td><span class="status-badge ${getAchatsStatusBadgeClass(row.status)}">${escapeHtml(row.status)}</span></td>
+              <td><span class="status-badge ${row.type === 'REC' ? (row.status === 'Conforme' ? 'badge-success' : row.status !== '-' ? 'badge-danger' : 'badge-gray') : getAchatsStatusBadgeClass(row.status)}">${escapeHtml(row.status)}</span></td>
               <td>${row.type === "BC" ? formatAchatsMoney(row.amount) : "-"}</td>
             </tr>
           `,
@@ -21988,65 +22095,56 @@ function renderAchatsHistoryPage(state, activeSubpageKey) {
       </div>
     </div>
 
-    <div class="card">
+    
+            <form class="card stock-card" data-ach-history-filter="true">
       <div class="card-head">
-        <div class="card-title"><i class="fa-solid fa-sliders"></i> Filtres</div>
+        <div class="card-title"><i class="fa-solid fa-filter"></i> ${uiText('Filtres')}</div>
+        <button class="btn btn-outline btn-sm" type="button" data-ach-history-reset="true">
+          <i class="fa-solid fa-rotate-left"></i> ${uiText('Réinitialiser')}
+        </button>
       </div>
       <div class="card-body">
-        <form class="org-form" data-ach-history-filter="true">
-          <div class="org-form-grid">
-            <div class="field-group">
-              <label for="historyArticle">Par article</label>
-              <input id="historyArticle" name="article" type="text" value="${escapeHtml(achatsHistoryFilterState.article)}" placeholder="Nom ou référence article" />
-            </div>
-            <div class="field-group">
-              <label for="historySupplier">Par fournisseur</label>
-              <input id="historySupplier" name="supplier" type="text" value="${escapeHtml(achatsHistoryFilterState.supplier)}" placeholder="Fournisseur" />
-            </div>
-            <div class="field-group">
-              <label for="historyDocType">Type document</label>
-              <select id="historyDocType" name="documentType">
-                <option value="">Tous</option>
-                <option value="DA" ${achatsHistoryFilterState.documentType === "DA" ? "selected" : ""}>DA</option>
-                <option value="BC" ${achatsHistoryFilterState.documentType === "BC" ? "selected" : ""}>BC</option>
-                <option value="REC" ${achatsHistoryFilterState.documentType === "REC" ? "selected" : ""}>REC</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label for="historyStatus">Statut</label>
-              <select id="historyStatus" name="status">
-                <option value="">Tous</option>
-                ${uniqueStatuses
-      .map(
-        (status) =>
-          `<option value="${escapeHtml(status)}" ${achatsHistoryFilterState.status === status ? "selected" : ""}>${escapeHtml(status)}</option>`,
-      )
-      .join("")}
-              </select>
-            </div>
-            <div class="field-group">
-              <label for="historyFrom">Du</label>
-              <input id="historyFrom" name="from" type="date" value="${escapeHtml(achatsHistoryFilterState.from)}" />
-            </div>
-            <div class="field-group">
-              <label for="historyTo">Au</label>
-              <input id="historyTo" name="to" type="date" value="${escapeHtml(achatsHistoryFilterState.to)}" />
-            </div>
-            <div class="field-group">
-              <label for="historyMinAmount">Montant minimum (BC)</label>
-              <input id="historyMinAmount" name="minAmount" type="number" min="0" step="0.01" value="${escapeHtml(achatsHistoryFilterState.minAmount)}" />
-            </div>
+        <div class="stock-filter-grid">
+          <div class="field-group">
+            <label for="historyArticle">${uiText('Par article')}</label>
+            <input id="historyArticle" name="article" type="text" value="${escapeHtml(achatsHistoryFilterState.article)}" placeholder="${uiText('Nom ou référence article')}" />
           </div>
-          <div class="org-modal-actions">
-            <button class="btn btn-outline" type="button" data-ach-history-reset="true">Réinitialiser</button>
-            <button class="btn btn-primary" type="submit">
-              <i class="fa-solid fa-filter"></i>
-              <span>Appliquer les filtres</span>
-            </button>
+          <div class="field-group">
+            <label for="historySupplier">${uiText('Par fournisseur')}</label>
+            <input id="historySupplier" name="supplier" type="text" value="${escapeHtml(achatsHistoryFilterState.supplier)}" placeholder="${uiText('Fournisseur')}" />
           </div>
-        </form>
+          <div class="field-group">
+            <label for="historyDocType">${uiText('Type document')}</label>
+            <select id="historyDocType" name="documentType">
+              <option value="">${uiText('Tous')}</option>
+              <option value="DA" ${achatsHistoryFilterState.documentType === "DA" ? "selected" : ""}>DA</option>
+              <option value="BC" ${achatsHistoryFilterState.documentType === "BC" ? "selected" : ""}>BC</option>
+              <option value="REC" ${achatsHistoryFilterState.documentType === "REC" ? "selected" : ""}>REC</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="historyStatus">${uiText('Statut')}</label>
+            <select id="historyStatus" name="status">
+              <option value="">${uiText('Tous')}</option>
+              ${uniqueStatuses.map((status) => `<option value="${escapeHtml(status)}" ${achatsHistoryFilterState.status === status ? "selected" : ""}>${escapeHtml(status)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="historyFrom">${uiText('Du')}</label>
+            <input id="historyFrom" name="from" type="date" value="${escapeHtml(achatsHistoryFilterState.from)}" />
+          </div>
+          <div class="field-group">
+            <label for="historyTo">${uiText('Au')}</label>
+            <input id="historyTo" name="to" type="date" value="${escapeHtml(achatsHistoryFilterState.to)}" />
+          </div>
+          <div class="field-group">
+            <label for="historyMinAmount">${uiText('Montant minimum (BC)')}</label>
+            <input id="historyMinAmount" name="minAmount" type="number" min="0" step="0.01" value="${escapeHtml(achatsHistoryFilterState.minAmount)}" />
+          </div>
+        </div>
       </div>
-    </div>
+    </form>
+
 
     <div class="card org-list-card">
       <div class="card-head">
@@ -23450,20 +23548,27 @@ function attachAchatsPageHandlers(activeSubpageKey, state) {
   const historyFilterForm = pageContentEl.querySelector(
     "[data-ach-history-filter='true']",
   );
-  historyFilterForm?.addEventListener("submit", function (event) {
-    event.preventDefault();
-    const formData = new FormData(historyFilterForm);
-    achatsHistoryFilterState = {
-      article: String(formData.get("article") || "").trim(),
-      supplier: String(formData.get("supplier") || "").trim(),
-      documentType: String(formData.get("documentType") || ""),
-      status: String(formData.get("status") || ""),
-      from: String(formData.get("from") || ""),
-      to: String(formData.get("to") || ""),
-      minAmount: String(formData.get("minAmount") || "").trim(),
+
+  if (historyFilterForm) {
+    const applyAchatsFilter = () => {
+      const formData = new FormData(historyFilterForm);
+      achatsHistoryFilterState = {
+        article: String(formData.get("article") || "").trim(),
+        supplier: String(formData.get("supplier") || "").trim(),
+        documentType: String(formData.get("documentType") || ""),
+        status: String(formData.get("status") || ""),
+        from: String(formData.get("from") || ""),
+        to: String(formData.get("to") || ""),
+        minAmount: String(formData.get("minAmount") || "").trim(),
+      };
+      renderAchatsPage("historique");
     };
-    renderAchatsPage("historique");
-  });
+
+    historyFilterForm.querySelectorAll("input, select").forEach((control) => {
+      control.addEventListener("input", applyAchatsFilter);
+      control.addEventListener("change", applyAchatsFilter);
+    });
+  }
 
   pageContentEl
     .querySelector("[data-ach-history-reset='true']")
@@ -23479,7 +23584,6 @@ function attachAchatsPageHandlers(activeSubpageKey, state) {
       };
       renderAchatsPage("historique");
     });
-
   pageActionsEl
     ?.querySelector("[data-ach-create]")
     ?.addEventListener("click", function () {
@@ -24158,6 +24262,13 @@ function bindInterventionsModalHandlers() {
         if (index >= 0) directory.dis[index] = nextRecord;
       } else {
         directory.dis.unshift(nextRecord);
+        appendInterventionHistory(directory, {
+          action: "di_created",
+          recordType: "DI",
+          recordRef: nextRecord.ref,
+          linkedRef: "",
+          message: `${nextRecord.ref}`,
+        });
       }
 
       saveInterventionsState(directory);
@@ -24251,10 +24362,11 @@ function bindInterventionsModalHandlers() {
       di.status = "Transformée en OT";
       directory.ots.unshift(ot);
       appendInterventionHistory(directory, {
-        action: "DI transformée en OT",
+        action: "di_to_ot",           // clé neutre, pas de texte FR
         recordType: "DI",
         recordRef: di.ref,
-        message: `${di.ref} transformée en ${ot.ref}`,
+        linkedRef: ot.ref,            // stocker la ref liée séparément
+        message: `${di.ref} → ${ot.ref}`,  // message universel sans mots FR
       });
       saveInterventionsState(directory);
       closeInterventionsModal();
@@ -24484,10 +24596,11 @@ function bindInterventionsModalHandlers() {
       ot.status = "Transformé en BT";
       directory.bts.unshift(bt);
       appendInterventionHistory(directory, {
-        action: "OT transformé en BT",
+        action: "ot_to_bt",
         recordType: "OT",
         recordRef: ot.ref,
-        message: `${ot.ref} transformé en ${bt.ref}`,
+        linkedRef: bt.ref,
+        message: `${ot.ref} → ${bt.ref}`,
       });
       saveInterventionsState(directory);
       closeInterventionsModal();
@@ -25231,7 +25344,7 @@ function renderBtSection(directory) {
           <div class="kpi-icon success"><i class="fa-solid fa-calculator"></i></div>
         </div>
         <div class="kpi-value">${formatterDzd.format(avgCost)}</div>
-        <div class="kpi-footer">Sur ${countCost} BT évalués</div>
+        <div class="kpi-footer">${uiText('Sur')} ${countCost} ${uiText('BT évalués')}</div>
       </div>
       <div class="kpi-card dashboard-kpi-card warning">
         <div class="kpi-header">
@@ -25271,6 +25384,15 @@ function renderBtSection(directory) {
   `;
 }
 
+function translateRefPrefix(ref) {
+  if (!ref) return ref;
+  if (getAdministrationLanguageKey() !== "en") return ref;
+  return ref
+    .replace(/^DI-/, "WR-")
+    .replace(/^OT-/, "WO-")
+    .replace(/^BT-/, "WT-");
+}
+
 function buildInterventionsHistoryEntries(directory) {
   const entries = [];
   (Array.isArray(directory.history) ? directory.history : []).forEach(
@@ -25278,10 +25400,10 @@ function buildInterventionsHistoryEntries(directory) {
       entries.push({
         id: event.id,
         date: event.createdAt,
-        ref: event.recordRef || event.action || "Événement",
-        type: event.recordType || "Historique",
-        label: event.message || event.action || "Transition",
-        meta: event.recordType || "Journal",
+        ref: event.recordRef || event.action || uiText("Événement"),
+        type: event.recordType || uiText("Historique"),
+        label: translateHistoryAction(event),
+        meta: event.recordType || uiText("Journal"),
         kind: "event",
         equipment: "",
         technician: "",
@@ -25297,12 +25419,22 @@ function buildInterventionsHistoryEntries(directory) {
       : null;
     const technician = getOrganizationUser(di.requesterId);
 
+    const diStatusNorm = (di.status || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let diLabel;
+    if (diStatusNorm.includes("transforme") || diStatusNorm.includes("ot")) {
+      diLabel = uiText("DI transformée en OT");
+    } else if (diStatusNorm.includes("valid")) {
+      diLabel = uiText("DI validée");
+    } else {
+      diLabel = uiText("DI créée");
+    }
+
     entries.push({
       id: di.id,
       date: di.createdAt,
       ref: di.ref,
       type: "DI",
-      label: di.title,
+      label: `${di.ref} — ${diLabel}`,
       meta: di.status,
       kind: "record",
       equipment:
@@ -25325,12 +25457,20 @@ function buildInterventionsHistoryEntries(directory) {
       .map((user) => user.name)
       .join(", ");
 
+    const otStatusNorm = (ot.status || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let otLabel;
+    if (otStatusNorm.includes("transforme") || otStatusNorm.includes("bt")) {
+      otLabel = uiText("OT transformé en BT");
+    } else {
+      otLabel = uiText("OT créé");
+    }
+
     entries.push({
       id: ot.id,
       date: ot.createdAt || ot.plannedDate,
       ref: ot.ref,
       type: "OT",
-      label: ot.equipmentLabel || ot.diRef || "Ordre",
+      label: `${ot.ref} — ${otLabel}`,
       meta: ot.status,
       kind: "record",
       equipment:
@@ -25344,12 +25484,20 @@ function buildInterventionsHistoryEntries(directory) {
   });
 
   directory.bts.forEach((bt) => {
+    const btStatusNorm = (bt.status || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let btLabel;
+    if (btStatusNorm.includes("clot") || btStatusNorm.includes("valid") || btStatusNorm.includes("termin")) {
+      btLabel = uiText("BT clôturé");
+    } else {
+      btLabel = uiText("BT créé");
+    }
+
     entries.push({
       id: bt.id,
       date: bt.endDate || bt.startDate || bt.createdAt,
       ref: bt.ref,
       type: "BT",
-      label: bt.otRef || "Bon",
+      label: `${bt.ref} — ${btLabel}`,
       meta: bt.status,
       kind: "record",
       equipment: bt.equipmentLabel || "",
@@ -25427,13 +25575,13 @@ function renderHistorySection(directory) {
       .map(
         (entry) => `
             <tr>
-              <td><strong>${escapeHtml(entry.ref)}</strong></td>
-              <td>${escapeHtml(entry.type)}</td>
+              <td><strong>${escapeHtml(translateRefPrefix(entry.ref))}</strong></td>
+              <td>${escapeHtml(uiText(entry.type) || entry.type)}</td>
               <td>${escapeHtml(entry.equipment || "-")}</td>
               <td>${escapeHtml(entry.technician || "-")}</td>
               <td>${escapeHtml(entry.status || "-")}</td>
               <td>${escapeHtml(entry.priority || "-")}</td>
-              <td>${escapeHtml(entry.label)}</td>
+              <td>${escapeHtml(uiText(entry.label) || entry.label)}</td>
               <td class="muted">${escapeHtml(
           entry.date
             ? new Date(entry.date).toLocaleString(
@@ -28117,10 +28265,10 @@ function validateInterventionDi(diId) {
 
   di.status = "Validée";
   appendInterventionHistory(directory, {
-    action: "DI validée",
+    action: "di_validated",
     recordType: "DI",
     recordRef: di.ref,
-    message: `${di.ref} validée`,
+    message: `${di.ref}`,   // juste la ref, sans mot FR
   });
   saveInterventionsState(directory);
   setInterventionsModalState({
@@ -28334,7 +28482,6 @@ function buildInterventionTransformOtModal(di) {
                 <option value="Corrective">${uiText('Corrective')}</option>
                 <option value="Préventive">${uiText('Préventive')}</option>
                 <option value="Prédictive">${uiText('Prédictive')}</option>
-                <option value="Réglementaire">${uiText('Réglementaire')}</option>
               </select>
             </div>
             <div class="field-group">
@@ -28452,227 +28599,192 @@ function buildInterventionTransformBtModal(ot) {
     <!-- ══ HEADER FIXE ══ -->
     <div class="org-modal-head" style="flex-shrink:0;">
       <div>
-        <div class="org-modal-kicker">Créer BT</div>
-        <h3 id="intTransformBtTitle">Créer un BT depuis ${escapeHtml(ot.ref || "OT")}</h3>
-        <p>Vérifiez les informations de l'OT et complétez les détails du Bon de Travail.</p>
+        <div class="org-modal-kicker">${uiText('Créer BT')}</div>
+        <h3 id="intTransformBtTitle">${uiText('Créer un BT depuis')} ${escapeHtml(ot.ref || "OT")}</h3>
+        <p>${uiText("Vérifiez les informations de l'OT et complétez les détails du Bon de Travail.")}</p>
       </div>
-      <button class="org-modal-close" type="button" data-int-close="true" aria-label="Fermer">
+      <button class="org-modal-close" type="button" data-int-close="true" aria-label="${uiText('Fermer')}">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
     <!-- ══ FORM ══ -->
     <form class="org-form" data-int-transform-bt-form data-ot-id="${ot.id}"
-      style="
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-      ">
+      style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
 
       <!-- ══ DEUX BLOCS CÔTE À CÔTE ══ -->
-      <div style="
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0;
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-      ">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;flex:1;min-height:0;overflow:hidden;">
 
         <!-- ▌BLOC 1 — SECTION 1 scrollable ▌-->
-        <div style="
-          overflow-y: auto;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          padding: 1.5rem;
-          border-right: 1px solid var(--org-border, #e5e7eb);
-        ">
+        <div style="overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;padding:1.5rem;border-right:1px solid var(--org-border,#e5e7eb);">
 
-          <h4 style="
-            margin: 0 0 1rem 0;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--org-text-muted, #6b7280);
-            font-weight: 600;
-          ">SECTION 1 — Informations de l'OT</h4>
+          <h4 style="margin:0 0 1rem 0;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--org-text-muted,#6b7280);font-weight:600;">
+            ${uiText("SECTION 1 — Informations de l'OT")}
+          </h4>
 
           <!-- Ligne 1 : OT lié | Titre / Réf DI -->
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
             <div>
-              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Numéro OT lié</label>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">${uiText('Numéro OT lié')}</label>
               <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;font-weight:600;color:var(--org-text,#111827);">${escapeHtml(ot.ref || '-')}</div>
             </div>
             <div>
-              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Titre / Réf DI</label>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">${uiText('Titre / Réf DI')}</label>
               <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(ot.diRef || '-')}</div>
             </div>
           </div>
 
           <!-- Ligne 2 : Équipement | Organe -->
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
             <div>
-              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Équipement</label>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">${uiText('Équipement')}</label>
               <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(equipmentLabel)}</div>
             </div>
             <div>
-              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Organe</label>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">${uiText('Organe')}</label>
               <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(organLabel)}</div>
             </div>
           </div>
 
           <!-- Ligne 3 : Type maintenance | Technicien -->
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
             <div>
-              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Type maintenance</label>
-              <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(ot.typeMaintenance || '-')}</div>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">${uiText('Type maintenance')}</label>
+              <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${uiText(ot.typeMaintenance || '-')}</div>
             </div>
             <div>
-              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Technicien assigné</label>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">${uiText('Technicien assigné')}</label>
               <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(ot.technicianLabel || '-')}</div>
             </div>
           </div>
 
           <!-- Ligne 4 : Date planifiée | Durée estimée -->
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
             <div>
-              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Date planifiée</label>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">${uiText('Date planifiée')}</label>
               <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${escapeHtml(ot.plannedDate || '-')}</div>
             </div>
             <div>
-              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Durée estimée</label>
+              <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">${uiText('Durée estimée')}</label>
               <div style="padding:0.55rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);">${ot.durationEstimated ? ot.durationEstimated + ' h' : '-'}</div>
             </div>
           </div>
 
-          <!-- Ligne 5 : Instructions (pleine largeur) -->
+          <!-- Ligne 5 : Instructions -->
           <div style="margin-bottom:1rem;">
-            <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Instructions techniques</label>
+            <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">${uiText('Instructions techniques')}</label>
             <div style="padding:0.75rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);min-height:4rem;line-height:1.6;white-space:pre-wrap;">${escapeHtml(ot.instructions || '-')}</div>
           </div>
 
-          <!-- Ligne 6 : Articles prévus (pleine largeur) -->
+          <!-- Ligne 6 : Articles prévus -->
           <div>
-            <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">Articles prévus</label>
+            <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--org-text-muted,#9ca3af);font-weight:600;margin-bottom:0.3rem;">${uiText('Articles prévus')}</label>
             <div style="padding:0.75rem 0.875rem;background:#ffffff;border:1px solid var(--org-border,#e2e8f0);border-radius:6px;font-size:0.875rem;color:var(--org-text,#111827);min-height:3rem;line-height:1.8;white-space:pre-wrap;">${formattedArticles}</div>
           </div>
 
         </div>
 
         <!-- ▌BLOC 2 — SECTION 2 scrollable ▌-->
-        <div style="
-          overflow-y: auto;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          padding: 1.5rem;
-        ">
+        <div style="overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;padding:1.5rem;">
 
-          <h4 style="
-            margin: 0 0 1rem 0;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--org-text-muted, #6b7280);
-            font-weight: 600;
-          ">SECTION 2 — Champs à remplir pour le BT</h4>
+          <h4 style="margin:0 0 1rem 0;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--org-text-muted,#6b7280);font-weight:600;">
+            ${uiText('SECTION 2 — Champs à remplir pour le BT')}
+          </h4>
 
           <div class="org-form-grid">
             <div class="field-group">
-              <label>Numéro BT</label>
-              <input type="text" value="Généré automatiquement (BT-XXX)" disabled />
+              <label>${uiText('Numéro BT')}</label>
+              <input type="text" value="${uiText('Généré automatiquement (BT-XXX)')}" disabled />
             </div>
             <div class="field-group">
-              <label for="btStartDate">Date de début</label>
+              <label for="btStartDate">${uiText('Date de début')}</label>
               <input id="btStartDate" name="startDate" type="datetime-local" value="${new Date().toISOString().slice(0, 16)}" readonly />
             </div>
             <div class="field-group">
-              <label for="btEndDate">Date de fin <span style="color:var(--org-danger);">*</span></label>
+              <label for="btEndDate">${uiText('Date de fin')} <span style="color:var(--org-danger);">*</span></label>
               <input id="btEndDate" name="endDate" type="datetime-local" required />
             </div>
             <div class="field-group">
-              <label for="btDurationReal">Durée réelle</label>
+              <label for="btDurationReal">${uiText('Durée réelle')}</label>
               <input id="btDurationReal" type="text" value="0h" readonly />
             </div>
             <div class="field-group field-group-wide">
-              <label for="btWorks">Travaux réalisés <span style="color:var(--org-danger);">*</span></label>
-              <textarea id="btWorks" name="works" rows="3" required placeholder="Détaillez les actions menées..."></textarea>
+              <label for="btWorks">${uiText('Travaux réalisés')} <span style="color:var(--org-danger);">*</span></label>
+              <textarea id="btWorks" name="works" rows="3" required placeholder="${uiText('Détaillez les actions menées...')}"></textarea>
             </div>
             <div class="field-group">
-              <label for="btCause">Cause de la panne</label>
+              <label for="btCause">${uiText('Cause de la panne')}</label>
               <select id="btCause" name="cause">
-                <option value="">Sélectionner</option>
-                <option value="Usure normale">Usure normale</option>
-                <option value="Défaut lubrification">Défaut lubrification</option>
-                <option value="Surcharge">Surcharge</option>
-                <option value="Défaut matière">Défaut matière</option>
-                <option value="Autre">Autre</option>
+                <option value="">${uiText('Sélectionner')}</option>
+                <option value="Usure normale">${uiText('Usure normale')}</option>
+                <option value="Défaut lubrification">${uiText('Défaut lubrification')}</option>
+                <option value="Surcharge">${uiText('Surcharge')}</option>
+                <option value="Défaut matière">${uiText('Défaut matière')}</option>
+                <option value="Autre">${uiText('Autre')}</option>
               </select>
             </div>
             <div class="field-group">
-              <label>Statut</label>
-              <input type="text" value="Clôturé" disabled />
+              <label>${uiText('Statut')}</label>
+              <input type="text" value="${uiText('Clôturé')}" disabled />
             </div>
             <div class="field-group field-group-wide">
-              <label for="btAnomalies">Anomalies détectées</label>
-              <textarea id="btAnomalies" name="anomalies" rows="2" placeholder="Ex: Fuite mineure constatée sur joint secondaire..."></textarea>
+              <label for="btAnomalies">${uiText('Anomalies détectées')}</label>
+              <textarea id="btAnomalies" name="anomalies" rows="2" placeholder="${uiText('Ex: Fuite mineure constatée sur joint secondaire...')}"></textarea>
             </div>
             <div class="field-group field-group-wide">
-              <label for="btObservations">Observations</label>
-              <textarea id="btObservations" name="observations" rows="2" placeholder="Remarques éventuelles..."></textarea>
+              <label for="btObservations">${uiText('Observations')}</label>
+              <textarea id="btObservations" name="observations" rows="2" placeholder="${uiText('Remarques éventuelles...')}"></textarea>
             </div>
             <div class="field-group field-group-wide">
-              <label>Photos après intervention</label>
+              <label>${uiText('Photos après intervention')}</label>
               <input type="file" accept="image/*" multiple />
             </div>
             <div class="field-group field-group-wide">
-              <label>Articles consommés</label>
-              <div id="btArticleLinesContainer" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.75rem;"></div>
+              <label>${uiText('Articles consommés')}</label>
+              <div id="btArticleLinesContainer" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.75rem;"></div>
               <button type="button" class="btn btn-outline btn-sm" id="btAddArticleBtn" data-options="${escapeHtml(articleOptions)}">
-                <i class="fa-solid fa-plus"></i> Ajouter un article consommé
+                <i class="fa-solid fa-plus"></i> ${uiText('Ajouter un article consommé')}
               </button>
             </div>
             <div class="field-group">
-              <label for="btTauxHoraire">Taux horaire de la ressource (DZD)</label>
+              <label for="btTauxHoraire">${uiText('Taux horaire de la ressource (DZD)')}</label>
               <input id="btTauxHoraire" name="tauxHoraire" type="number" step="0.01" min="0" value="0" />
             </div>
             <div class="field-group">
-              <label for="btCoutSousTraitance">Coût de sous-traitance (DZD)</label>
+              <label for="btCoutSousTraitance">${uiText('Coût de sous-traitance (DZD)')}</label>
               <input id="btCoutSousTraitance" name="coutSousTraitance" type="number" step="0.01" min="0" value="0" />
             </div>
           </div>
 
           <!-- Récapitulatif des coûts -->
-          <div style="margin-top:1.5rem; padding:1rem; background:var(--org-bg-alt); border-radius:6px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-              <span>Coût articles consommés :</span>
+          <div style="margin-top:1.5rem;padding:1rem;background:var(--org-bg-alt);border-radius:6px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+              <span>${uiText('Coût articles consommés')} :</span>
               <strong id="btCostArticles">0,00 DZD</strong>
             </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-              <span>Coût main d'œuvre :</span>
+            <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+              <span>${uiText("Coût main d'œuvre")} :</span>
               <strong id="btCostMO">0,00 DZD</strong>
             </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-              <span>Sous-traitance :</span>
+            <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+              <span>${uiText('Sous-traitance')} :</span>
               <strong id="btCostST">0,00 DZD</strong>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:1.1em; font-weight:bold; border-top:1px solid var(--org-border); padding-top:0.5rem;">
-              <span>Coût total intervention :</span>
+            <div style="display:flex;justify-content:space-between;font-size:1.1em;font-weight:bold;border-top:1px solid var(--org-border);padding-top:0.5rem;">
+              <span>${uiText('Coût total intervention')} :</span>
               <strong id="btCostTotal">0,00 DZD</strong>
             </div>
           </div>
 
         </div>
-
       </div><!-- fin grid 2 colonnes -->
 
       <!-- ══ BOUTONS FIXES ══ -->
-      <div class="org-modal-actions" style="flex-shrink:0; border-top:1px solid var(--org-border,#e5e7eb);">
-        <button class="btn btn-outline" type="button" data-int-close="true">Annuler</button>
+      <div class="org-modal-actions" style="flex-shrink:0;border-top:1px solid var(--org-border,#e5e7eb);">
+        <button class="btn btn-outline" type="button" data-int-close="true">${uiText('Annuler')}</button>
         <button class="btn btn-primary" type="submit">
           <i class="fa-solid fa-check"></i>
-          <span>Confirmer et créer BT</span>
+          <span>${uiText('Confirmer et créer BT')}</span>
         </button>
       </div>
 
@@ -28720,10 +28832,10 @@ function closeBt(btId) {
   if (ot) ot.status = "Terminé";
 
   appendInterventionHistory(directory, {
-    action: "BT clôturé",
+    action: "bt_closed",
     recordType: "BT",
     recordRef: bt.ref,
-    message: `${bt.ref} clôturé`,
+    message: `${bt.ref}`,
   });
   // Recalcul nextDueDate du plan lié après clôture BT
   if (bt.planId) {
@@ -29679,28 +29791,17 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     <div><label>${uiText("Domaine d'activité")}</label>
       <select name="domaine">${domaineOptions.map(o => `<option${current.domaine === o ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>
     </div>
-    <div><label>${uiText('Raison sociale')}</label><input name="raisonSociale" value="${escapeHtml(current.raisonSociale)}" /></div>
     <div><label>${uiText('Nom commercial')}</label><input name="nomCommercial" value="${escapeHtml(current.nomCommercial)}" /></div>
     <div><label>${uiText('Type fournisseur')}</label>
       <select name="type">${typeOptions.map(o => `<option${current.type === o ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>
     </div>
     <div class="full"><label>${uiText('Adresse complète')}</label><input name="adresse" value="${escapeHtml(current.adresse)}" /></div>
     <div><label>${uiText('Téléphone principal')}</label><input name="tel1" value="${escapeHtml(current.tel1)}" /></div>
-    <div><label>${uiText('Téléphone secondaire')}</label><input name="tel2" value="${escapeHtml(current.tel2)}" /></div>
     <div><label>${uiText('Email')}</label><input name="email" value="${escapeHtml(current.email)}" /></div>
     <div><label>${uiText('Site web')}</label><input name="website" value="${escapeHtml(current.website)}" /></div>
-    <div><label>${uiText('Rôle contact')}</label><input name="contactRole" value="${escapeHtml(current.contactRole)}" /></div>
-    <div><label>${uiText('Email contact')}</label><input name="contactEmail" value="${escapeHtml(current.contactEmail)}" /></div>
-    <div><label>${uiText('RC')}</label><input name="rc" value="${escapeHtml(current.rc)}" /></div>
-    <div><label>${uiText('NIF')}</label><input name="nif" value="${escapeHtml(current.nif)}" /></div>
-    <div><label>${uiText('NIS')}</label><input name="nis" value="${escapeHtml(current.nis)}" /></div>
-    <div><label>${uiText("Article d'imposition")}</label><input name="articleImposition" value="${escapeHtml(current.articleImposition)}" /></div>
-    <div><label>${uiText('RIB')}</label><input name="rib" value="${escapeHtml(current.rib)}" /></div>
-    <div><label>${uiText('Délai livraison (jours)')}</label><input name="deliveryDays" type="number" value="${current.deliveryDays}" /></div>
     <div><label>${uiText('Conditions de paiement')}</label>
       <select name="paymentTerm">${paymentOptions.map(o => `<option${current.paymentTerm === o ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>
     </div>
-    <div><label>${uiText('Remise (%)')}</label><input name="discount" type="number" step="0.01" value="${current.discount || 0}" /></div>
     <div class="full"><label>${uiText('Statut')}</label>
       <select name="status">${statusOptions.map(o => `<option${current.status === o ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>
     </div>
@@ -29721,21 +29822,15 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
         var payload = {
           id: isEdit ? current.id : "sup-" + Date.now(),
           number: fd.get("number"),
-          raisonSociale: fd.get("raisonSociale") || "",
           nomCommercial: fd.get("nomCommercial"),
           type: fd.get("type"),
           domaine: fd.get("domaine"),
           adresse: fd.get("adresse"),
           tel1: fd.get("tel1"),
-          tel2: fd.get("tel2"),
           email: fd.get("email"),
           website: fd.get("website"),
-          contact: { role: fd.get("contactRole"), email: fd.get("contactEmail") },
-          legal: { rc: fd.get("rc"), nif: fd.get("nif"), nis: fd.get("nis"), articleImposition: fd.get("articleImposition"), rib: fd.get("rib") },
-          deliveryDays: Number(fd.get("deliveryDays") || 0),
           paymentTerm: fd.get("paymentTerm"),
           currency: fd.get("currency"),
-          discount: Number(fd.get("discount") || 0),
           status: fd.get("status"),
           observations: fd.get("observations"),
           bcCount: current.bcCount || 0,
@@ -29760,284 +29855,6 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
   }
 
   /* ---------------------------------------------------------------
-     CATALOGUE MODAL
-  --------------------------------------------------------------- */
-  function openCatalogueModal(entry, supplierRef) {
-    entry = entry || null;
-    supplierRef = supplierRef || null;
-    var isEdit = !!entry;
-    var state = loadState();
-    var currentSupplierId = supplierRef ? supplierRef.id : (entry && entry.supplier ? entry.supplier.id : (state.suppliers[0] ? state.suppliers[0].id : ""));
-    var current = entry || {};
-    var availOptions = ["En stock fournisseur", "Sur commande", "Délai spécial"];
-
-    openModal(
-      isEdit ? "Modifier ligne catalogue" : "Créer ligne catalogue",
-      "Formulaire de ligne catalogue fournisseur.",
-      '<form class="supplier-form-grid" id="catalogueForm">' +
-      '<div><label>Fournisseur</label><select name="supplierId">' + supplierOptions(currentSupplierId) + '</select></div>' +
-      '<div><label>Article</label><input name="article" value="' + escapeHtml(current.article || "") + '" /></div>' +
-      '<div><label>Référence fournisseur</label><input name="refFourn" value="' + escapeHtml(current.refFourn || "") + '" /></div>' +
-      '<div><label>Désignation fournisseur</label><input name="designation" value="' + escapeHtml(current.designation || "") + '" /></div>' +
-      '<div><label>Prix unitaire HT</label><input name="price" type="number" step="0.01" value="' + (current.price || "") + '" /></div>' +
-      '<div><label>Unité de mesure</label><input name="unit" value="' + escapeHtml(current.unit || "") + '" /></div>' +
-      '<div><label>MOQ</label><input name="moq" type="number" value="' + (current.moq || "") + '" /></div>' +
-      '<div><label>Délai livraison spécifique</label><input name="leadTime" type="number" value="' + (current.leadTime || "") + '" /></div>' +
-      '<div><label>Remise %</label><input name="discount" type="number" step="0.01" value="' + (current.discount || 0) + '" /></div>' +
-      '<div><label>Disponibilité</label><select name="availability">' + availOptions.map(function (o) { return '<option' + (current.availability === o ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
-      '<div class="full"><label>Observations</label><textarea name="observations">' + escapeTextarea(current.observations || "") + '</textarea></div>' +
-      '</form>',
-      '<div class="supplier-form-footer"><button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button><button type="button" class="btn btn-primary" id="catalogueSaveBtn">Enregistrer</button></div>'
-    );
-
-    var saveBtn = document.getElementById("catalogueSaveBtn");
-    if (saveBtn) {
-      saveBtn.addEventListener("click", function () {
-        var form = document.getElementById("catalogueForm");
-        if (!form) return;
-        var fd = new FormData(form);
-        var state = loadState();
-        var supplier = state.suppliers.find(function (s) { return s.id === fd.get("supplierId"); });
-        if (!supplier) return;
-        var payload = {
-          id: isEdit ? current.id : "cat-" + Date.now(),
-          supplierNumber: supplier.number,
-          article: fd.get("article"),
-          refFourn: fd.get("refFourn"),
-          designation: fd.get("designation"),
-          price: Number(fd.get("price") || 0),
-          unit: fd.get("unit"),
-          moq: Number(fd.get("moq") || 0),
-          leadTime: Number(fd.get("leadTime") || 0),
-          discount: Number(fd.get("discount") || 0),
-          availability: fd.get("availability"),
-          observations: fd.get("observations"),
-          updatedAt: new Date().toISOString(),
-        };
-        if (!supplier.catalogue) supplier.catalogue = [];
-        if (isEdit) {
-          supplier.catalogue = supplier.catalogue.map(function (i) { return i.id === current.id ? payload : i; });
-        } else {
-          supplier.catalogue.unshift(payload);
-        }
-        saveState(state);
-        closeModal();
-        renderPage();
-      });
-    }
-  }
-
-  /* =============================================================
-     CONTRACT MODAL
-  ============================================================= */
-  function openContractModal(stateOverride, entry, supplierRef) {
-    stateOverride = stateOverride || null;
-    entry = entry || null;
-    supplierRef = supplierRef || null;
-    var state = stateOverride || loadState();
-    var isEdit = !!entry;
-    var currentSupplierId = supplierRef ? supplierRef.id : (entry && entry.supplier ? entry.supplier.id : (state.suppliers[0] ? state.suppliers[0].id : ""));
-    var current = entry || {};
-    var typeOptions = ["Contrat cadre", "Contrat de maintenance", "Accord de partenariat"];
-    var statusOptions = ["En cours", "Expiré", "Résilié", "En renouvellement"];
-    var alertDays = current.alertDays || 30;
-    var selectedEquipmentRefs = isEdit && Array.isArray(current.equipmentRefs) ? current.equipmentRefs : (isEdit && current.equipmentRefs ? String(current.equipmentRefs).split(",").map(function (s) { return s.trim(); }).filter(Boolean) : []);
-
-    openModal(
-      isEdit ? "Modifier contrat" : "Créer contrat",
-      "Fiche contrat avec alertes expiration et responsable de suivi.",
-      '<form class="supplier-form-grid" id="contractForm" novalidate>' +
-      '<div><label>Fournisseur *</label><select name="supplierId" required>' + supplierOptions(currentSupplierId) + '</select></div>' +
-      '<div><label>Type contrat</label><select name="type">' + typeOptions.map(function (o, idx) { return '<option value="' + escapeHtml(o) + '"' + (current.type === o || (!current.type && idx === 0) ? " selected" : "") + '>' + escapeHtml(o) + '</option>'; }).join("") + '</select></div>' +
-      '<div class="full"><label>Objet du contrat *</label><input name="objet" value="' + escapeHtml(current.objet || "") + '" required /></div>' +
-      '<div><label>Date début *</label><input name="debut" type="date" value="' + (current.debut || "") + '" required /></div>' +
-      '<div><label>Date fin *</label><input name="fin" type="date" value="' + (current.fin || "") + '" required /></div>' +
-      '<div><label>Valeur du contrat</label><input name="valeur" type="number" step="0.01" value="' + (current.valeur || "") + '" /></div>' +
-      '<div class="full"><label>Conditions</label><textarea name="conditions" rows="3">' + escapeTextarea(current.conditions || "") + '</textarea></div>' +
-      '<div class="full"><label>Équipements couverts</label><select name="equipmentRefs" multiple size="4">' + getEquipmentMultiOptionsHtml(selectedEquipmentRefs) + '</select><div class="org-field-hint" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Maintenez Ctrl/Cmd pour sÃ©lectionner plusieurs Ã©quipements.</div></div>' +
-      '<div><label>Responsable du suivi</label><select name="responsible">' + getUserOptionsHtml(current.responsible || "") + '</select></div>' +
-      '<div><label>Alerte expiration (jours)</label><input name="alertDays" type="number" value="' + alertDays + '" /></div>' +
-      '<div class="full"><label>Documents joints</label><input name="documents" value="' + escapeHtml(current.documents || "") + '" placeholder="Noms des fichiers sÃ©parÃ©s par des virgules" /></div>' +
-      '</form>',
-      '<div class="supplier-form-footer"><button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button><button type="button" class="btn btn-primary" id="contractSaveBtn">Enregistrer</button></div>'
-    );
-
-    var saveBtn = document.getElementById("contractSaveBtn");
-    if (saveBtn) {
-      saveBtn.addEventListener("click", function () {
-        var form = document.getElementById("contractForm");
-        if (!form) return;
-        var fd = new FormData(form);
-
-        // Validations
-        var errors = [];
-        if (!fd.get("supplierId")) errors.push("Fournisseur obligatoire.");
-        if (!fd.get("objet")) errors.push("Objet du contrat obligatoire.");
-        if (!fd.get("debut")) errors.push("Date début obligatoire.");
-        if (!fd.get("fin")) errors.push("Date fin obligatoire.");
-        if (fd.get("fin") && fd.get("debut") && fd.get("fin") < fd.get("debut")) errors.push("La date fin ne peut pas étre antérieure Ã  la date début.");
-        if (Number(fd.get("valeur")) < 0) errors.push("La valeur ne peut pas étre négative.");
-
-        if (errors.length) {
-          uiAlert("Erreurs de validation :\n- " + errors.join("\n- "));
-          return;
-        }
-
-        var state = loadState();
-        var supplier = state.suppliers.find(function (s) { return s.id === fd.get("supplierId"); });
-        if (!supplier) return;
-
-        // Get selected equipment IDs from multi-select
-        var equipSelect = form.querySelector('[name="equipmentRefs"]');
-        var selectedEquipments = equipSelect ? Array.from(equipSelect.selectedOptions).map(function (opt) { return opt.value; }).filter(Boolean) : [];
-
-        var debut = fd.get("debut");
-        var fin = fd.get("fin");
-        var status = computeContractStatus({ fin: fin, status: "" });
-
-        var payload = {
-          id: isEdit ? current.id : "ctr-" + Date.now(),
-          number: nextRef("CTR-", state.contracts || [], "number"),
-          supplierId: fd.get("supplierId"),
-          supplierNumber: supplier.number,
-          type: fd.get("type"),
-          objet: fd.get("objet"),
-          debut: debut,
-          fin: fin,
-          valeur: Number(fd.get("valeur") || 0),
-          conditions: fd.get("conditions") || "",
-          equipmentRefs: selectedEquipments,
-          responsible: fd.get("responsible") || "",
-          alertDays: Number(fd.get("alertDays") || 30),
-          documents: fd.get("documents") || "",
-          status: status,
-          createdAt: current.createdAt || new Date().toISOString(),
-        };
-
-        if (!state.contracts) state.contracts = [];
-        if (isEdit) {
-          state.contracts = state.contracts.map(function (c) { return c.id === current.id ? payload : c; });
-        } else {
-          state.contracts.unshift(payload);
-        }
-        saveState(state);
-        closeModal();
-        renderPage();
-      });
-    }
-  }
-
-  /* =============================================================
-     WARRANTY MODAL
-  ============================================================= */
-  function openWarrantyModal(stateOverride, entry, supplierRef) {
-    stateOverride = stateOverride || null;
-    entry = entry || null;
-    supplierRef = supplierRef || null;
-    var state = stateOverride || loadState();
-    var isEdit = !!entry;
-    var currentSupplierId = supplierRef ? supplierRef.id : (entry && entry.supplier ? entry.supplier.id : (state.suppliers[0] ? state.suppliers[0].id : ""));
-    var current = entry || {};
-
-    openModal(
-      isEdit ? "Modifier garantie" : "Créer garantie",
-      "Garantie liée Ã  un équipement avec calcul automatique de la date de fin.",
-      '<form class="supplier-form-grid" id="warrantyForm" novalidate>' +
-      '<div><label>Équipement *</label><select name="equipmentId" required>' + getEquipmentOptionsHtml(isEdit ? (current.equipmentId || "") : "") + '</select></div>' +
-      '<div><label>Fournisseur *</label><select name="supplierId" required>' + supplierOptions(currentSupplierId) + '</select></div>' +
-      '<div><label>Date début *</label><input name="debut" type="date" value="' + (current.debut || "") + '" required /></div>' +
-      '<div><label>Durée (mois) *</label><input name="durationMonths" type="number" value="' + (current.durationMonths || "") + '" required min="1" /></div>' +
-      '<div><label>Date fin (calculée auto)</label><input name="endDate" type="date" value="' + (current.endDate || "") + '" readonly style="background:#f5f5f5;" /></div>' +
-      '<div class="full"><label>Conditions</label><textarea name="conditions" rows="3">' + escapeTextarea(current.conditions || "") + '</textarea></div>' +
-      '<div><label>Facture / Bon de garantie</label><input name="documents" value="' + escapeHtml(current.documents || "") + '" placeholder="Noms des fichiers" /></div>' +
-      '</form>',
-      '<div class="supplier-form-footer"><button type="button" class="btn btn-outline" data-modal-cancel>Annuler</button><button type="button" class="btn btn-primary" id="warrantySaveBtn">Enregistrer</button></div>'
-    );
-
-    // Auto-calculate end date when debut or duration changes
-    var overlay = root.overlay();
-    if (overlay) {
-      var debutInput = overlay.querySelector('[name="debut"]');
-      var durationInput = overlay.querySelector('[name="durationMonths"]');
-      var endDateInput = overlay.querySelector('[name="endDate"]');
-      if (debutInput && durationInput && endDateInput) {
-        var recalc = function () {
-          if (debutInput.value && durationInput.value && Number(durationInput.value) > 0) {
-            endDateInput.value = calcEndDate(debutInput.value, Number(durationInput.value));
-          }
-        };
-        debutInput.addEventListener("change", recalc);
-        durationInput.addEventListener("input", recalc);
-        durationInput.addEventListener("change", recalc);
-        if (current.debut && current.durationMonths && !current.endDate) {
-          endDateInput.value = calcEndDate(current.debut, Number(current.durationMonths));
-        }
-      }
-    }
-
-    var saveBtn = document.getElementById("warrantySaveBtn");
-    if (saveBtn) {
-      saveBtn.addEventListener("click", function () {
-        var form = document.getElementById("warrantyForm");
-        if (!form) return;
-        var fd = new FormData(form);
-
-        // Validations
-        var errors = [];
-        if (!fd.get("equipmentId")) errors.push("Équipement obligatoire.");
-        if (!fd.get("supplierId")) errors.push("Fournisseur obligatoire.");
-        if (!fd.get("debut")) errors.push("Date début obligatoire.");
-        if (!fd.get("durationMonths") || Number(fd.get("durationMonths")) <= 0) errors.push("La durÃ©e doit Ãªtre positive.");
-
-        if (errors.length) {
-          uiAlert("Erreurs de validation :\n- " + errors.join("\n- "));
-          return;
-        }
-
-        var state = loadState();
-        var supplier = state.suppliers.find(function (s) { return s.id === fd.get("supplierId"); });
-        if (!supplier) return;
-
-        var debut = fd.get("debut");
-        var durationMonths = Number(fd.get("durationMonths") || 0);
-        var endDate = fd.get("endDate") || calcEndDate(debut, durationMonths);
-        var status = computeWarrantyStatus({ endDate: endDate, status: "" });
-
-        // Get equipment info
-        var equipId = fd.get("equipmentId");
-        var equipInfo = getEquipmentByCodeOrId(equipId);
-        var equipLabel = equipInfo ? equipInfo.label : equipId;
-
-        var payload = {
-          id: isEdit ? current.id : "war-" + Date.now(),
-          supplierId: fd.get("supplierId"),
-          supplierNumber: supplier.number,
-          equipmentId: equipId,
-          equipment: equipLabel,
-          equipmentCode: equipInfo ? equipInfo.code : equipId,
-          debut: debut,
-          durationMonths: durationMonths,
-          endDate: endDate,
-          conditions: fd.get("conditions") || "",
-          documents: fd.get("documents") || "",
-          status: status,
-          createdAt: current.createdAt || new Date().toISOString(),
-        };
-
-        if (!state.warranties) state.warranties = [];
-        if (isEdit) {
-          state.warranties = state.warranties.map(function (w) { return w.id === current.id ? payload : w; });
-        } else {
-          state.warranties.unshift(payload);
-        }
-        saveState(state);
-        closeModal();
-        renderPage();
-      });
-    }
-  }
-
-  /* ---------------------------------------------------------------
      EVALUATION MODAL
   --------------------------------------------------------------- */
   function openEvaluationModal(entry, supplierRef) {
@@ -30047,7 +29864,7 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
     var state = loadState();
     var currentSupplierId = supplierRef ? supplierRef.id : (entry && entry.supplier ? entry.supplier.id : (state.suppliers[0] ? state.suppliers[0].id : ""));
     var current = entry || {};
-    var scoreNames = [["quality", "QualitÃ©"], ["delay", "DÃ©lais"], ["conformity", "ConformitÃ©"], ["sav", "SAV"], ["price", "Prix"], ["communication", "Communication"]];
+    var scoreNames = [["quality", "Qualité"], ["delay", "Délais"], ["conformity", "Conformité"], ["sav", "SAV"], ["price", "Prix"], ["communication", "Communication"]];
     var nextNumber = isEdit ? current.number : nextRef("EVL-", state.suppliers.reduce(function (acc, s) { return acc.concat(s.evaluations || []); }, []), "number");
 
     var connectedUserId = localStorage.getItem("maintflow.connectedUserId") || "";

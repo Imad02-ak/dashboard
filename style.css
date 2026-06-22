@@ -1954,6 +1954,23 @@ body {
   margin-bottom: 2px;
 }
 
+.stock-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stock-filter-grid .field-group label {
+  font-size: 11px;
+}
+
+.stock-filter-grid .field-group input,
+.stock-filter-grid .field-group select {
+  padding: 7px 10px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
 .stock-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.8fr);
@@ -2323,7 +2340,7 @@ body {
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  background:  #f2f4f5;
+  background: #f2f4f5;
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 26px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
@@ -3686,20 +3703,20 @@ body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.dashboard-chart-card ,
-.dashboard-pie-card  {
+.dashboard-chart-card,
+.dashboard-pie-card {
   min-width: 0;
 }
 
-.dashboard-pie-card .card-head{
+.dashboard-pie-card .card-head {
   background-color: #54aac057;
 }
 
-.dashboard-chart-card .card-head{
+.dashboard-chart-card .card-head {
   background-color: #54aac057;
 }
 
-.dashboard-grid-2 .card-head{
+.dashboard-grid-2 .card-head {
   background-color: #54aac057;
 }
 
@@ -3932,7 +3949,6 @@ body {
 }
 
 .dashboard-business-grid {
-
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
@@ -5620,7 +5636,9 @@ body.sidebar-collapsed .sidebar-toggle {
   min-height: 0;
 }
 
-.org-modal-panel:has(.equipment-form-wizard) .eq-wizard-panel.active .equipment-section-card {
+.org-modal-panel:has(.equipment-form-wizard)
+  .eq-wizard-panel.active
+  .equipment-section-card {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -5631,13 +5649,17 @@ body.sidebar-collapsed .sidebar-toggle {
   -ms-overflow-style: none;
 }
 
-.org-modal-panel:has(.equipment-form-wizard) .eq-wizard-panel.active .equipment-section-card::-webkit-scrollbar {
+.org-modal-panel:has(.equipment-form-wizard)
+  .eq-wizard-panel.active
+  .equipment-section-card::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
 
-.org-modal-panel:has(.equipment-form-wizard) .eq-wizard-panel.active .equipment-section-head {
+.org-modal-panel:has(.equipment-form-wizard)
+  .eq-wizard-panel.active
+  .equipment-section-head {
   position: sticky;
   top: 0;
   z-index: 0;
@@ -5648,7 +5670,9 @@ body.sidebar-collapsed .sidebar-toggle {
   isolation: isolate;
 }
 
-.org-modal-panel:has(.equipment-form-wizard) .eq-wizard-panel.active .equipment-section-head::after {
+.org-modal-panel:has(.equipment-form-wizard)
+  .eq-wizard-panel.active
+  .equipment-section-head::after {
   content: "";
   position: absolute;
   left: 0;
@@ -6282,12 +6306,72 @@ body.sidebar-collapsed .sidebar-toggle {
     grid-template-columns: 1fr;
   }
 }
-.card-head{
+.card-head {
   background-color: #18a6bf97;
 }
-.card{
+.card {
   background-color: #ffffff;
 }
-.kpi-card{
+.kpi-card {
   background-color: white;
+}
+/* === FILTRE HISTORIQUE STOCK — GRID COMPACT === */
+.stock-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 12px;
+  align-items: end;
+}
+
+.stock-filter-grid .field-group {
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stock-filter-grid .field-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0;
+}
+
+.stock-filter-grid .field-group select,
+.stock-filter-grid .field-group input[type="date"],
+.stock-filter-grid .field-group input[type="text"] {
+  font-size: 12px;
+  padding: 5px 8px;
+  height: 30px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+}
+
+.stock-filter-grid .field-group-wide {
+  grid-column: 1 / -1;
+}
+
+.stock-card .card-body:has(.stock-filter-grid) {
+  padding: 10px 14px 12px;
+}
+/* === HISTORIQUE STOCK — LAYOUT & HEADER === */
+.stock-history-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stock-card .card-head {
+  padding-top: 7px;
+  padding-bottom: 7px;
+  min-height: unset;
+}
+
+.stock-card .card-title {
+  font-size: 13px;
 }
