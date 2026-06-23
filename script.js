@@ -162,6 +162,10 @@ const pages = {
     title: "Interventions",
     subtitle: "Cycle complet DI, OT et BT avec suivi terrain",
   },
+  messagerie: {
+    title: 'Messagerie',
+    subtitle: 'Échangez avec vos collègues de la même entreprise.',
+  },
   parametres: {
     title: "Administration",
     subtitle: "Gestion des utilisateurs, des rôles et des paramètres globaux",
@@ -11957,6 +11961,9 @@ const SUBPAGE_TO_APP_PAGE = {
   general: "parametres",
   logs: "parametres",
   evaluation: "fournisseurs",
+  inbox: 'messagerie',
+  sent: 'messagerie',
+  compose: 'messagerie',
 };
 
 function getCurrentPageKeyFromHash() {
@@ -23694,7 +23701,9 @@ function renderPage(pageKey, subpageKey) {
       }
     } else if (pageKey === "interventions") {
       renderInterventionsPage(activeSubpageKey);
-    } else if (pageKey === "parametres") {
+    } else if (pageKey === 'messagerie') { renderMessagingPage() }
+
+    else if (pageKey === "parametres") {
       renderAdministrationPage(activeSubpageKey);
     } else if (sectionSubpages[pageKey]) {
       renderSectionSubpages(pageKey, activeSubpageKey);
@@ -30000,6 +30009,11 @@ document.getElementById("sidebarToggle").addEventListener("click", function () {
 
   window._fournisseurs = { renderPage };
 })();
+// ─── ÉTAT MESSAGERIE — déclaré ici pour être disponible avant bootstrapRoute() ───
+const messagingStorageKey = 'mf_messaging_v1';
+const messagingDefaults = { messages: [] };
+let activeConvPartnerId = null;
+let msgContextMenuId = null;
 resetDemoDataIfNeeded();
 if (window.MaintFlowAuth) {
   MaintFlowAuth.initializeAuthData();
@@ -30464,3 +30478,877 @@ if (window.MaintFlowAuth) {
   else init();
 
 })();
+
+// ============================================================
+//  MODULE MESSAGERIE — v3 Premium + Suppression
+// ============================================================
+
+// ─── 1. STOCKAGE ────────────────────────────────────────────
+
+function getMessagingState() {
+  try {
+    const s = window.localStorage.getItem(messagingStorageKey);
+    return s ? { ...messagingDefaults, ...JSON.parse(s) } : { ...messagingDefaults };
+  } catch (e) { return { ...messagingDefaults }; }
+}
+function saveMessagingState(state) {
+  try { window.localStorage.setItem(messagingStorageKey, JSON.stringify(state)); }
+  catch (e) { }
+}
+
+// ─── 2. ÉTAT ────────────────────────────────────────────────
+
+
+// ─── 3. HELPERS ─────────────────────────────────────────────
+function getMessagingCurrentUser() {
+  if (typeof getConnectedUserProfile === 'function') return getConnectedUserProfile();
+  return null;
+}
+function getMessagingEnterpriseCode() {
+  if (typeof getEnterpriseProfile === 'function') {
+    const ep = getEnterpriseProfile();
+    return ep ? (ep.code || ep.name || 'ORG-001') : 'ORG-001';
+  }
+  return 'ORG-001';
+}
+function getMessagingAllUsers() {
+  if (typeof getAdministrationState === 'function') {
+    const state = getAdministrationState();
+    return Array.isArray(state.users) ? state.users : [];
+  }
+  return [];
+}
+function getMessagingUserFullName(user) {
+  if (!user) return 'Inconnu';
+  if (typeof getAdministrationUserFullName === 'function') return getAdministrationUserFullName(user);
+  return [user.firstName, user.lastName, user.name].filter(Boolean).join(' ').trim() || user.username || 'Inconnu';
+}
+function getMessagingUserInitials(user) {
+  if (!user) return '?';
+  if (typeof getAdministrationUserInitials === 'function') return getAdministrationUserInitials(user);
+  const name = getMessagingUserFullName(user);
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
+}
+function formatMessagingDate(isoStr) {
+  if (!isoStr) return '';
+  try {
+    const d = new Date(isoStr);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+    if (isToday) return d.toLocaleTimeString('fr-DZ', { hour: '2-digit', minute: '2-digit' });
+    if (isYesterday) return 'Hier ' + d.toLocaleTimeString('fr-DZ', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString('fr-DZ', { day: '2-digit', month: 'short' }) + ' ' +
+      d.toLocaleTimeString('fr-DZ', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) { return isoStr; }
+}
+function escapeMsg(str) {
+  if (typeof escapeHtml === 'function') return escapeHtml(str);
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+// Génère une couleur d'avatar cohérente par utilisateur
+function getAvatarColor(userId) {
+  const colors = [
+    ['#e8f4f8', '#2196a8'], ['#f0ebe8', '#a0522d'], ['#eaf2e8', '#4a7c59'],
+    ['#f0eaf8', '#7b52ab'], ['#fdf0e8', '#c87941'], ['#e8eef8', '#3a5a9a'],
+    ['#f8e8ee', '#b5446e'], ['#e8f8f2', '#2e8b72']
+  ];
+  let hash = 0;
+  String(userId || '').split('').forEach(c => { hash = ((hash << 5) - hash) + c.charCodeAt(0); hash |= 0; });
+  const idx = Math.abs(hash) % colors.length;
+  return colors[idx];
+}
+
+// ─── 4. FONCTIONS MÉTIER ────────────────────────────────────
+function sendInternalMessage(toUserId, body) {
+  const from = getMessagingCurrentUser();
+  if (!from) return null;
+  const companyId = from.companyId || getMessagingEnterpriseCode();
+  const state = getMessagingState();
+  const message = {
+    id: 'msg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+    companyId, fromUserId: from.id, toUserId,
+    body: body.trim(),
+    sentAt: new Date().toISOString(),
+    readAt: null,
+    deletedBySender: false,
+    deletedByRecipient: false,
+  };
+  state.messages = [message, ...state.messages];
+  saveMessagingState(state);
+  return message;
+}
+
+function deleteSingleMessage(messageId) {
+  const me = getMessagingCurrentUser();
+  if (!me) return;
+  const state = getMessagingState();
+  const msg = state.messages.find(m => m.id === messageId);
+  if (!msg) return;
+  if (msg.fromUserId === me.id) msg.deletedBySender = true;
+  if (msg.toUserId === me.id) msg.deletedByRecipient = true;
+  // Si supprimé des deux côtés, retirer complètement
+  if (msg.deletedBySender && msg.deletedByRecipient) {
+    state.messages = state.messages.filter(m => m.id !== messageId);
+  }
+  saveMessagingState(state);
+}
+
+function deleteEntireConversation(partnerId) {
+  const me = getMessagingCurrentUser();
+  if (!me) return;
+  const state = getMessagingState();
+  state.messages.forEach(m => {
+    if (m.fromUserId === me.id && m.toUserId === partnerId) m.deletedBySender = true;
+    if (m.fromUserId === partnerId && m.toUserId === me.id) m.deletedByRecipient = true;
+  });
+  // Nettoyer les messages supprimés des deux côtés
+  state.messages = state.messages.filter(m => !(m.deletedBySender && m.deletedByRecipient));
+  saveMessagingState(state);
+}
+
+function getMessagingUnreadCount() {
+  const user = getMessagingCurrentUser();
+  if (!user) return 0;
+  const companyId = user.companyId || getMessagingEnterpriseCode();
+  return getMessagingState().messages.filter(m =>
+    m.toUserId === user.id && m.companyId === companyId && !m.readAt && !m.deletedByRecipient
+  ).length;
+}
+
+function getColleaguesForMessaging() {
+  const user = getMessagingCurrentUser();
+  if (!user) return [];
+  const companyId = user.companyId || getMessagingEnterpriseCode();
+  return getMessagingAllUsers().filter(u => {
+    if (u.id === user.id) return false;
+    const sameCompany = !u.companyId || u.companyId === companyId;
+    const isActive = String(u.status).toLowerCase() === 'actif';
+    return sameCompany && isActive;
+  });
+}
+
+function getConversationMessages(partnerId) {
+  const me = getMessagingCurrentUser();
+  if (!me) return [];
+  const companyId = me.companyId || getMessagingEnterpriseCode();
+  return getMessagingState().messages.filter(m =>
+    m.companyId === companyId &&
+    ((m.fromUserId === me.id && m.toUserId === partnerId && !m.deletedBySender) ||
+      (m.fromUserId === partnerId && m.toUserId === me.id && !m.deletedByRecipient))
+  ).sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
+}
+
+function getLastMessageWith(partnerId) {
+  const msgs = getConversationMessages(partnerId);
+  return msgs.length ? msgs[msgs.length - 1] : null;
+}
+
+function getUnreadCountFrom(partnerId) {
+  const me = getMessagingCurrentUser();
+  if (!me) return 0;
+  return getMessagingState().messages.filter(m =>
+    m.fromUserId === partnerId && m.toUserId === me.id && !m.readAt && !m.deletedByRecipient
+  ).length;
+}
+
+function markConversationAsRead(partnerId) {
+  const me = getMessagingCurrentUser();
+  if (!me) return;
+  const state = getMessagingState();
+  state.messages.forEach(m => {
+    if (m.fromUserId === partnerId && m.toUserId === me.id && !m.readAt)
+      m.readAt = new Date().toISOString();
+  });
+  saveMessagingState(state);
+}
+
+// ─── 5. RENDU PAGE PRINCIPALE ────────────────────────────────
+function renderMessagingPage() {
+  if (typeof pageActionsEl !== 'undefined' && pageActionsEl) pageActionsEl.innerHTML = '';
+  if (typeof pageTitleEl !== 'undefined' && pageTitleEl) pageTitleEl.textContent = 'Messagerie';
+  if (typeof pageSubtitleEl !== 'undefined' && pageSubtitleEl) pageSubtitleEl.textContent = 'Discussions internes avec vos collègues';
+  if (typeof pageContentEl === 'undefined' || !pageContentEl) return;
+
+  injectMessagingStyles();
+
+  const me = getMessagingCurrentUser();
+  const colleagues = getColleaguesForMessaging();
+  const users = getMessagingAllUsers();
+
+  // ══ PANNEAU GAUCHE ══════════════════════════════════════════
+  let leftPanel = '';
+  if (activeConvPartnerId) {
+    const partner = users.find(u => u.id === activeConvPartnerId);
+    const partnerName = getMessagingUserFullName(partner);
+    const partnerInitials = getMessagingUserInitials(partner);
+    const [bgColor, fgColor] = getAvatarColor(activeConvPartnerId);
+    const msgs = getConversationMessages(activeConvPartnerId);
+
+    // Grouper les messages par date
+    let lastDate = '';
+    const bubbles = msgs.length ? msgs.map(m => {
+      const isMine = m.fromUserId === me.id;
+      const msgDate = new Date(m.sentAt).toDateString();
+      let dateSep = '';
+      if (msgDate !== lastDate) {
+        lastDate = msgDate;
+        const d = new Date(m.sentAt);
+        const now = new Date();
+        const isToday = d.toDateString() === now.toDateString();
+        const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+        const label = isToday ? "Aujourd'hui" :
+          d.toDateString() === yesterday.toDateString() ? 'Hier' :
+            d.toLocaleDateString('fr-DZ', { weekday: 'long', day: 'numeric', month: 'long' });
+        dateSep = `<div class="msgi-date-sep"><span>${escapeMsg(label)}</span></div>`;
+      }
+      return `${dateSep}
+        <div class="msgi-row ${isMine ? 'mine' : 'theirs'}" data-msg-id="${escapeMsg(m.id)}">
+          <div class="msgi-bubble-wrap">
+            <div class="msgi-bubble">${escapeMsg(m.body)}</div>
+            <button class="msgi-msg-menu-btn" type="button" title="Options" data-menu-msg="${escapeMsg(m.id)}">
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+          </div>
+          <div class="msgi-time">
+            ${isMine ? '<i class="fa-solid fa-check-double msgi-read-icon"></i>' : ''}
+            ${formatMessagingDate(m.sentAt)}
+          </div>
+        </div>`;
+    }).join('') : `<div class="msgi-empty-thread">
+        <i class="fa-regular fa-comment-dots"></i>
+        <p>Commencez la conversation !</p>
+      </div>`;
+
+    leftPanel = `
+      <div class="msgi-thread-header">
+        <div class="msgi-avatar sm" style="background:${bgColor};color:${fgColor}">${escapeMsg(partnerInitials)}</div>
+        <div class="msgi-thread-header-info">
+          <strong>${escapeMsg(partnerName)}</strong>
+          ${partner?.role ? `<span>${escapeMsg(partner.role)}</span>` : '<span>En ligne</span>'}
+        </div>
+        <div class="msgi-thread-actions">
+          <button class="msgi-action-btn" type="button" id="msgiDeleteConvBtn" title="Supprimer la conversation">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+      <div class="msgi-messages" id="msgiMessages">${bubbles}</div>
+      <div class="msgi-input-bar">
+        <form id="msgiSendForm" class="msgi-send-form" novalidate>
+          <textarea id="msgiBody" placeholder="Écrivez un message…" rows="1" required></textarea>
+          <button class="msgi-send-btn" type="submit" title="Envoyer (Entrée)">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </form>
+      </div>`;
+  } else {
+    leftPanel = `
+      <div class="msgi-no-conv">
+        <div class="msgi-no-conv-icon"><i class="fa-regular fa-comments"></i></div>
+        <h3>Vos messages</h3>
+        <p>Sélectionnez un collègue à droite<br>pour démarrer une discussion</p>
+      </div>`;
+  }
+
+  // ══ PANNEAU DROIT ═══════════════════════════════════════════
+  const sorted = [...colleagues].sort((a, b) => {
+    const la = getLastMessageWith(a.id);
+    const lb = getLastMessageWith(b.id);
+    if (!la && !lb) return getMessagingUserFullName(a).localeCompare(getMessagingUserFullName(b));
+    if (!la) return 1; if (!lb) return -1;
+    return new Date(lb.sentAt) - new Date(la.sentAt);
+  });
+
+  const rightPanel = sorted.length ? `
+    <div class="msgi-contacts-header">
+      <i class="fa-solid fa-users"></i> Collègues <span class="msgi-contacts-count">${sorted.length}</span>
+    </div>
+    <div class="msgi-contacts-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="msgiSearchContact" placeholder="Rechercher un collègue…" autocomplete="off" />
+    </div>
+    <div class="msgi-contacts-list" id="msgiContactsList">
+      ${sorted.map(u => {
+    const name = getMessagingUserFullName(u);
+    const initials = getMessagingUserInitials(u);
+    const [bg, fg] = getAvatarColor(u.id);
+    const last = getLastMessageWith(u.id);
+    const unread = getUnreadCountFrom(u.id);
+    const isMine = last && last.fromUserId === me.id;
+    const preview = last
+      ? (isMine ? '↩ ' : '') + last.body.slice(0, 38) + (last.body.length > 38 ? '…' : '')
+      : 'Démarrer une conversation';
+    const isActive = activeConvPartnerId === u.id;
+    return `<div class="msgi-contact ${isActive ? 'active' : ''} ${unread > 0 ? 'has-unread' : ''}"
+                     data-uid="${escapeMsg(u.id)}" role="button" tabindex="0">
+          <div class="msgi-avatar sm" style="background:${bg};color:${fg}">${escapeMsg(initials)}</div>
+          <div class="msgi-contact-body">
+            <div class="msgi-contact-head">
+              <span class="msgi-contact-name">${escapeMsg(name)}</span>
+              ${last ? `<span class="msgi-contact-time">${formatMessagingDate(last.sentAt)}</span>` : ''}
+            </div>
+            <div class="msgi-contact-preview ${!last ? 'no-msg' : ''}">${escapeMsg(preview)}</div>
+          </div>
+          ${unread > 0 ? `<span class="msgi-badge">${unread}</span>` : ''}
+        </div>`;
+  }).join('')}
+    </div>` : `<div class="msgi-no-conv" style="height:100%">
+      <i class="fa-regular fa-user-slash"></i>
+      <p>Aucun collègue actif</p>
+    </div>`;
+
+  pageContentEl.className = 'messaging-page';
+  pageContentEl.innerHTML = `
+    <div class="msgi-layout">
+      <div class="msgi-left" id="msgiLeft">${leftPanel}</div>
+      <div class="msgi-right" id="msgiRight">${rightPanel}</div>
+    </div>
+    <div class="msgi-ctx-menu" id="msgiCtxMenu" style="display:none">
+      <button class="msgi-ctx-item danger" id="msgiCtxDelete" type="button">
+        <i class="fa-regular fa-trash-can"></i> Supprimer ce message
+      </button>
+    </div>`;
+
+  // ── Scroll bas ──
+  setTimeout(() => {
+    const el = document.getElementById('msgiMessages');
+    if (el) el.scrollTop = el.scrollHeight;
+  }, 30);
+
+  // ── Clic contact ──
+  pageContentEl.querySelectorAll('[data-uid]').forEach(item => {
+    const open = () => {
+      activeConvPartnerId = item.dataset.uid;
+      markConversationAsRead(activeConvPartnerId);
+      renderMessagingPage();
+    };
+    item.addEventListener('click', open);
+    item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(); });
+  });
+
+  // ── Recherche ──
+  document.getElementById('msgiSearchContact')?.addEventListener('input', function () {
+    const q = this.value.toLowerCase().trim();
+    document.querySelectorAll('.msgi-contact').forEach(item => {
+      const name = item.querySelector('.msgi-contact-name')?.textContent.toLowerCase() || '';
+      item.style.display = name.includes(q) ? '' : 'none';
+    });
+  });
+
+  // ── Envoi ──
+  const sendForm = document.getElementById('msgiSendForm');
+  const textarea = document.getElementById('msgiBody');
+  if (sendForm && textarea) {
+    textarea.addEventListener('input', function () {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+    textarea.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendForm.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    });
+    sendForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const body = textarea.value.trim();
+      if (!body || !activeConvPartnerId) return;
+      sendInternalMessage(activeConvPartnerId, body);
+      textarea.value = '';
+      textarea.style.height = 'auto';
+      renderMessagingPage();
+    });
+    setTimeout(() => textarea.focus(), 60);
+  }
+
+  // ── Supprimer conversation ──
+  document.getElementById('msgiDeleteConvBtn')?.addEventListener('click', () => {
+    const confirmFn = typeof uiConfirm === 'function' ? uiConfirm : (msg) => window.confirm(msg);
+    const ok = confirmFn('Supprimer toute cette conversation ? Cette action est irréversible.');
+    if (!ok) return;
+    deleteEntireConversation(activeConvPartnerId);
+    activeConvPartnerId = null;
+    renderMessagingPage();
+  });
+
+  // ── Menu contextuel message (clic sur "…") ──
+  const ctxMenu = document.getElementById('msgiCtxMenu');
+
+  pageContentEl.querySelectorAll('[data-menu-msg]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const msgId = btn.dataset.menuMsg;
+      const rect = btn.getBoundingClientRect();
+      const isMine = btn.closest('.msgi-row.mine') !== null;
+      ctxMenu.style.display = 'block';
+      ctxMenu.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+      ctxMenu.style.left = (isMine ? (rect.right - 160 + window.scrollX) : rect.left + window.scrollX) + 'px';
+      msgContextMenuId = msgId;
+    });
+  });
+
+  document.getElementById('msgiCtxDelete')?.addEventListener('click', () => {
+    if (!msgContextMenuId) return;
+    deleteSingleMessage(msgContextMenuId);
+    ctxMenu.style.display = 'none';
+    msgContextMenuId = null;
+    renderMessagingPage();
+  });
+
+  // Fermer menu au clic extérieur
+  document.addEventListener('mousedown', function (e) {
+    const ctxMenu = document.getElementById('msgiCtxMenu');
+    if (!ctxMenu) return;
+    // Si le clic est en dehors du menu ET en dehors des boutons 3 points
+    if (!ctxMenu.contains(e.target) && !e.target.closest('[data-menu-msg]')) {
+      ctxMenu.style.display = 'none';
+      msgContextMenuId = null;
+    }
+  }, true);
+}
+
+// ─── 6. PATCH renderPage ────────────────────────────────────
+function patchRenderPageForMessaging() {
+  if (typeof renderPage !== 'function') return;
+  const orig = renderPage;
+  window.renderPage = function (pageKey, subpageKey) {
+    if (pageKey === 'messagerie') {
+      document.querySelectorAll('[data-page]').forEach(i =>
+        i.classList.toggle('active', i.dataset.page === 'messagerie'));
+      renderMessagingPage();
+      return;
+    }
+    return orig(pageKey, subpageKey);
+  };
+}
+
+// ─── 7. HASH ─────────────────────────────────────────────────
+(function () {
+  function checkHash() {
+    if (window.location.hash === '#messagerie' && typeof renderPage === 'function')
+      renderPage('messagerie');
+  }
+  window.addEventListener('hashchange', checkHash);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', checkHash);
+  else checkHash();
+})();
+
+// ─── 8. CSS PREMIUM ──────────────────────────────────────────
+function injectMessagingStyles() {
+  const existing = document.getElementById('messaging-styles');
+  if (existing) existing.remove();
+  const style = document.createElement('style');
+  style.id = 'messaging-styles';
+  style.textContent = `
+  /* ══════════════════════════════════════════════════════════
+     MESSAGERIE MAINTFLOW — Premium Style v3
+  ══════════════════════════════════════════════════════════ */
+
+  .messaging-page {
+    padding: 1rem;
+    height: calc(100vh - 130px);
+    box-sizing: border-box;
+  }
+
+  .msgi-layout {
+    display: grid;
+    grid-template-columns: 1fr 290px;
+    height: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--color-border, #d4d1ca);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  /* ══ GAUCHE ══ */
+  .msgi-left {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg, #f7f6f2);
+    overflow: hidden;
+    border-right: 1px solid var(--color-divider, #dcd9d5);
+  }
+
+  /* Header conversation */
+  .msgi-thread-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    background: var(--color-surface-2, #fbfbf9);
+    border-bottom: 1px solid var(--color-divider, #dcd9d5);
+    flex-shrink: 0;
+    min-height: 56px;
+  }
+  .msgi-thread-header-info { flex: 1; min-width: 0; }
+  .msgi-thread-header-info strong {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text, #28251d);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .msgi-thread-header-info span {
+    font-size: 0.71rem;
+    color: var(--color-text-muted, #7a7974);
+  }
+  .msgi-thread-actions { display: flex; gap: 4px; margin-left: auto; flex-shrink: 0; }
+  .msgi-action-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--color-text-muted, #7a7974);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .msgi-action-btn:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fecaca;
+  }
+
+  /* État vide */
+  .msgi-no-conv {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px;
+    padding: 2rem;
+    text-align: center;
+  }
+  .msgi-no-conv-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--color-surface-offset, #f3f0ec);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    color: var(--color-text-faint, #bab9b4);
+    margin-bottom: 4px;
+  }
+  .msgi-no-conv h3 { font-size: 1rem; font-weight: 600; color: var(--color-text, #28251d); margin: 0; }
+  .msgi-no-conv p { font-size: 0.82rem; color: var(--color-text-muted, #7a7974); line-height: 1.6; margin: 0; }
+
+  /* Zone messages */
+  .msgi-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    scroll-behavior: smooth;
+    background: var(--color-bg, #f7f6f2);
+  }
+  .msgi-messages::-webkit-scrollbar { width: 4px; }
+  .msgi-messages::-webkit-scrollbar-thumb { background: var(--color-divider, #dcd9d5); border-radius: 4px; }
+
+  /* Séparateur de date */
+  .msgi-date-sep {
+    display: flex; align-items: center;
+    gap: 8px; margin: 10px 0 6px;
+    color: var(--color-text-faint, #bab9b4);
+    font-size: 0.68rem;
+  }
+  .msgi-date-sep::before, .msgi-date-sep::after {
+    content: ''; flex: 1;
+    height: 1px;
+    background: var(--color-divider, #dcd9d5);
+  }
+  .msgi-date-sep span {
+    padding: 2px 10px;
+    background: var(--color-surface-offset, #f3f0ec);
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+
+  /* État vide thread */
+  .msgi-empty-thread {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px;
+    color: var(--color-text-faint, #bab9b4);
+    font-size: 0.82rem;
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  .msgi-empty-thread i { font-size: 2rem; opacity: 0.4; }
+  .msgi-empty-thread p { margin: 0; }
+
+  /* ══ BULLES ══ */
+  .msgi-row {
+    display: flex;
+    flex-direction: column;
+    max-width: 68%;
+    gap: 2px;
+    position: relative;
+  }
+  .msgi-row.mine  { align-self: flex-end;  align-items: flex-end; }
+  .msgi-row.theirs { align-self: flex-start; align-items: flex-start; }
+
+  .msgi-bubble-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .msgi-row.mine .msgi-bubble-wrap { flex-direction: row-reverse; }
+
+  .msgi-bubble {
+    padding: 8px 13px;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    word-break: break-word;
+    white-space: pre-wrap;
+    max-width: 100%;
+    position: relative;
+  }
+  .msgi-row.mine .msgi-bubble {
+    background: var(--color-primary, #01696f);
+    color: #fff;
+    border-radius: 18px 18px 4px 18px;
+    box-shadow: 0 1px 4px rgba(1,105,111,0.25);
+  }
+  .msgi-row.theirs .msgi-bubble {
+    background: var(--color-surface-2, #fbfbf9);
+    color: var(--color-text, #28251d);
+    border: 1px solid var(--color-border, #d4d1ca);
+    border-radius: 18px 18px 18px 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  /* Bouton "…" sur hover */
+  .msgi-msg-menu-btn {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--color-surface-offset, #f3f0ec);
+    border: 1px solid var(--color-border, #d4d1ca);
+    color: var(--color-text-muted, #7a7974);
+    font-size: 0.65rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 150ms, background 150ms;
+    flex-shrink: 0;
+  }
+  .msgi-row:hover .msgi-msg-menu-btn { opacity: 1; }
+  .msgi-msg-menu-btn:hover { background: var(--color-surface-dynamic, #e6e4df); }
+
+  .msgi-time {
+    font-size: 0.64rem;
+    color: var(--color-text-faint, #bab9b4);
+    padding: 0 4px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .msgi-read-icon { font-size: 0.6rem; color: var(--color-primary, #01696f); opacity: 0.7; }
+
+  /* ══ BARRE SAISIE ══ */
+  .msgi-input-bar {
+    padding: 10px 12px;
+    border-top: 1px solid var(--color-divider, #dcd9d5);
+    background: var(--color-surface-2, #fbfbf9);
+    flex-shrink: 0;
+  }
+  .msgi-send-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    background: var(--color-surface, #f9f8f5);
+    border: 1.5px solid var(--color-border, #d4d1ca);
+    border-radius: 26px;
+    padding: 7px 7px 7px 16px;
+    transition: border-color 200ms, box-shadow 200ms;
+  }
+  .msgi-send-form:focus-within {
+    border-color: var(--color-primary, #01696f);
+    box-shadow: 0 0 0 3px var(--color-primary-highlight, #cedcd8);
+  }
+  .msgi-send-form textarea {
+    flex: 1; border: none; background: transparent;
+    font-size: 0.875rem; resize: none; outline: none;
+    color: var(--color-text, #28251d);
+    line-height: 1.5;
+    min-height: 22px; max-height: 120px;
+    overflow-y: auto; padding: 2px 0;
+    font-family: inherit;
+  }
+  .msgi-send-form textarea::placeholder { color: var(--color-text-faint, #bab9b4); }
+  .msgi-send-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--color-primary, #01696f);
+    color: #fff; border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.82rem; cursor: pointer; flex-shrink: 0;
+    transition: background 150ms, transform 100ms, box-shadow 150ms;
+    box-shadow: 0 2px 8px rgba(1,105,111,0.3);
+  }
+  .msgi-send-btn:hover { background: var(--color-primary-hover, #0c4e54); box-shadow: 0 3px 12px rgba(1,105,111,0.4); }
+  .msgi-send-btn:active { transform: scale(0.9); }
+
+  /* ══ DROITE ══ */
+  .msgi-right {
+    display: flex; flex-direction: column;
+    background: var(--color-surface, #f9f8f5);
+    overflow: hidden;
+  }
+  .msgi-contacts-header {
+    padding: 14px 14px 8px;
+    font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--color-text-muted, #7a7974);
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .msgi-contacts-count {
+    background: var(--color-surface-dynamic, #e6e4df);
+    border-radius: 99px;
+    font-size: 0.65rem;
+    padding: 1px 7px;
+    color: var(--color-text-muted, #7a7974);
+    font-weight: 600; letter-spacing: 0;
+  }
+  .msgi-contacts-search {
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 10px 8px;
+    padding: 7px 12px;
+    background: var(--color-surface-offset, #f3f0ec);
+    border-radius: 20px;
+    border: 1px solid var(--color-border, #d4d1ca);
+    flex-shrink: 0;
+    transition: border-color 180ms;
+  }
+  .msgi-contacts-search:focus-within { border-color: var(--color-primary, #01696f); }
+  .msgi-contacts-search i { font-size: 0.72rem; color: var(--color-text-faint, #bab9b4); flex-shrink: 0; }
+  .msgi-contacts-search input {
+    border: none; background: transparent; outline: none;
+    font-size: 0.8rem; color: var(--color-text, #28251d); width: 100%;
+  }
+  .msgi-contacts-search input::placeholder { color: var(--color-text-faint, #bab9b4); }
+
+  .msgi-contacts-list { flex: 1; overflow-y: auto; }
+  .msgi-contacts-list::-webkit-scrollbar { width: 3px; }
+  .msgi-contacts-list::-webkit-scrollbar-thumb { background: var(--color-divider, #dcd9d5); border-radius: 3px; }
+
+  .msgi-contact {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 130ms;
+    border-bottom: 1px solid var(--color-divider, #dcd9d5);
+    position: relative;
+  }
+  .msgi-contact:last-child { border-bottom: none; }
+  .msgi-contact:hover { background: var(--color-surface-offset, #f3f0ec); }
+  .msgi-contact.active {
+    background: var(--color-primary-highlight, #cedcd8);
+    border-left: 3px solid var(--color-primary, #01696f);
+    padding-left: 11px;
+  }
+  .msgi-contact-body { flex: 1; min-width: 0; }
+  .msgi-contact-head {
+    display: flex; justify-content: space-between;
+    align-items: baseline; gap: 4px; margin-bottom: 2px;
+  }
+  .msgi-contact-name {
+    font-size: 0.83rem; font-weight: 500;
+    color: var(--color-text, #28251d);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;
+  }
+  .msgi-contact.has-unread .msgi-contact-name { font-weight: 700; }
+  .msgi-contact-time {
+    font-size: 0.63rem; color: var(--color-text-faint, #bab9b4);
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .msgi-contact-preview {
+    font-size: 0.74rem; color: var(--color-text-muted, #7a7974);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .msgi-contact-preview.no-msg {
+    color: var(--color-text-faint, #bab9b4);
+    font-style: italic;
+  }
+  .msgi-contact.has-unread .msgi-contact-preview { color: var(--color-text, #28251d); font-weight: 500; }
+
+  .msgi-badge {
+    background: var(--color-primary, #01696f);
+    color: #fff; border-radius: 99px;
+    font-size: 0.6rem; font-weight: 700;
+    padding: 1px 6px; min-width: 18px;
+    text-align: center; flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(1,105,111,0.3);
+  }
+
+  /* ══ AVATAR ══ */
+  .msgi-avatar {
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; flex-shrink: 0;
+    border: 1.5px solid rgba(0,0,0,0.06);
+  }
+  .msgi-avatar.sm { width: 36px; height: 36px; font-size: 0.7rem; }
+
+  /* ══ MENU CONTEXTUEL ══ */
+  .msgi-ctx-menu {
+    position: fixed;
+    z-index: 9999;
+    background: var(--color-surface-2, #fbfbf9);
+    border: 1px solid var(--color-border, #d4d1ca);
+    border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.13);
+    overflow: hidden;
+    min-width: 170px;
+    animation: msgiCtxIn 120ms ease;
+  }
+  @keyframes msgiCtxIn {
+    from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .msgi-ctx-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 14px;
+    width: 100%; text-align: left;
+    font-size: 0.83rem; cursor: pointer;
+    background: transparent; border: none;
+    transition: background 120ms;
+    color: var(--color-text, #28251d);
+  }
+  .msgi-ctx-item:hover { background: var(--color-surface-offset, #f3f0ec); }
+  .msgi-ctx-item.danger { color: #dc2626; }
+  .msgi-ctx-item.danger:hover { background: #fee2e2; }
+
+  /* ══ DARK MODE ══ */
+  [data-theme="dark"] .msgi-row.theirs .msgi-bubble {
+    background: var(--color-surface-offset, #1d1c1a);
+    border-color: var(--color-border, #393836);
+    color: var(--color-text, #cdccca);
+  }
+  [data-theme="dark"] .msgi-send-form {
+    background: var(--color-surface, #1c1b19);
+    border-color: var(--color-border, #393836);
+  }
+  [data-theme="dark"] .msgi-send-form textarea { color: var(--color-text, #cdccca); }
+  [data-theme="dark"] .msgi-ctx-menu {
+    background: var(--color-surface-2, #201f1d);
+    border-color: var(--color-border, #393836);
+  }
+  [data-theme="dark"] .msgi-msg-menu-btn {
+    background: var(--color-surface-dynamic, #2d2c2a);
+    border-color: var(--color-border, #393836);
+  }
+
+  /* ══ RESPONSIVE ══ */
+  @media (max-width: 768px) {
+    .msgi-layout { grid-template-columns: 1fr; }
+    .msgi-right { display: none; }
+    .msgi-row { max-width: 84%; }
+  }
+  `;
+  document.head.appendChild(style);
+}
+
+patchRenderPageForMessaging();
