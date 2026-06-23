@@ -30017,4 +30017,450 @@ if (window.MaintFlowAuth) {
   window.location.replace("login.html");
 }
 
+// ============================================================
+//  GMAO — RECHERCHE GLOBALE NAVBAR
+//  Coller à la TOUTE FIN de script.js
+// ============================================================
+(function () {
+  'use strict';
 
+  // ─── CSS ──────────────────────────────────────────────────
+  const style = document.createElement('style');
+  style.textContent = `
+    .topbar-search { position: relative !important; }
+    #gmaoSearchDropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 380px;
+      max-width: 560px;
+      max-height: 460px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--border, #e2e8ef);
+      border-radius: 12px;
+      box-shadow: 0 8px 36px rgba(0,0,0,.18);
+      z-index: 99999;
+      display: none;
+    }
+    #gmaoSearchDropdown.open { display: block; }
+    .gs-group {
+      font-size: .67rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #8fa0b0;
+      padding: 10px 14px 3px;
+      border-top: 1px solid #f0f4f8;
+    }
+    .gs-group:first-child { border-top: none; }
+    .gs-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: background .12s;
+      user-select: none;
+    }
+    .gs-item:hover, .gs-item:focus {
+      background: #f0f6ff;
+      outline: none;
+    }
+    .gs-item i {
+      width: 18px;
+      text-align: center;
+      font-size: .87rem;
+      color: var(--brand, #18a7bf);
+      flex-shrink: 0;
+    }
+    .gs-txt { flex: 1; min-width: 0; }
+    .gs-name {
+      font-size: .86rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text, #1e293b);
+    }
+    .gs-meta {
+      font-size: .72rem;
+      color: #8fa0b0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .gs-code {
+      font-size: .69rem;
+      font-weight: 700;
+      color: #b0bec5;
+      flex-shrink: 0;
+    }
+    .gs-empty {
+      padding: 24px 14px;
+      text-align: center;
+      color: #8fa0b0;
+      font-size: .84rem;
+    }
+    mark.gsh {
+      background: rgba(24,167,191,.18);
+      border-radius: 2px;
+      font-weight: 700;
+      color: inherit;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ─── HELPERS ──────────────────────────────────────────────
+  const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const hit = (t, q) => norm(t).includes(norm(q));
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const j = (...v) => v.filter(Boolean).join(' · ');
+
+  function hl(text, q) {
+    const t = esc(text);
+    if (!q) return t;
+    const idx = norm(text).indexOf(norm(q));
+    if (idx < 0) return t;
+    return esc(text.slice(0, idx))
+      + '<mark class="gsh">' + esc(text.slice(idx, idx + q.length)) + '</mark>'
+      + esc(text.slice(idx + q.length));
+  }
+
+  function safeGet(key) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; } catch { return null; }
+  }
+
+  function fmtDate(d) {
+    if (!d) return '';
+    try { return new Date(d).toLocaleDateString('fr-FR'); } catch { return ''; }
+  }
+
+  // ─── NAVIGATION CORRIGÉE ──────────────────────────────────
+  // PROBLÈME RACINE : renderPage() re-attache des listeners navItems
+  // à chaque appel → accumulation → redirections parasites vers dashboard.
+  // SOLUTION : on passe par le navItem click UNE SEULE FOIS pour changer
+  // de module, puis on appelle renderPage pour le subpage dans un tick séparé,
+  // APRÈS que le DOM soit stable (requestAnimationFrame).
+
+  function navigateTo(pageKey, subpageKey) {
+
+    const PAGE_MAP = {
+      'equipements': { page: 'equipements', sub: 'equipment' },
+      'equipment': { page: 'equipements', sub: 'equipment' },
+      'famille-equipment': { page: 'equipements', sub: 'famille-equipment' },
+      'groupe-equipment': { page: 'equipements', sub: 'groupe-equipment' },
+      'organe': { page: 'organe', sub: 'organe' },
+      'famille-organe': { page: 'organe', sub: 'famille-organe' },
+      'groupe-organe': { page: 'organe', sub: 'groupe-organe' },
+      'articles': { page: 'articles', sub: 'article' },
+      'article': { page: 'articles', sub: 'article' },
+      'famille-article': { page: 'articles', sub: 'famille-article' },
+      'groupe-article': { page: 'articles', sub: 'groupe-article' },
+      'interventions': { page: 'interventions', sub: 'di' },
+      'di': { page: 'interventions', sub: 'di' },
+      'ot': { page: 'interventions', sub: 'ot' },
+      'bt': { page: 'interventions', sub: 'bt' },
+      'planification': { page: 'planification', sub: 'plans-maintenance' },
+      'plans-maintenance': { page: 'planification', sub: 'plans-maintenance' },
+      'compteurs': { page: 'planification', sub: 'compteurs' },
+      'stock': { page: 'stock', sub: 'fiche-stock' },
+      'fiche-stock': { page: 'stock', sub: 'fiche-stock' },
+      'mouvements': { page: 'stock', sub: 'mouvements' },
+      'inventaire': { page: 'stock', sub: 'inventaire' },
+      'achats': { page: 'achats', sub: 'demandes-achat' },
+      'demandes-achat': { page: 'achats', sub: 'demandes-achat' },
+      'bons-commande': { page: 'achats', sub: 'bons-commande' },
+      'receptions': { page: 'achats', sub: 'receptions' },
+      'fournisseurs': { page: 'fournisseurs', sub: '' },
+      'organisation': { page: 'organisation', sub: 'entreprise' },
+      'entreprise': { page: 'organisation', sub: 'entreprise' },
+      'unites': { page: 'organisation', sub: 'unites' },
+      'divisions': { page: 'organisation', sub: 'divisions' },
+      'departements-services': { page: 'organisation', sub: 'departements-services' },
+      'parametres': { page: 'parametres', sub: 'general' },
+      'utilisateurs': { page: 'parametres', sub: 'utilisateurs' },
+      'general': { page: 'parametres', sub: 'general' },
+      'roles': { page: 'parametres', sub: 'roles' },
+      'logs': { page: 'parametres', sub: 'logs' },
+      'dashboard': { page: 'dashboard', sub: '' },
+      'arborescence': { page: 'arborescence', sub: '' },
+    };
+
+    // Résoudre les vraies clés
+    var resolvedPage = pageKey;
+    var resolvedSub = subpageKey || '';
+
+    var bySubKey = subpageKey ? PAGE_MAP[subpageKey] : null;
+    var byPageKey = PAGE_MAP[pageKey];
+
+    if (bySubKey) {
+      resolvedPage = bySubKey.page;
+      resolvedSub = bySubKey.sub;
+    } else if (byPageKey) {
+      resolvedPage = byPageKey.page;
+      resolvedSub = subpageKey || byPageKey.sub;
+    }
+
+    console.log('[GMAO Search] navigateTo → page="' + resolvedPage + '" sub="' + resolvedSub + '"');
+
+    // Cas spécial fournisseurs
+    if (resolvedPage === 'fournisseurs') {
+      if (typeof window.fournisseurs === 'object' && typeof window.fournisseurs.renderPage === 'function') {
+        window.fournisseurs.renderPage();
+      } else {
+        var fBtn = document.querySelector('[data-page="fournisseurs"]');
+        if (fBtn) fBtn.click();
+      }
+      return;
+    }
+
+    // ── SOLUTION AU BUG : appel direct renderPage() en isolation totale ──
+    // On utilise requestAnimationFrame pour s'assurer que le clic précédent
+    // a fini de propager tous ses listeners avant qu'on appelle renderPage.
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (typeof renderPage === 'function') {
+          try {
+            // Mise à jour active du nav visuellement
+            document.querySelectorAll('[data-page]').forEach(function (item) {
+              item.classList.toggle('active', item.dataset.page === resolvedPage);
+            });
+            // Appel direct sans passer par le click du navItem
+            renderPage(resolvedPage, resolvedSub || undefined);
+            // Hash en cohérence
+            history.replaceState(null, '', '#' + resolvedPage + (resolvedSub ? resolvedSub : ''));
+          } catch (e) {
+            console.warn('[GMAO Search] renderPage erreur:', e);
+          }
+        }
+      });
+    });
+  }
+
+  // ─── COLLECTE DES DONNÉES ────────────────────────────────
+  function collectData() {
+    var out = [];
+
+    function add(module, icon, name, code, meta, pageKey, subpageKey) {
+      if (!name && !code) return;
+      out.push({ module: module, icon: icon, name: String(name || code), code: String(code || ''), meta: String(meta || ''), pageKey: pageKey, subpageKey: subpageKey || '' });
+    }
+
+    // Équipements
+    var eq = safeGet('maintflow.equipmentCatalog');
+    (eq && eq.equipments || []).forEach(function (e) { add('Équipements', 'fa-gear', e.name, e.code, j(e.brand, e.model, e.status, e.criticality), 'equipements', 'equipment'); });
+    (eq && eq.families || []).forEach(function (f) { add('Familles équipements', 'fa-folder-tree', f.name, f.code, f.designations, 'equipements', 'famille-equipment'); });
+    (eq && eq.groups || []).forEach(function (g) { add('Groupes équipements', 'fa-layer-group', g.name, g.code, g.designations, 'equipements', 'groupe-equipment'); });
+
+    // Organes
+    var og = safeGet('maintflow.organeCatalog');
+    (og && og.organes || []).forEach(function (o) { add('Organes', 'fa-circle-nodes', o.name, o.code, j(o.brand, o.model, o.status), 'organe', 'organe'); });
+    (og && og.families || []).forEach(function (f) { add('Familles organes', 'fa-puzzle-piece', f.name, f.code, '', 'organe', 'famille-organe'); });
+    (og && og.groups || []).forEach(function (g) { add('Groupes organes', 'fa-diagram-project', g.name, g.code, '', 'organe', 'groupe-organe'); });
+
+    // Articles
+    var art = safeGet('maintflow.articleCatalog');
+    (art && art.articles || []).forEach(function (x) { add('Articles', 'fa-box', x.name, x.code, j(x.articleType, x.brand, x.unitMeasure), 'articles', 'article'); });
+    (art && art.families || []).forEach(function (f) { add('Familles articles', 'fa-layer-group', f.name, f.code, '', 'articles', 'famille-article'); });
+    (art && art.groups || []).forEach(function (g) { add('Groupes articles', 'fa-boxes-stacked', g.name, g.code, '', 'articles', 'groupe-article'); });
+
+    // Stock
+    var stk = safeGet('maintflow.stockLedger');
+    (stk && stk.records || []).forEach(function (r) {
+      var a = art && art.articles && art.articles.find(function (x) { return x.id === r.articleId; });
+      add('Fiches stock', 'fa-warehouse', a && a.name || r.articleId, a && a.code || '', j(r.locationLabel, r.currentQuantity != null ? 'Qté: ' + r.currentQuantity : ''), 'stock', 'fiche-stock');
+    });
+    (stk && stk.movements || []).filter(function (m) { return !m.isCancelled; }).forEach(function (m) {
+      var a = art && art.articles && art.articles.find(function (x) { return x.id === m.articleId; });
+      var t = m.type === 'entry' ? 'Entrée' : m.type === 'exit' ? 'Sortie' : m.type === 'transfer' ? 'Transfert' : 'Inventaire';
+      add('Mouvements stock', 'fa-right-left', a && a.name || m.articleId, m.linkedDocument || '', j(t, fmtDate(m.createdAt)), 'stock', 'mouvements');
+    });
+    var invs = safeGet('maintflow.stockInventories');
+    (Array.isArray(invs) ? invs : []).forEach(function (inv) { add('Inventaires', 'fa-clipboard-check', inv.inventoryId || inv.id, '', j(inv.status, inv.inventoryType, fmtDate(inv.closedAt)), 'stock', 'inventaire'); });
+
+    // Achats
+    var ach = safeGet('maintflow.purchaseFlow');
+    (ach && ach.demandes || []).forEach(function (d) { add('Demandes achat (DA)', 'fa-file-invoice', d.reference || d.number || d.id, d.reference || d.number || '', j(d.status, d.articleLabel, fmtDate(d.createdAt)), 'achats', 'demandes-achat'); });
+    (ach && ach.bons || []).forEach(function (b) { add('Bons de commande (BC)', 'fa-file-signature', b.reference || b.number || b.id, b.reference || b.number || '', j(b.status, b.supplierName, fmtDate(b.createdAt)), 'achats', 'bons-commande'); });
+    (ach && ach.receptions || []).forEach(function (r) { add('Réceptions', 'fa-truck-ramp-box', r.reference || r.number || r.id, r.reference || r.number || '', j(r.status, r.supplierName, fmtDate(r.createdAt)), 'achats', 'receptions'); });
+
+    // Fournisseurs
+    var fou = safeGet('maintflow.fournisseurs');
+    (fou && fou.suppliers || []).forEach(function (s) { add('Fournisseurs', 'fa-truck', s.nomCommercial || s.raisonSociale || s.name, s.number || s.code || '', j(s.domaine, s.type, s.wilaya), 'fournisseurs', ''); });
+    (fou && fou.contracts || []).forEach(function (c) { add('Contrats fournisseurs', 'fa-file-contract', c.reference || c.title || c.id, c.reference || '', j(c.type, c.status, fmtDate(c.expiryDate)), 'fournisseurs', ''); });
+
+    // Interventions
+    var inter = safeGet('maintflow.interventionFlow') || safeGet('maintflow.interventions');
+    var diList = (inter && inter.dis) || (inter && inter.demandes) || (Array.isArray(inter) ? inter : []);
+    var otList = (inter && inter.ots) || (inter && inter.ordres) || [];
+    var btList = (inter && inter.bts) || (inter && inter.bons_travail) || [];
+
+    diList.forEach(function (d) { add('Demandes intervention (DI)', 'fa-screwdriver', d.title || d.ref || d.id, d.ref || d.number || '', j(d.status, d.equipmentLabel || d.equipment, d.urgency, fmtDate(d.createdAt)), 'interventions', 'di'); });
+    otList.forEach(function (o) { add('Ordres de travail (OT)', 'fa-wrench', o.title || o.ref || o.id, o.ref || o.number || '', j(o.status, o.equipmentLabel || o.equipment, o.technicianLabel, fmtDate(o.plannedDate)), 'interventions', 'ot'); });
+    btList.forEach(function (b) { add('Bons de travail (BT)', 'fa-clipboard-list', b.title || b.ref || b.id, b.ref || b.number || '', j(b.status, b.equipmentLabel || b.equipment, fmtDate(b.closedAt || b.endDate)), 'interventions', 'bt'); });
+
+    // Planification
+    var plan = safeGet('maintflow.planificationState');
+    (plan && plan.plans || []).forEach(function (p) { add('Plans maintenance', 'fa-calendar-check', p.name || p.title, p.code || '', j(p.maintenanceType, p.type, p.status), 'planification', 'plans-maintenance'); });
+    (plan && plan.counters || []).forEach(function (c) { add('Compteurs', 'fa-gauge-high', c.name || c.id, c.code || '', j(c.type, c.currentValue != null ? 'Valeur: ' + c.currentValue : '', c.linkedEquipment), 'planification', 'compteurs'); });
+
+    // Organisation
+    var org = safeGet('maintflow.organizationDirectory');
+    (org && org.unites || []).forEach(function (u) { add('Unités', 'fa-industry', u.name, u.code, j(u.wilaya, u.phone), 'organisation', 'unites'); });
+    (org && org.divisions || []).forEach(function (d) { add('Divisions', 'fa-sitemap', d.name, d.code, '', 'organisation', 'divisions'); });
+    (org && org.departmentServices || []).forEach(function (d) { add('Départements', 'fa-folder-open', d.name, d.code, d.kind, 'organisation', 'departements-services'); });
+
+    // Utilisateurs
+    var adm = safeGet('maintflow.administrationState') || safeGet('maintflow.administration');
+    (adm && adm.users || []).forEach(function (u) {
+      var name = u.fullName || (u.firstName ? u.firstName + ' ' + u.lastName : '') || u.username || u.name;
+      add('Utilisateurs', 'fa-user', name, u.role || '', j(u.email, u.active === false ? 'Inactif' : 'Actif'), 'parametres', 'utilisateurs');
+    });
+
+    // Dédoublonnage
+    var seen = new Set();
+    return out.filter(function (r) {
+      var k = r.module + '|' + r.code + '|' + r.name;
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+  }
+
+  // ─── RENDU DROPDOWN ──────────────────────────────────────
+  function render(dropdown, q, data) {
+    if (!q.trim()) { dropdown.classList.remove('open'); return; }
+
+    var filtered = data
+      .filter(function (r) { return hit(r.name, q) || hit(r.code, q) || hit(r.meta, q) || hit(r.module, q); })
+      .slice(0, 80);
+
+    if (!filtered.length) {
+      dropdown.innerHTML = '<div class="gs-empty">Aucun résultat pour « ' + esc(q) + ' »</div>';
+      dropdown.classList.add('open');
+      return;
+    }
+
+    var groups = {};
+    filtered.forEach(function (r) {
+      if (!groups[r.module]) groups[r.module] = [];
+      groups[r.module].push(r);
+    });
+
+    var html = '';
+    Object.keys(groups).forEach(function (grp) {
+      var items = groups[grp];
+      html += '<div class="gs-group">' + esc(grp) + ' <span style="font-weight:400;opacity:.6">(' + items.length + ')</span></div>';
+      items.forEach(function (item) {
+        html += '<div class="gs-item" tabindex="0"'
+          + ' data-page="' + esc(item.pageKey) + '"'
+          + ' data-subpage="' + esc(item.subpageKey) + '"'
+          + ' role="option">'
+          + '<i class="fa-solid ' + esc(item.icon) + '"></i>'
+          + '<div class="gs-txt">'
+          + '<div class="gs-name">' + hl(item.name, q) + '</div>'
+          + (item.meta ? '<div class="gs-meta">' + hl(item.meta, q) + '</div>' : '')
+          + '</div>'
+          + (item.code ? '<span class="gs-code">' + hl(item.code, q) + '</span>' : '')
+          + '</div>';
+      });
+    });
+
+    dropdown.innerHTML = html;
+    dropdown.classList.add('open');
+
+    dropdown.querySelectorAll('.gs-item').forEach(function (el) {
+      // ── MOUSEDOWN empêche le blur avant la navigation ──
+      el.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var pg = el.dataset.page;
+        var sub = el.dataset.subpage;
+        dropdown.classList.remove('open');
+        if (pg) navigateTo(pg, sub);
+      });
+
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          var pg = el.dataset.page;
+          var sub = el.dataset.subpage;
+          dropdown.classList.remove('open');
+          if (pg) navigateTo(pg, sub);
+          return;
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          var next = el.nextElementSibling;
+          while (next && !next.classList.contains('gs-item')) next = next.nextElementSibling;
+          if (next) next.focus();
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          var prev = el.previousElementSibling;
+          while (prev && !prev.classList.contains('gs-item')) prev = prev.previousElementSibling;
+          if (prev) prev.focus();
+        }
+      });
+    });
+  }
+
+  // ─── INITIALISATION ──────────────────────────────────────
+  function init() {
+    var input = document.querySelector('.topbar-search input')
+      || document.querySelector('.navbar-search input')
+      || document.querySelector('input[placeholder*="chercher"]')
+      || document.querySelector('input[placeholder*="Rechercher"]')
+      || document.querySelector('input[placeholder*="Search"]');
+
+    if (!input) { setTimeout(init, 600); return; }
+    if (input.dataset.gsInit) return;
+    input.dataset.gsInit = '1';
+
+    var wrapper = input.closest('.topbar-search') || input.closest('.navbar-search') || input.parentElement;
+    if (wrapper) wrapper.style.position = 'relative';
+
+    var dropdown = document.createElement('div');
+    dropdown.id = 'gmaoSearchDropdown';
+    dropdown.setAttribute('role', 'listbox');
+    wrapper.appendChild(dropdown);
+
+    var allData = collectData();
+    var timer;
+
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        allData = collectData();
+        render(dropdown, input.value, allData);
+      }, 100);
+    });
+
+    input.addEventListener('focus', function () {
+      if (input.value.trim()) render(dropdown, input.value, allData);
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { dropdown.classList.remove('open'); input.blur(); return; }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        var first = dropdown.querySelector('.gs-item');
+        if (first) first.focus();
+      }
+    });
+
+    // Fermeture dropdown — mousedown pour ne pas bloquer la navigation
+    document.addEventListener('mousedown', function (e) {
+      if (!dropdown.contains(e.target) && e.target !== input)
+        dropdown.classList.remove('open');
+    });
+
+    console.log('[GMAO Search] ✓ Activé — ' + collectData().length + ' enregistrements indexés');
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+})();
