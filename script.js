@@ -8863,7 +8863,7 @@ function localizeAdministrationText(value, state = null) {
     [
       "BT non validé après X jours",
       languageKey === "en"
-        ? "Unvalidated work report after X days"
+        ? "Unvalidated work ticket after X days"
         : "BT non validé après X jours",
     ],
     [
@@ -9023,6 +9023,9 @@ function translateHistoryAction(event) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Élément": "Element",
+    "Type d'élément demandé": "Requested Element Type",
+    "Transformée en OT": "Transformed to WO",
     "Transformée en BC": "Transformed to PO",
     "Observations générales": "general observations",
     "Sélectionnez une demande d'achat validée.": "Select a validated purchase request.",
@@ -10084,7 +10087,7 @@ const englishInterfacePhraseTranslations = new Map(
     'Plan supprimé.': 'Plan deleted.',
     'Flux de déclenchement': 'Trigger workflow',
     'Plan actif ➜ échéance atteinte ➜ OT généré automatiquement ➜ notification ➜ assignation technicien ➜ visible dans le calendrier.': 'Active plan - due date reached - WO generated automatically - notification - technician assignment - visible in the calendar.',
-    'Relevé saisi ➜ seuil action atteint ➜ OT généré ➜ compteur remis à zéro après clôture BT ➜ prochain déclenchement recalculé.': 'Reading entered - action threshold reached - WO generated - meter reset after WRP closure - next trigger recalculated.',
+    'Relevé saisi ➜ seuil action atteint ➜ OT généré ➜ compteur remis à zéro après clôture BT ➜ prochain déclenchement recalculé.': 'Reading entered - action threshold reached - WO generated - meter reset after WT closure - next trigger recalculated.',
     "Étape": "Step",
     "jours": "Days",
     "Urgente": "Urgent",
@@ -10254,7 +10257,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Choisissez un r\u00f4le, puis modifiez ses permissions via des boutons \u00e0 \u00e9tat.":
       "Choose a role, then edit its permissions with status buttons.",
     "Lecture large et cr\u00e9ation des DI/BT avec modification des OT affect\u00e9s.":
-      "Broad read access plus WR/WRP creation and assigned WO editing.",
+      "Broad read access plus WR/WT creation and assigned WO editing.",
     "Stock uniquement": "Stock only",
     "G\u00e8re le stock, les mouvements et les validations de r\u00e9ception.":
       "Manages stock, movements and receipt approvals.",
@@ -10355,7 +10358,7 @@ const englishInterfacePhraseTranslations = new Map(
     "V\u00e9rifiez les informations de la DI et compl\u00e9tez les d\u00e9tails de l'OT.":
       "Review the work request information and complete the work order details.",
     "V\u00e9rifiez les informations de l'OT et compl\u00e9tez les d\u00e9tails du Bon de Travail.":
-      "Review the work order information and complete the work report details.",
+      "Review the work order information and complete the Work ticket details.",
     "SECTION 1 \u2014 Informations de la DI":
       "SECTION 1 - Work request information",
     "SECTION 1 \u2014 Informations de l'OT":
@@ -10363,7 +10366,7 @@ const englishInterfacePhraseTranslations = new Map(
     "SECTION 2 \u2014 Champs \u00e0 remplir pour l'OT":
       "SECTION 2 - Work order fields",
     "SECTION 2 \u2014 Champs \u00e0 remplir pour le BT":
-      "SECTION 2 - Work report fields",
+      "SECTION 2 - Work ticket fields",
     "Articles consomm\u00e9s": "Consumed items",
     "Travaux r\u00e9alis\u00e9s": "Work performed",
     "Cause de la panne": "Failure cause",
@@ -10460,8 +10463,8 @@ const englishInterfacePhraseTranslations = new Map(
     "R\u00e8gles de validation": "Approval rules",
     "Validation r\u00e9ception obligatoire": "Receipt approval required",
     "DI obligatoire avant OT": "Work request required before work order",
-    "Signature BT obligatoire": "Work report signature required",
-    "Photos obligatoires dans BT": "Photos required in work report",
+    "Signature BT obligatoire": "Work ticket signature required",
+    "Photos obligatoires dans BT": "Photos required in Work ticket",
     "Checklist s\u00e9curit\u00e9 obligatoire": "Safety checklist required",
     "D\u00e9lai max DI non trait\u00e9e (jours)":
       "Maximum unprocessed request delay (days)",
@@ -10569,7 +10572,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Plan actif \u2192 \u00e9ch\u00e9ance atteinte \u2192 OT g\u00e9n\u00e9r\u00e9 automatiquement \u2192 notification \u2192 assignation technicien \u2192 visible dans le calendrier.":
       "Active plan -> due date reached -> WO generated automatically -> notification -> technician assignment -> visible in the calendar.",
     "Relev\u00e9 saisi \u2192 seuil action atteint \u2192 OT g\u00e9n\u00e9r\u00e9 \u2192 compteur remis \u00e0 z\u00e9ro apr\u00e8s cl\u00f4ture BT \u2192 prochain d\u00e9clenchement recalcul\u00e9.":
-      "Reading entered -> action threshold reached -> WO generated -> meter reset after WRP closure -> next trigger recalculated.",
+      "Reading entered -> action threshold reached -> WO generated -> meter reset after WT closure -> next trigger recalculated.",
     "Les relev\u00e9s alimentent les seuils d'alerte et d'action, avec g\u00e9n\u00e9ration d'OT quand la valeur critique est atteinte.":
       "Readings feed alert and action thresholds, with WO generation when the critical value is reached.",
     "Si le seuil d'action est d\u00e9pass\u00e9, un OT est ajout\u00e9 \u00e0 la file planifi\u00e9e et le plan concern\u00e9 reste tra\u00e7able dans l'historique.":
@@ -10597,7 +10600,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Num\u00e9ro DI li\u00e9": "Linked WR number",
     "Num\u00e9ro OT li\u00e9": "Linked WO number",
     "Num\u00e9ro OT": "WO number",
-    "Num\u00e9ro BT": "WRP number",
+    "Num\u00e9ro BT": "WT number",
     "Titre / R\u00e9f DI": "Title / WR ref.",
     "RIB / Coordonn\u00e9es bancaires": "Bank details / account information",
     "Point de d\u00e9part du flux achat, avec cr\u00e9ation manuelle ou automatique depuis le stock.":
@@ -10614,7 +10617,7 @@ const englishInterfacePhraseTranslations = new Map(
       "Objective, instructions and field entry deadline...",
     "BC (bon de commande / r\u00e9ception)": "PO (purchase order / receipt)",
     "BT (bon de sortie)": "Issue note",
-    "BT / BC / inventaire...": "WRP / PO / inventory...",
+    "BT / BC / inventaire...": "WT / PO / inventory...",
     "DA en attente": "Pending PR",
     "DA urgentes": "Urgent PR",
     "DA valid\u00e9es": "Approved PR",
@@ -10624,10 +10627,10 @@ const englishInterfacePhraseTranslations = new Map(
     "Cr\u00e9ation, validation et transformation en OT avec \u00e9quipements, organes et demandeur li\u00e9s au r\u00e9f\u00e9rentiel.":
       "Create, approve and convert to WO with equipment, organs and requester linked to the directory.",
     "Vue consolid\u00e9e des DI, OT et BT avec filtres et export Excel / PDF.":
-      "Consolidated WR, WO and WRP view with filters and Excel / PDF export.",
+      "Consolidated WR, WO and WT view with filters and Excel / PDF export.",
     "Total DI": "Total WR",
     "Total OT": "Total WO",
-    "Total BT": "Total WRP",
+    "Total BT": "Total WT",
     "Aucune fiche stock": "No stock record",
     "Aucun contrat.": "No contract.",
     "Aucune garantie.": "No warranty.",
@@ -10652,10 +10655,10 @@ const englishInterfacePhraseTranslations = new Map(
     "Imprimer la fiche": "Print record",
     "Transformer en OT": "Convert to work order",
     "Cr\u00e9er OT": "Create work order",
-    "Cr\u00e9er BT": "Create work report",
+    "Cr\u00e9er BT": "Create Work ticket",
     "Cl\u00f4turer": "Close",
     "Confirmer et cr\u00e9er OT": "Confirm and create work order",
-    "Confirmer et cr\u00e9er BT": "Confirm and create work report",
+    "Confirmer et cr\u00e9er BT": "Confirm and create Work ticket",
     "Cette page centralise les plans qui organisent les interventions de maintenance.":
       "This page centralizes the plans that organize maintenance interventions.",
     "Référentiel de base, contacts, légaux et conditions commerciales.":
@@ -10704,7 +10707,7 @@ const englishInterfacePhraseTranslations = new Map(
       "Error while generating the goods receipt document.",
     "DI introuvable.": "Work request not found.",
     "OT introuvable.": "Work order not found.",
-    "BT introuvable.": "Work report not found.",
+    "BT introuvable.": "Work ticket not found.",
     "La date planifiée est obligatoire.":
       "Scheduled date is required.",
     "Les travaux réalisés sont obligatoires.":
@@ -10765,11 +10768,11 @@ const englishInterfacePhraseTranslations = new Map(
     "Aucun article prévu pour cet OT.":
       "No items planned for this work order.",
     "Technicien assigné": "Assigned technician",
-    "BON DE TRAVAIL": "WORK REPORT",
+    "BON DE TRAVAIL": "WORK TICKET",
     "BT — Rapport d'exécution et clôture de l'intervention":
-      "WRP — Execution report and work order closure",
-    "Identification du bon de travail": "Work report identification",
-    "Référence BT": "WRP reference",
+      "WT — Execution report and work order closure",
+    "Identification du bon de travail": "Work ticket identification",
+    "Référence BT": "WT reference",
     "OT lié": "Linked WO",
     "Temps d'intervention": "Work time",
     "Durée estimée": "Estimated duration",
@@ -11004,7 +11007,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Refusée": "Rejected",
     "Validée": "Approved",
     "OT créé avec succès": "Work order created successfully",
-    "BT créé avec succès": "Work report created successfully",
+    "BT créé avec succès": "Work ticket created successfully",
     "Modifier ligne catalogue": "Edit catalog line",
     "Créer ligne catalogue": "Create catalog line",
     "Formulaire de ligne catalogue fournisseur.":
@@ -11054,6 +11057,9 @@ const englishInterfacePhraseTranslations = new Map(
 
 const englishInterfaceWordTranslations = new Map(
   Object.entries({
+    "transformée": "transformed",
+    "transformé": "transformed",
+    "validée": "Validated",
     'messagerie': 'messaging',
     'collègue': 'colleague',
     'collègues': 'colleagues',
@@ -18016,28 +18022,40 @@ function buildStockFicheContent() {
 
   return `
     <div class="stock-page-shell">
-      <div class="stock-kpi-grid">
-        <div class="stock-kpi-card">
-          <span>Fiches actives</span>
-          <strong>${records.length}</strong>
-          <small>emplacements enregistrés</small>
-        </div>
-        <div class="stock-kpi-card">
-          <span>Quantité totale</span>
-          <strong>${formatStockNumber(totals.quantity)}</strong>
-          <small>unités en stock</small>
-        </div>
-        <div class="stock-kpi-card">
-          <span>Valeur catalogue</span>
-          <strong>${formatStockNumber(valueByArticle)} DA</strong>
-          <small>valorisation actuelle</small>
-        </div>
-        <div class="stock-kpi-card ${alerts.length ? "danger" : ""}">
-          <span>Alertes</span>
-          <strong>${alerts.length}</strong>
-          <small>fiches sous seuil</small>
-        </div>
-      </div>
+      <div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-header">
+      <div class="kpi-label">Fiches actives</div>
+      <div class="kpi-icon blue"><i class="fa-solid fa-boxes-stacked"></i></div>
+    </div>
+    <div class="kpi-value">${records.length}</div>
+    <div class="kpi-footer">Emplacements enregistrés</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-header">
+      <div class="kpi-label">Quantité totale</div>
+      <div class="kpi-icon green"><i class="fa-solid fa-cubes"></i></div>
+    </div>
+    <div class="kpi-value">${formatStockNumber(totals.quantity)}</div>
+    <div class="kpi-footer">Unités en stock</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-header">
+      <div class="kpi-label">Valeur catalogue</div>
+      <div class="kpi-icon orange"><i class="fa-solid fa-coins"></i></div>
+    </div>
+    <div class="kpi-value">${formatStockNumber(valueByArticle)} DA</div>
+    <div class="kpi-footer">Valorisation actuelle</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-header">
+      <div class="kpi-label">Alertes</div>
+      <div class="kpi-icon ${alerts.length ? "red" : "green"}"><i class="fa-solid fa-bell${alerts.length ? "" : "-slash"}"></i></div>
+    </div>
+    <div class="kpi-value">${alerts.length}</div>
+    <div class="kpi-footer">Fiches sous seuil</div>
+  </div>
+</div>
 
       <div class="card stock-card stock-records-card">
         <div class="card-head">
@@ -18070,28 +18088,40 @@ function buildStockMovementsContent() {
 
   return `
     <div class="stock-page-shell">
-      <div class="stock-kpi-grid">
-        <div class="stock-kpi-card">
-          <span>Entrées</span>
-          <strong>${entryMovements.length}</strong>
-          <small>mouvements récents</small>
-        </div>
-        <div class="stock-kpi-card">
-          <span>Sorties</span>
-          <strong>${exitMovements.length}</strong>
-          <small>mouvements récents</small>
-        </div>
-        <div class="stock-kpi-card">
-          <span>Transferts</span>
-          <strong>${transferMovements.length}</strong>
-          <small>mouvements récents</small>
-        </div>
-        <div class="stock-kpi-card">
-          <span>Total tracé</span>
-          <strong>${allMovements.length}</strong>
-          <small>mouvements actifs</small>
-        </div>
-      </div>
+      <div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-header">
+      <div class="kpi-label">Entrées</div>
+      <div class="kpi-icon green"><i class="fa-solid fa-arrow-down-short-wide"></i></div>
+    </div>
+    <div class="kpi-value">${entryMovements.length}</div>
+    <div class="kpi-footer">Mouvements récents</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-header">
+      <div class="kpi-label">Sorties</div>
+      <div class="kpi-icon red"><i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+    </div>
+    <div class="kpi-value">${exitMovements.length}</div>
+    <div class="kpi-footer">Mouvements récents</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-header">
+      <div class="kpi-label">Transferts</div>
+      <div class="kpi-icon orange"><i class="fa-solid fa-right-left"></i></div>
+    </div>
+    <div class="kpi-value">${transferMovements.length}</div>
+    <div class="kpi-footer">Mouvements récents</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-header">
+      <div class="kpi-label">Total tracé</div>
+      <div class="kpi-icon blue"><i class="fa-solid fa-chart-line"></i></div>
+    </div>
+    <div class="kpi-value">${allMovements.length}</div>
+    <div class="kpi-footer">Mouvements actifs</div>
+  </div>
+</div>
 
       <div class="stock-list-stack">
         <div class="card stock-card">
@@ -21759,7 +21789,7 @@ ${renderOrganizationStats([
               <th>Date création</th>
               <th>Demandeur</th>
               <th>Urgence</th>
-              <th>Article</th>
+              <th>Élément</th>
               <th>Qté</th>
               <th>Prix estimé</th>
               <th>Statut</th>
@@ -21863,7 +21893,7 @@ function renderAchatsOrdersPage(state, activeSubpageKey) {
               <th>Numéro</th>
               <th>Date création</th>
               <th>Fournisseur</th>
-              <th>Article</th>
+              <th>Élément</th>
               <th>Qté</th>
               <th>Total TTC</th>
               <th>Statut</th>
@@ -21970,7 +22000,7 @@ function renderAchatsReceptionsPage(state, activeSubpageKey) {
               <th>Date réception</th>
               <th>BC lié</th>
               <th>Fournisseur</th>
-              <th>Article</th>
+              <th>Élément</th>
               <th>Qté reçue</th>
               <th>Qté manquante</th>
               <th>Statut</th>
@@ -22198,7 +22228,7 @@ function renderAchatsHistoryPage(state, activeSubpageKey) {
               <th>Numéro</th>
               <th>Type</th>
               <th>Date</th>
-              <th>Article</th>
+              <th>Élément</th>
               <th>Fournisseur</th>
               <th>Statut</th>
               <th>Montant</th>
@@ -22273,62 +22303,121 @@ function getSupplierByName(name) {
 }
 
 function buildAchatsDaForm(record, mode) {
-  const codePreview =
-    record?.number || buildAchatsRef("DA", loadAchatsState().demandes);
+  const codePreview = record?.number || buildAchatsRef("DA", loadAchatsState().demandes);
   const datePreview = record?.createdAt || new Date().toISOString();
+
+  // Construire les options organes
+  const organes = getOrganeDirectory().organes || [];
+  const organeOptions = [`<option value="">Sélectionner un organe</option>`]
+    .concat(organes.map(o =>
+      `<option value="${escapeHtml(o.id)}"
+        data-price="${escapeHtml(String(o.purchasePrice || 0))}"
+        ${record?.organeId === o.id ? 'selected' : ''}>
+        ${escapeHtml(o.code)} — ${escapeHtml(o.name)}
+      </option>`
+    )).join('');
 
   return `
     <form class="org-form" data-ach-form="demandes-achat">
       <div class="org-form-grid">
+
         <div class="field-group">
           <label>Numéro</label>
           <input type="text" value="${escapeHtml(codePreview)}" disabled />
         </div>
+
         <div class="field-group">
-          <label for="daArticle">Article</label>
-          <select id="daArticle" name="articleId">${buildAchatsArticleOptions(record?.articleId || "")}</select>
+          <label>Date création</label>
+          <input type="text" value="${escapeHtml(formatAchatsDate(datePreview))}" disabled />
         </div>
+
+        <!-- ── CHOIX TYPE : Article ou Organe ── -->
+        <div class="field-group field-group-wide">
+          <label>Type d'élément demandé</label>
+          <div style="display:flex;gap:1.5rem;margin-top:6px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;">
+              <input type="radio" name="daItemType" value="article" id="daTypeArticle"
+                ${(!record?.organeId) ? 'checked' : ''} />
+              <i class="fa-solid fa-box" style="color:var(--color-primary)"></i> Article
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;">
+              <input type="radio" name="daItemType" value="organe" id="daTypeOrgane"
+                ${record?.organeId ? 'checked' : ''} />
+              <i class="fa-solid fa-gear" style="color:var(--color-orange)"></i> Organe
+            </label>
+          </div>
+        </div>
+
+        <!-- ── DROPDOWN ARTICLE (visible par défaut) ── -->
+        <div class="field-group" id="daArticleGroup" style="${record?.organeId ? 'display:none' : ''}">
+          <label for="daArticle">Article</label>
+          <select id="daArticle" name="articleId">
+            ${buildAchatsArticleOptions(record?.articleId || "")}
+          </select>
+        </div>
+
+        <!-- ── DROPDOWN ORGANE (caché par défaut) ── -->
+        <div class="field-group" id="daOrganeGroup" style="${record?.organeId ? '' : 'display:none'}">
+          <label for="daOrgane">Organe</label>
+          <select id="daOrgane" name="organeId">
+            ${organeOptions}
+          </select>
+        </div>
+
+        <!-- Champ caché pour stocker organeLabel -->
+        <input type="hidden" name="organeLabel" id="daOrganeLabel"
+          value="${escapeHtml(record?.organeLabel || '')}" />
+
         <div class="field-group">
           <label for="daQuantity">Quantité demandée</label>
-          <input id="daQuantity" name="quantity" type="number" min="1" step="1" value="${escapeHtml(String(record?.quantity || ""))}" required />
+          <input id="daQuantity" name="quantity" type="number" min="1" step="1"
+            value="${escapeHtml(String(record?.quantity || ""))}" required />
         </div>
+
         <div class="field-group">
-  <label for="daEstimatedPrice">Prix unitaire (article)</label>
-  <input id="daEstimatedPrice" name="estimatedUnitPrice" type="number" min="0" step="0.01"
-         value="${escapeHtml(String(record?.estimatedUnitPrice ?? 0))}"
-         readonly style="background:var(--color-surface-offset); cursor:not-allowed;"
-         title="Récupéré automatiquement depuis la fiche article">
-</div>
-<div class="field-group">
-  <label for="daTotalPrice">Prix total estimé</label>
-  <input id="daTotalPrice" name="totalPrice" type="number" min="0" step="0.01"
-         value="0" readonly
-         style="background:var(--color-surface-offset); cursor:not-allowed;"
-         title="Quantité × Prix unitaire">
-</div>
+          <label for="daEstimatedPrice">Prix unitaire</label>
+          <input id="daEstimatedPrice" name="estimatedUnitPrice" type="number" min="0" step="0.01"
+            value="${escapeHtml(String(record?.estimatedUnitPrice ?? 0))}"
+            readonly style="background:var(--color-surface-offset);cursor:not-allowed;"
+            title="Récupéré automatiquement depuis la fiche article ou organe" />
+        </div>
+
         <div class="field-group">
-  <label for="daSupplier">Fournisseur</label>
-  <select id="daSupplier" name="preferredSupplier">
-    ${buildSupplierOptions(record?.preferredSupplier || "")}
-  </select>
-</div>
+          <label for="daTotalPrice">Prix total estimé</label>
+          <input id="daTotalPrice" name="totalPrice" type="number" min="0" step="0.01"
+            value="0" readonly
+            style="background:var(--color-surface-offset);cursor:not-allowed;"
+            title="Quantité × Prix unitaire" />
+        </div>
+
+        <div class="field-group">
+          <label for="daSupplier">Fournisseur</label>
+          <select id="daSupplier" name="preferredSupplier">
+            ${buildSupplierOptions(record?.preferredSupplier || "")}
+          </select>
+        </div>
+
         <div class="field-group">
           <label for="daNeededDate">Date souhaitée</label>
-          <input id="daNeededDate" name="neededDate" type="date" value="${escapeHtml(record?.neededDate || "")}" />
+          <input id="daNeededDate" name="neededDate" type="date"
+            value="${escapeHtml(record?.neededDate || "")}" />
         </div>
+
         <div class="field-group">
-  <label for="daUrgency">Urgence</label>
-  <select id="daUrgency" name="urgency" required>
-    <option value="Normale" ${record?.urgency === "Normale" ? "selected" : ""}>Normale</option>
-    <option value="Urgente" ${record?.urgency === "Urgente" ? "selected" : ""}>Urgente</option>
-    <option value="Critique" ${record?.urgency === "Critique" ? "selected" : ""}>Critique</option>
-  </select>
-</div>
+          <label for="daUrgency">Urgence</label>
+          <select id="daUrgency" name="urgency" required>
+            <option value="Normale" ${record?.urgency === "Normale" ? "selected" : ""}>Normale</option>
+            <option value="Urgente" ${record?.urgency === "Urgente" ? "selected" : ""}>Urgente</option>
+            <option value="Critique" ${record?.urgency === "Critique" ? "selected" : ""}>Critique</option>
+          </select>
+        </div>
 
         <div class="field-group field-group-wide">
           <label for="daReason">Justification</label>
-          <textarea id="daReason" name="reason" rows="4" placeholder="Motif de la demande">${escapeTextarea(record?.reason || "")}</textarea>
+          <textarea id="daReason" name="reason" rows="4"
+            placeholder="Motif de la demande">${escapeTextarea(record?.reason || "")}</textarea>
         </div>
+
       </div>
       ${buildAchatsFormFooter("demandes-achat", mode, record?.id || "")}
     </form>
@@ -22943,17 +23032,14 @@ function renderAchatsModal(activeSubpageKey, state) {
   // ✅ METTRE ICI — après modal, avant les autres addEventListener
   if (activeSubpageKey === 'demandes-achat' && mode !== 'details') {
     const articleSelect = modal.querySelector('select[name="articleId"]');
+    const organeSelect = modal.querySelector('select[name="organeId"]');
     const priceInput = modal.querySelector('#daEstimatedPrice');
     const qtyInput = modal.querySelector('#daQuantity');
     const totalInput = modal.querySelector('#daTotalPrice');
-
-    function syncDaPrice() {
-      const articleId = articleSelect?.value;
-      const article = getArticleRecord('articles', articleId);  // ✅ CORRECT
-      const price = Number(article?.price ?? 0);
-      if (priceInput) priceInput.value = price;
-      syncDaTotal();
-    }
+    const articleGroup = modal.querySelector('#daArticleGroup');
+    const organeGroup = modal.querySelector('#daOrganeGroup');
+    const organeLabelInp = modal.querySelector('#daOrganeLabel');
+    const radios = modal.querySelectorAll('input[name="daItemType"]');
 
     function syncDaTotal() {
       const qty = Number(qtyInput?.value ?? 0);
@@ -22961,9 +23047,52 @@ function renderAchatsModal(activeSubpageKey, state) {
       if (totalInput) totalInput.value = (qty * price).toFixed(2);
     }
 
-    syncDaPrice();
-    articleSelect?.addEventListener('change', syncDaPrice);
+    function syncDaPriceFromArticle() {
+      const articleId = articleSelect?.value;
+      const article = getArticleRecord("articles", articleId);
+      const price = Number(article?.price ?? 0);
+      if (priceInput) priceInput.value = price;
+      syncDaTotal();
+    }
+
+    function syncDaPriceFromOrgane() {
+      const selected = organeSelect?.options[organeSelect.selectedIndex];
+      const price = Number(selected?.dataset?.price ?? 0);
+      if (priceInput) priceInput.value = price;
+      // Mettre à jour le label organe
+      if (organeLabelInp) organeLabelInp.value = selected?.textContent?.trim() || '';
+      syncDaTotal();
+    }
+
+    // Gestion des radios Article / Organe
+    radios.forEach(radio => {
+      radio.addEventListener('change', function () {
+        if (this.value === 'article') {
+          articleGroup.style.display = '';
+          organeGroup.style.display = 'none';
+          // Réinitialiser organe
+          if (organeSelect) organeSelect.value = '';
+          if (organeLabelInp) organeLabelInp.value = '';
+          syncDaPriceFromArticle();
+        } else {
+          articleGroup.style.display = 'none';
+          organeGroup.style.display = '';
+          // Réinitialiser article
+          if (articleSelect) articleSelect.value = '';
+          syncDaPriceFromOrgane();
+        }
+      });
+    });
+
+    // Sync au changement de sélection
+    articleSelect?.addEventListener('change', syncDaPriceFromArticle);
+    organeSelect?.addEventListener('change', syncDaPriceFromOrgane);
     qtyInput?.addEventListener('input', syncDaTotal);
+
+    // Sync initial
+    const activeRadio = modal.querySelector('input[name="daItemType"]:checked');
+    if (activeRadio?.value === 'organe') syncDaPriceFromOrgane();
+    else syncDaPriceFromArticle();
   }
   const supplierSelect =
     modal.querySelector("#bcSupplierName");
@@ -23167,6 +23296,17 @@ function renderAchatsModal(activeSubpageKey, state) {
     const nextState = loadAchatsState();
 
     if (formType === "demandes-achat") {
+      const itemType = formData.get("daItemType") || "article";
+      const articleId = itemType === "article" ? String(formData.get("articleId") || "") : "";
+      const organeId = itemType === "organe" ? String(formData.get("organeId") || "") : "";
+      const organeLabel = itemType === "organe" ? String(formData.get("organeLabel") || "") : "";
+
+      const articleLabel = (() => {
+        if (itemType === "organe") return organeLabel;
+        const art = getArticleRecord("articles", articleId);
+        return art ? `${art.code} — ${art.name}` : "";
+      })();
+
       const record = {
         id: modeType === "edit" ? recordId : `da-${Date.now()}`,
         number:
@@ -23180,30 +23320,20 @@ function renderAchatsModal(activeSubpageKey, state) {
               .createdAt || new Date().toISOString()
             : new Date().toISOString(),
         requester: achatsCurrentUser,
-        status: modeType === "edit"
-          ? (nextState.demandes.find((item) => item.id === recordId) || {}).status || "En attente"
-          : "En attente",
-        articleId: String(formData.get("articleId") || ""),
-        articleLabel: (() => {
-          const articleId = String(formData.get("articleId") || "");
-
-          const article = getArticleRecord("articles", articleId);
-
-          return article
-            ? `${article.code} — ${article.name}`
-            : "";
-        })(),
+        status:
+          modeType === "edit"
+            ? (nextState.demandes.find((item) => item.id === recordId) || {})
+              .status || "En attente"
+            : "En attente",
+        itemType,
+        articleId,
+        organeId,
+        articleLabel,
         quantity: Number(formData.get("quantity") || 0),
-        estimatedUnitPrice: Number(
-          formData.get("estimatedUnitPrice") || 0
-        ),
-        totalPrice: Number(formData.get('totalPrice')) || 0,
-        preferredSupplier: String(
-          formData.get("preferredSupplier") || "",
-        ).trim(),
-        urgency: String(
-          formData.get("urgency") || "Normale"
-        ),
+        estimatedUnitPrice: Number(formData.get("estimatedUnitPrice") || 0),
+        totalPrice: Number(formData.get("totalPrice")) || 0,
+        preferredSupplier: String(formData.get("preferredSupplier") || "").trim(),
+        urgency: String(formData.get("urgency") || "Normale"),
         reason: String(formData.get("reason") || "").trim(),
         neededDate: String(formData.get("neededDate") || ""),
       };
@@ -24035,10 +24165,17 @@ function appendInterventionHistory(directory, entry) {
   history.unshift({
     id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     createdAt: entry.createdAt || new Date().toISOString(),
-    action: entry.action || "Événement",
-    recordType: entry.recordType || "",
-    recordRef: entry.recordRef || "",
-    message: entry.message || entry.action || "",
+    action: entry.action || 'Événement',
+    recordType: entry.recordType || '',
+    recordRef: entry.recordRef || '',
+    linkedRef: entry.linkedRef || '',
+    equipmentId: entry.equipmentId || '',
+    equipmentLabel: entry.equipmentLabel || '',   // ✅ ajouté
+    technicianId: entry.technicianId || '',
+    technicianLabel: entry.technicianLabel || '', // ✅ ajouté
+    status: entry.status || '',                   // ✅ ajouté
+    priority: entry.priority || '',               // ✅ ajouté
+    message: entry.message || entry.action || '',
   });
   directory.history = history;
 }
@@ -24161,7 +24298,7 @@ function buildInterventionDiFormModal(record = null) {
 
 function renderInterventionsModal() {
   if (!overlayRootEl || !interventionsModalState) return;
-
+  delete overlayRootEl.dataset.modalHandlersBound;
   const mode = interventionsModalState.mode || "create-di";
   const recordType = interventionsModalState.recordType || "di";
   const recordId = interventionsModalState.recordId || null;
@@ -24198,11 +24335,14 @@ function renderInterventionsModal() {
 
   const diRecord = recordId ? getInterventionDi(recordId) : null;
   overlayRootEl.innerHTML = buildInterventionDiFormModal(diRecord);
+  bindInterventionsModalHandlers();
 }
 
 function bindInterventionsModalHandlers() {
   if (!overlayRootEl) return;
 
+  if (overlayRootEl.dataset.modalHandlersBound === 'true') return;
+  overlayRootEl.dataset.modalHandlersBound = 'true';
   overlayRootEl
     .querySelectorAll("[data-int-close='true']")
     .forEach((button) => {
@@ -24252,67 +24392,65 @@ function bindInterventionsModalHandlers() {
     });
   });
 
-  const diForm = overlayRootEl.querySelector("[data-int-di-form]");
+  const diForm = overlayRootEl.querySelector('[data-int-di-form]');
   if (diForm) {
-    diForm.addEventListener("submit", function (event) {
+    if (diForm.dataset.submitBound === 'true') return;
+    const freshForm = diForm.cloneNode(true);
+    diForm.parentNode.replaceChild(freshForm, diForm);
+    freshForm.dataset.submitBound = 'true';
+    freshForm.addEventListener('submit', function (event) {
       event.preventDefault();
-
-      const formData = new FormData(diForm);
+      const formData = new FormData(freshForm);
       const directory = loadInterventionsState();
       const nowIso = new Date().toISOString();
       const existing = interventionsModalState?.recordId
-        ? directory.dis.find(
-          (item) => item.id === interventionsModalState.recordId,
-        )
+        ? directory.dis.find((item) => item.id === interventionsModalState.recordId)
         : null;
-
-      const equipmentId = String(formData.get("equipmentId") || "");
-      const organeId = String(formData.get("organeId") || "");
-      const requesterId = String(formData.get("requesterId") || "");
-      const equipment = equipmentId
-        ? getEquipmentRecord("equipments", equipmentId)
-        : null;
-      const organ = organeId ? getOrganeRecord("organes", organeId) : null;
+      const equipmentId = String(formData.get('equipmentId'));
+      const organeId = String(formData.get('organeId'));
+      const requesterId = String(formData.get('requesterId'));
+      const equipmentDir = getEquipmentDirectory();
+      const equipment = equipmentId ? equipmentDir.equipments.find(e => e.id === equipmentId) : null;
+      const organ = organeId ? getOrganeRecord('organes', organeId) : null;
       const requester = requesterId ? getOrganizationUser(requesterId) : null;
-
       const nextRecord = {
-        ...(existing || {}),
+        ...existing,
         id: existing?.id || `di-${Date.now()}`,
-        ref: existing?.ref || buildInterventionRef("DI", directory.dis),
+        ref: existing?.ref || buildInterventionRef('DI', directory.dis),  // ← CORRIGÉ
         createdAt: existing?.createdAt || nowIso,
-        title: String(formData.get("title") || "").trim(),
-        description: String(formData.get("description") || "").trim(),
+        title: String(formData.get('title')).trim(),
+        description: String(formData.get('description')).trim(),
         equipmentId,
-        equipmentLabel: equipment
-          ? `${equipment.code} — ${equipment.name}`
-          : "",
+        equipmentLabel: equipment ? `${equipment.code} — ${equipment.name}` : '',
         organeId,
-        organeLabel: organ ? `${organ.code} — ${organ.name}` : "",
+        organeLabel: organ ? `${organ.code} — ${organ.name}` : '',
         requesterId,
-        requesterLabel: requester ? requester.name : "",
-        requestType: String(formData.get("requestType") || "Panne"),
-        urgency: String(formData.get("urgency") || "Moyenne"),
-        location: String(formData.get("location") || "").trim(),
-        status: existing?.status || "En attente",
+        requesterLabel: requester ? requester.name : '',
+        requestType: String(formData.get('requestType') || 'Panne'),
+        urgency: String(formData.get('urgency') || 'Moyenne'),
+        location: String(formData.get('location')).trim(),
+        status: existing?.status || 'En attente',
         documents: Array.isArray(existing?.documents) ? existing.documents : [],
       };
-
       if (existing) {
-        const index = directory.dis.findIndex(
-          (item) => item.id === existing.id,
-        );
+        const index = directory.dis.findIndex((item) => item.id === existing.id);
         if (index >= 0) directory.dis[index] = nextRecord;
       } else {
         directory.dis.unshift(nextRecord);
-        appendInterventionHistory(directory, {
-          action: "di_created",
-          recordType: "DI",
-          recordRef: nextRecord.ref,
-          linkedRef: "",
-          message: `${nextRecord.ref}`,
-        });
       }
-
+      appendInterventionHistory(directory, {
+        action: 'dicreated',
+        recordType: 'DI',
+        recordRef: nextRecord.ref,
+        linkedRef: '',
+        equipmentId: nextRecord.equipmentId,
+        equipmentLabel: nextRecord.equipmentLabel,
+        technicianId: nextRecord.requesterId,
+        technicianLabel: nextRecord.requesterLabel,
+        status: nextRecord.status,
+        priority: nextRecord.urgency,
+        message: `${nextRecord.ref} — DI créée`,
+      });
       saveInterventionsState(directory);
       closeInterventionsModal();
     });
@@ -24401,14 +24539,39 @@ function bindInterventionsModalHandlers() {
         status: "Planifié",
       };
 
-      di.status = "Transformée en OT";
+      di.status = 'Transformé en OT';
       directory.ots.unshift(ot);
+
+      // 1. D'abord : DI transformée en OT
       appendInterventionHistory(directory, {
-        action: "di_to_ot",           // clé neutre, pas de texte FR
-        recordType: "DI",
+        action: 'ditoot',
+        recordType: 'DI',
         recordRef: di.ref,
-        linkedRef: ot.ref,            // stocker la ref liée séparément
-        message: `${di.ref} → ${ot.ref}`,  // message universel sans mots FR
+        linkedRef: ot.ref,
+        equipmentId: di.equipmentId,
+        equipmentLabel: di.equipmentLabel,
+        technicianId: ot.technicianIds?.[0] || null,
+        technicianLabel: ot.technicianLabel || null,
+        status: 'Transformée en OT',
+        priority: di.urgency || ot.priority,
+        createdAt: new Date(Date.now()).toISOString(),
+        message: `${di.ref} — DI transformée en OT → ${ot.ref}`
+      });
+
+      // 2. Ensuite : OT créé (timestamp +1ms pour garantir l'ordre)
+      appendInterventionHistory(directory, {
+        action: 'otcreated',
+        recordType: 'OT',
+        recordRef: ot.ref,
+        linkedRef: di.ref,
+        equipmentId: ot.equipmentId,
+        equipmentLabel: ot.equipmentLabel,
+        technicianId: ot.technicianIds?.[0] || null,
+        technicianLabel: ot.technicianLabel || null,
+        status: 'Planifié',
+        priority: ot.priority,
+        createdAt: new Date(Date.now() + 1).toISOString(),
+        message: `${ot.ref} — OT créé`
       });
       saveInterventionsState(directory);
       closeInterventionsModal();
@@ -24429,7 +24592,7 @@ function bindInterventionsModalHandlers() {
       line.style.gap = "0.5rem";
       line.style.marginBottom = "0.5rem";
       line.innerHTML = `
-        <select name="articleIds" style="flex:1" required class="bt-article-select">
+        <select name="articleIds[]" style="flex:1" required class="bt-article-select">
     <option value="" data-pmp="0">Sélectionner un article</option>
     ${btAddArticleBtn.dataset.options}
   </select>
@@ -24635,15 +24798,41 @@ function bindInterventionsModalHandlers() {
         syncStockArticleQuantityFromRecords(articleLine.articleId);
       });
 
-      ot.status = "Transformé en BT";
+      ot.status = "Transform en BT";
       directory.bts.unshift(bt);
+
+      // 1. OT transformé en BT
       appendInterventionHistory(directory, {
-        action: "ot_to_bt",
+        action: "ottobt",
         recordType: "OT",
         recordRef: ot.ref,
         linkedRef: bt.ref,
-        message: `${ot.ref} → ${bt.ref}`,
+        equipmentId: ot.equipmentId,
+        equipmentLabel: ot.equipmentLabel,
+        technicianId: ot.technicianIds?.[0] || null,
+        technicianLabel: ot.technicianLabel || null,
+        status: "Transform en BT",
+        priority: ot.priority,
+        createdAt: new Date(Date.now()).toISOString(),
+        message: `${ot.ref} — OT transformé en BT → ${bt.ref}`,
       });
+
+      // 2. BT créé (timestamp +1ms pour garantir l'ordre dans l'historique)
+      appendInterventionHistory(directory, {
+        action: "btcreated",
+        recordType: "BT",
+        recordRef: bt.ref,
+        linkedRef: ot.ref,
+        equipmentId: bt.equipmentId,
+        equipmentLabel: bt.equipmentLabel,
+        technicianId: bt.technicianIds?.[0] || null,
+        technicianLabel: bt.technicianLabel || null,
+        status: "En cours",
+        priority: bt.priority,
+        createdAt: new Date(Date.now() + 1).toISOString(),
+        message: `${bt.ref} BT créé`,
+      });
+
       saveInterventionsState(directory);
       closeInterventionsModal();
 
@@ -24887,7 +25076,6 @@ function renderInterventionsPage(activeTabKey = "di") {
 
   if (interventionsModalState) {
     renderInterventionsModal();
-    bindInterventionsModalHandlers();
   } else if (overlayRootEl) {
     overlayRootEl.innerHTML = "";
   }
@@ -24954,30 +25142,16 @@ function attachInterventionsPageHandlers(activeTabKey) {
       return;
     }
 
-    const clearHistoryButton = event.target.closest("[data-int-history-clear]");
+    const clearHistoryButton = event.target.closest('[data-int-history-clear]');
     if (clearHistoryButton && pageContentEl.contains(clearHistoryButton)) {
-      const confirmed = uiConfirm(
-        "Effacer tout l'historique des interventions et réinitialiser l'état ?",
-      );
+      const confirmed = uiConfirm("Effacer l'historique des interventions ?");
       if (!confirmed) return;
-
       const directory = loadInterventionsState();
-      directory.dis = [];
-      directory.ots = [];
-      directory.bts = [];
+      // ✅ On touche SEULEMENT history — DI, OT, BT sont préservés
       directory.history = [];
       saveInterventionsState(directory);
-      interventionsHistoryFilterState = {
-        equipment: "",
-        technician: "",
-        type: "",
-        status: "",
-        priority: "",
-        from: "",
-        to: "",
-      };
-      renderInterventionsPage("history");
-      return;
+      interventionsHistoryFilterState = { equipment: '', technician: '', type: '', status: '', priority: '', from: '', to: '' };
+      renderInterventionsPage('history');
     }
   });
 
@@ -25104,7 +25278,7 @@ function renderInterventionsKpis(tabKey, directory) {
           directory.bts.filter((item) => item.status === "Validé").length,
         ),
         footer: "Finalisés",
-        icon: "fa-shield-check",
+        icon: "fa-circle-check",
         iconClass: "red",
       },
     ],
@@ -25371,33 +25545,33 @@ function renderBtSection(directory) {
   const pctPreventif = sumCost > 0 ? Math.round((costPreventif / sumCost) * 100) : 0;
 
   const kpisHtml = `
-    <div class="dashboard-kpi-grid" style="margin-bottom: 1.5rem;">
-      <div class="kpi-card dashboard-kpi-card info">
-        <div class="kpi-header">
-          <div class="kpi-label">Coût total tous BT</div>
-          <div class="kpi-icon info"><i class="fa-solid fa-coins"></i></div>
-        </div>
-        <div class="kpi-value">${formatterDzd.format(sumCost)}</div>
-        <div class="kpi-footer">Cumul des BT affichés</div>
+  <div class="dashboard-kpi-grid" style="margin-bottom: 1.5rem;">
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <div class="kpi-label">Coût total tous BT</div>
+        <div class="kpi-icon blue"><i class="fa-solid fa-coins"></i></div>
       </div>
-      <div class="kpi-card dashboard-kpi-card success">
-        <div class="kpi-header">
-          <div class="kpi-label">Coût moyen par BT</div>
-          <div class="kpi-icon success"><i class="fa-solid fa-calculator"></i></div>
-        </div>
-        <div class="kpi-value">${formatterDzd.format(avgCost)}</div>
-        <div class="kpi-footer">${uiText('Sur')} ${countCost} ${uiText('BT évalués')}</div>
-      </div>
-      <div class="kpi-card dashboard-kpi-card warning">
-        <div class="kpi-header">
-          <div class="kpi-label">Correctif vs Préventif</div>
-          <div class="kpi-icon warning"><i class="fa-solid fa-chart-pie"></i></div>
-        </div>
-        <div class="kpi-value">${pctCorrectif}% / ${pctPreventif}%</div>
-        <div class="kpi-footer">Répartition financière</div>
-      </div>
+      <div class="kpi-value">${formatterDzd.format(sumCost)}</div>
+      <div class="kpi-footer">Cumul des BT affichés</div>
     </div>
-  `;
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <div class="kpi-label">Coût moyen par BT</div>
+        <div class="kpi-icon green"><i class="fa-solid fa-calculator"></i></div>
+      </div>
+      <div class="kpi-value">${formatterDzd.format(avgCost)}</div>
+      <div class="kpi-footer">${uiText('Sur')} ${countCost} ${uiText('BT évalués')}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <div class="kpi-label">Correctif vs Préventif</div>
+        <div class="kpi-icon orange"><i class="fa-solid fa-chart-pie"></i></div>
+      </div>
+      <div class="kpi-value">${pctCorrectif}% / ${pctPreventif}%</div>
+      <div class="kpi-footer">Répartition financière</div>
+    </div>
+  </div>
+`;
 
   return `
     ${kpisHtml}
@@ -25437,6 +25611,7 @@ function translateRefPrefix(ref) {
 
 function buildInterventionsHistoryEntries(directory) {
   const entries = [];
+
   (Array.isArray(directory.history) ? directory.history : []).forEach(
     (event) => {
       entries.push({
@@ -25447,107 +25622,13 @@ function buildInterventionsHistoryEntries(directory) {
         label: translateHistoryAction(event),
         meta: event.recordType || uiText("Journal"),
         kind: "event",
-        equipment: "",
-        technician: "",
-        status: "",
-        priority: "",
+        equipment: event.equipmentLabel || "",
+        technician: event.technicianLabel || "",
+        status: event.status || "",
+        priority: event.priority || "",
       });
     },
   );
-
-  directory.dis.forEach((di) => {
-    const equipment = di.equipmentId
-      ? getEquipmentRecord("equipments", di.equipmentId)
-      : null;
-    const technician = getOrganizationUser(di.requesterId);
-
-    const diStatusNorm = (di.status || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    let diLabel;
-    if (diStatusNorm.includes("transforme") || diStatusNorm.includes("ot")) {
-      diLabel = uiText("DI transformée en OT");
-    } else if (diStatusNorm.includes("valid")) {
-      diLabel = uiText("DI validée");
-    } else {
-      diLabel = uiText("DI créée");
-    }
-
-    entries.push({
-      id: di.id,
-      date: di.createdAt,
-      ref: di.ref,
-      type: "DI",
-      label: `${di.ref} — ${diLabel}`,
-      meta: di.status,
-      kind: "record",
-      equipment:
-        equipment?.code && equipment?.name
-          ? `${equipment.code} — ${equipment.name}`
-          : di.equipmentLabel || "",
-      technician: technician ? technician.name : di.requesterLabel || "",
-      status: di.status || "",
-      priority: di.urgency || "",
-    });
-  });
-
-  directory.ots.forEach((ot) => {
-    const equipment = ot.equipmentId
-      ? getEquipmentRecord("equipments", ot.equipmentId)
-      : null;
-    const technicianNames = (ot.technicianIds || [])
-      .map((id) => getOrganizationUser(id))
-      .filter(Boolean)
-      .map((user) => user.name)
-      .join(", ");
-
-    const otStatusNorm = (ot.status || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    let otLabel;
-    if (otStatusNorm.includes("transforme") || otStatusNorm.includes("bt")) {
-      otLabel = uiText("OT transformé en BT");
-    } else {
-      otLabel = uiText("OT créé");
-    }
-
-    entries.push({
-      id: ot.id,
-      date: ot.createdAt || ot.plannedDate,
-      ref: ot.ref,
-      type: "OT",
-      label: `${ot.ref} — ${otLabel}`,
-      meta: ot.status,
-      kind: "record",
-      equipment:
-        equipment?.code && equipment?.name
-          ? `${equipment.code} — ${equipment.name}`
-          : ot.equipmentLabel || "",
-      technician: technicianNames || ot.technicianLabel || "",
-      status: ot.status || "",
-      priority: ot.priority || "",
-    });
-  });
-
-  directory.bts.forEach((bt) => {
-    const btStatusNorm = (bt.status || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    let btLabel;
-    if (btStatusNorm.includes("clot") || btStatusNorm.includes("valid") || btStatusNorm.includes("termin")) {
-      btLabel = uiText("BT clôturé");
-    } else {
-      btLabel = uiText("BT créé");
-    }
-
-    entries.push({
-      id: bt.id,
-      date: bt.endDate || bt.startDate || bt.createdAt,
-      ref: bt.ref,
-      type: "BT",
-      label: `${bt.ref} — ${btLabel}`,
-      meta: bt.status,
-      kind: "record",
-      equipment: bt.equipmentLabel || "",
-      technician: bt.technicianLabel || "",
-      status: bt.status || "",
-      priority: bt.priority || "",
-    });
-  });
 
   entries.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
   return entries;
@@ -26584,7 +26665,7 @@ function printBT(record) {
     <div class="doc-title-band">
       <div>
         <h1>BON DE TRAVAIL</h1>
-        <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">BT — Rapport d'exécution et clôture de l'intervention</div>
+        <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">BT — Bon de travail et clôture de l'intervention</div>
       </div>
       <div class="doc-ref">
         <strong>${printEsc(record.ref)}</strong>
@@ -28178,13 +28259,19 @@ function renderInterventionRecordDetails(recordType, record) {
       },
       {
         label: "Articles consommés",
-        value: Array.isArray(record.articles)
-          ? record.articles.map(formatInterventionArticleLine).join("<br />") || "-"
+        value: Array.isArray(record.articles) && record.articles.length > 0
+          ? `${record.articles.length} article(s) — ` + record.articles.map(a => {
+            const art = getArticleRecord("articles", a.articleId);
+            return art ? `${art.code} × ${a.qty || 0}` : `× ${a.qty || 0}`;
+          }).join(", ")
           : "-",
       },
       {
         label: "Coût articles",
-        value: record.coutArticles !== undefined ? new Intl.NumberFormat(typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ', { style: 'currency', currency: 'DZD' }).format(record.coutArticles ?? 0) : "-"
+        value: new Intl.NumberFormat(
+          typeof getAdministrationLocale === 'function' ? getAdministrationLocale() : 'fr-DZ',
+          { style: 'currency', currency: 'DZD' }
+        ).format(Number(record.coutArticles) || 0)
       },
       {
         label: "Coût main d'œuvre",
@@ -28307,10 +28394,16 @@ function validateInterventionDi(diId) {
 
   di.status = "Validée";
   appendInterventionHistory(directory, {
-    action: "di_validated",
-    recordType: "DI",
+    action: 'divalidated',
+    recordType: 'DI',
     recordRef: di.ref,
-    message: `${di.ref}`,   // juste la ref, sans mot FR
+    equipmentId: di.equipmentId,
+    equipmentLabel: di.equipmentLabel,
+    technicianId: di.requesterId,
+    technicianLabel: di.requesterLabel,
+    status: 'Validé',
+    priority: di.urgency,
+    message: `${di.ref} — DI validée`
   });
   saveInterventionsState(directory);
   setInterventionsModalState({
@@ -28873,11 +28966,25 @@ function closeBt(btId) {
   const ot = directory.ots.find((item) => item.id === bt.otId);
   if (ot) ot.status = "Terminé";
 
+  // Sauvegarder les infos du BT AVANT la mutation
+  const btSnapshot = { ...bt };
+
+  directory.bts = directory.bts.map(item =>
+    item.id === btId ? { ...item, status: 'Clôturé' } : item
+  );
+
   appendInterventionHistory(directory, {
-    action: "bt_closed",
-    recordType: "BT",
-    recordRef: bt.ref,
-    message: `${bt.ref}`,
+    action: 'btclosed',
+    recordType: 'BT',
+    recordRef: btSnapshot.ref,
+    linkedRef: btSnapshot.otRef,
+    equipmentId: btSnapshot.equipmentId,
+    equipmentLabel: btSnapshot.equipmentLabel,
+    technicianId: btSnapshot.technicianIds?.[0] || null,
+    technicianLabel: btSnapshot.technicianLabel || null,
+    status: 'Clôturé',
+    priority: btSnapshot.priority,
+    message: `${btSnapshot.ref} — BT clôturé`
   });
   // Recalcul nextDueDate du plan lié après clôture BT
   if (bt.planId) {
