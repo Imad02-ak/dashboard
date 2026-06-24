@@ -10050,6 +10050,25 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+    // ─── MODULE MESSAGERIE ───────────────────────────────────────
+    'Messagerie': 'Messaging',
+    'Discussions internes avec vos collègues': 'Internal discussions with your colleagues',
+    'Vos messages': 'Your messages',
+    'Sélectionnez un collègue à droite': 'Select a colleague on the right',
+    'pour démarrer une discussion': 'to start a discussion',
+    'Commencez la conversation !': 'Start the conversation!',
+    'Aucun collègue actif': 'No active colleagues',
+    'Rechercher un collègue': 'Search for a colleague',
+    'Collègues': 'Colleagues',
+    'Supprimer la conversation': 'Delete conversation',
+    'Supprimer toute cette conversation ? Cette action est irréversible.': 'Delete this entire conversation? This action is irreversible.',
+    'Supprimer ce message': 'Delete this message',
+    'Écrivez un message': 'Write a message',
+    'Envoyer': 'Send',
+    'Aujourd\'hui': 'Today',
+    'Hier': 'Yesterday',
+    'En ligne': 'Online',
+    'Options': 'Options',
     'Nouveau compteur': 'New counter',
     'Fiche complète du compteur et ses seuils.': 'Complete counter sheet and thresholds.',
     "Création et mise à jour d'un compteur de maintenance.": 'Creating and updating a maintenance counter.',
@@ -11035,6 +11054,20 @@ const englishInterfacePhraseTranslations = new Map(
 
 const englishInterfaceWordTranslations = new Map(
   Object.entries({
+    'messagerie': 'messaging',
+    'collègue': 'colleague',
+    'collègues': 'colleagues',
+    'conversation': 'conversation',
+    'conversations': 'conversations',
+    'destinataire': 'recipient',
+    'expéditeur': 'sender',
+    'envoyé': 'sent',
+    'reçu': 'received',
+    'non lu': 'unread',
+    'non lus': 'unread',
+    'discussion': 'discussion',
+    'discussions': 'discussions',
+    'bulle': 'bubble',
     "DA": "PR",
     "Correctif": "Corrective",
     "Groupe equipment": "Equipment group",
@@ -30577,6 +30610,7 @@ function sendInternalMessage(toUserId, body) {
   };
   state.messages = [message, ...state.messages];
   saveMessagingState(state);
+  updateMessagingBadge();
   return message;
 }
 
@@ -30615,6 +30649,59 @@ function getMessagingUnreadCount() {
   return getMessagingState().messages.filter(m =>
     m.toUserId === user.id && m.companyId === companyId && !m.readAt && !m.deletedByRecipient
   ).length;
+}
+
+function injectMessagingBadgeStyles() {
+  if (document.getElementById('msg-badge-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'msg-badge-styles';
+  style.textContent = `
+    .msg-nav-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      background: #e53935;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function updateMessagingBadge() {
+  injectMessagingBadgeStyles();
+  const navItem = document.querySelector('[data-page="messagerie"]');
+  if (!navItem) return;
+
+  const count = getMessagingUnreadCount();
+
+  // Supprimer l'ancien badge s'il existe
+  let badge = navItem.querySelector('.msg-nav-badge');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'msg-nav-badge';
+    navItem.style.position = 'relative';
+    navItem.appendChild(badge);
+  }
+
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 function getColleaguesForMessaging() {
@@ -30662,6 +30749,7 @@ function markConversationAsRead(partnerId) {
       m.readAt = new Date().toISOString();
   });
   saveMessagingState(state);
+  updateMessagingBadge();
 }
 
 // ─── 5. RENDU PAGE PRINCIPALE ────────────────────────────────
@@ -30823,6 +30911,7 @@ function renderMessagingPage() {
       activeConvPartnerId = item.dataset.uid;
       markConversationAsRead(activeConvPartnerId);
       renderMessagingPage();
+      updateMessagingBadge();
     };
     item.addEventListener('click', open);
     item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(); });
@@ -30942,6 +31031,8 @@ function injectMessagingStyles() {
   const style = document.createElement('style');
   style.id = 'messaging-styles';
   style.textContent = `
+
+
   /* ══════════════════════════════════════════════════════════
      MESSAGERIE MAINTFLOW — Premium Style v3
   ══════════════════════════════════════════════════════════ */
@@ -31352,3 +31443,24 @@ function injectMessagingStyles() {
 }
 
 patchRenderPageForMessaging();
+// ✅ Nouveau code — attend que la sidebar soit prête
+(function waitForMessagingNav() {
+  const navItem = document.querySelector('[data-page="messagerie"]');
+  if (navItem) {
+    // La sidebar est prête, on applique le badge
+    updateMessagingBadge();
+    // Rafraîchir toutes les 15 secondes
+    setInterval(updateMessagingBadge, 15000);
+  } else {
+    // La sidebar n'est pas encore rendue, on observe le DOM
+    const observer = new MutationObserver(function (mutations, obs) {
+      const navItem = document.querySelector('[data-page="messagerie"]');
+      if (navItem) {
+        obs.disconnect(); // Arrêter d'observer
+        updateMessagingBadge();
+        setInterval(updateMessagingBadge, 15000);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+})();
