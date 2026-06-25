@@ -9023,6 +9023,8 @@ function translateHistoryAction(event) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Plan de maintenance": "Maintenance Plan",
+    "Par date fixe": "By fixed date",
     "Élément": "Element",
     "Type d'élément demandé": "Requested Element Type",
     "Transformée en OT": "Transformed to WO",
@@ -10053,6 +10055,8 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+    "Plan de maintenance": "Maintenance Plan",
+    "Par date fixe": "By fixed date",
     // ─── MODULE MESSAGERIE ───────────────────────────────────────
     'Messagerie': 'Messaging',
     'Discussions internes avec vos collègues': 'Internal discussions with your colleagues',
@@ -11057,6 +11061,7 @@ const englishInterfacePhraseTranslations = new Map(
 
 const englishInterfaceWordTranslations = new Map(
   Object.entries({
+    "Par date fixe": "By fixed date",
     "transformée": "transformed",
     "transformé": "transformed",
     "validée": "Validated",
@@ -26656,9 +26661,24 @@ function printBT(record) {
     </tr>`;
   }).join('');
 
-  // Durée réelle
-  const dureeReelle = record.durationReal ? `${record.durationReal} h` : '—';
-  const dureeEstimee = ot?.durationEstimated ? `${ot.durationEstimated} h` : (record.durationEstimated ? `${record.durationEstimated} h` : '—');
+  const durationRealNum = parseFloat(record.duration);   // "2.5 h" → 2.5
+const durationEstNum  = ot?.durationEstimated ?? null;
+
+const dureeEstimee = durationEstNum != null ? `${durationEstNum} h` : '—';
+const dureeReelle  = !isNaN(durationRealNum)  ? `${durationRealNum} h` : '—';
+
+// Calcul de l'écart
+let ecartHtml = '—';
+if (!isNaN(durationRealNum) && durationEstNum != null) {
+  const ecart = durationRealNum - durationEstNum;
+  const color = ecart > 0 ? '#b91c1c' : '#15803d';
+  ecartHtml = `<span style="color:${color};font-weight:600;">${ecart > 0 ? '+' : ''}${ecart.toFixed(1)} h</span>`;
+}
+
+// Cause de panne : c'est un tableau "causes"
+const causeLabel = Array.isArray(record.causes) && record.causes.length
+  ? record.causes.join(', ')
+  : (record.cause || record.failureCause || '—');
 
   const body = `
     <!-- BANDEAU TITRE BT -->
@@ -26735,31 +26755,24 @@ function printBT(record) {
         </thead>
         <tbody>
           <tr>
-            <td style="padding:8px 10px;border:1px solid #e2e8f0;">${dureeEstimee}</td>
-            <td style="padding:8px 10px;border:1px solid #e2e8f0;font-weight:600;color:#0d7a8e;">${dureeReelle}</td>
-            <td style="padding:8px 10px;border:1px solid #e2e8f0;">
-              ${record.durationReal && ot?.durationEstimated
-      ? (() => {
-        const ecart = (record.durationReal - ot.durationEstimated);
-        const color = ecart > 0 ? '#b91c1c' : '#15803d';
-        return `<span style="color:${color};font-weight:600;">${ecart > 0 ? '+' : ''}${ecart} h</span>`;
-      })()
-      : '—'
-    }
-            </td>
-            <td style="padding:8px 10px;border:1px solid #e2e8f0;">${printEsc(record.cause || record.failureCause || '—')}</td>
-          </tr>
+  <td style="padding:8px 10px;border:1px solid #e2e8f0;">${dureeEstimee}</td>
+  <td style="padding:8px 10px;border:1px solid #e2e8f0;font-weight:600;color:#0d7a8e;">${dureeReelle}</td>
+  <td style="padding:8px 10px;border:1px solid #e2e8f0;">${ecartHtml}</td>
+  <td style="padding:8px 10px;border:1px solid #e2e8f0;">${printEsc(causeLabel)}</td>
+</tr>
         </tbody>
       </table>
     </div>
 
-    <!-- SECTION 4 : TRAVAUX RÉALISÉS -->
     <div class="doc-section">
-      <div class="doc-section-title">Travaux réalisés</div>
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 14px;font-size:9.5pt;line-height:1.7;white-space:pre-line;">
-        ${printEsc(record.workDone || record.observations || 'Aucune description des travaux réalisés.')}
-      </div>
-    </div>
+  <div class="doc-section-title">Travaux réalisés</div>
+  <div class="doc-field doc-field-full">
+    <label>DESCRIPTION DES TRAVAUX</label>
+    <span style="white-space:pre-line;line-height:1.6;display:block;padding:6px 0;">
+      ${printEsc(record.works || '—')}
+    </span>
+  </div>
+</div>
 
     <!-- SECTION 5 : ARTICLES CONSOMMÉS -->
     <div class="doc-section">
