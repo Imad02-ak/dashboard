@@ -9023,6 +9023,59 @@ function translateHistoryAction(event) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    // ════════════════════════════════════════════════
+    //  BON DE RÉCEPTION — RECEIPT SHEET
+    // ════════════════════════════════════════════════
+
+    // ── Titre & bandeau ──────────────────────────────
+    'BON DE RÉCEPTION': 'RECEIPT SHEET',
+    'Bon de Réception': 'Receipt Sheet',
+    'REC — Réception marchandise': 'REC — Receipt Sheet',
+    'Imprimer le bon de réception': 'Print Receipt Sheet',
+    'Erreur lors de la génération du document Bon de Réception.': 'Error while generating the Receipt Sheet document.',
+    'Bon de réception introuvable.': 'Receipt Sheet not found.',
+
+    // ── Section 1 : Identification ───────────────────
+    'Identification de la réception': 'Receipt Identification',
+    'Référence réception': 'Receipt Reference',
+    'Date réception': 'Receipt Date',
+    'BC lié': 'Linked PO',
+    'Date commande': 'Order Date',
+    'Réceptionné par': 'Received By',
+    'État réception': 'Receipt Status',
+
+    // ── Section 2 : Fournisseur ──────────────────────
+    'Fournisseur': 'Supplier',
+    'Raison sociale': 'Legal Name',
+    'Téléphone principal': 'Primary Phone',
+    'Email fournisseur': 'Supplier Email',
+    'Bon de livraison fournisseur': 'Supplier Delivery Note',
+    'Facture fournisseur': 'Supplier Invoice',
+    'Conditions de paiement': 'Payment Terms',
+
+    // ── Section 3 : Détail réception ─────────────────
+    'Détail de la réception': 'Receipt Details',
+    'Désignation article': 'Item Description',
+    'Qté commandée': 'Ordered Qty.',
+    'Qté reçue': 'Received Qty.',
+    'Écart': 'Variance',
+    'Qté manquante': 'Missing Qty.',
+    'Emplacement stockage': 'Storage Location',
+    'Quantité commandée': 'Ordered Quantity',
+    'Quantité reçue': 'Received Quantity',
+    'Quantité manquante': 'Missing Quantity',
+    'Réception conforme': 'Compliant Receipt',
+    // ── Section 5 : Observations ─────────────────────
+    'Observations': 'Observations',
+    'Aucune observation.': 'No observations.',
+
+    // ── Signatures ───────────────────────────────────
+    'Responsable magasin': 'Warehouse Manager',
+    'Fournisseur Accusé réception': 'Supplier Acknowledgement',
+    'Signature': 'Signature',
+    'Date': 'Date',
+    'Cachet': 'Stamp',
+    'Imprimé le': 'Printed on',
     "Feuille d'Inventaire": "Inventory Sheet",
     "lignes": "Lines",
     "Plan de maintenance": "Maintenance Plan",
@@ -27961,7 +28014,7 @@ function printBonReception(receptionId) {
     const statusStyle = printGetBadgeStyle(record.receptionState || record.status || '—');
     const qualityStyle = printGetBadgeStyle(record.qualityControl || '—');
 
-    // Ligne article réceptionné — même style que printBC
+    // ─── Ligne article réceptionné ────────────────────────────────────────────
     const articleRow = `
       <tr style="background:#ffffff;">
         <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:600;">${printEsc(record.articleLabel || '—')}</td>
@@ -27972,29 +28025,29 @@ function printBonReception(receptionId) {
         <td style="padding:7px 10px;border:1px solid #e2e8f0;">${printEsc(record.storageLocation || '—')}</td>
       </tr>`;
 
-    // Récap quantités — même style que le récap financier du BC
+    // ─── Récap quantités ──────────────────────────────────────────────────────
     const recapQty = `
       <div style="display:flex;justify-content:flex-end;margin-top:12px;">
         <table style="border-collapse:collapse;font-size:9.5pt;min-width:260px;">
           <tr>
-            <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">Quantité commandée</td>
+            <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">${printEscT('Quantité commandée')}</td>
             <td style="padding:6px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">${orderedQty}</td>
           </tr>
           <tr>
-            <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">Quantité reçue</td>
+            <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">${printEscT('Quantité reçue')}</td>
             <td style="padding:6px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:700;color:#0d7a8e;">${receivedQty}</td>
           </tr>
           <tr>
-            <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">Écart</td>
+            <td style="background:#f8fafc;padding:6px 12px;border:1px solid #e2e8f0;color:#8fa0b0;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">${printEscT('Écart')}</td>
             <td style="padding:6px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:800;color:${ecartColor};">${ecartLabel}</td>
           </tr>
           ${missingQty > 0 ? `
           <tr>
-            <td style="background:#fee2e2;padding:6px 12px;border:1px solid #fca5a5;color:#991b1b;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">Quantité manquante</td>
+            <td style="background:#fee2e2;padding:6px 12px;border:1px solid #fca5a5;color:#991b1b;font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.5px;">${printEscT('Quantité manquante')}</td>
             <td style="background:#fee2e2;padding:6px 12px;border:1px solid #fca5a5;text-align:right;font-weight:800;color:#b91c1c;">${missingQty}</td>
           </tr>` : `
           <tr>
-            <td style="background:#0d3d4f;padding:8px 12px;border:1px solid #0d3d4f;color:#fff;font-weight:800;font-size:9pt;text-transform:uppercase;letter-spacing:.5px;">Réception conforme</td>
+            <td style="background:#0d3d4f;padding:8px 12px;border:1px solid #0d3d4f;color:#fff;font-weight:800;font-size:9pt;text-transform:uppercase;letter-spacing:.5px;">${printEscT('Réception conforme')}</td>
             <td style="background:#0d3d4f;padding:8px 12px;border:1px solid #0d3d4f;text-align:right;font-weight:800;color:#fff;font-size:10.5pt;">✓</td>
           </tr>`}
         </table>
@@ -28004,43 +28057,45 @@ function printBonReception(receptionId) {
       <!-- BANDEAU TITRE BON DE RÉCEPTION -->
       <div class="doc-title-band">
         <div>
-          <h1>BON DE RÉCEPTION</h1>
-          <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">REC — Réception marchandise${linkedBc ? ' · BC lié : ' + printEsc(linkedBc.number) : ''}</div>
+          <h1>${printEscT('BON DE RÉCEPTION')}</h1>
+          <div style="font-size:8.5pt;color:#5a6a7a;margin-top:4px;">
+            ${printEscT('REC — Réception marchandise')}${linkedBc ? ' · ' + printEscT('BC lié') + ' : ' + printEsc(linkedBc.number) : ''}
+          </div>
         </div>
         <div class="doc-ref">
           <strong>${printEsc(record.number)}</strong>
           <div style="margin-top:6px;font-size:8pt;color:#8fa0b0;font-weight:400;font-style:italic;">
-            Imprimé le ${now}
+            ${printEscT('Imprimé le')} ${now}
           </div>
         </div>
       </div>
 
       <!-- SECTION 1 : IDENTIFICATION -->
       <div class="doc-section">
-        <div class="doc-section-title">Identification du bon de réception</div>
+        <div class="doc-section-title">${printEscT('Identification de la réception')}</div>
         <div class="doc-grid">
           <div class="doc-field">
-            <label>Référence REC</label>
+            <label>${printEscT('Référence réception')}</label>
             <span style="font-weight:700;">${printEsc(record.number)}</span>
           </div>
           <div class="doc-field">
-            <label>Date de réception</label>
+            <label>${printEscT('Date réception')}</label>
             <span>${fmtD(record.createdAt)}</span>
           </div>
           <div class="doc-field">
-            <label>BC lié</label>
+            <label>${printEscT('BC lié')}</label>
             <span>${linkedBc ? printEsc(linkedBc.number) : '—'}</span>
           </div>
           <div class="doc-field">
-            <label>Date commande BC</label>
+            <label>${printEscT('Date commande')}</label>
             <span>${fmtD(linkedBc?.orderDate)}</span>
           </div>
           <div class="doc-field">
-            <label>Réceptionné par</label>
+            <label>${printEscT('Réceptionné par')}</label>
             <span style="font-weight:600;">${printEsc(record.receiver || '—')}</span>
           </div>
           <div class="doc-field">
-            <label>État réception</label>
+            <label>${printEscT('État réception')}</label>
             <span class="doc-status" style="${statusStyle}">${printEscT(record.receptionState || record.status || '—')}</span>
           </div>
         </div>
@@ -28048,30 +28103,30 @@ function printBonReception(receptionId) {
 
       <!-- SECTION 2 : FOURNISSEUR -->
       <div class="doc-section">
-        <div class="doc-section-title">Fournisseur</div>
+        <div class="doc-section-title">${printEscT('Fournisseur')}</div>
         <div class="doc-grid">
           <div class="doc-field doc-field-full">
-            <label>Raison sociale</label>
+            <label>${printEscT('Raison sociale')}</label>
             <span style="font-weight:700;">${printEsc(record.supplierName || '—')}</span>
           </div>
           <div class="doc-field">
-            <label>Téléphone</label>
+            <label>${printEscT('Téléphone principal')}</label>
             <span>${printEsc(linkedBc?.supplierPhone || '—')}</span>
           </div>
           <div class="doc-field">
-            <label>Email</label>
+            <label>${printEscT('Email fournisseur')}</label>
             <span>${printEsc(linkedBc?.supplierEmail || '—')}</span>
           </div>
           <div class="doc-field">
-            <label>N° BL fournisseur</label>
+            <label>${printEscT('Bon de livraison fournisseur')}</label>
             <span style="font-weight:600;">${printEsc(record.deliveryNoteRef || '—')}</span>
           </div>
           <div class="doc-field">
-            <label>N° Facture fournisseur</label>
+            <label>${printEscT('Facture fournisseur')}</label>
             <span style="font-weight:600;">${printEsc(record.invoiceRef || '—')}</span>
           </div>
           <div class="doc-field">
-            <label>Conditions de paiement</label>
+            <label>${printEscT('Conditions de paiement')}</label>
             <span>${printEsc(linkedBc?.paymentTerm || '—')}</span>
           </div>
         </div>
@@ -28079,17 +28134,17 @@ function printBonReception(receptionId) {
 
       <!-- SECTION 3 : DÉTAIL RÉCEPTION -->
       <div class="doc-section">
-        <div class="doc-section-title">Détail de la réception</div>
+        <div class="doc-section-title">${printEscT('Détail de la réception')}</div>
         <div class="doc-table-wrap">
           <table class="doc-table">
             <thead>
               <tr>
-                <th>Désignation article</th>
-                <th style="width:12%;text-align:center;">Qté commandée</th>
-                <th style="width:12%;text-align:center;">Qté reçue</th>
-                <th style="width:9%;text-align:center;">Écart</th>
-                <th style="width:10%;text-align:center;">Manquant</th>
-                <th style="width:19%;">Emplacement stock</th>
+                <th>${printEscT('Désignation article')}</th>
+                <th style="width:12%;text-align:center;">${printEscT('Qté commandée')}</th>
+                <th style="width:12%;text-align:center;">${printEscT('Qté reçue')}</th>
+                <th style="width:9%;text-align:center;">${printEscT('Écart')}</th>
+                <th style="width:10%;text-align:center;">${printEscT('Qté manquante')}</th>
+                <th style="width:19%;">${printEscT('Emplacement stockage')}</th>
               </tr>
             </thead>
             <tbody>
@@ -28100,55 +28155,37 @@ function printBonReception(receptionId) {
         ${recapQty}
       </div>
 
-      <!-- SECTION 4 : CONTRÔLE QUALITÉ -->
-      <div class="doc-section">
-        <div class="doc-section-title">Contrôle qualité</div>
-        <div class="doc-grid">
-          <div class="doc-field">
-            <label>Résultat contrôle</label>
-            <span class="doc-status" style="${qualityStyle}">${printEsc(record.qualityControl || '—')}</span>
-          </div>
-          <div class="doc-field">
-            <label>Motif écart / non-conformité</label>
-            <span>${printEsc(record.missingReason || '—')}</span>
-          </div>
-        </div>
-        ${record.qualityControl === 'Refusé' || record.qualityControl === 'Non conforme' ? `
-        <div style="margin-top:10px;background:#fee2e2;border-left:3px solid #b91c1c;padding:8px 14px;border-radius:0 4px 4px 0;font-size:9.5pt;color:#991b1b;line-height:1.6;">
-          ⚠ Contrôle qualité négatif — Ce lot est en litige avec le fournisseur. Voir le motif ci-dessus.
-        </div>` : ''}
-      </div>
 
       <!-- SECTION 5 : OBSERVATIONS -->
       <div class="doc-section">
-        <div class="doc-section-title">Observations</div>
+        <div class="doc-section-title">${printEscT('Observations')}</div>
         <div class="doc-field doc-field-full">
-          <label>Conditions particulières</label>
-          <span style="white-space:pre-line;line-height:1.6;">${printEsc(record.observations || 'Aucune observation.')}</span>
+          <label>${printEscT('Aucune observation.')}</label>
+          <span style="white-space:pre-line;line-height:1.6;">${printEsc(record.observations || uiText('Aucune observation.'))}</span>
         </div>
       </div>
 
       <!-- SIGNATURES -->
       <div class="doc-signatures">
         <div class="doc-sig-box">
-          <label>Réceptionné par — Magasinier</label>
+          <label>${printEscT('Réceptionné par')}</label>
           <div class="sig-name" style="color:#b0b8c1;"></div>
-          <div class="sig-line">Signature &amp; Date</div>
+          <div class="sig-line">${printEscT('Signature')} &amp; ${printEscT('Date')}</div>
         </div>
         <div class="doc-sig-box">
-          <label>Contrôlé par — Responsable</label>
+          <label>${printEscT('Responsable magasin')}</label>
           <div class="sig-name" style="color:#b0b8c1;"></div>
-          <div class="sig-line">Signature &amp; Date</div>
+          <div class="sig-line">${printEscT('Signature')} &amp; ${printEscT('Date')}</div>
         </div>
         <div class="doc-sig-box">
-          <label>Fournisseur — Accusé réception</label>
+          <label>${printEscT('Fournisseur Accusé réception')}</label>
           <div class="sig-name" style="color:#b0b8c1;"></div>
-          <div class="sig-line">Cachet &amp; Signature</div>
+          <div class="sig-line">${printEscT('Cachet')} &amp; ${printEscT('Signature')}</div>
         </div>
       </div>
     `;
 
-    printDocument(`Bon de Réception ${record.number}`, body);
+    printDocument(`${uiText('Bon de Réception')} ${record.number}`, body);
 
   } catch (err) {
     console.error('printBonReception', err);
