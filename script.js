@@ -9023,6 +9023,8 @@ function translateHistoryAction(event) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Feuille d'Inventaire": "Inventory Sheet",
+    "lignes": "Lines",
     "Plan de maintenance": "Maintenance Plan",
     "Par date fixe": "By fixed date",
     "Élément": "Element",
@@ -10055,6 +10057,8 @@ const englishInterfacePatterns = [
 
 const englishInterfacePhraseTranslations = new Map(
   Object.entries({
+    "Feuille d'Inventaire": "Inventory Sheet",
+    "lignes": "Lines",
     "Plan de maintenance": "Maintenance Plan",
     "Par date fixe": "By fixed date",
     // ─── MODULE MESSAGERIE ───────────────────────────────────────
@@ -11061,6 +11065,7 @@ const englishInterfacePhraseTranslations = new Map(
 
 const englishInterfaceWordTranslations = new Map(
   Object.entries({
+    "lignes": "Lines",
     "Par date fixe": "By fixed date",
     "transformée": "transformed",
     "transformé": "transformed",
@@ -26662,23 +26667,23 @@ function printBT(record) {
   }).join('');
 
   const durationRealNum = parseFloat(record.duration);   // "2.5 h" → 2.5
-const durationEstNum  = ot?.durationEstimated ?? null;
+  const durationEstNum = ot?.durationEstimated ?? null;
 
-const dureeEstimee = durationEstNum != null ? `${durationEstNum} h` : '—';
-const dureeReelle  = !isNaN(durationRealNum)  ? `${durationRealNum} h` : '—';
+  const dureeEstimee = durationEstNum != null ? `${durationEstNum} h` : '—';
+  const dureeReelle = !isNaN(durationRealNum) ? `${durationRealNum} h` : '—';
 
-// Calcul de l'écart
-let ecartHtml = '—';
-if (!isNaN(durationRealNum) && durationEstNum != null) {
-  const ecart = durationRealNum - durationEstNum;
-  const color = ecart > 0 ? '#b91c1c' : '#15803d';
-  ecartHtml = `<span style="color:${color};font-weight:600;">${ecart > 0 ? '+' : ''}${ecart.toFixed(1)} h</span>`;
-}
+  // Calcul de l'écart
+  let ecartHtml = '—';
+  if (!isNaN(durationRealNum) && durationEstNum != null) {
+    const ecart = durationRealNum - durationEstNum;
+    const color = ecart > 0 ? '#b91c1c' : '#15803d';
+    ecartHtml = `<span style="color:${color};font-weight:600;">${ecart > 0 ? '+' : ''}${ecart.toFixed(1)} h</span>`;
+  }
 
-// Cause de panne : c'est un tableau "causes"
-const causeLabel = Array.isArray(record.causes) && record.causes.length
-  ? record.causes.join(', ')
-  : (record.cause || record.failureCause || '—');
+  // Cause de panne : c'est un tableau "causes"
+  const causeLabel = Array.isArray(record.causes) && record.causes.length
+    ? record.causes.join(', ')
+    : (record.cause || record.failureCause || '—');
 
   const body = `
     <!-- BANDEAU TITRE BT -->
@@ -27219,10 +27224,8 @@ function printInventaire(inventoryId) {
     const manquants = discrepancies.filter(v => v < 0).length;
     const surstocks = discrepancies.filter(v => v > 0).length;
 
-    const statusStyle = inventory.status === 'Clôturé'
-      ? 'background:#15803d;color:#fff;'
-      : 'background:#1d4ed8;color:#fff;';
-
+    const inventoryStatus = inventory.status || 'Ouvert';
+    const statusStyle = inventoryStatus === 'Clôturé' ? '#15803d' : '#1d4ed8';
     const rowsHtml = rows.length
       ? rows.map((row, i) => {
         const art = typeof getArticleRecord === 'function'
@@ -27279,7 +27282,7 @@ function printInventaire(inventoryId) {
   <table style="width:100%;border-collapse:collapse;font-size:9.5pt;">
     <tr>
       <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;width:25%;text-align:left;color:#64748b;font-weight:600;">Total lignes comptées</th>
-      <td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700;color:#1a2533;">${rows.length} ligne(s)</td>
+      <td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700;color:#1a2533;">${rows.length} </td>
       <th style="background:#f8fafc;padding:7px 12px;border:1px solid #e2e8f0;width:25%;text-align:left;color:#64748b;font-weight:600;">Lignes conformes</th>
       <td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700;color:#15803d;">${conformes}</td>
     </tr>
@@ -27306,7 +27309,7 @@ function printInventaire(inventoryId) {
           <div class="doc-field"><label>Type</label><span>${printEsc(inventory.type || '-')}</span></div>
           <div class="doc-field"><label>Date inventaire</label><span>${printFormatDate(inventory.createdAt)}</span></div>
           <div class="doc-field"><label>Statut</label>
-            <span class="doc-status" style="${statusStyle}">${printEscT(inventory.status || '-')}</span>
+            <span style="${statusStyle}">${printEsc(inventory.status || '-')}</span>
           </div>
           <div class="doc-field"><label>Responsable</label><span style="font-weight:600;">${printEsc(inventory.owner || '-')}</span></div>
           <div class="doc-field"><label>Date clôture</label><span>${printFormatDate(inventory.closedAt)}</span></div>

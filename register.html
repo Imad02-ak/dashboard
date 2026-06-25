@@ -16,6 +16,19 @@
     />
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="auth.css" />
+    <style>
+  /* Background bleu clair pour tous les champs de la page inscription */
+  .auth-page .auth-input-wrap input,
+  .auth-page .auth-input-wrap textarea {
+    background-color: #e1ebf4 !important;
+  }
+
+  /* Optionnel : quand le champ est actif (focus), on garde le blanc */
+  .auth-page .auth-input-wrap input:focus,
+  .auth-page .auth-input-wrap textarea:focus {
+    background-color: #ffffff !important;
+  }
+</style>
   </head>
   <body class="auth-page">
     <main class="auth-layout" aria-label="Authentification MaintFlow">
@@ -60,14 +73,14 @@
       </aside>
 
       <section class="auth-form-panel auth-form-panel-wide">
-        <div class="auth-card auth-card-register" data-auth-card>
+        <div style="background-color: rgb(255, 255, 255);" class="auth-card auth-card-register" data-auth-card>
           <div class="auth-card-head">
             <div class="auth-kicker">Nouvel accès</div>
             <h2>Créer un compte</h2>
             <p>Rejoignez votre plateforme MaintFlow</p>
           </div>
 
-          <form class="auth-form" id="registerForm" novalidate>
+          <form  class="auth-form" id="registerForm" novalidate>
             <div class="auth-form-grid">
               <div class="auth-field" data-field>
                 <label for="firstName">Prénom</label>
