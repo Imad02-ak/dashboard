@@ -72,7 +72,14 @@
     try { localStorage.setItem(key, JSON.stringify(data)); } catch (_) { }
     onFirebaseReady(function (db) {
       const fbKey = key.replace(/\./g, "_");
-      db.ref("maintflow/" + fbKey).set(data).catch(function (err) {
+      // Sérialiser puis désérialiser pour éviter toute corruption des données
+      let safeData;
+      try {
+        safeData = JSON.parse(JSON.stringify(data));
+      } catch (_) {
+        safeData = data;
+      }
+      db.ref("maintflow/" + fbKey).set(safeData).catch(function (err) {
         console.warn("[MaintFlowAuth] Firebase write error:", err);
       });
     });
@@ -583,14 +590,14 @@
   function appendAuditLog(entry) {
     let adminState = storageGet(STORAGE_KEYS.administrationState, null);
     if (!adminState || typeof adminState !== 'object') {
-        adminState = { users: [], settings: {}, logs: [] };
+      adminState = { users: [], settings: {}, logs: [] };
     }
     if (!Array.isArray(adminState.logs)) adminState.logs = [];
     const log = createAuditEntry(entry);
     adminState.logs = [log, ...adminState.logs];
     storageSet(STORAGE_KEYS.administrationState, adminState);
     return log;
-}
+  }
 
   /* ------------------------------------------------------------------ */
   /* Legacy sync                                                         */
