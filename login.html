@@ -162,11 +162,6 @@
     <script src="auth-core.js"></script>
     <script>
       (function () {
-        // Rediriger si déjà connecté
-        if (MaintFlowAuth.isSessionValid()) {
-          window.location.replace("index.html");
-        }
-
         // Toggle mot de passe
         document
           .querySelectorAll("[data-password-toggle]")
@@ -187,14 +182,18 @@
         // Sélecteur de langue
         const langSelect = document.getElementById("authLanguageSelect");
         const savedLang =
-          localStorage.getItem("maintflow.authLanguage") || "fr";
-        if (langSelect) langSelect.value = savedLang;
-        if (langSelect)
+          MaintFlowAuth.storage.getItem("maintflow.authLanguage") || "fr";
+        if (langSelect) {
+          langSelect.value = savedLang;
           langSelect.addEventListener("change", function () {
-            localStorage.setItem("maintflow.authLanguage", langSelect.value);
+            MaintFlowAuth.storage.setItem(
+              "maintflow.authLanguage",
+              langSelect.value,
+            );
           });
+        }
 
-        // Soumission du formulaire
+        // Soumission
         const form = document.getElementById("loginForm");
         const statusEl = document.getElementById("loginStatus");
         const btn = document.getElementById("loginBtn");
@@ -205,7 +204,6 @@
             ? "var(--color-error, #c0392b)"
             : "var(--color-success, #27ae60)";
         }
-
         function setLoading(loading) {
           btn.disabled = loading;
           btn.querySelector("span").textContent = loading
@@ -213,36 +211,50 @@
             : "Se connecter";
         }
 
+        // Attendre que auth-core soit initialisé puis vérifier session
+        function checkSessionAndRedirect() {
+          if (MaintFlowAuth.isSessionValid()) {
+            window.location.replace("index.html");
+          }
+        }
+
+        // Vérifier session après init Firebase (avec délai)
+        setTimeout(checkSessionAndRedirect, 900);
+
         form.addEventListener("submit", async function (e) {
           e.preventDefault();
 
           const email = document.getElementById("loginEmail").value.trim();
           const password = document.getElementById("loginPassword").value;
 
-          // Validation de base
+          document.getElementById("loginEmailError").textContent = "";
+          document.getElementById("loginPasswordError").textContent = "";
+
           if (!email) {
             document.getElementById("loginEmailError").textContent =
               "L'adresse e-mail est requise.";
             return;
           }
-          document.getElementById("loginEmailError").textContent = "";
-
           if (!password) {
             document.getElementById("loginPasswordError").textContent =
               "Le mot de passe est requis.";
             return;
           }
-          document.getElementById("loginPasswordError").textContent = "";
 
           setLoading(true);
-          setStatus("", false);
+          setStatus("Vérification en cours...", false);
 
           try {
-            // Attendre que Firebase soit prêt
+            // Attendre Firebase + init complète
             await new Promise(function (resolve) {
               MaintFlowAuth.onFirebaseReady(function () {
                 resolve();
               });
+            });
+
+            // Délai pour laisser initializeAuthData finir
+            await new Promise(function (resolve) {
+              setTimeout(resolve, 1000);
             });
 
             const user = MaintFlowAuth.getUserByEmail(email);
@@ -253,7 +265,7 @@
               return;
             }
 
-            if (user.status === "Pending") {
+            if (user.status === MaintFlowAuth.USER_STATUS.PENDING) {
               setStatus(
                 "Votre compte est en attente de validation par un administrateur.",
                 true,
@@ -262,7 +274,7 @@
               return;
             }
 
-            if (user.status === "Rejected") {
+            if (user.status === MaintFlowAuth.USER_STATUS.REJECTED) {
               setStatus(
                 "Votre compte a été refusé. Contactez un administrateur.",
                 true,
