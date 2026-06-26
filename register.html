@@ -674,5 +674,58 @@
           });
       })();
     </script>
+    <!-- Firebase Integration -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import { getFirestore, collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyAPLDMt39WS5PxyC-F7LD8CRGcLd1DKHpM",
+        authDomain: "maintflow-c84cc.firebaseapp.com",
+        databaseURL: "https://maintflow-c84cc-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "maintflow-c84cc",
+        storageBucket: "maintflow-c84cc.firebasestorage.app",
+        messagingSenderId: "526391421178",
+        appId: "1:526391421178:web:f066d3383b5594abcd4143",
+        measurementId: "G-2WCQJSJBXZ"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // Real-time synchronization
+      try {
+        onSnapshot(collection(db, "maintflow_data"), (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added" || change.type === "modified") {
+              const val = change.doc.data().value;
+              if (localStorage.getItem(change.doc.id) !== val) {
+                localStorage.setItem(change.doc.id, val);
+                window.dispatchEvent(new StorageEvent('storage', { key: change.doc.id, newValue: val }));
+              }
+            }
+            if (change.type === "removed") {
+              localStorage.removeItem(change.doc.id);
+            }
+          });
+        });
+      } catch (e) {
+        console.error(e);
+      }
+
+      // Proxy native localStorage methods
+      const originalSetItem = Storage.prototype.setItem;
+      const originalRemoveItem = Storage.prototype.removeItem;
+
+      Storage.prototype.setItem = function(key, value) {
+        originalSetItem.call(this, key, value);
+        try { setDoc(doc(db, "maintflow_data", key), { value: value }); } catch (e) {}
+      };
+
+      Storage.prototype.removeItem = function(key) {
+        originalRemoveItem.call(this, key);
+        try { deleteDoc(doc(db, "maintflow_data", key)); } catch (e) {}
+      };
+    </script>
   </body>
 </html>
