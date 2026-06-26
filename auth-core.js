@@ -581,12 +581,16 @@
     };
   }
   function appendAuditLog(entry) {
-    const adminState = storageGet(STORAGE_KEYS.administrationState, { users: [], settings: {}, logs: [] });
+    let adminState = storageGet(STORAGE_KEYS.administrationState, null);
+    if (!adminState || typeof adminState !== 'object') {
+        adminState = { users: [], settings: {}, logs: [] };
+    }
+    if (!Array.isArray(adminState.logs)) adminState.logs = [];
     const log = createAuditEntry(entry);
-    adminState.logs = [log, ...(Array.isArray(adminState.logs) ? adminState.logs : [])];
+    adminState.logs = [log, ...adminState.logs];
     storageSet(STORAGE_KEYS.administrationState, adminState);
     return log;
-  }
+}
 
   /* ------------------------------------------------------------------ */
   /* Legacy sync                                                         */
@@ -608,7 +612,13 @@
     };
   }
   function syncUsersToAdministrationState() {
-    const adminState = storageGet(STORAGE_KEYS.administrationState, { users: [], settings: {}, logs: [] });
+    let adminState = storageGet(STORAGE_KEYS.administrationState, null);
+    if (!adminState || typeof adminState !== 'object') {
+      adminState = { users: [], settings: {}, logs: [] };
+    }
+    if (!Array.isArray(adminState.users)) adminState.users = [];
+    if (!adminState.settings) adminState.settings = {};
+    if (!Array.isArray(adminState.logs)) adminState.logs = [];
     adminState.users = getUsers().map(userToLegacyAdminUser);
     storageSet(STORAGE_KEYS.administrationState, adminState);
   }
