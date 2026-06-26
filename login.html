@@ -14,71 +14,73 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <style>
-</style>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="auth.css" />
   </head>
   <body class="auth-page">
-    <div class="auth-language-row lang-switcher-fixed" aria-label="Language selector">
-            <i class="fa-solid fa-globe" aria-hidden="true"></i>
-            <select id="authLanguageSelect" aria-label="Choisir la langue">
-              <option value="fr">Fr</option>
-              <option value="en">Eng</option>
-            </select>
-          </div>
+    <div
+      class="auth-language-row lang-switcher-fixed"
+      aria-label="Language selector"
+    >
+      <i class="fa-solid fa-globe" aria-hidden="true"></i>
+      <select id="authLanguageSelect" aria-label="Choisir la langue">
+        <option value="fr">Fr</option>
+        <option value="en">Eng</option>
+      </select>
+    </div>
+
     <main class="auth-layout" aria-label="Authentification MaintFlow">
       <aside class="auth-brand-panel" aria-label="Présentation MaintFlow">
         <div class="auth-blur-shape auth-blur-shape-one"></div>
         <div class="auth-blur-shape auth-blur-shape-two"></div>
         <div class="auth-blur-shape auth-blur-shape-three"></div>
 
-       <div class="auth-brand-header">
-    <a class="auth-logo" href="login.html" aria-label="MaintFlow accueil">
-        <img src="white.png" alt="Logo MaintFlow" />
-    </a>
-    <div class="auth-brand-copy">
-        <h1>Maint<span>Flow</span></h1>
-        <p>Plateforme intelligente de gestion de maintenance</p>
-    </div>
-</div>
-
-          <div class="auth-feature-grid" aria-label="Fonctionnalités MaintFlow">
-            <div class="auth-feature-card">
-              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Gérez tous vos actifs en un seul endroit</span>
-            </div>
-            <div class="auth-feature-card">
-              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Planifiez, suivez et optimisez vos opérations</span>
-            </div>
-            <div class="auth-feature-card">
-              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Optimisez vos ressources et vos coûts</span>
-            </div>
-            <div class="auth-feature-card">
-              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Suivez vos performances en temps réel</span>
-            </div>
+        <div class="auth-brand-header">
+          <a class="auth-logo" href="login.html" aria-label="MaintFlow accueil">
+            <img src="white.png" alt="Logo MaintFlow" />
+          </a>
+          <div class="auth-brand-copy">
+            <h1>Maint<span>Flow</span></h1>
+            <p>Plateforme intelligente de gestion de maintenance</p>
           </div>
         </div>
 
-        <p class="auth-brand-footer">Optimisez votre maintenance avec MaintFlow.</p>
+        <div class="auth-feature-grid" aria-label="Fonctionnalités MaintFlow">
+          <div class="auth-feature-card">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span>Gérez tous vos actifs en un seul endroit</span>
+          </div>
+          <div class="auth-feature-card">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span>Planifiez, suivez et optimisez vos opérations</span>
+          </div>
+          <div class="auth-feature-card">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span>Optimisez vos ressources et vos coûts</span>
+          </div>
+          <div class="auth-feature-card">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span>Suivez vos performances en temps réel</span>
+          </div>
+        </div>
+
+        <p class="auth-brand-footer">
+          Optimisez votre maintenance avec MaintFlow.
+        </p>
       </aside>
 
-      <section  class="auth-form-panel">
-        <div style="background-color:#fff;" class="auth-card" data-auth-card>
-
+      <section class="auth-form-panel">
+        <div style="background-color: #fff" class="auth-card" data-auth-card>
           <div class="auth-card-head">
             <div class="auth-kicker">Espace utilisateur</div>
             <h2>Connexion</h2>
             <p>Connectez-vous à votre espace MaintFlow</p>
           </div>
 
-          <form   class="auth-form" id="loginForm" novalidate>
+          <form class="auth-form" id="loginForm" novalidate>
             <div class="auth-field" data-field>
               <label for="loginEmail">Adresse e-mail</label>
-              <div  class="auth-input-wrap">
+              <div class="auth-input-wrap">
                 <i class="fa-regular fa-envelope" aria-hidden="true"></i>
                 <input
                   id="loginEmail"
@@ -115,7 +117,11 @@
                   <i class="fa-regular fa-eye" aria-hidden="true"></i>
                 </button>
               </div>
-              <p class="auth-error" id="loginPasswordError" aria-live="polite"></p>
+              <p
+                class="auth-error"
+                id="loginPasswordError"
+                aria-live="polite"
+              ></p>
             </div>
 
             <div class="auth-form-row">
@@ -128,9 +134,18 @@
               </a>
             </div>
 
-            <div class="auth-status" role="status" aria-live="polite"></div>
+            <div
+              class="auth-status"
+              id="loginStatus"
+              role="status"
+              aria-live="polite"
+            ></div>
 
-            <button class="btn btn-primary auth-submit" type="submit">
+            <button
+              class="btn btn-primary auth-submit"
+              type="submit"
+              id="loginBtn"
+            >
               <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
               <span>Se connecter</span>
             </button>
@@ -145,6 +160,136 @@
     </main>
 
     <script src="auth-core.js"></script>
-    <script src="auth.js"></script>
+    <script>
+      (function () {
+        // Rediriger si déjà connecté
+        if (MaintFlowAuth.isSessionValid()) {
+          window.location.replace("index.html");
+        }
+
+        // Toggle mot de passe
+        document
+          .querySelectorAll("[data-password-toggle]")
+          .forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              const input = btn
+                .closest(".auth-input-wrap")
+                .querySelector("input");
+              const isVisible = input.type === "text";
+              input.type = isVisible ? "password" : "text";
+              btn.setAttribute("aria-pressed", String(!isVisible));
+              btn.querySelector("i").className = isVisible
+                ? "fa-regular fa-eye"
+                : "fa-regular fa-eye-slash";
+            });
+          });
+
+        // Sélecteur de langue
+        const langSelect = document.getElementById("authLanguageSelect");
+        const savedLang =
+          localStorage.getItem("maintflow.authLanguage") || "fr";
+        if (langSelect) langSelect.value = savedLang;
+        if (langSelect)
+          langSelect.addEventListener("change", function () {
+            localStorage.setItem("maintflow.authLanguage", langSelect.value);
+          });
+
+        // Soumission du formulaire
+        const form = document.getElementById("loginForm");
+        const statusEl = document.getElementById("loginStatus");
+        const btn = document.getElementById("loginBtn");
+
+        function setStatus(msg, isError) {
+          statusEl.textContent = msg;
+          statusEl.style.color = isError
+            ? "var(--color-error, #c0392b)"
+            : "var(--color-success, #27ae60)";
+        }
+
+        function setLoading(loading) {
+          btn.disabled = loading;
+          btn.querySelector("span").textContent = loading
+            ? "Connexion en cours..."
+            : "Se connecter";
+        }
+
+        form.addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const email = document.getElementById("loginEmail").value.trim();
+          const password = document.getElementById("loginPassword").value;
+
+          // Validation de base
+          if (!email) {
+            document.getElementById("loginEmailError").textContent =
+              "L'adresse e-mail est requise.";
+            return;
+          }
+          document.getElementById("loginEmailError").textContent = "";
+
+          if (!password) {
+            document.getElementById("loginPasswordError").textContent =
+              "Le mot de passe est requis.";
+            return;
+          }
+          document.getElementById("loginPasswordError").textContent = "";
+
+          setLoading(true);
+          setStatus("", false);
+
+          try {
+            // Attendre que Firebase soit prêt
+            await new Promise(function (resolve) {
+              MaintFlowAuth.onFirebaseReady(function () {
+                resolve();
+              });
+            });
+
+            const user = MaintFlowAuth.getUserByEmail(email);
+
+            if (!user) {
+              setStatus("Aucun compte trouvé avec cet e-mail.", true);
+              setLoading(false);
+              return;
+            }
+
+            if (user.status === "Pending") {
+              setStatus(
+                "Votre compte est en attente de validation par un administrateur.",
+                true,
+              );
+              setLoading(false);
+              return;
+            }
+
+            if (user.status === "Rejected") {
+              setStatus(
+                "Votre compte a été refusé. Contactez un administrateur.",
+                true,
+              );
+              setLoading(false);
+              return;
+            }
+
+            const valid = await MaintFlowAuth.verifyPassword(password, user);
+            if (!valid) {
+              setStatus("Mot de passe incorrect.", true);
+              setLoading(false);
+              return;
+            }
+
+            await MaintFlowAuth.createSessionForUser(user);
+            setStatus("Connexion réussie ! Redirection...", false);
+            setTimeout(function () {
+              window.location.replace("index.html");
+            }, 800);
+          } catch (err) {
+            console.error("[Login]", err);
+            setStatus("Une erreur est survenue. Veuillez réessayer.", true);
+            setLoading(false);
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

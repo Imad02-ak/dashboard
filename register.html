@@ -17,18 +17,15 @@
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="auth.css" />
     <style>
-  /* Background bleu clair pour tous les champs de la page inscription */
-  .auth-page .auth-input-wrap input,
-  .auth-page .auth-input-wrap textarea {
-    background-color: #e1ebf4 !important;
-  }
-
-  /* Optionnel : quand le champ est actif (focus), on garde le blanc */
-  .auth-page .auth-input-wrap input:focus,
-  .auth-page .auth-input-wrap textarea:focus {
-    background-color: #ffffff !important;
-  }
-</style>
+      .auth-page .auth-input-wrap input,
+      .auth-page .auth-input-wrap textarea {
+        background-color: #e1ebf4 !important;
+      }
+      .auth-page .auth-input-wrap input:focus,
+      .auth-page .auth-input-wrap textarea:focus {
+        background-color: #ffffff !important;
+      }
+    </style>
   </head>
   <body class="auth-page">
     <main class="auth-layout" aria-label="Authentification MaintFlow">
@@ -38,32 +35,31 @@
         <div class="auth-blur-shape auth-blur-shape-three"></div>
 
         <div class="auth-brand-header">
-    <a class="auth-logo" href="login.html" aria-label="MaintFlow accueil">
-        <img src="white.png" alt="Logo MaintFlow" />
-    </a>
-    <div class="auth-brand-copy">
-        <h1>Maint<span>Flow</span></h1>
-        <p>Plateforme intelligente de gestion de maintenance</p>
-    </div>
-</div>
+          <a class="auth-logo" href="login.html" aria-label="MaintFlow accueil">
+            <img src="white.png" alt="Logo MaintFlow" />
+          </a>
+          <div class="auth-brand-copy">
+            <h1>Maint<span>Flow</span></h1>
+            <p>Plateforme intelligente de gestion de maintenance</p>
+          </div>
+        </div>
 
-          <div class="auth-feature-grid" aria-label="Fonctionnalités MaintFlow">
-            <div class="auth-feature-card">
-              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Gérez tous vos actifs en un seul endroit</span>
-            </div>
-            <div class="auth-feature-card">
-              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Planifiez, suivez et optimisez vos opérations</span>
-            </div>
-            <div class="auth-feature-card">
-              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Optimisez vos ressources et vos coûts</span>
-            </div>
-            <div class="auth-feature-card">
-              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Suivez vos performances en temps réel</span>
-            </div>
+        <div class="auth-feature-grid" aria-label="Fonctionnalités MaintFlow">
+          <div class="auth-feature-card">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span>Gérez tous vos actifs en un seul endroit</span>
+          </div>
+          <div class="auth-feature-card">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span>Planifiez, suivez et optimisez vos opérations</span>
+          </div>
+          <div class="auth-feature-card">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span>Optimisez vos ressources et vos coûts</span>
+          </div>
+          <div class="auth-feature-card">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span>Suivez vos performances en temps réel</span>
           </div>
         </div>
 
@@ -73,14 +69,18 @@
       </aside>
 
       <section class="auth-form-panel auth-form-panel-wide">
-        <div style="background-color: rgb(255, 255, 255);" class="auth-card auth-card-register" data-auth-card>
+        <div
+          style="background-color: rgb(255, 255, 255)"
+          class="auth-card auth-card-register"
+          data-auth-card
+        >
           <div class="auth-card-head">
             <div class="auth-kicker">Nouvel accès</div>
             <h2>Créer un compte</h2>
             <p>Rejoignez votre plateforme MaintFlow</p>
           </div>
 
-          <form  class="auth-form" id="registerForm" novalidate>
+          <form class="auth-form" id="registerForm" novalidate>
             <div class="auth-form-grid">
               <div class="auth-field" data-field>
                 <label for="firstName">Prénom</label>
@@ -386,9 +386,18 @@
               </div>
             </section>
 
-            <div class="auth-status" role="status" aria-live="polite"></div>
+            <div
+              class="auth-status"
+              id="registerStatus"
+              role="status"
+              aria-live="polite"
+            ></div>
 
-            <button class="btn btn-primary auth-submit" type="submit">
+            <button
+              class="btn btn-primary auth-submit"
+              type="submit"
+              id="registerBtn"
+            >
               <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
               <span>Créer mon compte</span>
             </button>
@@ -403,6 +412,267 @@
     </main>
 
     <script src="auth-core.js"></script>
-    <script src="auth.js"></script>
+    <script>
+      (function () {
+        // Rediriger si déjà connecté
+        if (MaintFlowAuth.isSessionValid()) {
+          window.location.replace("index.html");
+        }
+
+        // Toggle mot de passe
+        document
+          .querySelectorAll("[data-password-toggle]")
+          .forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              const input = btn
+                .closest(".auth-input-wrap")
+                .querySelector("input");
+              const isVisible = input.type === "text";
+              input.type = isVisible ? "password" : "text";
+              btn.setAttribute("aria-pressed", String(!isVisible));
+              btn.querySelector("i").className = isVisible
+                ? "fa-regular fa-eye"
+                : "fa-regular fa-eye-slash";
+            });
+          });
+
+        // Toggle créer entreprise / code entreprise
+        const createCompanyChk = document.getElementById("createCompany");
+        const companyCodeField = document.getElementById("companyCodeField");
+        const companyInfoCard = document.getElementById("companyInfoCard");
+        const companyCodeInput = document.getElementById("companyCode");
+
+        createCompanyChk.addEventListener("change", function () {
+          const creating = createCompanyChk.checked;
+          companyCodeField.style.display = creating ? "none" : "";
+          companyInfoCard.classList.toggle("is-hidden", !creating);
+          companyCodeInput.required = !creating;
+        });
+
+        // Preview logo entreprise
+        document
+          .getElementById("companyLogo")
+          .addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+              const preview = document.getElementById("companyLogoPreview");
+              preview.src = ev.target.result;
+              preview.hidden = false;
+              preview.previousElementSibling &&
+                (preview.previousElementSibling.style.display = "none");
+            };
+            reader.readAsDataURL(file);
+          });
+
+        // Status helper
+        const statusEl = document.getElementById("registerStatus");
+        const btn = document.getElementById("registerBtn");
+
+        function setStatus(msg, isError) {
+          statusEl.textContent = msg;
+          statusEl.style.color = isError
+            ? "var(--color-error, #c0392b)"
+            : "var(--color-success, #27ae60)";
+        }
+        function setLoading(loading) {
+          btn.disabled = loading;
+          btn.querySelector("span").textContent = loading
+            ? "Création en cours..."
+            : "Créer mon compte";
+        }
+        function fieldError(field, msg) {
+          const err = field
+            .closest("[data-field]")
+            ?.querySelector(".auth-error");
+          if (err) err.textContent = msg;
+        }
+        function clearErrors() {
+          document.querySelectorAll(".auth-error").forEach(function (el) {
+            el.textContent = "";
+          });
+        }
+
+        // Soumission
+        document
+          .getElementById("registerForm")
+          .addEventListener("submit", async function (e) {
+            e.preventDefault();
+            clearErrors();
+
+            const firstName = document.getElementById("firstName").value.trim();
+            const lastName = document.getElementById("lastName").value.trim();
+            const email = document.getElementById("registerEmail").value.trim();
+            const password = document.getElementById("registerPassword").value;
+            const confirm = document.getElementById("confirmPassword").value;
+            const isCreating = createCompanyChk.checked;
+            const companyCode = document
+              .getElementById("companyCode")
+              .value.trim()
+              .toUpperCase();
+
+            // Validation
+            let hasError = false;
+            if (!firstName) {
+              fieldError(
+                document.getElementById("firstName"),
+                "Le prénom est requis.",
+              );
+              hasError = true;
+            }
+            if (!lastName) {
+              fieldError(
+                document.getElementById("lastName"),
+                "Le nom est requis.",
+              );
+              hasError = true;
+            }
+            if (!email) {
+              fieldError(
+                document.getElementById("registerEmail"),
+                "L'e-mail est requis.",
+              );
+              hasError = true;
+            }
+            if (password.length < 8) {
+              fieldError(
+                document.getElementById("registerPassword"),
+                "8 caractères minimum.",
+              );
+              hasError = true;
+            }
+            if (password !== confirm) {
+              fieldError(
+                document.getElementById("confirmPassword"),
+                "Les mots de passe ne correspondent pas.",
+              );
+              hasError = true;
+            }
+            if (!isCreating && !companyCode) {
+              fieldError(
+                document.getElementById("companyCode"),
+                "Le code entreprise est requis.",
+              );
+              hasError = true;
+            }
+            if (hasError) return;
+
+            setLoading(true);
+            setStatus("", false);
+
+            try {
+              // Attendre Firebase
+              await new Promise(function (resolve) {
+                MaintFlowAuth.onFirebaseReady(function () {
+                  resolve();
+                });
+              });
+
+              // Vérifier email déjà utilisé
+              if (MaintFlowAuth.emailExists(email)) {
+                fieldError(
+                  document.getElementById("registerEmail"),
+                  "Cet e-mail est déjà utilisé.",
+                );
+                setLoading(false);
+                return;
+              }
+
+              let companyId = "";
+
+              if (isCreating) {
+                // Créer l'entreprise
+                const companyName = document
+                  .getElementById("companyName")
+                  .value.trim();
+                if (!companyName) {
+                  fieldError(
+                    document.getElementById("companyName"),
+                    "Le nom de l'entreprise est requis.",
+                  );
+                  setLoading(false);
+                  return;
+                }
+                const company = MaintFlowAuth.addCompany({
+                  companyName: companyName,
+                  wilaya: document.getElementById("wilaya").value.trim(),
+                  daira: document.getElementById("daira").value.trim(),
+                  commune: document.getElementById("commune").value.trim(),
+                  phone: document.getElementById("companyPhone").value.trim(),
+                  address: document
+                    .getElementById("companyAddress")
+                    .value.trim(),
+                  website: document
+                    .getElementById("companyWebsite")
+                    .value.trim(),
+                  createdAt:
+                    document.getElementById("companyCreatedAt").value ||
+                    new Date().toISOString(),
+                  logo: document.getElementById("companyLogoPreview").src || "",
+                });
+                companyId = company.id;
+                MaintFlowAuth.syncCompanyToEnterpriseProfile(company);
+              } else {
+                // Rejoindre une entreprise existante
+                const company = MaintFlowAuth.getCompanyByCode(companyCode);
+                if (!company) {
+                  fieldError(
+                    document.getElementById("companyCode"),
+                    "Code entreprise introuvable.",
+                  );
+                  setLoading(false);
+                  return;
+                }
+                companyId = company.id;
+              }
+
+              // Hasher le mot de passe
+              const { passwordHash, passwordSalt } =
+                await MaintFlowAuth.createPasswordHash(password);
+
+              // Créer l'utilisateur
+              // Le 1er utilisateur d'une entreprise est Admin et Actif, les suivants sont Pending
+              const companyUsers = MaintFlowAuth.getUsersByCompany(companyId);
+              const isFirstUser = companyUsers.length === 0;
+
+              MaintFlowAuth.addUser({
+                firstName,
+                lastName,
+                email,
+                passwordHash,
+                passwordSalt,
+                companyId,
+                role: isFirstUser ? MaintFlowAuth.ROLES.ADMINISTRATOR : null,
+                status: isFirstUser
+                  ? MaintFlowAuth.USER_STATUS.ACTIVE
+                  : MaintFlowAuth.USER_STATUS.PENDING,
+              });
+
+              if (isFirstUser) {
+                setStatus(
+                  "Compte créé ! Vous êtes administrateur. Redirection...",
+                  false,
+                );
+                setTimeout(function () {
+                  window.location.replace("login.html");
+                }, 1200);
+              } else {
+                setStatus(
+                  "Compte créé ! En attente de validation par l'administrateur.",
+                  false,
+                );
+                setTimeout(function () {
+                  window.location.replace("login.html");
+                }, 2000);
+              }
+            } catch (err) {
+              console.error("[Register]", err);
+              setStatus("Une erreur est survenue. Veuillez réessayer.", true);
+              setLoading(false);
+            }
+          });
+      })();
+    </script>
   </body>
 </html>

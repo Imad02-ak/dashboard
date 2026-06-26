@@ -1,32 +1,30 @@
 ﻿const StorageManager = {
   get(key, defaultValue = null) {
     try {
-      const value = localStorage.getItem(key);
+      const value = MaintFlowAuth.storage.getItem(key);
       return value ? JSON.parse(value) : defaultValue;
     } catch (error) {
-      console.error(`Erreur lecture ${key}`, error);
+      console.error('Erreur lecture', key, error);
       return defaultValue;
     }
   },
-
   set(key, data) {
     try {
-      localStorage.setItem(key, JSON.stringify(data));
+      MaintFlowAuth.storage.setItem(key, JSON.stringify(data));
       return true;
     } catch (error) {
-      console.error(`Erreur écriture ${key}`, error);
+      console.error('Erreur écriture', key, error);
       return false;
     }
   },
-
   remove(key) {
     try {
-      localStorage.removeItem(key);
+      MaintFlowAuth.storage.removeItem(key);
       return true;
     } catch (error) {
       return false;
     }
-  },
+  }
 };
 
 let administrationLocaleCache = "fr-FR";
@@ -702,7 +700,7 @@ function getArticleDirectory() {
   let directory = JSON.parse(JSON.stringify(articleDefaults));
 
   try {
-    const stored = window.localStorage.getItem(articleStorageKey);
+    const stored = MaintFlowAuth.storage.getItem(articleStorageKey);
     if (stored) {
       const parsed = JSON.parse(stored);
       directory = {
@@ -724,7 +722,7 @@ function getArticleDirectory() {
 
 function saveArticleDirectory(directory) {
   try {
-    window.localStorage.setItem(articleStorageKey, JSON.stringify(directory));
+    MaintFlowAuth.storage.setItem(articleStorageKey, JSON.stringify(directory));
   } catch (error) {
     // ignore storage errors
   }
@@ -863,7 +861,7 @@ function buildArticleUnitMeasureOptions(selectedUnitMeasure = "") {
 function buildArticleSupplierOptions(selectedSupplier) {
   const stored = (() => {
     try {
-      const raw = window.localStorage.getItem('maintflow.fournisseurs');
+      const raw = MaintFlowAuth.storage.getItem('maintflow.fournisseurs');
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed?.suppliers) ? parsed.suppliers : [];
@@ -2446,7 +2444,7 @@ function getOrganizationDirectory() {
   let directory = JSON.parse(JSON.stringify(organizationDefaults));
 
   try {
-    const stored = window.localStorage.getItem(organizationStorageKey);
+    const stored = MaintFlowAuth.storage.getItem(organizationStorageKey);
     if (stored) {
       const parsed = JSON.parse(stored);
       directory = {
@@ -2475,7 +2473,7 @@ function getOrganizationDirectory() {
     if (!directory.unites.length && !directory.departmentServices.length) {
       const seedState = buildOrganizationSeedState();
       try {
-        window.localStorage.setItem(
+        MaintFlowAuth.storage.setItem(
           organizationStorageKey,
           JSON.stringify(seedState),
         );
@@ -2485,7 +2483,7 @@ function getOrganizationDirectory() {
   } catch (error) {
     const seedState = buildOrganizationSeedState();
     try {
-      window.localStorage.setItem(
+      MaintFlowAuth.storage.setItem(
         organizationStorageKey,
         JSON.stringify(seedState),
       );
@@ -2498,7 +2496,7 @@ function getOrganizationDirectory() {
 
 function saveOrganizationDirectory(directory) {
   try {
-    window.localStorage.setItem(
+    MaintFlowAuth.storage.setItem(
       organizationStorageKey,
       JSON.stringify(directory),
     );
@@ -3823,7 +3821,7 @@ function getEquipmentDirectory() {
   let directory = JSON.parse(JSON.stringify(equipmentDefaults));
 
   try {
-    const stored = window.localStorage.getItem(equipmentStorageKey);
+    const stored = MaintFlowAuth.storage.getItem(equipmentStorageKey);
     if (stored) {
       const parsed = JSON.parse(stored);
       directory = {
@@ -3857,7 +3855,7 @@ function getEquipmentDirectory() {
 
 function saveEquipmentDirectory(directory) {
   try {
-    window.localStorage.setItem(equipmentStorageKey, JSON.stringify(directory));
+    MaintFlowAuth.storage.setItem(equipmentStorageKey, JSON.stringify(directory));
   } catch (error) {
     // Keep the UI usable even if storage is unavailable.
   }
@@ -5296,7 +5294,7 @@ function buildOrganeMultiOptions(selectedIds) {
 function buildEquipmentSupplierOptions(selectedSupplier) {
   const stored = (() => {
     try {
-      const raw = window.localStorage.getItem('maintflow.fournisseurs');
+      const raw = MaintFlowAuth.storage.getItem('maintflow.fournisseurs');
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed?.suppliers) ? parsed.suppliers : [];
@@ -6464,7 +6462,7 @@ function getOrganeDirectory() {
   let directory = JSON.parse(JSON.stringify(organeDefaults));
 
   try {
-    const stored = window.localStorage.getItem(organeStorageKey);
+    const stored = MaintFlowAuth.storage.getItem(organeStorageKey);
     if (stored) {
       const parsed = JSON.parse(stored);
       directory = {
@@ -6486,7 +6484,7 @@ function getOrganeDirectory() {
 
 function saveOrganeDirectory(directory) {
   try {
-    window.localStorage.setItem(organeStorageKey, JSON.stringify(directory));
+    MaintFlowAuth.storage.setItem(organeStorageKey, JSON.stringify(directory));
   } catch (error) {
     // Keep the UI usable if persistent storage is unavailable.
   }
@@ -8473,7 +8471,7 @@ function getAdministrationState() {
   const state = cloneAdministrationDefaults();
 
   try {
-    const stored = window.localStorage.getItem(administrationStorageKey);
+    const stored = MaintFlowAuth.storage.getItem(administrationStorageKey);
     if (!stored) return state;
 
     const parsed = JSON.parse(stored);
@@ -8521,7 +8519,7 @@ function getAdministrationState() {
 
 function saveAdministrationState(state) {
   try {
-    window.localStorage.setItem(
+    MaintFlowAuth.storage.setItem(
       administrationStorageKey,
       JSON.stringify(state),
     );
@@ -11913,14 +11911,7 @@ function applyLocalizedShell(state = null) {
 
   updateClock();
 
-  try {
-    localStorage.setItem(
-      "maintflow.authLanguage",
-      languageKey === "en" ? "en" : "fr",
-    );
-  } catch (error) {
-    // ignore storage errors
-  }
+  try { MaintFlowAuth.storage.setItem('maintflow.authLanguage', languageKey === 'en' ? 'en' : 'fr'); } catch (e) { }
 }
 
 function formatAdministrationDateTime(value) {
@@ -11963,22 +11954,12 @@ function getConnectedUserProfile() {
     const session = MaintFlowAuth.getSession();
     if (session?.userId) {
       const authUser = MaintFlowAuth.getUserById(session.userId);
-      if (authUser) {
-        return MaintFlowAuth.userToLegacyAdminUser(authUser);
-      }
+      if (authUser) return MaintFlowAuth.userToLegacyAdminUser(authUser);
     }
   }
-
+  // Fallback : chercher dans l'état admin
   const state = getAdministrationState();
-  const storedUserId = (() => {
-    try {
-      return window.localStorage.getItem(connectedUserStorageKey) || "";
-    } catch (_error) {
-      return "";
-    }
-  })();
-
-  return state.users.find((user) => user.id === storedUserId) || null;
+  return state.users[0] || null;
 }
 
 function canViewPageKey(pageKey) {
@@ -14447,7 +14428,7 @@ function dashboardIsLate(dateValue, status) {
 
 function dashboardGetSupplierState() {
   try {
-    const raw = window.localStorage.getItem("maintflow.fournisseurs");
+    const raw = MaintFlowAuth.storage.getItem("maintflow.fournisseurs");
     const parsed = raw ? JSON.parse(raw) : { suppliers: [] };
     return { suppliers: Array.isArray(parsed.suppliers) ? parsed.suppliers : [] };
   } catch (error) {
@@ -15559,7 +15540,7 @@ function getStockDirectory() {
   };
 
   try {
-    const stored = window.localStorage.getItem(stockStorageKey);
+    const stored = MaintFlowAuth.storage.getItem(stockStorageKey);
 
     if (!stored) {
       return fallback;
@@ -15610,7 +15591,7 @@ function buildStockLocationOptions(selectedValue = "") {
 
 function saveStockDirectory(directory) {
   try {
-    window.localStorage.setItem(stockStorageKey, JSON.stringify(directory));
+    MaintFlowAuth.storage.setItem(stockStorageKey, JSON.stringify(directory));
   } catch (error) {
     // ignore storage errors
   }
@@ -15937,7 +15918,7 @@ function getStockInventoryTemplate() {
 
 function getStockInventories() {
   try {
-    const raw = window.localStorage.getItem(stockInventoriesStorageKey);
+    const raw = MaintFlowAuth.storage.getItem(stockInventoriesStorageKey);
     const parsed = raw ? JSON.parse(raw) : null;
     if (Array.isArray(parsed)) return parsed;
   } catch (error) {
@@ -15949,7 +15930,7 @@ function getStockInventories() {
 
 function saveStockInventories(inventories) {
   try {
-    window.localStorage.setItem(
+    MaintFlowAuth.storage.setItem(
       stockInventoriesStorageKey,
       JSON.stringify(inventories),
     );
@@ -15960,7 +15941,7 @@ function saveStockInventories(inventories) {
 
 function getStockSelectedInventoryId() {
   try {
-    return window.localStorage.getItem(stockSelectedInventoryStorageKey) || "";
+    return MaintFlowAuth.storage.getItem(stockSelectedInventoryStorageKey) || "";
   } catch (error) {
     return "";
   }
@@ -15968,7 +15949,7 @@ function getStockSelectedInventoryId() {
 
 function saveStockSelectedInventoryId(inventoryId) {
   try {
-    window.localStorage.setItem(
+    MaintFlowAuth.storage.setItem(
       stockSelectedInventoryStorageKey,
       String(inventoryId || ""),
     );
@@ -15997,7 +15978,7 @@ function getStockInventoryState() {
 
 function saveStockInventoryState(state) {
   try {
-    window.localStorage.setItem(
+    MaintFlowAuth.storage.setItem(
       stockInventoryStateStorageKey,
       JSON.stringify(state),
     );
@@ -16151,7 +16132,7 @@ function getStockMovementTypeBadge(type) {
 
 function getStockAlertReadKeys() {
   try {
-    const stored = window.localStorage.getItem(stockAlertReadStorageKey);
+    const stored = MaintFlowAuth.storage.getItem(stockAlertReadStorageKey);
     const parsed = stored ? JSON.parse(stored) : [];
     return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
   } catch (error) {
@@ -16161,7 +16142,7 @@ function getStockAlertReadKeys() {
 
 function saveStockAlertReadKeys(keys) {
   try {
-    window.localStorage.setItem(
+    MaintFlowAuth.storage.setItem(
       stockAlertReadStorageKey,
       JSON.stringify(Array.from(keys)),
     );
@@ -18567,11 +18548,11 @@ function clonePlanificationDefaults() {
 
 function loadPlanificationState() {
   try {
-    const raw = window.localStorage.getItem(planificationStorageKey);
+    const raw = MaintFlowAuth.storage.getItem(planificationStorageKey);
     if (!raw) {
       const seedState = clonePlanificationDefaults();
       try {
-        window.localStorage.setItem(
+        MaintFlowAuth.storage.setItem(
           planificationStorageKey,
           JSON.stringify(seedState),
         );
@@ -18605,7 +18586,7 @@ function loadPlanificationState() {
 
 function savePlanificationState(state) {
   try {
-    window.localStorage.setItem(planificationStorageKey, JSON.stringify(state));
+    MaintFlowAuth.storage.setItem(planificationStorageKey, JSON.stringify(state));
   } catch (error) { }
 }
 
@@ -20174,7 +20155,7 @@ function renderStockPage(subpageKey) {
 function loadPlanificationData() {
   const seedState = JSON.parse(JSON.stringify(planificationDefaults));
   try {
-    const raw = window.localStorage.getItem(planificationStorageKey);
+    const raw = MaintFlowAuth.storage.getItem(planificationStorageKey);
     const parsed = raw ? JSON.parse(raw) : null;
     const state = parsed
       ? {
@@ -20212,7 +20193,7 @@ function loadPlanificationData() {
 
 function savePlanificationData(state) {
   try {
-    window.localStorage.setItem(planificationStorageKey, JSON.stringify(state));
+    MaintFlowAuth.storage.setItem(planificationStorageKey, JSON.stringify(state));
   } catch (error) { }
 }
 
@@ -21501,7 +21482,7 @@ function loadAchatsState() {
   const seed = buildAchatsSeedState();
 
   try {
-    const raw = window.localStorage.getItem(achatsStorageKey);
+    const raw = MaintFlowAuth.storage.getItem(achatsStorageKey);
     if (!raw) return cloneAchatsState(seed);
     const parsed = JSON.parse(raw);
 
@@ -21523,7 +21504,7 @@ function loadAchatsState() {
 
 function saveAchatsState(state) {
   try {
-    window.localStorage.setItem(achatsStorageKey, JSON.stringify(state));
+    MaintFlowAuth.storage.setItem(achatsStorageKey, JSON.stringify(state));
   } catch (error) {
     // Keep UI operational if localStorage is unavailable.
   }
@@ -24147,7 +24128,7 @@ let interventionsHistoryFilterState = {
 
 function loadInterventionsState() {
   try {
-    const raw = window.localStorage.getItem(interventionsStorageKey);
+    const raw = MaintFlowAuth.storage.getItem(interventionsStorageKey);
     if (!raw) return buildInterventionsSeedState();
     const parsed = JSON.parse(raw);
     const normalized = {
@@ -24176,7 +24157,7 @@ function loadInterventionsState() {
 
     if (!hasStoredInterventionsState) {
       try {
-        window.localStorage.setItem(
+        MaintFlowAuth.storage.setItem(
           interventionsStorageKey,
           JSON.stringify(seedState),
         );
@@ -24193,7 +24174,7 @@ function loadInterventionsState() {
       };
 
       try {
-        window.localStorage.setItem(
+        MaintFlowAuth.storage.setItem(
           interventionsStorageKey,
           JSON.stringify(mergedState),
         );
@@ -24217,7 +24198,7 @@ function loadInterventionsState() {
 
 function saveInterventionsState(state) {
   try {
-    window.localStorage.setItem(interventionsStorageKey, JSON.stringify(state));
+    MaintFlowAuth.storage.setItem(interventionsStorageKey, JSON.stringify(state));
   } catch (e) {
     // Keep the UI usable if persistent storage is unavailable.
   }
@@ -30680,12 +30661,12 @@ if (window.MaintFlowAuth) {
 
 function getMessagingState() {
   try {
-    const s = window.localStorage.getItem(messagingStorageKey);
+    const s = MaintFlowAuth.storage.getItem(messagingStorageKey);
     return s ? { ...messagingDefaults, ...JSON.parse(s) } : { ...messagingDefaults };
   } catch (e) { return { ...messagingDefaults }; }
 }
 function saveMessagingState(state) {
-  try { window.localStorage.setItem(messagingStorageKey, JSON.stringify(state)); }
+  try { MaintFlowAuth.storage.setItem(messagingStorageKey, JSON.stringify(state)); }
   catch (e) { }
 }
 
