@@ -40,7 +40,7 @@
   --radius-lg: 14px;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.04);
-  --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-collapsed-w: 68px;
   --sidebar-expanded-w: 230px;
   --sidebar-w: var(--sidebar-collapsed-w);
@@ -73,7 +73,7 @@ body {
   transition: width var(--transition);
   border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
-.sidebar.expanded {
+.sidebar:hover {
   width: var(--sidebar-expanded-w);
 }
 
@@ -81,7 +81,7 @@ body {
 .sidebar-logo {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   padding-top: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   flex-shrink: 0;
@@ -93,10 +93,10 @@ body {
   height: 70px;
   object-fit: contain;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 5px rgba(93, 212, 240, 0.25));
 }
 .logo-text {
-  font-size: 28px;
+  padding-bottom: 6px;
+  font-size: 32px;
   font-weight: 800;
   color: #fff;
   letter-spacing: 0.2px;
@@ -110,7 +110,7 @@ body {
 .logo-text span {
   color: #5dd4f0;
 }
-.sidebar.expanded .logo-text {
+.sidebar:hover .logo-text {
   opacity: 1;
   transform: translateX(0);
 }
@@ -146,13 +146,13 @@ body {
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-.sidebar.expanded .sidebar-arrow {
+.sidebar:hover .sidebar-arrow {
   left: calc(var(--sidebar-expanded-w) - 15px);
   border-radius: 999px 0 0 999px;
   background: var(--body-bg);
   color: var(--brand-dark);
 }
-.sidebar.expanded .sidebar-arrow:hover {
+.sidebar:hover .sidebar-arrow:hover {
   color: var(--brand);
 }
 
@@ -160,7 +160,7 @@ body {
   transition: transform var(--transition);
   font-size: 16px;
 }
-.sidebar.expanded #arrowIcon {
+.sidebar:hover #arrowIcon {
   transform: rotate(180deg);
 }
 /* Nav */
@@ -188,7 +188,7 @@ body {
     opacity var(--transition),
     height var(--transition);
 }
-.sidebar.expanded .nav-section-label {
+.sidebar:hover .nav-section-label {
   height: 30px;
   opacity: 1;
 }
@@ -274,7 +274,7 @@ body {
   overflow: hidden;
   white-space: nowrap;
 }
-.sidebar.expanded .nav-label {
+.sidebar:hover .nav-label {
   opacity: 1;
   transform: translateX(0);
 }
@@ -290,7 +290,7 @@ body {
   transition: opacity var(--transition);
   flex-shrink: 0;
 }
-.sidebar.expanded .nav-badge {
+.sidebar:hover .nav-badge {
   opacity: 1;
 }
 
@@ -330,7 +330,7 @@ body {
   overflow: hidden;
   transition: margin-left var(--transition);
 }
-.sidebar.expanded ~ .main {
+.sidebar:hover ~ .main {
   margin-left: var(--sidebar-expanded-w);
 }
 

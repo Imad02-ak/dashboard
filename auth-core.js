@@ -1000,7 +1000,7 @@
     if (!profile || (!profile.name && !profile.code)) return companies;
 
     const company = addCompany({
-      companyName: profile.name || "MaintFlow Industrie",
+      companyName: profile.name || "IncaMaint Industrie",
       country: profile.wilaya || "",
       city: profile.commune || "",
       wilaya: profile.wilaya || "",

@@ -413,7 +413,7 @@ function mergeAdministrationRolePermissions(basePermissions, overrides = {}) {
 const administrationDefaults = {
   users: [],
   settings: {
-    companyName: "MaintFlow Industrie",
+    companyName: "IncaMaint Industrie",
     logo: "",
     currency: "DZD",
     defaultLanguage: "fr",
@@ -11852,7 +11852,7 @@ function applyLocalizedShell(state = null) {
   }
 
   if (document.title) {
-    document.title = `MaintFlow — ${text.appTitleSuffix}`;
+    document.title = `IncaMaint — ${text.appTitleSuffix}`;
   }
 
   navItems.forEach((item) => {
@@ -26201,7 +26201,7 @@ margin-left: 0px;
 .doc-section-title,
 .doc-logo-text,
 .doc-kpi strong {
-  font-family: 'Playfair Display', 'Times New Roman', serif;
+  font-family: 'Noto Serif NP Hmong', 'Times New Roman', serif;
   /* Informations, champs, tableaux */
 .doc-field span,
 .doc-field label,
@@ -26230,14 +26230,14 @@ margin-left: 0px;
   <div class="doc-logo-row">
   
   <!-- Logo : height augmenté directement, plus de transform -->
-  <img src="black.png" 
+  <img src="logoinca.png" 
        alt="MaintFlow" 
-       style="height:70px; width:70px; object-fit:contain; flex-shrink:0;">
+       style="height:90px; width:90px; object-fit:contain; flex-shrink:0; margin:0 ;">
 
   <!-- Nom + sous-titre dans une colonne -->
   <div style="display:flex; flex-direction:column; gap:1px; margin-left:0px;">
     <div class="doc-logo-text">
-      <span style="color:#18a7bf">Maint</span><span style="color:#1a2533">Flow</span>
+      <span style="color:#18a7bf">Inca</span><span style="color:#1a2533">Maint</span>
     </div>
     <div class="doc-logo-subtitle">${uiText('Système de gestion de maintenance')}</div>
   </div>
@@ -26265,7 +26265,7 @@ margin-left: 0px;
     ${localizedBody}
     <div class="doc-footer">
       <span>${printEsc(localizedTitle)}</span>
-      <span>MaintFlow © ${new Date().getFullYear()} — ${uiText('Document généré automatiquement')}</span>
+      <span>IncaMaint © ${new Date().getFullYear()} — ${uiText('Document généré automatiquement')}</span>
     </div>
   </div>
 </body>
@@ -29316,13 +29316,6 @@ function bootstrapRoute() {
 
 window.addEventListener("hashchange", bootstrapRoute);
 
-// Sidebar toggle — collapsed par défaut
-const sidebar = document.getElementById("sidebar");
-const arrowIcon = document.getElementById("arrowIcon");
-
-document.getElementById("sidebarToggle").addEventListener("click", function () {
-  sidebar.classList.toggle("expanded");
-});
 
 (function () {
   const STORAGE_KEY = "maintflow.fournisseurs";
