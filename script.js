@@ -497,14 +497,14 @@ const organizationSubpages = {
     body: "Fiche entreprise, informations de base et logo.",
   },
   unites: {
-    label: "Unités",
-    title: "Unités",
-    body: "Gestion des unités avec responsables et rattachements.",
+    label: "Divisions",
+    title: "Divisions",
+    body: "Gestion des Divisions avec responsables et rattachements.",
   },
   "departements-services": {
     label: "Départements",
     title: "Départements",
-    body: "Gestion des départements avec rattachement aux unités.",
+    body: "Gestion des départements avec rattachement aux Divisions.",
   },
 };
 
@@ -2459,7 +2459,7 @@ function getOrganizationDirectory() {
                 : unit.code,
             name:
               typeof unit.name === "string" && unit.name.includes("Site")
-                ? unit.name.replace(/Site/g, "Unité")
+                ? unit.name.replace(/Site/g, "Division")
                 : unit.name,
           }))
           : directory.unites,
@@ -2746,10 +2746,10 @@ function renderUnitsManagementPage() {
       : null;
 
   renderOrganizationPageHeader(
-    "Unités",
-    "Gestion des unités avec liste, détails, création, modification et suppression.",
+    "Divisions",
+    "Gestion des Divisions avec liste, détails, création, modification et suppression.",
   );
-  renderOrganizationActionButtons("unites", "Nouvelle unité");
+  renderOrganizationActionButtons("unites", "Nouvelle Division");
 
   if (!pageContentEl) return;
 
@@ -2779,9 +2779,9 @@ function renderUnitsManagementPage() {
         <td colspan="6">
           ${buildOrganizationEmptyState(
       "fa-building",
-      "Aucune unité enregistrée",
-      "Créez la première unité pour commencer à structurer l'organisation.",
-      "Le bouton Nouvelle unité ouvre le formulaire de création.",
+      "Aucune Division enregistrée",
+      "Créez la première Division pour commencer à structurer l'organisation.",
+      "Le bouton Nouvelle Division ouvre le formulaire de création.",
     )}
         </td>
       </tr>
@@ -2794,17 +2794,17 @@ function renderUnitsManagementPage() {
     <div class="org-section-intro">
       <div>
         <div class="org-section-kicker">Référentiel organisation</div>
-        <h2>Unités</h2>
-        <p>Chaque unité conserve son code, ses coordonnées et son responsable avec email synchronisé automatiquement.</p>
+        <h2>Divisions</h2>
+        <p>Chaque Division conserve son code, ses coordonnées et son responsable avec email synchronisé automatiquement.</p>
       </div>
       <div class="org-section-pills">
-        <span class="status-badge badge-info">${directory.unites.length} unités</span>
+        <span class="status-badge badge-info">${directory.unites.length} Divisions</span>
       </div>
     </div>
 
     ${renderOrganizationStats([
     {
-      label: "Unités actives",
+      label: "Divisions actives",
       value: String(directory.unites.length),
       note: "Enregistrement local dans le navigateur",
     },
@@ -2826,7 +2826,7 @@ function renderUnitsManagementPage() {
 
     <div class="card org-list-card">
       <div class="card-head">
-        <div class="card-title"><i class="fa-solid fa-building"></i> Liste des unités</div>
+        <div class="card-title"><i class="fa-solid fa-building"></i> Liste des Divisions</div>
         <span class="status-badge badge-info">${directory.unites.length} lignes</span>
       </div>
       <div class="table-wrap">
@@ -2849,10 +2849,10 @@ function renderUnitsManagementPage() {
   `;
 
   renderOrganizationModal(
-    activeRecord ? `Détails de ${activeRecord.name}` : "Nouvelle unité",
+    activeRecord ? `Détails de ${activeRecord.name}` : "Nouvelle Division",
     activeRecord
-      ? "Toutes les informations de l'unité sélectionnée."
-      : "Saisissez les informations de la nouvelle unité.",
+      ? "Toutes les informations de la Division sélectionnée."
+      : "Saisissez les informations de la nouvelle Division.",
     organizationModalState &&
       organizationModalState.mode === "details" &&
       activeRecord
@@ -2869,7 +2869,7 @@ function renderUnitsManagementPage() {
 function buildUnitsFormContent(record, mode) {
   const codePreview =
     record?.code ||
-    generateOrganizationCode("UNI", getOrganizationRecords("unites"));
+    generateOrganizationCode("DIV", getOrganizationRecords("unites"));
   const selectedResponsible = record?.responsibleUserId || "";
   const selectedEmail = getResponsibleEmail(selectedResponsible);
 
@@ -2877,12 +2877,12 @@ function buildUnitsFormContent(record, mode) {
     <form class="org-form" data-org-form="unites">
       <div class="org-form-grid">
         <div class="field-group">
-          <label for="unitCode">Code unité</label>
+          <label for="unitCode">Code Division</label>
           <input id="unitCode" type="text" value="${escapeHtml(codePreview)}" disabled />
         </div>
         <div class="field-group">
           <label for="unitName">Nom</label>
-          <input id="unitName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="${uiText("Nom de l'unité")}" required />
+          <input id="unitName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="${uiText("Nom de la Division")}" required />
         </div>
         <div class="field-group field-group-wide">
           <label for="unitLocations">Localisations</label>
@@ -2890,7 +2890,7 @@ function buildUnitsFormContent(record, mode) {
         </div>
         <div class="field-group">
           <label for="unitPhone">Numéro téléphone</label>
-          <input id="unitPhone" name="phone" type="tel" value="${escapeHtml(record?.phone || "")}" placeholder="${uiText("Téléphone de l'unité")}" />
+          <input id="unitPhone" name="phone" type="tel" value="${escapeHtml(record?.phone || "")}" placeholder="${uiText("Téléphone de la Division")}" />
         </div>
         <div class="field-group">
           <label for="unitResponsible">Nom de responsable</label>
@@ -2956,7 +2956,7 @@ function renderDivisionsManagementPage() {
 
   renderOrganizationPageHeader(
     "Divisions",
-    "Gestion des divisions avec liaison multi-unités, responsable et email synchronisé.",
+    "Gestion des divisions avec liaison multi-Divisions, responsable et email synchronisé.",
   );
   renderOrganizationActionButtons("divisions", "Nouvelle division");
 
@@ -2988,8 +2988,8 @@ function renderDivisionsManagementPage() {
           ${buildOrganizationEmptyState(
       "fa-diagram-project",
       "Aucune division enregistrée",
-      "Créez une division et rattachez-la à une ou plusieurs unités.",
-      "Les divisions peuvent appartenir à plusieurs unités.",
+      "Créez une division et rattachez-la à une ou plusieurs Divisions.",
+      "Les divisions peuvent appartenir à plusieurs Divisions.",
     )}
         </td>
       </tr>
@@ -3003,11 +3003,11 @@ function renderDivisionsManagementPage() {
       <div>
         <div class="org-section-kicker">Référentiel organisation</div>
         <h2>Divisions</h2>
-          <p>Chaque division peut appartenir à plusieurs unités, avec un responsable unique et son email chargé automatiquement.</p>
+          <p>Chaque division peut appartenir à plusieurs Divisions, avec un responsable unique et son email chargé automatiquement.</p>
       </div>
       <div class="org-section-pills">
         <span class="status-badge badge-info">${directory.divisions.length} divisions</span>
-        <span class="status-badge badge-gray">${directory.unites.length} unités disponibles</span>
+        <span class="status-badge badge-gray">${directory.unites.length} Divisions disponibles</span>
       </div>
     </div>
 
@@ -3015,16 +3015,16 @@ function renderDivisionsManagementPage() {
     {
       label: "Divisions actives",
       value: String(directory.divisions.length),
-      note: "Liens multi-unités pris en charge",
+      note: "Liens multi-Divisions pris en charge",
     },
     {
-      label: "Divisions multi-unités",
+      label: "Divisions multi-Divisions",
       value: String(
         directory.divisions.filter(
           (division) => (division.unitIds || []).length > 1,
         ).length,
       ),
-      note: "Une division peut appartenir à plusieurs unités",
+      note: "Une division peut appartenir à plusieurs Divisions",
     },
     {
       label: "Responsables attribués",
@@ -3047,7 +3047,7 @@ function renderDivisionsManagementPage() {
             <tr>
               <th>Code</th>
               <th>Nom</th>
-              <th>Unités liées</th>
+              <th>Divisions liées</th>
               <th>Responsable</th>
               <th>Actions</th>
             </tr>
@@ -3096,11 +3096,11 @@ function buildDivisionsFormContent(record, mode) {
           <input id="divisionName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom de la division" required />
         </div>
         <div class="field-group field-group-wide">
-          <label for="divisionUnits">Unités rattachées</label>
+          <label for="divisionUnits">Divisions rattachées</label>
           <select id="divisionUnits" name="unitIds" multiple size="5">
             ${buildUnitOptions(record?.unitIds || [])}
           </select>
-          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs unités.</div>
+          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs Divisions.</div>
         </div>
         <div class="field-group">
           <label for="divisionResponsible">Nom de responsable</label>
@@ -3147,7 +3147,7 @@ function buildDivisionsDetailsContent(record) {
         title: "Organisation",
         rows: [
           {
-            label: "Unités liées",
+            label: "Divisions liées",
             value: joinNames(getOrganizationRecords("unites"), record.unitIds || []),
           },
         ],
@@ -3178,7 +3178,7 @@ function renderDepartmentServicesManagementPage() {
 
   renderOrganizationPageHeader(
     "Départements",
-    "Gestion des départements avec rattachement aux unités.",
+    "Gestion des départements avec rattachement aux Divisions.",
   );
   renderOrganizationActionButtons(
     "departements-services",
@@ -3215,8 +3215,8 @@ function renderDepartmentServicesManagementPage() {
            ${buildOrganizationEmptyState(
       "fa-folder-open",
       "Aucun département enregistré",
-      "Créez un département et rattachez-le à une ou plusieurs unités.",
-      "Les départements supportent plusieurs unités.",
+      "Créez un département et rattachez-le à une ou plusieurs Divisions.",
+      "Les départements supportent plusieurs Divisions.",
     )}
         </td>
       </tr>
@@ -3230,7 +3230,7 @@ function renderDepartmentServicesManagementPage() {
       <div>
         <div class="org-section-kicker">Référentiel organisation</div>
           <h2>Départements</h2>
-        <p>Chaque département peut être rattaché à plusieurs unités.</p>
+        <p>Chaque département peut être rattaché à plusieurs Divisions.</p>
       </div>
     </div>
 
@@ -3243,7 +3243,7 @@ function renderDepartmentServicesManagementPage() {
     {
       label: "Départements",
       value: String(directory.departmentServices.length),
-      note: "Multiples unités possibles",
+      note: "Multiples Divisions possibles",
     },
     {
       label: "Responsables attribués",
@@ -3267,7 +3267,7 @@ function renderDepartmentServicesManagementPage() {
             <tr>
               <th>Code</th>
               <th>Nom</th>
-              <th>Unités liées</th>
+              <th>Divisions liées</th>
               <th>Responsable</th>
               <th>Actions</th>
             </tr>
@@ -3326,11 +3326,11 @@ function buildDepartmentServicesFormContent(record, mode) {
           <input id="departmentServiceName" name="name" type="text" value="${escapeHtml(record?.name || "")}" placeholder="Nom du département" required />
         </div>
         <div class="field-group field-group-wide">
-          <label for="departmentServiceUnits">Unités rattachées</label>
+          <label for="departmentServiceUnits">Divisions rattachées</label>
           <select id="departmentServiceUnits" name="unitIds" multiple size="5">
             ${buildUnitOptions(record?.unitIds || [])}
           </select>
-          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs unités.</div>
+          <div class="org-field-hint">Maintenez Ctrl ou Cmd pour sélectionner plusieurs Divisions.</div>
         </div>
         <div class="field-group">
           <label for="departmentServiceResponsible">Nom de responsable</label>
@@ -3377,7 +3377,7 @@ function buildDepartmentServicesDetailsContent(record) {
         title: "Organisation",
         rows: [
           {
-            label: "Unités liées",
+            label: "Divisions liées",
             value: joinNames(getOrganizationRecords("unites"), record.unitIds || []),
           },
         ],
@@ -8863,7 +8863,7 @@ function localizeAdministrationText(value, state = null) {
     [
       "BT non validé après X jours",
       languageKey === "en"
-        ? "Unvalidated work ticket after X days"
+        ? "Unvalidated Work Report after X days"
         : "BT non validé après X jours",
     ],
     [
@@ -9023,6 +9023,7 @@ function translateHistoryAction(event) {
 
 const englishInterfaceTranslations = new Map(
   Object.entries({
+    "Arborescence hiérarchique": "hierarchical tree view",
     // ════════════════════════════════════════════════
     //  BON DE RÉCEPTION — RECEIPT SHEET
     // ════════════════════════════════════════════════
@@ -9107,26 +9108,26 @@ const englishInterfaceTranslations = new Map(
     'DI créée': 'WR created',
     'DI validée': 'WR approved',
     'DI transformée en OT': 'WR converted to WO',
-    'OT transformé en BT': 'WO converted to WT',
-    'BT clôturé': 'WT closed',
-    'BT validé': 'WT approved',
+    'OT transformé en BT': 'WO converted to WRP',
+    'BT clôturé': 'WRP closed',
+    'BT validé': 'WRP approved',
     'Transformer en OT': 'Convert to WO',
-    'Créer BT': 'Create WT',
+    'Créer BT': 'Create WRP',
     'Planifié': 'Scheduled',
     'Clôturé': 'Closed',
     'Validé': 'Approved',
     'En cours': 'In progress',
     'Créé par': 'Created by',
-    'Transformé en BT': 'Converted to WT',
+    'Transformé en BT': 'Converted to WRP',
     'Transformé en OT': 'Converted to WO',
     'DI transformée en OT': 'WR converted to WO',
-    'OT transformé en BT': 'WO converted to WT',
+    'OT transformé en BT': 'WO converted to WRP',
     'DI validée': 'WR approved',
-    'BT clôturé': 'WT closed',
+    'BT clôturé': 'WRP closed',
     "Réinitialisez les filtres ou effacez l'historique pour repartir de zéro.": "Reset filters or clear history to start from scratch.",
     "Aucun événement ou intervention ne correspond aux filtres sélectionnés.": "No events or actions match the filters you selected.",
     'Sur': 'On',
-    'BT évalués': 'WT evaluated',
+    'BT évalués': 'WRP evaluated',
     "Coût total": "total cost",
     "Coût articles": "Cost items",
     "Fiche détaillée du BT": "Detailed sheet of the BT",
@@ -9287,9 +9288,9 @@ const englishInterfaceTranslations = new Map(
     "Pièces jointes": "Attachments",
     "Toutes les informations de la famille sélectionnée.": "All information for the selected family.",
     "Toutes les informations du groupe sélectionné.": "All informations for the selected group.",
-    "Unités rattachées": "attached units",
-    "Unités liées": "linked units",
-    "Multiples unités possibles": "Multiple possible units",
+    "Divisions rattachées": "attached units",
+    "Divisions liées": "linked units",
+    "Multiples Divisions possibles": "Multiple possible units",
     // ── Dashboard Activité récente ─────────────────────────────────
     "DA créée": "PR created",
     "BC envoyé": "PO sent",
@@ -9333,7 +9334,7 @@ const englishInterfaceTranslations = new Map(
     "Créez un premier plan de maintenance pour alimenter la liste et le calendrier.": "Create a first maintenance plan to populate the list and calendar.",
     "Saisir un relevé": "Enter a reading",
     "Le style a été resserré pour un usage plus lisible: compteur, dernier relevé, seuils et historique visibles ensemble.": "The style has been streamlined for improved readability: the counter, latest reading, thresholds, and history are displayed together.",
-    "Les bons de travail remplis par les techniciens s'afficheront ici.": "WT filled by technicians will appear here",
+    "Les bons de travail remplis par les techniciens s'afficheront ici.": "WRP filled by technicians will appear here",
     "Les OT issus d'une DI validée apparaîtront ici.": "WO generated from approved WR will appear here",
     "Réf": "REF",
     "Commentaire optionnel": "Optional comment",
@@ -9572,9 +9573,9 @@ const englishInterfaceTranslations = new Map(
     "Créer l'équipement": "Create equipment",
     "Étape": "Step",
     "nom de l'équipment": "Equipment name",
-    "Nom de l'unité": "Name of the unit",
-    "Téléphone de l'unité": "Unit phone",
-    "Unités": "Units",
+    "Nom de la Division": "Name of the unit",
+    "Téléphone de la Division": "Division phone",
+    "Divisions": "Divisions",
     "Saisie terrain, articles consommés, signatures et validation finale.": "Field entry, items consumed, signatures, and final validation.",
     "Gestion des demandes d'achat avec validation, priorisation par niveau d'urgence et transformation en bons de commande.": "Management of purchase requests, including approval, prioritization based on urgency level, and conversion into purchase orders.",
     "fournisseurs actifs": "Active suppliers",
@@ -9904,7 +9905,6 @@ const englishInterfaceTranslations = new Map(
     "Type g\u00e9n\u00e9ral": "General information",
     "Type compl\u00e9mentaire": "Additional information",
     "Liste des utilisateurs": "User list",
-    "Liste des unit\u00e9s": "Unit list",
     "Liste des divisions": "Division list",
     "Liste des d\u00e9partements": "Department list",
     "Liste des \u00e9quipements": "Equipment list",
@@ -9944,7 +9944,7 @@ const englishInterfaceTranslations = new Map(
     Calendrier: "Calendar",
     Compteurs: "Counters",
     "Ordre de travail": "Work order",
-    "Bon de travail": "Work ticket",
+    "Bon de travail": "Work Report",
     "Demande d'intervention": "Work Request",
     "Vue globale de la maintenance": "Global maintenance overview",
     Wilaya: "Province",
@@ -9996,7 +9996,7 @@ const englishInterfaceTranslations = new Map(
       "to simplify data entry.",
     DI: "WR",
     OT: "WO",
-    BT: "WT",
+    BT: "WRP",
     /*DA: "PR",*/
     BC: "PO",
     REC: "Receipt",
@@ -10015,7 +10015,7 @@ const englishInterfaceTranslations = new Map(
     "Délai moyen": "mean time",
     "BC en cours": "PO in progress",
     "Cumul du mois en cours": "Monthly roll-up",
-    "Toutes les informations de l'unité sélectionnée.": "All information for the selected unit.",
+    "Toutes les informations de la Division sélectionnée.": "All information for the selected unit.",
     "Toutes les informations du département sélectionné.": "All information for the selected department.",
     "Groupes actifs": "active groups",
     "Départements liés": "Linked departments",
@@ -10073,7 +10073,7 @@ const englishInterfaceTranslations = new Map(
     "À valider": "To be validated",
     "Prêtes pour OT": "Ready for WO",
     "Décrivez le besoin d'intervention": "Describe the need for intervention",
-    "La clôture BT déclenchera les sorties de stock automatiques.": "The WT fence will trigger automatic stock withdrawals.",
+    "La clôture BT déclenchera les sorties de stock automatiques.": "The WRP fence will trigger automatic stock withdrawals.",
     "La fenêtre popup reprend le formulaire métier et les liens vers les autres modules.": "The popup window displays the business form and links to other modules.",
     "Créez la première demande d'intervention depuis le bouton Nouvelle DI.": "Create the first service request from the New DI button.",
     "Les OT issus d'une DI validée apparaîtront ici": "The WOs from a validated WR will appear here.",
@@ -10084,7 +10084,7 @@ const englishInterfaceTranslations = new Map(
 
 const englishInterfacePatterns = [
   [/^Cr\u00e9er un OT depuis (.+)$/i, "Create a WO from $1"],
-  [/^Cr\u00e9er un BT depuis (.+)$/i, "Create a WT from $1"],
+  [/^Cr\u00e9er un BT depuis (.+)$/i, "Create a WRP from $1"],
   [/^Transformer en OT$/i, "Convert to WO"],
   [/^1 familles\s*·\s*1 \u00e9quipements$/i, "1 family · 1 equipment"],
   [/^1 familles\s*·\s*1 organes$/i, "1 family · 1 organ"],
@@ -10148,7 +10148,7 @@ const englishInterfacePhraseTranslations = new Map(
     'Plan supprimé.': 'Plan deleted.',
     'Flux de déclenchement': 'Trigger workflow',
     'Plan actif ➜ échéance atteinte ➜ OT généré automatiquement ➜ notification ➜ assignation technicien ➜ visible dans le calendrier.': 'Active plan - due date reached - WO generated automatically - notification - technician assignment - visible in the calendar.',
-    'Relevé saisi ➜ seuil action atteint ➜ OT généré ➜ compteur remis à zéro après clôture BT ➜ prochain déclenchement recalculé.': 'Reading entered - action threshold reached - WO generated - meter reset after WT closure - next trigger recalculated.',
+    'Relevé saisi ➜ seuil action atteint ➜ OT généré ➜ compteur remis à zéro après clôture BT ➜ prochain déclenchement recalculé.': 'Reading entered - action threshold reached - WO generated - meter reset after WRP closure - next trigger recalculated.',
     "Étape": "Step",
     "jours": "Days",
     "Urgente": "Urgent",
@@ -10177,13 +10177,13 @@ const englishInterfacePhraseTranslations = new Map(
     "Nom du groupe équipement": "Equipment group name",
     "Code groupe": "Group code",
     "Description facultative": "Optionary description",
-    "Téléphone de l'unité": "Unit's phone number ",
+    "Téléphone de la Division": "Unit's phone number ",
     "Localisation principale ou zones": "Primary location or zones",
-    "Nom de l'unité": "Unit name",
-    "Code unité": "Unit code",
-    "Les départements supportent plusieurs unités.": "Departments support multiple units",
-    "Créez un département et rattachez-le à une ou plusieurs unités.": "Create a department and attach it to one or multiple units",
-    "Créez la première unité pour commencer à structurer l'organisation.": "Create the first unit to start structuring the organization",
+    "Nom de la Division": "Division name",
+    "Code Division": "Division code",
+    "Les départements supportent plusieurs Divisions.": "Departments support multiple units",
+    "Créez un département et rattachez-le à une ou plusieurs Divisions.": "Create a department and attach it to one or multiple units",
+    "Créez la première Division pour commencer à structurer l'organisation.": "Create the first unit to start structuring the organization",
     "Le logo peut être ajouté après la création de l'entreprise.": "The logo can be added after the creation of the company",
     "Les informations sont affichées depuis la création de l'entreprise. Le code reste figé.": "The information is displayed from the company's inception onward. The code remains unchanged.",
     "Créer le niveau suivant pour continuer": "Create the next level to continue",
@@ -10210,13 +10210,13 @@ const englishInterfacePhraseTranslations = new Map(
     "Nom du groupe équipement": "Equipment group name",
     "Code groupe": "Group code",
     "Description facultative": "Optionary description",
-    "Téléphone de l'unité": "Unit's phone number ",
+    "Téléphone de la Division": "Unit's phone number ",
     "Localisation principale ou zones": "Primary location or zones",
-    "Nom de l'unité": "Unit name",
-    "Code unité": "Unit code",
-    "Les départements supportent plusieurs unités.": "Departments support multiple units",
-    "Créez un département et rattachez-le à une ou plusieurs unités.": "Create a department and attach it to one or multiple units",
-    "Créez la première unité pour commencer à structurer l'organisation.": "Create the first unit to start structuring the organization",
+    "Nom de la Division": "Division name",
+    "Code Division": "Division code",
+    "Les départements supportent plusieurs Divisions.": "Departments support multiple units",
+    "Créez un département et rattachez-le à une ou plusieurs Divisions.": "Create a department and attach it to one or multiple units",
+    "Créez la première Division pour commencer à structurer l'organisation.": "Create the first unit to start structuring the organization",
     "Le logo peut être ajouté après la création de l'entreprise.": "The logo can be added after the creation of the company",
     "Les informations sont affichées depuis la création de l'entreprise. Le code reste figé.": "The information is displayed from the company's inception onward. The code remains unchanged.",
     "Créer le niveau suivant pour continuer": "Create the next level to continue",
@@ -10229,14 +10229,14 @@ const englishInterfacePhraseTranslations = new Map(
     "dispo immé.": "Immed. Avail.",
     "Taux service stock": "Stock service rate",
     "Taux PM réalisées": "PM completion rates",
-    "nom de l'unité": "unit name",
+    "nom de la Division": "unit name",
     "dans délai": "on time",
     "moy répar": "avg. repair",
     "moy pannes": "avg. breakdowns",
     "mouvements actifs": "Active movements",
     "Achats - Bons de commande": "Purchaes - Purchase orders",
     "clôturés": "Closed",
-    "BT validés": "Validated WT",
+    "BT validés": "Validated WRP",
     "Vue consolidée": "consolidated view",
     "Enregistrez une réception à partir d'un BC existant.": "Save a receipt from an existing PO",
     "Créez votre première DA pour lancer le flux achat": "Create your first purchase request to initiate the procurement workflow",
@@ -10254,7 +10254,7 @@ const englishInterfacePhraseTranslations = new Map(
       "Hold Ctrl or Cmd to select multiple equipment items.",
     "Maintenez Ctrl ou Cmd pour sélectionner plusieurs départements.":
       "Hold Ctrl or Cmd to select multiple departments.",
-    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs unités.":
+    "Maintenez Ctrl ou Cmd pour sélectionner plusieurs Divisions.":
       "Hold Ctrl or Cmd to select multiple units.",
     "Saisissez les informations du nouvel article.":
       "Enter the information of the new item.",
@@ -10271,7 +10271,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Saisissez les informations du nouveau département.":
       "Enter the information of the new department.",
 
-    "Saisissez les informations de la nouvelle unité.":
+    "Saisissez les informations de la nouvelle Division.":
       "Enter the information of the new unit.",
 
     "Saisissez les informations du nouveau groupe article.":
@@ -10318,7 +10318,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Choisissez un r\u00f4le, puis modifiez ses permissions via des boutons \u00e0 \u00e9tat.":
       "Choose a role, then edit its permissions with status buttons.",
     "Lecture large et cr\u00e9ation des DI/BT avec modification des OT affect\u00e9s.":
-      "Broad read access plus WR/WT creation and assigned WO editing.",
+      "Broad read access plus WR/WRP creation and assigned WO editing.",
     "Stock uniquement": "Stock only",
     "G\u00e8re le stock, les mouvements et les validations de r\u00e9ception.":
       "Manages stock, movements and receipt approvals.",
@@ -10376,7 +10376,7 @@ const englishInterfacePhraseTranslations = new Map(
       "View purchase requests, orders and receipts filtered by item, supplier, document type, status, date and amount.",
     "Demande d'intervention (DI)": "Work request (WR)",
     "Ordres de travail (OT)": "Work orders (WO)",
-    "Bons de travail (BT)": "Work Tickets (WT)",
+    "Bons de travail (BT)": "Work Reports (WRP)",
     "Historique des interventions": "Intervention history",
     "Demandes d'achat (DA)": "Purchase requests (PR)",
     "Bons de commande (BC)": "Purchase orders (PO)",
@@ -10419,7 +10419,7 @@ const englishInterfacePhraseTranslations = new Map(
     "V\u00e9rifiez les informations de la DI et compl\u00e9tez les d\u00e9tails de l'OT.":
       "Review the work request information and complete the work order details.",
     "V\u00e9rifiez les informations de l'OT et compl\u00e9tez les d\u00e9tails du Bon de Travail.":
-      "Review the work order information and complete the Work ticket details.",
+      "Review the work order information and complete the Work Report details.",
     "SECTION 1 \u2014 Informations de la DI":
       "SECTION 1 - Work request information",
     "SECTION 1 \u2014 Informations de l'OT":
@@ -10427,7 +10427,7 @@ const englishInterfacePhraseTranslations = new Map(
     "SECTION 2 \u2014 Champs \u00e0 remplir pour l'OT":
       "SECTION 2 - Work order fields",
     "SECTION 2 \u2014 Champs \u00e0 remplir pour le BT":
-      "SECTION 2 - Work ticket fields",
+      "SECTION 2 - Work Report fields",
     "Articles consomm\u00e9s": "Consumed items",
     "Travaux r\u00e9alis\u00e9s": "Work performed",
     "Cause de la panne": "Failure cause",
@@ -10524,8 +10524,8 @@ const englishInterfacePhraseTranslations = new Map(
     "R\u00e8gles de validation": "Approval rules",
     "Validation r\u00e9ception obligatoire": "Receipt approval required",
     "DI obligatoire avant OT": "Work request required before work order",
-    "Signature BT obligatoire": "Work ticket signature required",
-    "Photos obligatoires dans BT": "Photos required in Work ticket",
+    "Signature BT obligatoire": "Work Report signature required",
+    "Photos obligatoires dans BT": "Photos required in Work Report",
     "Checklist s\u00e9curit\u00e9 obligatoire": "Safety checklist required",
     "D\u00e9lai max DI non trait\u00e9e (jours)":
       "Maximum unprocessed request delay (days)",
@@ -10633,7 +10633,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Plan actif \u2192 \u00e9ch\u00e9ance atteinte \u2192 OT g\u00e9n\u00e9r\u00e9 automatiquement \u2192 notification \u2192 assignation technicien \u2192 visible dans le calendrier.":
       "Active plan -> due date reached -> WO generated automatically -> notification -> technician assignment -> visible in the calendar.",
     "Relev\u00e9 saisi \u2192 seuil action atteint \u2192 OT g\u00e9n\u00e9r\u00e9 \u2192 compteur remis \u00e0 z\u00e9ro apr\u00e8s cl\u00f4ture BT \u2192 prochain d\u00e9clenchement recalcul\u00e9.":
-      "Reading entered -> action threshold reached -> WO generated -> meter reset after WT closure -> next trigger recalculated.",
+      "Reading entered -> action threshold reached -> WO generated -> meter reset after WRP closure -> next trigger recalculated.",
     "Les relev\u00e9s alimentent les seuils d'alerte et d'action, avec g\u00e9n\u00e9ration d'OT quand la valeur critique est atteinte.":
       "Readings feed alert and action thresholds, with WO generation when the critical value is reached.",
     "Si le seuil d'action est d\u00e9pass\u00e9, un OT est ajout\u00e9 \u00e0 la file planifi\u00e9e et le plan concern\u00e9 reste tra\u00e7able dans l'historique.":
@@ -10651,7 +10651,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Liste des BC": "PO list",
     "Liste des DI": "WR list",
     "Liste des OT": "WO list",
-    "Liste des BT": "WT list",
+    "Liste des BT": "WRP list",
     "S\u00e9lectionner un BC": "Select a PO",
     "S\u00e9lectionner une DA": "Select a PR",
     "Fournisseur (auto BC)": "Supplier (auto PO)",
@@ -10661,7 +10661,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Num\u00e9ro DI li\u00e9": "Linked WR number",
     "Num\u00e9ro OT li\u00e9": "Linked WO number",
     "Num\u00e9ro OT": "WO number",
-    "Num\u00e9ro BT": "WT number",
+    "Num\u00e9ro BT": "WRP number",
     "Titre / R\u00e9f DI": "Title / WR ref.",
     "RIB / Coordonn\u00e9es bancaires": "Bank details / account information",
     "Point de d\u00e9part du flux achat, avec cr\u00e9ation manuelle ou automatique depuis le stock.":
@@ -10678,7 +10678,7 @@ const englishInterfacePhraseTranslations = new Map(
       "Objective, instructions and field entry deadline...",
     "BC (bon de commande / r\u00e9ception)": "PO (purchase order / receipt)",
     "BT (bon de sortie)": "Issue note",
-    "BT / BC / inventaire...": "WT / PO / inventory...",
+    "BT / BC / inventaire...": "WRP / PO / inventory...",
     "DA en attente": "Pending PR",
     "DA urgentes": "Urgent PR",
     "DA valid\u00e9es": "Approved PR",
@@ -10688,10 +10688,10 @@ const englishInterfacePhraseTranslations = new Map(
     "Cr\u00e9ation, validation et transformation en OT avec \u00e9quipements, organes et demandeur li\u00e9s au r\u00e9f\u00e9rentiel.":
       "Create, approve and convert to WO with equipment, organs and requester linked to the directory.",
     "Vue consolid\u00e9e des DI, OT et BT avec filtres et export Excel / PDF.":
-      "Consolidated WR, WO and WT view with filters and Excel / PDF export.",
+      "Consolidated WR, WO and WRP view with filters and Excel / PDF export.",
     "Total DI": "Total WR",
     "Total OT": "Total WO",
-    "Total BT": "Total WT",
+    "Total BT": "Total WRP",
     "Aucune fiche stock": "No stock record",
     "Aucun contrat.": "No contract.",
     "Aucune garantie.": "No warranty.",
@@ -10716,10 +10716,10 @@ const englishInterfacePhraseTranslations = new Map(
     "Imprimer la fiche": "Print record",
     "Transformer en OT": "Convert to work order",
     "Cr\u00e9er OT": "Create work order",
-    "Cr\u00e9er BT": "Create Work ticket",
+    "Cr\u00e9er BT": "Create Work Report",
     "Cl\u00f4turer": "Close",
     "Confirmer et cr\u00e9er OT": "Confirm and create work order",
-    "Confirmer et cr\u00e9er BT": "Confirm and create Work ticket",
+    "Confirmer et cr\u00e9er BT": "Confirm and create Work Report",
     "Cette page centralise les plans qui organisent les interventions de maintenance.":
       "This page centralizes the plans that organize maintenance interventions.",
     "Référentiel de base, contacts, légaux et conditions commerciales.":
@@ -10729,7 +10729,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Ordre de travail":
       "Work order",
     "Bon de travail":
-      "Work ticket",
+      "Work Report",
     "Demandes d'intervention (DI)":
       "Work Request (WR)",
     "Substituts, organes et équipements associés":
@@ -10768,7 +10768,7 @@ const englishInterfacePhraseTranslations = new Map(
       "Error while generating the goods receipt document.",
     "DI introuvable.": "Work request not found.",
     "OT introuvable.": "Work order not found.",
-    "BT introuvable.": "Work ticket not found.",
+    "BT introuvable.": "Work Report not found.",
     "La date planifiée est obligatoire.":
       "Scheduled date is required.",
     "Les travaux réalisés sont obligatoires.":
@@ -10829,11 +10829,11 @@ const englishInterfacePhraseTranslations = new Map(
     "Aucun article prévu pour cet OT.":
       "No items planned for this work order.",
     "Technicien assigné": "Assigned technician",
-    "BON DE TRAVAIL": "WORK TICKET",
+    "BON DE TRAVAIL": "WORK REPORT",
     "BT — Rapport d'exécution et clôture de l'intervention":
-      "WT — Execution report and work order closure",
-    "Identification du bon de travail": "Work ticket identification",
-    "Référence BT": "WT reference",
+      "WRP — Execution report and work order closure",
+    "Identification du bon de travail": "Work Report identification",
+    "Référence BT": "WRP reference",
     "OT lié": "Linked WO",
     "Temps d'intervention": "Work time",
     "Durée estimée": "Estimated duration",
@@ -10987,15 +10987,15 @@ const englishInterfacePhraseTranslations = new Map(
     "Créez la première famille article.": "Create the first item family.",
     "Aucun article": "No item",
     "Créez le premier article.": "Create the first item.",
-    "Aucune unité enregistrée": "No units recorded",
+    "Aucune Division enregistrée": "No units recorded",
     "Aucune sélection": "No selection",
     "Non défini": "Not defined",
     "Système": "System",
     "Voir les détails": "View details",
     "Mettre à jour": "Update",
     "Créer": "Create",
-    "Nouvelle unité": "New unit",
-    "Liste des unités": "Unit list",
+    "Nouvelle Division": "New unit",
+    "Liste des Divisions": "Division list",
     "Pièce de rechange": "Spare part",
     "Sélectionner le type d'article": "Select item type",
     "Sélectionner l'unité de mesure": "Select unit of measure",
@@ -11020,7 +11020,7 @@ const englishInterfacePhraseTranslations = new Map(
       "All information for the selected item family.",
     "Toutes les informations de l'article sélectionné.":
       "All information for the selected item.",
-    "Toutes les informations de l'unité sélectionnée.":
+    "Toutes les informations de la Division sélectionnée.":
       "All information for the selected unit.",
     "Chaque groupe structure les familles et les articles rattachés.":
       "Each group structures linked families and items.",
@@ -11038,16 +11038,16 @@ const englishInterfacePhraseTranslations = new Map(
       "The logo can be added after the company is created.",
     "Numéro téléphone": "Phone number",
     "Sélectionner un responsable": "Select a manager",
-    "Gestion des unités avec liste, détails, création, modification et suppression.":
+    "Gestion des Divisions avec liste, détails, création, modification et suppression.":
       "Manage units with list, details, create, edit and delete.",
-    "Créez la première unité pour commencer à structurer l'organisation.":
+    "Créez la première Division pour commencer à structurer l'organisation.":
       "Create the first unit to start structuring the organization.",
-    "Le bouton Nouvelle unité ouvre le formulaire de création.":
+    "Le bouton Nouvelle Division ouvre le formulaire de création.":
       "The New unit button opens the creation form.",
-    "Chaque unité conserve son code, ses coordonnées et son responsable avec email synchronisé automatiquement.":
+    "Chaque Division conserve son code, ses coordonnées et son responsable avec email synchronisé automatiquement.":
       "Each unit keeps its code, contact details and manager with automatically synchronized email.",
-    "Unités actives": "Active units",
-    "nom de l'unités": "Unit Name",
+    "Divisions actives": "Active units",
+    "nom de l'Divisions": "Division Name",
     "Email chargé automatiquement": "Email loaded automatically",
     "Référentiel organisation": "Organization directory",
     "Sous-pages organes": "organs subpages",
@@ -11068,7 +11068,7 @@ const englishInterfacePhraseTranslations = new Map(
     "Refusée": "Rejected",
     "Validée": "Approved",
     "OT créé avec succès": "Work order created successfully",
-    "BT créé avec succès": "Work ticket created successfully",
+    "BT créé avec succès": "Work Report created successfully",
     "Modifier ligne catalogue": "Edit catalog line",
     "Créer ligne catalogue": "Create catalog line",
     "Formulaire de ligne catalogue fournisseur.":
@@ -11105,14 +11105,14 @@ const englishInterfacePhraseTranslations = new Map(
     "Finalisés": "Finalized",
     "Validés": "Validated",
     "Bons saisis": "Recorded Tickets",
-    "Coût total tous BT": "Total cost all WT",
-    "Cumul des BT affichés": "Roll up of displayed WT",
+    "Coût total tous BT": "Total cost all WRP",
+    "Cumul des BT affichés": "Roll up of displayed WRP",
     "Sur 0 BT évalués": "On 0 BT evaluated",
     "Répartition financière": "Financial distribution",
     "Correctif vs Préventif": "Corrective vs Preventive",
-    "Coût moyen par BT": "Average cost per WT",
+    "Coût moyen par BT": "Average cost per WRP",
     "Groupe equipment": "Equipment group",
-    "Nom de l'unité": "Unit Name",
+    "Nom de la Division": "Division Name",
   }),
 );
 
@@ -11247,7 +11247,7 @@ const englishInterfaceWordTranslations = new Map(
     /* da: "PR",*/
     di: "WR",
     ot: "WO",
-    bt: "Wt",
+    bt: "WRP",
     bc: "PO",
     rec: "receipt",
     acc\u00e8s: "access",
@@ -12346,7 +12346,6 @@ function renderProfilePage() {
     ["Fonction", connectedUser.functionTitle || "—"],
     ["Email", connectedUser.email || "—"],
     ["Téléphone", connectedUser.phone || "—"],
-    ["Unité", connectedUser.unit || "—"],
     ["Division", connectedUser.division || "—"],
     ["Département", connectedUser.department || "—"],
     ["Langue", connectedUser.language || "—"],
@@ -12366,7 +12365,7 @@ function renderProfilePage() {
   )}</p>
         <div class="profile-hero-meta">
           <span>${escapeHtml(connectedUser.role || "Rôle non défini")}</span>
-          <span>${escapeHtml(connectedUser.unit || "Unité non renseignée")}</span>
+          <span>${escapeHtml(connectedUser.unit || "Division non renseignée")}</span>
           <span>${escapeHtml(connectedUser.email || "Email non renseigné")}</span>
         </div>
       </div>
@@ -12618,7 +12617,6 @@ function renderAdministrationUserDetailsModal(user) {
     icon: "fa-solid fa-sitemap",
     title: "Organisation",
     rows: [
-      { label: "Unité", value: user.unit || "Non renseigné" },
       { label: "Division", value: user.division || "Non renseigné" },
       { label: "Département", value: user.department || "Non renseigné" },
       { label: "Code entreprise associé", value: user.companyCode || enterprise.code || "ORG-001" },
@@ -12711,8 +12709,8 @@ function getAdministrationApprovalRoleOptions() {
       "Articles avec substitut": "Items with substitute",
       "Description moyenne": "Average description",
       "Divisions actives": "Active divisions",
-      "Divisions multi-unités": "Multi-unit divisions",
-      "Unités liées": "Linked units",
+      "Divisions multi-Divisions": "Multi-unit divisions",
+      "Divisions liées": "Linked units",
       "Détails": "Details",
       "Départements associés": "Associated departments",
       "Groupe associé": "Associated group",
@@ -18100,7 +18098,7 @@ function buildStockFicheContent() {
       <div class="kpi-icon green"><i class="fa-solid fa-cubes"></i></div>
     </div>
     <div class="kpi-value">${formatStockNumber(totals.quantity)}</div>
-    <div class="kpi-footer">Unités en stock</div>
+    <div class="kpi-footer">Divisions en stock</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-header">
@@ -25669,7 +25667,7 @@ function translateRefPrefix(ref) {
   return ref
     .replace(/^DI-/, "WR-")
     .replace(/^OT-/, "WO-")
-    .replace(/^BT-/, "WT-");
+    .replace(/^BT-/, "WRP-");
 }
 
 function buildInterventionsHistoryEntries(directory) {
@@ -30509,7 +30507,7 @@ if (window.MaintFlowAuth) {
 
     // Organisation
     var org = safeGet('maintflow.organizationDirectory');
-    (org && org.unites || []).forEach(function (u) { add('Unités', 'fa-industry', u.name, u.code, j(u.wilaya, u.phone), 'organisation', 'unites'); });
+    (org && org.unites || []).forEach(function (u) { add('Divisions', 'fa-industry', u.name, u.code, j(u.wilaya, u.phone), 'organisation', 'unites'); });
     (org && org.divisions || []).forEach(function (d) { add('Divisions', 'fa-sitemap', d.name, d.code, '', 'organisation', 'divisions'); });
     (org && org.departmentServices || []).forEach(function (d) { add('Départements', 'fa-folder-open', d.name, d.code, d.kind, 'organisation', 'departements-services'); });
 
